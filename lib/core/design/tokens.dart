@@ -96,11 +96,19 @@ class BBColor {
   /// Modern Purple. Primary brand action.
   static const Color primary = Color(0xFF6B4CE6);
 
-  /// Darker primary (~12% darker) for pressed states, focus rings, gradient stop.
-  static const Color primaryDark = Color(0xFF5B3DD6);
+  /// Darker primary for pressed states, focus rings, gradient stop
+  /// (`tokens.css --bb-primary-dark` light `#5638C7`).
+  static const Color primaryDark = Color(0xFF5638C7);
 
-  /// Lighter primary for hover surface fill, focus ring backgrounds.
-  static const Color primaryLight = Color(0xFF9B86F3);
+  /// Lighter primary for hover surface fill, focus ring backgrounds
+  /// (`tokens.css --bb-primary-light` `#B5A4F0`, same in dark).
+  static const Color primaryLight = Color(0xFFB5A4F0);
+
+  /// Dark-mode primary lift. Used as `BBColorSet.dark.primary` so that
+  /// `BBColor.of(context).primary` resolves to mockup `--bb-primary` in dark
+  /// (`design_handoff/source/tokens.css` `.theme-dark { --bb-primary: #8B6FFF }`).
+  /// Light mode keeps [primary] `#6B4CE6`.
+  static const Color primaryDarkMode = Color(0xFF8B6FFF);
 
   /// Coral. Used for destructive CTA + error states.
   static const Color secondary = Color(0xFFFF6B6B);
@@ -115,7 +123,18 @@ class BBColor {
   static const Color success = Color(0xFF2E7D5B);
   static const Color warning = Color(0xFFFFB84D);
   static const Color error = Color(0xFFFF6B6B);
-  static const Color info = Color(0xFF6B4CE6);
+  static const Color info = Color(0xFF4A90D9);
+
+  // -------------------------------------------------------------------------
+  // Brand + semantic — dark lifts (`tokens.css .theme-dark`, AA on black)
+  // -------------------------------------------------------------------------
+
+  static const Color secondaryDarkMode = Color(0xFFFF8080);
+  static const Color tertiaryDarkMode = Color(0xFFFFC872);
+  static const Color successDarkMode = Color(0xFF4FAE7F);
+  static const Color warningDarkMode = Color(0xFFFFC872);
+  static const Color errorDarkMode = Color(0xFFFF8080);
+  static const Color infoDarkMode = Color(0xFF6BA8E8);
 
   // -------------------------------------------------------------------------
   // Surfaces — light
@@ -131,6 +150,8 @@ class BBColor {
   // -------------------------------------------------------------------------
 
   static const Color bgDark = Color(0xFF000000);
+  // `--bb-surface` dark `#121212` — cards must lift ABOVE the `#0B0B0D`
+  // panel (shell #000 → panel #0B0B0D → cards #121212, tokens.css L3 note).
   static const Color surfaceDark = Color(0xFF121212);
   static const Color surfaceVarDark = Color(0xFF1E1E1E);
   static const Color borderDark = Color(0xFF2D3748);
@@ -156,10 +177,19 @@ class BBColor {
   // -------------------------------------------------------------------------
 
   static const Color statusConfirmed = Color(0xFF2E7D5B);
-  static const Color statusPending = Color(0xFFFFB84D);
-  static const Color statusCancelled = Color(0xFF718096);
+
+  /// `--bb-status-pending` light — darker amber for AA contrast on tint.
+  static const Color statusPending = Color(0xFFB7791F);
+  static const Color statusCancelled = Color(0xFF4A5568);
   static const Color statusCompleted = Color(0xFF6B4CE6);
   static const Color statusImported = Color(0xFF4A90D9);
+
+  // Dark lifts (`tokens.css .theme-dark --bb-status-*`)
+  static const Color statusConfirmedDarkMode = Color(0xFF4FAE7F);
+  static const Color statusPendingDarkMode = Color(0xFFFFC872);
+  static const Color statusCancelledDarkMode = Color(0xFFA0AEC0);
+  static const Color statusCompletedDarkMode = Color(0xFF8B6FFF);
+  static const Color statusImportedDarkMode = Color(0xFF6BA8E8);
 
   // -------------------------------------------------------------------------
   // Theme-aware sets (resolved via [of])
@@ -190,15 +220,15 @@ class BBColor {
   );
 
   static const BBColorSet dark = BBColorSet(
-    primary: primary,
-    primaryDark: primaryDark,
+    primary: primaryDarkMode, // mockup --bb-primary dark #8B6FFF
+    primaryDark: primary, // dark `--bb-primary-dark` = #6B4CE6
     primaryLight: primaryLight,
-    secondary: secondary,
-    tertiary: tertiary,
-    success: success,
-    warning: warning,
-    error: error,
-    info: info,
+    secondary: secondaryDarkMode,
+    tertiary: tertiaryDarkMode,
+    success: successDarkMode,
+    warning: warningDarkMode,
+    error: errorDarkMode,
+    info: infoDarkMode,
     bg: bgDark,
     surface: surfaceDark,
     surfaceVariant: surfaceVarDark,
@@ -206,11 +236,11 @@ class BBColor {
     textPrimary: textPrimaryDark,
     textSecondary: textSecondaryDark,
     textTertiary: textTertiaryDark,
-    statusConfirmed: statusConfirmed,
-    statusPending: statusPending,
-    statusCancelled: statusCancelled,
-    statusCompleted: statusCompleted,
-    statusImported: statusImported,
+    statusConfirmed: statusConfirmedDarkMode,
+    statusPending: statusPendingDarkMode,
+    statusCancelled: statusCancelledDarkMode,
+    statusCompleted: statusCompletedDarkMode,
+    statusImported: statusImportedDarkMode,
   );
 
   /// Resolve the active color set for the current [BuildContext].

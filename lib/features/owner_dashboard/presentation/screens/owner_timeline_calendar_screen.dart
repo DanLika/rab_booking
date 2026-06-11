@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/router_owner.dart';
+import '../../../../core/constants/enums.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/date_range_selection.dart';
@@ -9,9 +13,9 @@ import '../providers/owner_calendar_provider.dart';
 import '../providers/overbooking_detection_provider.dart';
 import '../../domain/models/overbooking_conflict.dart';
 import '../widgets/timeline_calendar_widget.dart';
-import '../widgets/booking_details_dialog_v2.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/calendar/calendar_top_toolbar.dart';
+import '../widgets/calendar/month_calendar_kpi_strip.dart';
 import '../widgets/calendar/multi_select_action_bar.dart';
 import '../widgets/calendar/unit_future_bookings_dialog.dart';
 import '../widgets/booking_create_dialog.dart';
@@ -266,6 +270,11 @@ class _OwnerTimelineCalendarScreenState
                   ),
                   child: Column(
                     children: [
+                      // KPI strip — matches handoff `screens/03-owner.png` row
+                      // above the timeline grid. Self-contained (watches the
+                      // unified dashboard provider). Hidden when owner has no
+                      // units (same gate as toolbar).
+                      if (hasUnits) const MonthCalendarKpiStrip(),
                       // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
                       // CONDITIONAL: Hide toolbar when owner has no units
                       if (hasUnits)
@@ -372,6 +381,10 @@ class _OwnerTimelineCalendarScreenState
                           },
                         ),
 
+                      // Status legend row — handoff `screens/03-owner.png`
+                      // shows status chips between toolbar and timeline grid.
+                      if (hasUnits) const _TimelineStatusLegend(),
+
                       // Timeline calendar widget (it fetches its own data via providers)
                       Expanded(
                         child: Consumer(
@@ -432,7 +445,6 @@ class _OwnerTimelineCalendarScreenState
 
                     return _AnimatedGradientFAB(
                       onPressed: _showCreateBookingDialog,
-                      gradient: context.gradients.brandPrimary,
                     );
                   },
                 ),
@@ -521,7 +533,7 @@ class _OwnerTimelineCalendarScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.overbookingConflictDetails(guest1, guest2)),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.error,
         action: SnackBarAction(
           label: l10n.overbookingViewBooking,
           textColor: Colors.white,
@@ -548,10 +560,11 @@ class _OwnerTimelineCalendarScreenState
       );
 
       if (ownerBooking != null && mounted) {
-        await showDialog(
-          context: context,
-          builder: (context) =>
-              BookingDetailsDialogV2(ownerBooking: ownerBooking),
+        await context.push(
+          OwnerRoutes.bookingDetail.replaceFirst(
+            ':bookingId',
+            ownerBooking.booking.id,
+          ),
         );
       }
     } catch (e) {
@@ -561,7 +574,7 @@ class _OwnerTimelineCalendarScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.ownerBookingsNotFound),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -703,9 +716,8 @@ class _TodayIntent extends Intent {
 /// Animated gradient FAB with hover and press effects
 class _AnimatedGradientFAB extends StatefulWidget {
   final VoidCallback onPressed;
-  final LinearGradient gradient;
 
-  const _AnimatedGradientFAB({required this.onPressed, required this.gradient});
+  const _AnimatedGradientFAB({required this.onPressed});
 
   @override
   State<_AnimatedGradientFAB> createState() => _AnimatedGradientFABState();
@@ -733,6 +745,7 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return MouseRegion(
       onEnter: (_) => _isHoveredNotifier.value = true,
       onExit: (_) => _isHoveredNotifier.value = false,
@@ -762,12 +775,12 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
                   ),
                   transformAlignment: Alignment.center,
                   decoration: BoxDecoration(
-                    gradient: widget.gradient,
+                    color: theme.colorScheme.primary,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: widget.gradient.colors.first.withAlpha(
-                          ((isHovered ? 0.5 : 0.35) * 255).toInt(),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: isHovered ? 0.5 : 0.35,
                         ),
                         blurRadius: isHovered ? 20 : 12,
                         offset: Offset(0, isHovered ? 8 : 4),
@@ -778,7 +791,11 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
                   child: AnimatedRotation(
                     duration: const Duration(milliseconds: 200),
                     turns: isHovered ? 0.125 : 0, // 45 degree rotation on hover
-                    child: const Icon(Icons.add, color: Colors.white, size: 28),
+                    child: Icon(
+                      Icons.add,
+                      color: theme.colorScheme.onPrimary,
+                      size: 28,
+                    ),
                   ),
                 );
               },
@@ -786,6 +803,70 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
           },
         ),
       ),
+    );
+  }
+}
+
+/// Status legend row above the timeline grid — handoff
+/// `screens/03-owner.png` (Potvrđeno · Na čekanju · Završeno · Otkazano).
+/// Mirrors `MonthCalendarScreen._buildStatusLegend` shape but stays self-
+/// contained so it doesn't drag a state-bound private builder across files.
+class _TimelineStatusLegend extends StatelessWidget {
+  const _TimelineStatusLegend();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 6,
+        children: [
+          _legendItem(
+            theme,
+            BookingStatus.confirmed.color,
+            l10n.ownerStatusConfirmed,
+          ),
+          _legendItem(
+            theme,
+            BookingStatus.pending.color,
+            l10n.ownerStatusPending,
+          ),
+          _legendItem(
+            theme,
+            BookingStatus.completed.color,
+            l10n.ownerStatusCompleted,
+          ),
+          _legendItem(
+            theme,
+            BookingStatus.cancelled.color,
+            l10n.ownerStatusCancelled,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _legendItem(ThemeData theme, Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            fontSize: 11,
+          ),
+        ),
+      ],
     );
   }
 }

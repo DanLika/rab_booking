@@ -16,15 +16,18 @@ class AppTheme {
   // SHARED CONSTANTS (reduce hardcoded color duplication)
   // ============================================================================
 
-  /// Dark mode menu/dropdown background color (purple-gray)
-  /// Used in: popupMenuTheme, dropdownMenuTheme, menuTheme
-  static const Color darkMenuBackground = Color(0xFF252330);
+  /// Dark mode menu/dropdown background — handoff `panelBg` (BbRedesignTokens
+  /// dark) so popup surfaces sit on the same tone as cards.
+  /// Used in: popupMenuTheme, dropdownMenuTheme, menuTheme.
+  static const Color darkMenuBackground = Color(0xFF0B0B0D);
 
-  /// Dark mode input fill color (lighter for better contrast)
-  static const Color darkInputFill = Color(0xFF2A2A2A);
+  /// Dark mode input fill color — same panelBg family as `_darkInputFill`
+  /// in `app_gradients.dart`.
+  static const Color darkInputFill = Color(0xFF15151A);
 
-  /// Dark mode date picker background
-  static const Color darkDatePickerBackground = Color(0xFF1E1E28);
+  /// Dark mode date picker background — elevated panel one step above
+  /// `panelBg` (`#0B0B0D` → `#14141A`) so the modal reads as raised.
+  static const Color darkDatePickerBackground = Color(0xFF14141A);
 
   // ============================================================================
   // LIGHT THEME
@@ -54,8 +57,9 @@ class AppTheme {
         outline: AppColors.borderLight,
       ),
 
-      // Background
-      scaffoldBackgroundColor: AppColors.backgroundLight,
+      // Background — shell layer (`--bb-shell-bg`), matches the app bar so
+      // screens without an explicit pageBackground paint show no seam.
+      scaffoldBackgroundColor: AppColors.shellBgLight,
 
       // Typography
       textTheme: AppTypography.textTheme.apply(
@@ -63,30 +67,30 @@ class AppTheme {
         displayColor: AppColors.textPrimaryLight,
       ),
 
-      // AppBar theme - Height: 64px, dark purple background with white text
+      // AppBar theme — handoff `BbAppBar`: transparent on the shell
+      // (`--bb-shell-bg`), 56px slim, text-primary title, status bar icons
+      // dark on light.
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.primary, // Dark purple background
-        foregroundColor: Colors.white, // White text and icons
+        backgroundColor: AppColors.shellBgLight,
+        foregroundColor: AppColors.textPrimaryLight,
         elevation: 0,
         centerTitle: false,
         scrolledUnderElevation: 1,
-        shadowColor: Colors.black26,
-        toolbarHeight: 64, // 64px height as specified
-        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-          statusBarColor: AppColors.primary, // Match AppBar color
-          statusBarBrightness: Brightness.dark, // For iOS (light icons)
-          statusBarIconBrightness:
-              Brightness.light, // For Android (light icons)
+        shadowColor: AppColors.sectionDividerLight,
+        toolbarHeight: 56, // Premium slim AppBar
+        systemOverlayStyle: SystemUiOverlayStyle.dark.copyWith(
+          statusBarColor: AppColors.shellBgLight,
+          statusBarBrightness: Brightness.light, // iOS: dark icons
+          statusBarIconBrightness: Brightness.dark, // Android: dark icons
         ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
-          color: Colors.white, // White title text
+          color: AppColors.textPrimaryLight,
           fontWeight: FontWeight.w600,
+          fontSize: 20, // BBType.h2
         ),
-        iconTheme: const IconThemeData(
-          color: Colors.white, // White icons (including back button)
-        ),
+        iconTheme: const IconThemeData(color: AppColors.textSecondaryLight),
         actionsIconTheme: const IconThemeData(
-          color: Colors.white, // White action icons
+          color: AppColors.textSecondaryLight,
         ),
       ),
 
@@ -240,21 +244,54 @@ class AppTheme {
         unselectedLabelStyle: AppTypography.textTheme.labelSmall,
       ),
 
-      // Dialog theme
+      // Dialog theme — Premium (audit/116 §3.3): radius 24 (BBRadius.lg),
+      // shadow ramp via Material elevation, bb-h2 title.
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surfaceLight,
-        elevation: 8,
+        elevation: 12,
+        shadowColor: const Color(0x29101828), // ~16% cool-tone
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-            AppDimensions.radiusM,
-          ), // 20px modern radius (upgraded from 16)
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL), // 24
         ),
         titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(
           color: AppColors.textPrimaryLight,
+          fontSize: 20, // BBType.h2
+          fontWeight: FontWeight.w600,
         ),
         contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(
           color: AppColors.textSecondaryLight,
         ),
+      ),
+      // BottomSheet theme — Premium (audit/116 §3.4): top corners radius 24,
+      // surface bg, modal scrim handled by showModalBottomSheet defaults.
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surfaceLight,
+        modalBackgroundColor: AppColors.surfaceLight,
+        elevation: 12,
+        shadowColor: Color(0x29101828),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppDimensions.radiusL),
+            topRight: Radius.circular(AppDimensions.radiusL),
+          ),
+        ),
+        showDragHandle: true,
+        dragHandleColor: AppColors.borderWarmLight,
+      ),
+
+      // Drawer theme — Premium (audit/116 §3.2): surface bg, 280 width,
+      // cool-toned envelope shadow approximating `--bb-shadow-lg` (3-layer
+      // gets collapsed to Material elevation 16 + cool shadowColor — closest
+      // single-stack approximation). Applies to both `drawer` and `endDrawer`
+      // (Material draws the same widget class for either slot), so this also
+      // premium-ifies the master-panel EndDrawer used by unified_unit_hub.
+      drawerTheme: const DrawerThemeData(
+        backgroundColor: AppColors.surfaceLight,
+        scrimColor: Color(0x66101828), // ~40% cool scrim
+        elevation: 16,
+        shadowColor: Color(0x33101828), // ~20% cool-tone
+        surfaceTintColor: Colors.transparent,
+        width: 280,
       ),
 
       // Snackbar theme
@@ -413,7 +450,7 @@ class AppTheme {
 
       // Color scheme
       colorScheme: const ColorScheme.dark(
-        primary: AppColors.primaryLight,
+        primary: AppColors.primaryDarkMode, // mockup --bb-primary dark #8B6FFF
         onPrimary: Colors.white, // White text on primary color (chips, buttons)
         primaryContainer: AppColors.primary,
         secondary: AppColors.secondaryLight,
@@ -436,24 +473,30 @@ class AppTheme {
         displayColor: AppColors.textPrimaryDark,
       ),
 
-      // AppBar theme - Height: 64px
+      // AppBar theme — handoff `BbAppBar`: transparent on the shell
+      // (`--bb-shell-bg` dark = #000), 56px slim, text-primary title,
+      // status bar icons light on dark.
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.surfaceDark,
+        backgroundColor: AppColors.shellBgDark,
         foregroundColor: AppColors.textPrimaryDark,
         elevation: 0,
         centerTitle: false,
         scrolledUnderElevation: 1,
         shadowColor: AppColors.borderDark,
-        toolbarHeight: 64, // 64px height as specified
+        toolbarHeight: 56, // Premium slim AppBar
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-          statusBarColor: AppColors.surfaceDark, // Match AppBar color
-          statusBarBrightness: Brightness.dark, // For iOS (light icons)
-          statusBarIconBrightness:
-              Brightness.light, // For Android (light icons)
+          statusBarColor: AppColors.shellBgDark,
+          statusBarBrightness: Brightness.dark, // iOS: light icons
+          statusBarIconBrightness: Brightness.light, // Android: light icons
         ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
           color: AppColors.textPrimaryDark,
           fontWeight: FontWeight.w600,
+          fontSize: 20, // BBType.h2
+        ),
+        iconTheme: const IconThemeData(color: AppColors.textSecondaryDark),
+        actionsIconTheme: const IconThemeData(
+          color: AppColors.textSecondaryDark,
         ),
       ),
 
@@ -609,21 +652,49 @@ class AppTheme {
         unselectedLabelStyle: AppTypography.textTheme.labelSmall,
       ),
 
-      // Dialog theme
+      // Dialog theme — Premium (audit/116 §3.3): radius 24, deeper shadow.
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surfaceDark,
-        elevation: 8,
+        elevation: 12,
+        shadowColor: const Color(0xCC000000), // 80% black on dark
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-            AppDimensions.radiusM,
-          ), // 20px modern radius (upgraded from 16)
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL), // 24
         ),
         titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(
           color: AppColors.textPrimaryDark,
+          fontSize: 20, // BBType.h2
+          fontWeight: FontWeight.w600,
         ),
         contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(
           color: AppColors.textSecondaryDark,
         ),
+      ),
+      // BottomSheet theme — Premium (audit/116 §3.4): top corners radius 24,
+      // surface bg.
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surfaceDark,
+        modalBackgroundColor: AppColors.surfaceDark,
+        elevation: 12,
+        shadowColor: Color(0xCC000000),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppDimensions.radiusL),
+            topRight: Radius.circular(AppDimensions.radiusL),
+          ),
+        ),
+        showDragHandle: true,
+        dragHandleColor: AppColors.borderWarmDark,
+      ),
+
+      // Drawer theme — Premium (audit/116 §3.2): dark surface, 280 width,
+      // deeper envelope shadow for dark contrast. Covers `drawer` + `endDrawer`.
+      drawerTheme: const DrawerThemeData(
+        backgroundColor: AppColors.surfaceDark,
+        scrimColor: Color(0x99000000), // 60% black scrim on dark
+        elevation: 16,
+        shadowColor: Color(0xCC000000),
+        surfaceTintColor: Colors.transparent,
+        width: 280,
       ),
 
       // Snackbar theme

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/router_owner.dart';
+import '../../../core/design/tokens.dart';
+import '../../../core/theme/app_colors.dart';
 import '../providers/trial_status_provider.dart';
 
 /// Banner widget that shows trial status warnings
@@ -62,25 +64,31 @@ class _ExpiringBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    // Handoff `--bb-warning(-tint)`; AA amber `--bb-status-pending` for
+    // light-tint foregrounds (audit/121).
+    final warning = isDark ? BBColor.warningDarkMode : BBColor.warning;
+    final fg = isDark ? BBColor.textPrimaryDark : BBColor.statusPending;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.amber.shade100, Colors.amber.shade50],
+          colors: [
+            warning.withValues(alpha: isDark ? 0.22 : 0.18),
+            warning.withValues(alpha: isDark ? 0.12 : 0.10),
+          ],
         ),
-        border: Border(bottom: BorderSide(color: Colors.amber.shade300)),
+        border: Border(
+          bottom: BorderSide(color: warning.withValues(alpha: 0.4)),
+        ),
       ),
       child: SafeArea(
         bottom: false,
         child: Row(
           children: [
-            Icon(
-              Icons.access_time_rounded,
-              color: Colors.amber.shade800,
-              size: 20,
-            ),
+            Icon(Icons.access_time_rounded, color: fg, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -88,7 +96,7 @@ class _ExpiringBanner extends StatelessWidget {
                     ? 'Your trial ends tomorrow!'
                     : 'Your trial ends in $daysRemaining days',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.amber.shade900,
+                  color: fg,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -96,7 +104,7 @@ class _ExpiringBanner extends StatelessWidget {
             TextButton(
               onPressed: onUpgrade,
               style: TextButton.styleFrom(
-                backgroundColor: Colors.amber.shade700,
+                backgroundColor: AppColors.warningDark,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -124,31 +132,34 @@ class _ExpiredBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    // Handoff `--bb-error(-tint)`, dark lift (audit/121).
+    final error = isDark ? BBColor.errorDarkMode : BBColor.error;
+    final fg = isDark ? BBColor.textPrimaryDark : AppColors.errorDark;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.red.shade100, Colors.red.shade50],
+          colors: [
+            error.withValues(alpha: isDark ? 0.22 : 0.14),
+            error.withValues(alpha: isDark ? 0.12 : 0.08),
+          ],
         ),
-        border: Border(bottom: BorderSide(color: Colors.red.shade300)),
+        border: Border(bottom: BorderSide(color: error.withValues(alpha: 0.4))),
       ),
       child: SafeArea(
         bottom: false,
         child: Row(
           children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.red.shade800,
-              size: 20,
-            ),
+            Icon(Icons.warning_amber_rounded, color: fg, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Your trial has expired. Upgrade to continue.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.red.shade900,
+                  color: fg,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -156,7 +167,7 @@ class _ExpiredBanner extends StatelessWidget {
             TextButton(
               onPressed: onUpgrade,
               style: TextButton.styleFrom(
-                backgroundColor: Colors.red.shade700,
+                backgroundColor: AppColors.errorDark,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,

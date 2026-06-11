@@ -22,7 +22,7 @@ import {
 import {sanitizeText, sanitizeEmail, sanitizePhone} from "./utils/inputSanitization";
 import {logInfo, logError, logWarn, logSuccess} from "./logger";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
-import {checkRateLimit} from "./utils/rateLimit";
+import {checkRateLimit, enforceRateLimit, hashRateKey} from "./utils/rateLimit";
 import {requireActiveUnitOwner} from "./utils/requireActiveUnitOwner";
 import {
   logSecurityEvent,
@@ -53,7 +53,10 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 export const createStripeCheckoutSession = onCall({
   secrets: [stripeSecretKey, "RESEND_API_KEY"],
   cors: getCorsAllowlist(),
-  // SF-046: App Check audit-only — see availability.ts for full context.
+  // SF-046: App Check audit-only — see availability.ts for full context
+  // (incl. WEB CSP pre-flight: `https://www.google.com` must be added to
+  // firebase.json script-src on owner/widget/admin BEFORE flipping this
+  // to true, else reCAPTCHA v3 CSP-blocks → silent permission-deny on web).
   enforceAppCheck: false,
   consumeAppCheckToken: true,
 }, async (request) => {
@@ -81,6 +84,17 @@ export const createStripeCheckoutSession = onCall({
       "Too many checkout attempts. Please wait a few minutes before trying again."
     );
   }
+
+  // F-101-03: instance-global Firestore-backed layer behind the in-memory
+  // L1 (scale-out resets the Map). failOpen — checkout is the revenue path;
+  // L1 still guards if the limiter store hiccups.
+  await enforceRateLimit(`ip_${hashRateKey(clientIp)}`, "stripe_checkout", {
+    maxCalls: 10,
+    windowMs: 300000,
+    failOpen: true,
+    errorMessage:
+      "Too many checkout attempts. Please wait a few minutes before trying again.",
+  });
 
   const {
     // Booking data (from atomicBooking validation result)

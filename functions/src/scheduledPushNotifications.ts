@@ -387,7 +387,7 @@ export const biweeklySummary = onSchedule(
       // Get all active owners
       const ownersSnapshot = await db
         .collection("users")
-        .where("accountStatus", "in", ["trial", "active", "premium"])
+        .where("accountStatus", "in", ["trial", "active"])
         .limit(1000)
         .get();
 
@@ -496,7 +496,7 @@ export const monthlyRevenueReport = onSchedule(
       // Get all active owners
       const ownersSnapshot = await db
         .collection("users")
-        .where("accountStatus", "in", ["trial", "active", "premium"])
+        .where("accountStatus", "in", ["trial", "active"])
         .limit(1000)
         .get();
 
@@ -626,7 +626,7 @@ export const newAppUpdateNotification = onDocumentUpdated(
       // We check for users who have fcmTokens subcollection
       const usersSnapshot = await db
         .collection("users")
-        .where("accountStatus", "in", ["trial", "active", "premium"])
+        .where("accountStatus", "in", ["trial", "active"])
         .limit(1000)
         .get();
 

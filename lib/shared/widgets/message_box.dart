@@ -153,49 +153,31 @@ class MessageBox extends StatelessWidget {
     );
   }
 
+  // Handoff `tokens.css` semantic tints: `--bb-info(-tint)` and
+  // `--bb-warning(-tint)`, dark `.theme-dark` lifts (audit/121).
   _MessageBoxColors _getColors(bool isDark) {
-    // Info colors matching SnackBarColors: light #3B82F6, dark #60A5FA
-    const infoLight = Color(0xFF3B82F6); // Blue 500
-    const infoDark = Color(0xFF60A5FA); // Blue 400
-    const infoBackgroundLight = Color(0xFFDBEAFE); // Blue 100
-    const infoBackgroundDark = Color(0xFF1E3A5F); // Dark blue
-
-    // Warning colors matching SnackBarColors: light #F59E0B, dark #FBBF24
-    const warningLight = Color(0xFFF59E0B); // Amber 500
-    const warningDark = Color(0xFFFBBF24); // Amber 400
+    final info = isDark ? BBColor.infoDarkMode : BBColor.info;
+    final warning = isDark ? BBColor.warningDarkMode : BBColor.warning;
 
     switch (type) {
       case MessageBoxType.info:
         return _MessageBoxColors(
-          // Blue colors (consistent with snackbars)
-          background: isDark
-              ? infoBackgroundDark.withAlpha((0.5 * 255).toInt())
-              : infoBackgroundLight,
-          border: isDark
-              ? infoDark.withAlpha((0.4 * 255).toInt())
-              : infoLight.withAlpha((0.3 * 255).toInt()),
-          iconBackground: isDark
-              ? infoDark.withAlpha((0.2 * 255).toInt())
-              : infoLight.withAlpha((0.15 * 255).toInt()),
-          iconColor: isDark ? infoDark : infoLight,
+          background: info.withValues(alpha: isDark ? 0.18 : 0.12),
+          border: info.withValues(alpha: isDark ? 0.4 : 0.3),
+          iconBackground: info.withValues(alpha: isDark ? 0.2 : 0.15),
+          iconColor: info,
           textColor: isDark
-              ? BBColorPalette.slate100
-              : const Color(0xFF1E3A8A), // Blue 900
+              ? BBColor.textPrimaryDark
+              : const Color(0xFF3576BC), // info pressed/deep — AA on tint
         );
       case MessageBoxType.warning:
         return _MessageBoxColors(
-          // Amber/yellow colors (consistent with snackbars)
-          background: isDark
-              ? BBColorPalette.amber900.withAlpha((0.4 * 255).toInt())
-              : const Color(0xFFFEF3C7), // amber-100
-          border: isDark
-              ? warningDark.withAlpha((0.4 * 255).toInt())
-              : warningLight.withAlpha((0.4 * 255).toInt()),
-          iconBackground: isDark
-              ? warningDark.withAlpha((0.2 * 255).toInt())
-              : warningLight.withAlpha((0.15 * 255).toInt()),
-          iconColor: isDark ? warningDark : BBColorPalette.amber600,
-          textColor: isDark ? BBColorPalette.slate100 : BBColorPalette.amber900,
+          background: warning.withValues(alpha: isDark ? 0.22 : 0.16),
+          border: warning.withValues(alpha: 0.4),
+          iconBackground: warning.withValues(alpha: isDark ? 0.2 : 0.15),
+          // AA-safe darker amber on light tint (`--bb-status-pending`)
+          iconColor: isDark ? warning : BBColor.statusPending,
+          textColor: isDark ? BBColor.textPrimaryDark : BBColor.statusPending,
         );
     }
   }

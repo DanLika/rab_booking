@@ -223,25 +223,20 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
                         // Try Again button
                         SizedBox(
                           width: 170,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: context.gradients.brandPrimary,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: ElevatedButton.icon(
-                              onPressed: () => _tryAgain(context),
-                              icon: const Icon(Icons.refresh, size: 20),
-                              label: const Text('Try Again'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                foregroundColor: Colors.white,
-                                shadowColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                          child: ElevatedButton.icon(
+                            onPressed: () => _tryAgain(context),
+                            icon: const Icon(Icons.refresh, size: 20),
+                            label: const Text('Try Again'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onPrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                           ),

@@ -50,8 +50,8 @@ class TimelineSplitDayCell extends StatelessWidget {
           // Background with diagonal split
           CustomPaint(
             painter: SplitDayCellPainter(
-              checkOutColor: checkOutBooking.status.color,
-              checkInColor: checkInBooking.status.color,
+              checkOutColor: checkOutBooking.status.colorOf(context),
+              checkInColor: checkInBooking.status.colorOf(context),
             ),
             size: Size(width, cellHeight),
           ),
@@ -76,7 +76,7 @@ class TimelineSplitDayCell extends StatelessWidget {
                               l10n.ownerCalendarDefaultGuest,
                           style: TextStyle(
                             color: _getContrastTextColor(
-                              checkOutBooking.status.color,
+                              checkOutBooking.status.colorOf(context),
                             ),
                             fontWeight: FontWeight.w600,
                             fontSize: 10,
@@ -90,7 +90,7 @@ class TimelineSplitDayCell extends StatelessWidget {
                         Icons.logout,
                         size: 10,
                         color: _getContrastTextColor(
-                          checkOutBooking.status.color,
+                          checkOutBooking.status.colorOf(context),
                         ).withValues(alpha: 0.7),
                       ),
                     ],
@@ -118,7 +118,7 @@ class TimelineSplitDayCell extends StatelessWidget {
                         Icons.login,
                         size: 10,
                         color: _getContrastTextColor(
-                          checkInBooking.status.color,
+                          checkInBooking.status.colorOf(context),
                         ).withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 4),
@@ -128,7 +128,7 @@ class TimelineSplitDayCell extends StatelessWidget {
                               l10n.ownerCalendarDefaultGuest,
                           style: TextStyle(
                             color: _getContrastTextColor(
-                              checkInBooking.status.color,
+                              checkInBooking.status.colorOf(context),
                             ),
                             fontWeight: FontWeight.w600,
                             fontSize: 10,

@@ -130,8 +130,13 @@ class BookingCardActions extends StatelessWidget {
           // Consistent button height for all buttons
           final buttonHeight = isVeryNarrow ? 40.0 : 44.0;
 
+          // Marionette/VM-driver test hooks — stable keys per booking action.
+          // Lookup format: ValueKey('booking_<action>_<bookingId>')
+          final bId = booking?.id ?? 'noid';
+
           // Define buttons - using slate colors for better dark mode visibility
           final detailsBtn = OutlinedButton.icon(
+            key: ValueKey('booking_details_$bId'),
             onPressed: onShowDetails,
             icon: Icon(
               Icons.visibility_outlined,
@@ -171,6 +176,7 @@ class BookingCardActions extends StatelessWidget {
 
           // Softirane boje za gumbe - manje agresivne
           final approveBtn = FilledButton.icon(
+            key: ValueKey('booking_approve_$bId'),
             onPressed: onApprove,
             icon: Icon(Icons.check_circle_outline, size: iconSize),
             label: Text(
@@ -193,6 +199,7 @@ class BookingCardActions extends StatelessWidget {
           );
 
           final rejectBtn = FilledButton.icon(
+            key: ValueKey('booking_reject_$bId'),
             onPressed: onReject,
             icon: Icon(Icons.cancel_outlined, size: iconSize),
             label: Text(
@@ -215,6 +222,7 @@ class BookingCardActions extends StatelessWidget {
           );
 
           final completeBtn = FilledButton.icon(
+            key: ValueKey('booking_complete_$bId'),
             onPressed: onComplete,
             icon: Icon(Icons.done_all_outlined, size: iconSize),
             label: Text(
@@ -237,6 +245,7 @@ class BookingCardActions extends StatelessWidget {
           );
 
           final cancelBtn = OutlinedButton.icon(
+            key: ValueKey('booking_cancel_$bId'),
             onPressed: onCancel,
             icon: Icon(
               Icons.close,

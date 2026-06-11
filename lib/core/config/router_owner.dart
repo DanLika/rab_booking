@@ -18,6 +18,7 @@ import '../../features/owner_dashboard/presentation/providers/owner_properties_p
 import '../../features/owner_dashboard/presentation/screens/dashboard_overview_tab.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_bookings_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/owner_booking_detail_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/property_form_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/unit_form_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/unit_pricing_screen.dart';
@@ -82,6 +83,7 @@ class OwnerRoutes {
   static const String calendarTimeline = '/owner/calendar/timeline';
   static const String calendarMonth = '/owner/calendar/month';
   static const String bookings = '/owner/bookings';
+  static const String bookingDetail = '/owner/bookings/:bookingId';
   static const String propertyNew = '/owner/properties/new';
   static const String propertyEdit = '/owner/properties/:id/edit';
   static const String units = '/owner/units';
@@ -521,6 +523,20 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           return PageTransitions.fade(
             key: ValueKey('bookings_${bookingId ?? "none"}'),
             child: OwnerBookingsScreen(initialBookingId: bookingId),
+          );
+        },
+      ),
+      GoRoute(
+        // Full-route booking detail (premium B4b). See
+        // owner_booking_detail_screen.dart for the composition + frozen-scope
+        // analysis. The legacy `BookingDetailsDialogV2` modal still serves
+        // call sites that have not yet migrated to `context.push`.
+        path: OwnerRoutes.bookingDetail,
+        pageBuilder: (context, state) {
+          final bookingId = state.pathParameters['bookingId'] ?? '';
+          return PageTransitions.slideRight(
+            key: ValueKey('booking_detail_$bookingId'),
+            child: OwnerBookingDetailScreen(bookingId: bookingId),
           );
         },
       ),

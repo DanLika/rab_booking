@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/config/router_owner.dart';
-import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -19,6 +18,7 @@ import '../../../widget/presentation/providers/widget_settings_provider.dart'
     as widget_provider;
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../providers/user_profile_provider.dart';
 import '../../../../shared/widgets/universal_loader.dart';
 
@@ -675,54 +675,20 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
 
                 const SizedBox(height: 32),
 
-                // Gradient save button (uses brand gradient)
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: BBGradient.brandPrimary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _isSaving ? null : _saveSettings,
-                      borderRadius: BorderRadius.circular(10),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 15,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _isSaving
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.check,
-                                    size: 18,
-                                    color: Colors.white,
-                                  ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _isSaving
-                                  ? l10n.widgetSettingsSaving
-                                  : l10n.widgetSettingsSave,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                // Primary save CTA via `BbButton` (handoff brand purple +
+                // `--bb-shadow-purple-sm`). Replaces the hand-rolled
+                // `Container(gradient) + Material + InkWell + Icons.check`
+                // chrome so the surface tracks the design-system primary
+                // button (hover-lift, focus ring, loading spinner included).
+                BbButton(
+                  label: _isSaving
+                      ? l10n.widgetSettingsSaving
+                      : l10n.widgetSettingsSave,
+                  iconLeft: _isSaving ? null : 'check',
+                  size: BbButtonSize.lg,
+                  fullWidth: true,
+                  loading: _isSaving,
+                  onPressed: _isSaving ? null : _saveSettings,
                 ),
               ],
             ),
@@ -837,7 +803,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                           height: 2,
                           width: 40,
                           decoration: BoxDecoration(
-                            gradient: BBGradient.brandPrimary,
+                            color: theme.colorScheme.primary,
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
@@ -988,7 +954,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                           height: 2,
                           width: 40,
                           decoration: BoxDecoration(
-                            gradient: BBGradient.brandPrimary,
+                            color: theme.colorScheme.primary,
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
@@ -1520,7 +1486,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                           height: 2,
                           width: 40,
                           decoration: BoxDecoration(
-                            gradient: BBGradient.brandPrimary,
+                            color: theme.colorScheme.primary,
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),

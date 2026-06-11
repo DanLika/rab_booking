@@ -75,7 +75,7 @@ class BookingContextMenu extends StatelessWidget {
                               width: 8,
                               height: 8,
                               decoration: BoxDecoration(
-                                color: booking.status.color,
+                                color: booking.status.colorOf(context),
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -331,7 +331,7 @@ class BookingContextMenu extends StatelessWidget {
               width: 10,
               height: 10,
               decoration: BoxDecoration(
-                color: status.color,
+                color: status.colorOf(context),
                 shape: BoxShape.circle,
               ),
             ),

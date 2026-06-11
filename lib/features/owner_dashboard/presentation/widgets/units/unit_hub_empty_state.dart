@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/widgets/card.dart';
 
@@ -39,29 +38,35 @@ class UnitHubEmptyState extends StatelessWidget {
   }
 
   Widget _buildHeroSection(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 48, 24, 80),
-      decoration: BoxDecoration(gradient: context.gradients.brandPrimary),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.4)),
+        ),
+      ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.apartment_rounded,
               size: 48,
-              color: Colors.white,
+              color: theme.colorScheme.primary,
             ),
           ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
           const SizedBox(height: 24),
           Text(
             l10n.unitHubEmptyWelcome,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
@@ -69,8 +74,8 @@ class UnitHubEmptyState extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             l10n.unitHubEmptyDescription,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.white.withValues(alpha: 0.9),
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               height: 1.5,
             ),
             textAlign: TextAlign.center,

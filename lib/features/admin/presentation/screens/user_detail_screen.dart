@@ -86,114 +86,118 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userAsync = ref.watch(userDetailProvider(widget.userId));
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < _mobileBreakpoint;
-
     return Scaffold(
       backgroundColor: Colors.transparent, // Uses shell background
-      body: userAsync.when(
-        data: (user) {
-          if (user == null) return const _ErrorState(message: 'User not found');
-
-          // Initialize state if needed
-          _hideSubscription ??= user.hideSubscription;
-
-          return Column(
-            children: [
-              // Header
-              _buildHeader(context, user),
-
-              // Content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: isMobile
-                      ? Column(
-                          children: [
-                            _InfoCard(user: user),
-                            const SizedBox(height: 16),
-                            _StatisticsCard(user: user),
-                            const SizedBox(height: 16),
-                            _UserStatusCard(
-                              user: user,
-                              isLoading: _isLoading,
-                              onStatusChange: (status) =>
-                                  _updateUserStatus(user, status),
-                            ),
-                            const SizedBox(height: 16),
-                            _AdminControlsCard(
-                              hideSubscription: _hideSubscription ?? false,
-                              isLoading: _isLoading,
-                              onHideSubscriptionChanged: (val) =>
-                                  setState(() => _hideSubscription = val),
-                              onSave: () => _saveChanges(user),
-                            ),
-                            const SizedBox(height: 16),
-                            _LifetimeLicenseCard(
-                              user: user,
-                              isLoading: _isLoading,
-                              onGrant: () => _grantLifetimeLicense(user),
-                              onRevoke: () => _revokeLifetimeLicense(user),
-                            ),
-                          ],
-                        )
-                      : Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Left Column (Info & Stats)
-                            Expanded(
-                              flex: 2,
-                              child: Column(
-                                children: [
-                                  _InfoCard(user: user),
-                                  const SizedBox(height: 24),
-                                  _StatisticsCard(user: user),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 24),
-                            // Right Column (Admin Controls)
-                            Expanded(
-                              flex: 3,
-                              child: Column(
-                                children: [
-                                  _UserStatusCard(
-                                    user: user,
-                                    isLoading: _isLoading,
-                                    onStatusChange: (status) =>
-                                        _updateUserStatus(user, status),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  _AdminControlsCard(
-                                    hideSubscription:
-                                        _hideSubscription ?? false,
-                                    isLoading: _isLoading,
-                                    onHideSubscriptionChanged: (val) =>
-                                        setState(() => _hideSubscription = val),
-                                    onSave: () => _saveChanges(user),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  _LifetimeLicenseCard(
-                                    user: user,
-                                    isLoading: _isLoading,
-                                    onGrant: () => _grantLifetimeLicense(user),
-                                    onRevoke: () =>
-                                        _revokeLifetimeLicense(user),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-            ],
-          );
-        },
-        loading: () => const Center(child: BbSpinner(size: 24)),
-        error: (err, _) => _ErrorState(message: err.toString()),
+      // Content-width breakpoint (audit/122): the adaptive shell reserves
+      // 260/72px for sidebar/rail, so window width over-reports space.
+      body: LayoutBuilder(
+        builder: (context, constraints) =>
+            _buildBody(context, constraints.maxWidth < _mobileBreakpoint),
       ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, bool isMobile) {
+    final userAsync = ref.watch(userDetailProvider(widget.userId));
+    return userAsync.when(
+      data: (user) {
+        if (user == null) return const _ErrorState(message: 'User not found');
+
+        // Initialize state if needed
+        _hideSubscription ??= user.hideSubscription;
+
+        return Column(
+          children: [
+            // Header
+            _buildHeader(context, user),
+
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: isMobile
+                    ? Column(
+                        children: [
+                          _InfoCard(user: user),
+                          const SizedBox(height: 16),
+                          _StatisticsCard(user: user),
+                          const SizedBox(height: 16),
+                          _UserStatusCard(
+                            user: user,
+                            isLoading: _isLoading,
+                            onStatusChange: (status) =>
+                                _updateUserStatus(user, status),
+                          ),
+                          const SizedBox(height: 16),
+                          _AdminControlsCard(
+                            hideSubscription: _hideSubscription ?? false,
+                            isLoading: _isLoading,
+                            onHideSubscriptionChanged: (val) =>
+                                setState(() => _hideSubscription = val),
+                            onSave: () => _saveChanges(user),
+                          ),
+                          const SizedBox(height: 16),
+                          _LifetimeLicenseCard(
+                            user: user,
+                            isLoading: _isLoading,
+                            onGrant: () => _grantLifetimeLicense(user),
+                            onRevoke: () => _revokeLifetimeLicense(user),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Left Column (Info & Stats)
+                          Expanded(
+                            flex: 2,
+                            child: Column(
+                              children: [
+                                _InfoCard(user: user),
+                                const SizedBox(height: 24),
+                                _StatisticsCard(user: user),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          // Right Column (Admin Controls)
+                          Expanded(
+                            flex: 3,
+                            child: Column(
+                              children: [
+                                _UserStatusCard(
+                                  user: user,
+                                  isLoading: _isLoading,
+                                  onStatusChange: (status) =>
+                                      _updateUserStatus(user, status),
+                                ),
+                                const SizedBox(height: 24),
+                                _AdminControlsCard(
+                                  hideSubscription: _hideSubscription ?? false,
+                                  isLoading: _isLoading,
+                                  onHideSubscriptionChanged: (val) =>
+                                      setState(() => _hideSubscription = val),
+                                  onSave: () => _saveChanges(user),
+                                ),
+                                const SizedBox(height: 24),
+                                _LifetimeLicenseCard(
+                                  user: user,
+                                  isLoading: _isLoading,
+                                  onGrant: () => _grantLifetimeLicense(user),
+                                  onRevoke: () => _revokeLifetimeLicense(user),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: BbSpinner(size: 24)),
+      error: (err, _) => _ErrorState(message: err.toString()),
     );
   }
 

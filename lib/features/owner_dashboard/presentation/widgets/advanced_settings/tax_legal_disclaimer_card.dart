@@ -5,7 +5,6 @@ import '../../../../../core/theme/theme_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
-import '../../../../../core/design/tokens.dart';
 
 /// Tax & Legal Disclaimer Settings Card
 ///
@@ -93,7 +92,7 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
                     height: 2,
                     width: 40,
                     decoration: BoxDecoration(
-                      gradient: BBGradient.brandPrimary,
+                      color: theme.colorScheme.primary,
                       borderRadius: BorderRadius.circular(1),
                     ),
                   ),

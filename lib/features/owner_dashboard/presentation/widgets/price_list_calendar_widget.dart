@@ -944,11 +944,16 @@ class _PriceListCalendarWidgetState
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Gradient Header
+                    // Theme-aware shell header
                     Container(
                       padding: EdgeInsets.all(isMobile ? 16 : 20),
                       decoration: BoxDecoration(
-                        gradient: context.gradients.brandPrimary,
+                        color: theme.colorScheme.surface,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: theme.dividerColor.withValues(alpha: 0.4),
+                          ),
+                        ),
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(11),
                         ),
@@ -958,14 +963,14 @@ class _PriceListCalendarWidgetState
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.white.withAlpha(
-                                (0.2 * 255).toInt(),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.10,
                               ),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.calendar_today,
-                              color: Colors.white,
+                              color: theme.colorScheme.primary,
                               size: 24,
                             ),
                           ),
@@ -981,7 +986,7 @@ class _PriceListCalendarWidgetState
                                   style: TextStyle(
                                     fontSize: isMobile ? 16 : 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: theme.colorScheme.onSurface,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -992,9 +997,8 @@ class _PriceListCalendarWidgetState
                                   ).format(date),
                                   style: TextStyle(
                                     fontSize: isMobile ? 12 : 14,
-                                    color: Colors.white.withAlpha(
-                                      (0.9 * 255).toInt(),
-                                    ),
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.7),
                                   ),
                                 ),
                               ],
@@ -1482,11 +1486,16 @@ class _PriceListCalendarWidgetState
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header with gradient
+                  // Theme-aware shell header
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: context.gradients.brandPrimary,
+                      color: theme.colorScheme.surface,
+                      border: Border(
+                        bottom: BorderSide(
+                          color: theme.dividerColor.withValues(alpha: 0.4),
+                        ),
+                      ),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(16),
                       ),
@@ -1496,12 +1505,14 @@ class _PriceListCalendarWidgetState
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.10,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.euro,
-                            color: Colors.white,
+                            color: theme.colorScheme.primary,
                             size: 20,
                           ),
                         ),
@@ -1511,15 +1522,18 @@ class _PriceListCalendarWidgetState
                             l10nDialog.priceCalendarSetPriceForDays(
                               _selectedDays.length,
                             ),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
+                          icon: Icon(
+                            Icons.close,
+                            color: theme.colorScheme.onSurface,
+                          ),
                           onPressed: () => Navigator.of(context).pop(),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -1628,7 +1642,7 @@ class _PriceListCalendarWidgetState
                         Expanded(
                           child: Container(
                             decoration: BoxDecoration(
-                              gradient: context.gradients.brandPrimary,
+                              color: theme.colorScheme.primary,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Material(
@@ -1898,11 +1912,16 @@ class _PriceListCalendarWidgetState
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header with gradient
+                  // Theme-aware shell header
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: context.gradients.brandPrimary,
+                      color: theme.colorScheme.surface,
+                      border: Border(
+                        bottom: BorderSide(
+                          color: theme.dividerColor.withValues(alpha: 0.4),
+                        ),
+                      ),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(16),
                       ),
@@ -1912,12 +1931,14 @@ class _PriceListCalendarWidgetState
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.10,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.block,
-                            color: Colors.white,
+                            color: theme.colorScheme.primary,
                             size: 20,
                           ),
                         ),
@@ -1927,15 +1948,18 @@ class _PriceListCalendarWidgetState
                             l10nDialog.priceCalendarAvailabilityForDays(
                               _selectedDays.length,
                             ),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
+                          icon: Icon(
+                            Icons.close,
+                            color: theme.colorScheme.onSurface,
+                          ),
                           onPressed: () => Navigator.of(context).pop(),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),

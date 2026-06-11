@@ -206,19 +206,22 @@ async function deleteInBatches(
         error: batchError instanceof Error ? batchError.message : String(batchError),
       });
 
-      for (const doc of chunk) {
-        try {
-          await doc.ref.delete();
-          results.successCount++;
-        } catch (docError) {
-          results.failedCount++;
-          results.failedIds.push(doc.id);
-          logError(`[Cleanup] Failed to delete document ${doc.id}`, docError, {
-            bookingId: doc.id,
-            bookingReference: doc.data().booking_reference,
-          });
-        }
-      }
+      // Parallel fallback deletes (PR #699) — chunk is batchSize-bounded;
+      // counter mutations are safe under Node's single-threaded event loop.
+      await Promise.all(chunk.map((doc) =>
+        doc.ref.delete()
+          .then(() => {
+            results.successCount++;
+          })
+          .catch((docError) => {
+            results.failedCount++;
+            results.failedIds.push(doc.id);
+            logError(`[Cleanup] Failed to delete document ${doc.id}`, docError, {
+              bookingId: doc.id,
+              bookingReference: doc.data().booking_reference,
+            });
+          })
+      ));
     }
   }
 

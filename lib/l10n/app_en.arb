@@ -570,6 +570,8 @@
   "ownerYearlyRevenue": "Revenue this year",
   "ownerMonthlyBookings": "Bookings this month",
   "ownerUpcomingCheckIns": "Upcoming check-ins",
+  "ownerDashboardNewGuests": "New guests",
+  "ownerDashboardAvgRating": "Average rating",
   "ownerActiveProperties": "Active properties",
   "ownerOccupancyRate": "Occupancy rate",
   "ownerDashboardRevenue": "Revenue",
@@ -895,6 +897,7 @@
   "ownerTableCancelledByOwner": "Cancelled by owner",
 
   "ownerDetailsTitle": "Booking details",
+  "ownerDetailsAwaitingApproval": "This booking is awaiting your approval",
   "ownerDetailsBookingInfo": "Booking information",
   "ownerDetailsBookingId": "ID",
   "ownerDetailsStatus": "Status",

@@ -5,6 +5,7 @@ import '../../../../core/accessibility/accessibility_helpers.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/widgets/message_box.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/async_utils.dart';
@@ -200,12 +201,18 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Gradient Header - matches CommonAppBar height (52px)
+              // Shell-tone header (handoff dialogs.jsx PV_PANEL_BG) — matches
+              // the bookings filters / create-booking / edit-booking dialogs.
               Container(
                 height: ResponsiveDialogUtils.kHeaderHeight,
                 padding: EdgeInsets.symmetric(horizontal: headerPadding),
                 decoration: BoxDecoration(
-                  gradient: context.gradients.brandPrimary,
+                  color: theme.colorScheme.surface,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: theme.dividerColor.withValues(alpha: 0.4),
+                    ),
+                  ),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(11),
                   ),
@@ -215,12 +222,14 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.10,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.email,
-                        color: Colors.white,
+                        color: theme.colorScheme.primary,
                         size: 20,
                       ),
                     ),
@@ -228,16 +237,16 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                     Expanded(
                       child: Text(
                         l10n.sendEmailTitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                     ),
                     AccessibleIconButton(
                       icon: Icons.close,
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                       onPressed: _isLoading
                           ? null
                           : () => Navigator.of(context).pop(),
@@ -527,58 +536,15 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                     const SizedBox(width: 12),
                     Expanded(
                       flex: 2,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: context.gradients.brandPrimary,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.3,
-                              ),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton.icon(
-                          onPressed: _isLoading ? null : _sendEmail,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            // Keep same colors when disabled (loading state)
-                            disabledBackgroundColor: Colors.transparent,
-                            disabledForegroundColor: Colors.white,
-                            shadowColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          icon: _isLoading
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.send, size: 20),
-                          label: AutoSizeText(
-                            _isLoading
-                                ? l10n.sendEmailSending
-                                : l10n.sendEmailSend,
-                            maxLines: 1,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                      child: BbButton(
+                        label: _isLoading
+                            ? l10n.sendEmailSending
+                            : l10n.sendEmailSend,
+                        iconLeft: _isLoading ? null : 'send',
+                        size: BbButtonSize.lg,
+                        fullWidth: true,
+                        loading: _isLoading,
+                        onPressed: _isLoading ? null : _sendEmail,
                       ),
                     ),
                   ],

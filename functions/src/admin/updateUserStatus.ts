@@ -1,6 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "../firebase";
 import {logError, logSuccess} from "../logger";
+import {getCorsAllowlist} from "../utils/corsAllowlist";
 
 /**
  * Admin: Update User Status
@@ -26,6 +27,7 @@ interface UpdateUserStatusRequest {
 export const updateUserStatus = onCall(
   {
     region: "europe-west1",
+    cors: getCorsAllowlist(),
   },
   async (request) => {
     // 1. Security Check: Ensure the caller is authenticated

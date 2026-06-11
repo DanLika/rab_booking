@@ -168,7 +168,8 @@ void main() {
 
   group('BbCard surface resolution (admin/owner discrimination)', () {
     testWidgets('owner dark context (no BbAdminDarkTokens extension) renders '
-        'BBColor.dark.surface (#121212)', (WidgetTester tester) async {
+        'BBColor.dark.surface (#121212 — mockup --bb-surface dark, cards '
+        'lift above the #0B0B0D panel)', (WidgetTester tester) async {
       await tester.pumpWidget(
         _scaffoldWithTheme(
           ThemeData.dark(useMaterial3: true),

@@ -30,8 +30,9 @@ cp android/app/google-services.json.backup android/app/google-services.json
 grep project_id android/app/google-services.json
 # Should print:    "project_id": "bookbed-dev",
 
-# 4. Run with explicit dev target (Android requires --release flag — see "Debug Build Bug" below)
-flutter run -d <android-device-id> --release --target lib/main_dev.dart
+# 4. Run with explicit dev target (--debug for Marionette/adb smokes,
+#    --release for plain runs — see "Debug vs release builds" below)
+flutter run -d <android-device-id> --debug --target lib/main_dev.dart
 
 # (or the widget entry, depending on what you're testing)
 flutter run -d <android-device-id> --release --target lib/widget_main_dev.dart
@@ -63,9 +64,19 @@ Release builds (prod deploys) skip the check — the asserts ONLY fire in debug 
 
 ## Android-specific build gotchas
 
-### Debug build bug — use `--release` for Android
+### Debug vs release builds — pick per task (rule updated 2026-06-11)
 
-Per `.claude/rules/hosting-build.md`: the `firebase_storage` plugin does not compile its Kotlin code before Java code in debug mode, causing a build failure on Android. Workaround: always use `--release` flag for Android (`flutter run -d <android-id> --release`). Hot reload is NOT available in this mode. Web + iOS Simulator are unaffected and can use debug mode normally.
+Historical: `firebase_storage` < 13 failed `assembleDebug` (Kotlin-before-Java
+compile order), which made `--release` mandatory. On `firebase_storage: ^13`
++ Flutter 3.38.5 debug builds work again (verified audit/63, Pixel_8 —
+`memory/android-debug-build-firebase-storage-13.md`).
+
+- **UI-automation smokes (Marionette / adb taps): use `--debug`.** Release
+  builds expose the UI as a single Surface to uiautomator — coord-taps fire
+  but miss widgets (`memory/android-release-mode-adb-opacity.md`, F-T3-02).
+- **Plain manual runs / perf checks: `--release` is still fine.** If a debug
+  build fails after a dep bump, first retry with `--release` (per
+  `.claude/rules/hosting-build.md`).
 
 ### AAB build blocker — use `tool/build_aab.sh` (both local + CI)
 
@@ -89,7 +100,7 @@ tool/build_aab.sh
 tool/build_aab.sh --release --target lib/widget_main.dart
 ```
 
-Verified produces a working AAB. See `audit/16-android-regression-full.md` Appendix B for the full reproduction + fix derivation.
+Verified produces a working AAB. Full reproduction + fix derivation: `memory/aab-build-blocker.md` + `tool/build_aab.sh` header (audit/16 pruned — git history).
 
 **CI parity** (enabled 2026-05-22, commit `739655b4`, merged via `21d57f49`):
 `.github/workflows/ci.yml` `build-android` job runs `./tool/build_aab.sh --release`
@@ -124,7 +135,7 @@ If you see any of these, stop immediately and check:
 
 ## Permanent fix (NOT yet implemented)
 
-Tracked in `audit/16-android-regression-full.md` F-Android-011 + `.claude/rules/ios-development.md` analog: add `productFlavors { dev { applicationIdSuffix ".dev" }; staging { ... }; prod { ... } }` to `android/app/build.gradle.kts`, with per-env `src/dev/google-services.json` / `src/staging/google-services.json` / `src/prod/google-services.json` files committed. Gradle picks the right file based on the flavor.
+Tracked as F-Android-011 (audit/16, pruned) + `.claude/rules/ios-development.md` analog: add `productFlavors { dev { applicationIdSuffix ".dev" }; staging { ... }; prod { ... } }` to `android/app/build.gradle.kts`, with per-env `src/dev/google-services.json` / `src/staging/google-services.json` / `src/prod/google-services.json` files committed. Gradle picks the right file based on the flavor.
 
 Together with iOS Xcode `Debug-dev` / `Debug-staging` schemes, this eliminates the entire manual swap class of bugs. Larger change; needs Gradle + Xcode edits + 3 per-env config files committed.
 
@@ -137,6 +148,5 @@ Until that lands, use the manual procedure above and rely on the Dart asserts as
 - `.claude/rules/deep-links.md` — warm + cold start coverage matrix
 - `audit/14-deploy-scripts-mismatch.md` — origin of the swap-based contamination class
 - `audit/15-prod-contamination-deep-check.md` — Stripe Connect contamination cleanup recipe
-- `audit/16-android-regression-full.md` — first Android regression run + AAB blocker resolution
 - `memory/wave0-test-findings.md` — Wave 0 "drop --flavor dev" gotcha that triggered the contamination
 - `memory/aab-build-blocker.md` — AAB blocker resolution history (+ CI status)

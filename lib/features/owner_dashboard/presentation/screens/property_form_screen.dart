@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/async_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -17,7 +16,7 @@ import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
-import '../../../../shared/widgets/gradient_button.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../../../shared/widgets/app_filter_chip.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_calendar_provider.dart';
@@ -740,15 +739,18 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                               ),
                               const SizedBox(height: AppDimensions.spaceL),
 
-                              // Modern Gradient Save Button - uses brand gradient (BBGradient.brandPrimary)
-                              GradientButton(
-                                text: _isEditing
+                              // Primary save CTA on design-system `BbButton`
+                              // (matches Bank Account / Edit Profile / Widget
+                              // Settings — handoff `--bb-primary` brand purple).
+                              BbButton(
+                                label: _isEditing
                                     ? l10n.propertyFormSaveChanges
                                     : l10n.propertyFormAddProperty,
-                                onPressed: _handleSave,
-                                isLoading: _isLoading,
-                                icon: _isEditing ? Icons.save : Icons.add,
-                                width: double.infinity,
+                                iconLeft: _isEditing ? 'save' : 'add',
+                                size: BbButtonSize.lg,
+                                fullWidth: true,
+                                loading: _isLoading,
+                                onPressed: _isLoading ? null : _handleSave,
                               ),
                               const SizedBox(height: AppDimensions.spaceXL),
                             ],
@@ -773,15 +775,19 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.all(16),
-                                      decoration: const BoxDecoration(
-                                        gradient: BBGradient.brandPrimary,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const CircularProgressIndicator(
+                                      child: CircularProgressIndicator(
                                         strokeWidth: 3,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimary,
                                             ),
                                       ),
                                     ),

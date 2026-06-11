@@ -1,7 +1,9 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../../../core/config/router_owner.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -15,7 +17,6 @@ import '../../../../../shared/models/booking_model.dart';
 import '../../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../providers/owner_bookings_provider.dart';
 import '../../../../../shared/providers/repository_providers.dart';
-import '../booking_details_dialog_v2.dart';
 import '../edit_booking_dialog.dart';
 import '../send_email_dialog.dart';
 import '../../../../../shared/widgets/platform_icon.dart';
@@ -333,14 +334,14 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: booking.status.color.withValues(alpha: 0.2),
+              color: booking.status.colorOf(context).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: booking.status.color),
+              border: Border.all(color: booking.status.colorOf(context)),
             ),
             child: Text(
               booking.status.displayNameLocalized(context),
               style: TextStyle(
-                color: booking.status.color,
+                color: booking.status.colorOf(context),
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
@@ -571,10 +572,11 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
   }
 
   void _showBookingDetails(OwnerBooking ownerBooking) {
-    showDialog(
-      context: context,
-      builder: (context) => BookingDetailsDialogV2(ownerBooking: ownerBooking),
-    );
+    // Premium B4b: navigate to full-route booking detail.
+    // Legacy modal `BookingDetailsDialogV2` is still available; other call
+    // sites that have not migrated continue to use it.
+    final id = ownerBooking.booking.id;
+    context.push(OwnerRoutes.bookingDetail.replaceFirst(':bookingId', id));
   }
 
   void _showBookingDetailsById(String bookingId) {

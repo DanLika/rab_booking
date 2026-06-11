@@ -18,161 +18,197 @@ class AdminDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final signupsAsync = ref.watch(recentSignupsProvider);
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < _mobileBreakpoint;
-    final isTablet = width >= _mobileBreakpoint && width < _tabletBreakpoint;
     final palette = _DashboardPalette.of(context, ref);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const BbSectionHeader(title: 'Dashboard Overview'),
-            const SizedBox(height: 4),
-            Text(
-              'Welcome back! Here is what\'s happening with your platform.',
-              style: BBType.body(
-                context,
-              ).copyWith(color: palette.textSecondary),
-            ),
-            const SizedBox(height: 32),
-            statsAsync.when(
-              data: (stats) {
-                final totalOwners = stats['totalOwners'] ?? 0;
-                final trialUsers = stats['trialUsers'] ?? 0;
-                final premiumUsers = stats['premiumUsers'] ?? 0;
-                final lifetimeUsers = stats['lifetimeUsers'] ?? 0;
+      // LayoutBuilder (not MediaQuery): the adaptive shell reserves 260/72px
+      // for the sidebar/rail, so breakpoints must key on CONTENT width.
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final isMobile = width < _mobileBreakpoint;
+          final isTablet =
+              width >= _mobileBreakpoint && width < _tabletBreakpoint;
+          return _DashboardBody(
+            statsAsync: statsAsync,
+            signupsAsync: signupsAsync,
+            palette: palette,
+            width: width,
+            isMobile: isMobile,
+            isTablet: isTablet,
+            onRetry: () => ref.invalidate(dashboardStatsProvider),
+          );
+        },
+      ),
+    );
+  }
+}
 
-                final statsItems = <_StatItem>[
-                  _StatItem(
-                    title: 'Total Owners',
-                    value: totalOwners.toString(),
-                    icon: Icons.people,
-                    color: AppColors.info,
-                  ),
-                  _StatItem(
-                    title: 'Trial Users',
-                    value: trialUsers.toString(),
-                    icon: Icons.timer,
-                    color: AppColors.warning,
-                  ),
-                  _StatItem(
-                    title: 'Premium Users',
-                    value: premiumUsers.toString(),
-                    icon: Icons.star,
-                    color: AppColors.success,
-                  ),
-                  _StatItem(
-                    title: 'Lifetime Licenses',
-                    value: lifetimeUsers.toString(),
-                    icon: Icons.verified,
-                    color: AppColors.primary,
-                  ),
-                ];
+class _DashboardBody extends StatelessWidget {
+  final AsyncValue<Map<String, int>> statsAsync;
+  final AsyncValue<Map<String, int>> signupsAsync;
+  final _DashboardPalette palette;
+  final double width;
+  final bool isMobile;
+  final bool isTablet;
+  final VoidCallback onRetry;
 
-                final availableWidth = width - 48;
-                final columns = (isMobile || isTablet) ? 2 : 4;
-                final totalSpacing = (columns - 1) * 16.0;
-                final itemWidth = (availableWidth - totalSpacing) / columns;
+  const _DashboardBody({
+    required this.statsAsync,
+    required this.signupsAsync,
+    required this.palette,
+    required this.width,
+    required this.isMobile,
+    required this.isTablet,
+    required this.onRetry,
+  });
 
-                final paidUsers = premiumUsers + lifetimeUsers;
-                final conversionRate = totalOwners > 0
-                    ? (paidUsers / totalOwners * 100)
-                    : 0.0;
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const BbSectionHeader(title: 'Dashboard Overview'),
+          const SizedBox(height: 4),
+          Text(
+            'Welcome back! Here is what\'s happening with your platform.',
+            style: BBType.body(context).copyWith(color: palette.textSecondary),
+          ),
+          const SizedBox(height: 32),
+          statsAsync.when(
+            data: (stats) {
+              final totalOwners = stats['totalOwners'] ?? 0;
+              final trialUsers = stats['trialUsers'] ?? 0;
+              final premiumUsers = stats['premiumUsers'] ?? 0;
+              final lifetimeUsers = stats['lifetimeUsers'] ?? 0;
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: statsItems
-                          .map(
-                            (item) => SizedBox(
-                              width: itemWidth < 140 ? 140 : itemWidth,
-                              child: _StatsCard(
-                                item: item,
-                                palette: palette,
-                                // admin-shell.jsx AdmKpi `compact` mode:
-                                // padding 14 + value 24 (vs default 20 / 30)
-                                // on tablet/mobile breakpoints.
-                                compact: isMobile || isTablet,
-                              ),
+              final statsItems = <_StatItem>[
+                _StatItem(
+                  title: 'Total Owners',
+                  value: totalOwners.toString(),
+                  icon: Icons.people,
+                  color: AppColors.info,
+                ),
+                _StatItem(
+                  title: 'Trial Users',
+                  value: trialUsers.toString(),
+                  icon: Icons.timer,
+                  color: AppColors.warning,
+                ),
+                _StatItem(
+                  title: 'Premium Users',
+                  value: premiumUsers.toString(),
+                  icon: Icons.star,
+                  color: AppColors.success,
+                ),
+                _StatItem(
+                  title: 'Lifetime Licenses',
+                  value: lifetimeUsers.toString(),
+                  icon: Icons.verified,
+                  color: AppColors.primary,
+                ),
+              ];
+
+              final availableWidth = width - 48;
+              final columns = (isMobile || isTablet) ? 2 : 4;
+              final totalSpacing = (columns - 1) * 16.0;
+              final itemWidth = (availableWidth - totalSpacing) / columns;
+
+              final paidUsers = premiumUsers + lifetimeUsers;
+              final conversionRate = totalOwners > 0
+                  ? (paidUsers / totalOwners * 100)
+                  : 0.0;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: statsItems
+                        .map(
+                          (item) => SizedBox(
+                            width: itemWidth < 140 ? 140 : itemWidth,
+                            child: _StatsCard(
+                              item: item,
+                              palette: palette,
+                              // admin-shell.jsx AdmKpi `compact` mode:
+                              // padding 14 + value 24 (vs default 20 / 30)
+                              // on tablet/mobile breakpoints.
+                              compact: isMobile || isTablet,
                             ),
-                          )
-                          .toList(),
-                    ),
-                    const SizedBox(height: 16),
-                    const BbSectionHeader(
-                      title: 'Analytics',
-                      // admin-shell.jsx uses per-card `.bb-h3` (18/600) for
-                      // sub-section headers, not the page-level `.bb-h2`.
-                      level: BbSectionHeaderLevel.h3,
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: [
-                        SizedBox(
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  const BbSectionHeader(
+                    title: 'Analytics',
+                    // admin-shell.jsx uses per-card `.bb-h3` (18/600) for
+                    // sub-section headers, not the page-level `.bb-h2`.
+                    level: BbSectionHeaderLevel.h3,
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: [
+                      SizedBox(
+                        width: isMobile ? availableWidth : 280,
+                        child: _AnalyticsCard(
+                          title: 'Conversion Rate',
+                          subtitle: 'Trial to Paid',
+                          value: '${conversionRate.toStringAsFixed(1)}%',
+                          detail: '$paidUsers of $totalOwners owners',
+                          icon: Icons.trending_up,
+                          color: const Color(0xFF4A90D9),
+                          palette: palette,
+                        ),
+                      ),
+                      signupsAsync.when(
+                        data: (signups) => SizedBox(
                           width: isMobile ? availableWidth : 280,
                           child: _AnalyticsCard(
-                            title: 'Conversion Rate',
-                            subtitle: 'Trial to Paid',
-                            value: '${conversionRate.toStringAsFixed(1)}%',
-                            detail: '$paidUsers of $totalOwners owners',
-                            icon: Icons.trending_up,
-                            color: const Color(0xFF4A90D9),
+                            title: 'New Signups',
+                            subtitle: 'Last 7 days',
+                            value: signups['last7Days']?.toString() ?? '0',
+                            detail:
+                                '${signups['last30Days'] ?? 0} in last 30 days',
+                            icon: Icons.person_add,
+                            color: AppColors.primary,
                             palette: palette,
                           ),
                         ),
-                        signupsAsync.when(
-                          data: (signups) => SizedBox(
-                            width: isMobile ? availableWidth : 280,
-                            child: _AnalyticsCard(
-                              title: 'New Signups',
-                              subtitle: 'Last 7 days',
-                              value: signups['last7Days']?.toString() ?? '0',
-                              detail:
-                                  '${signups['last30Days'] ?? 0} in last 30 days',
-                              icon: Icons.person_add,
-                              color: AppColors.primary,
-                              palette: palette,
-                            ),
-                          ),
-                          loading: () => SizedBox(
-                            width: isMobile ? availableWidth : 280,
-                            height: 140,
-                            child: const Center(child: BbSpinner()),
-                          ),
-                          error: (_, _) => const SizedBox.shrink(),
-                        ),
-                        SizedBox(
+                        loading: () => SizedBox(
                           width: isMobile ? availableWidth : 280,
-                          child: _DistributionCard(
-                            totalOwners: totalOwners,
-                            trialUsers: trialUsers,
-                            premiumUsers: premiumUsers,
-                            lifetimeUsers: lifetimeUsers,
-                            palette: palette,
-                          ),
+                          height: 140,
+                          child: const Center(child: BbSpinner()),
                         ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-              loading: () => const _StatsLoading(),
-              error: (err, _) => _StatsError(
-                error: err.toString(),
-                onRetry: () => ref.invalidate(dashboardStatsProvider),
-              ),
-            ),
-          ],
-        ),
+                        error: (_, _) => const SizedBox.shrink(),
+                      ),
+                      SizedBox(
+                        width: isMobile ? availableWidth : 280,
+                        child: _DistributionCard(
+                          totalOwners: totalOwners,
+                          trialUsers: trialUsers,
+                          premiumUsers: premiumUsers,
+                          lifetimeUsers: lifetimeUsers,
+                          palette: palette,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+            loading: () => const _StatsLoading(),
+            error: (err, _) =>
+                _StatsError(error: err.toString(), onRetry: onRetry),
+          ),
+        ],
       ),
     );
   }
@@ -581,8 +617,9 @@ class _StatsError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SizedBox(
-        width: 420,
+      child: ConstrainedBox(
+        // maxWidth (not fixed width) so the card fits 390px mobile-web
+        constraints: const BoxConstraints(maxWidth: 420),
         child: BbCard(
           child: Column(
             mainAxisSize: MainAxisSize.min,

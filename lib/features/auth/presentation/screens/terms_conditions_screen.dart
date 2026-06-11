@@ -5,6 +5,7 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../shared/widgets/redesign.dart';
+import '../widgets/legal_tabs_row.dart';
 
 class TermsConditionsScreen extends StatefulWidget {
   const TermsConditionsScreen({super.key});
@@ -76,12 +77,30 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
     final rd = BbRedesignTokens.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    final isDesktop = screenWidth >= 900;
     final horizontalPadding = isMobile
         ? 16.0
         : screenWidth < 900
         ? 24.0
         : 32.0;
     final l10n = AppLocalizations.of(context);
+
+    final tocItems = <(String, String)>[
+      ('1. ${l10n.termsScreenSection1Title}', 'acceptance'),
+      ('2. ${l10n.termsScreenSection2Title}', 'license'),
+      ('3. ${l10n.termsScreenSection3Title}', 'booking'),
+      ('4. ${l10n.termsScreenSection4Title}', 'payment'),
+      ('5. ${l10n.termsScreenSection5Title}', 'cancellation'),
+      ('6. ${l10n.termsScreenSection6Title}', 'responsibilities'),
+      ('7. ${l10n.termsScreenSection7Title}', 'liability'),
+      ('8. ${l10n.termsScreenSection8Title}', 'modifications'),
+      ('9. ${l10n.termsScreenSection9Title}', 'governing'),
+      ('10. ${l10n.termsScreenSection10Title}', 'contact'),
+    ];
+
+    final lastUpdated = l10n.termsScreenLastUpdated(
+      DateTime.now().year.toString(),
+    );
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -99,128 +118,25 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
       ),
       body: SafeArea(
         child: Stack(
-          alignment:
-              Alignment.topLeft, // Explicit to avoid TextDirection null check
+          alignment: Alignment.topLeft,
           children: [
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1200),
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: horizontalPadding,
-                    vertical: isMobile ? 16 : 24,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _LegalHeaderCard(
-                        eyebrow: 'PRAVNO · UVJETI',
-                        title: l10n.termsScreenHeaderTitle,
-                        lastUpdated: l10n.termsScreenLastUpdated(
-                          DateTime.now().year.toString(),
-                        ),
+                child: isDesktop
+                    ? _buildDesktop(
+                        l10n: l10n,
+                        horizontalPadding: horizontalPadding,
+                        tocItems: tocItems,
+                        lastUpdated: lastUpdated,
+                      )
+                    : _buildMobile(
+                        l10n: l10n,
+                        horizontalPadding: horizontalPadding,
                         isMobile: isMobile,
+                        tocItems: tocItems,
+                        lastUpdated: lastUpdated,
                       ),
-                      SizedBox(height: isMobile ? 16 : 24),
-                      _LegalTocCard(
-                        title: l10n.termsScreenToc,
-                        items: [
-                          ('1. ${l10n.termsScreenSection1Title}', 'acceptance'),
-                          ('2. ${l10n.termsScreenSection2Title}', 'license'),
-                          ('3. ${l10n.termsScreenSection3Title}', 'booking'),
-                          ('4. ${l10n.termsScreenSection4Title}', 'payment'),
-                          (
-                            '5. ${l10n.termsScreenSection5Title}',
-                            'cancellation',
-                          ),
-                          (
-                            '6. ${l10n.termsScreenSection6Title}',
-                            'responsibilities',
-                          ),
-                          ('7. ${l10n.termsScreenSection7Title}', 'liability'),
-                          (
-                            '8. ${l10n.termsScreenSection8Title}',
-                            'modifications',
-                          ),
-                          ('9. ${l10n.termsScreenSection9Title}', 'governing'),
-                          ('10. ${l10n.termsScreenSection10Title}', 'contact'),
-                        ],
-                        onTapKey: _scrollToSection,
-                        isMobile: isMobile,
-                      ),
-                      SizedBox(height: isMobile ? 16 : 24),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['acceptance']!,
-                        title: l10n.termsScreenSection1Title,
-                        body: l10n.termsScreenSection1Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['license']!,
-                        title: l10n.termsScreenSection2Title,
-                        body: l10n.termsScreenSection2Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['booking']!,
-                        title: l10n.termsScreenSection3Title,
-                        body: l10n.termsScreenSection3Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['payment']!,
-                        title: l10n.termsScreenSection4Title,
-                        body: l10n.termsScreenSection4Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['cancellation']!,
-                        title: l10n.termsScreenSection5Title,
-                        body: l10n.termsScreenSection5Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['responsibilities']!,
-                        title: l10n.termsScreenSection6Title,
-                        body: l10n.termsScreenSection6Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['liability']!,
-                        title: l10n.termsScreenSection7Title,
-                        body: l10n.termsScreenSection7Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['modifications']!,
-                        title: l10n.termsScreenSection8Title,
-                        body: l10n.termsScreenSection8Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['governing']!,
-                        title: l10n.termsScreenSection9Title,
-                        body: l10n.termsScreenSection9Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['contact']!,
-                        title: l10n.termsScreenSection10Title,
-                        body: l10n.termsScreenSection10Body,
-                        isMobile: isMobile,
-                      ),
-                      SizedBox(height: isMobile ? 16 : 24),
-                      _LegalNoticeCard(
-                        icon: 'info',
-                        title: l10n.termsScreenLegalNotice,
-                        body: l10n.termsScreenLegalNoticeBody,
-                        isMobile: isMobile,
-                      ),
-                      SizedBox(height: isMobile ? 16 : 24),
-                    ],
-                  ),
-                ),
               ),
             ),
             if (_showScrollToTop)
@@ -238,10 +154,175 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
       ),
     );
   }
+
+  /// Desktop ≥900: 240px sticky TOC sidebar + doc column.
+  /// Sidebar is OUTSIDE the scrollable so it stays in viewport while the doc
+  /// column scrolls via [_scrollController].
+  Widget _buildDesktop({
+    required AppLocalizations l10n,
+    required double horizontalPadding,
+    required List<(String, String)> tocItems,
+    required String lastUpdated,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 240,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 28),
+              child: SingleChildScrollView(
+                child: _LegalTocSidebar(
+                  title: l10n.termsScreenToc,
+                  items: tocItems,
+                  onTapKey: _scrollToSection,
+                  lastUpdatedLabel: l10n.lastUpdated,
+                  lastUpdatedValue: lastUpdated,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 48),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.only(top: 24, bottom: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const LegalTabsRow(current: LegalTab.terms),
+                  const SizedBox(height: 28),
+                  _LegalDocHeader(
+                    eyebrow: 'PRAVNO · UVJETI',
+                    title: l10n.termsScreenHeaderTitle,
+                    lastUpdated: lastUpdated,
+                    isMobile: false,
+                  ),
+                  const SizedBox(height: 28),
+                  ..._sections(l10n),
+                  const SizedBox(height: 16),
+                  _LegalNoticeCard(
+                    icon: 'info',
+                    title: l10n.termsScreenLegalNotice,
+                    body: l10n.termsScreenLegalNoticeBody,
+                    isMobile: false,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Tablet/mobile <900: single column, TOC kept as card at top.
+  Widget _buildMobile({
+    required AppLocalizations l10n,
+    required double horizontalPadding,
+    required bool isMobile,
+    required List<(String, String)> tocItems,
+    required String lastUpdated,
+  }) {
+    return SingleChildScrollView(
+      controller: _scrollController,
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: isMobile ? 16 : 24,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const LegalTabsRow(current: LegalTab.terms),
+          SizedBox(height: isMobile ? 20 : 24),
+          _LegalDocHeader(
+            eyebrow: 'PRAVNO · UVJETI',
+            title: l10n.termsScreenHeaderTitle,
+            lastUpdated: lastUpdated,
+            isMobile: isMobile,
+          ),
+          SizedBox(height: isMobile ? 16 : 20),
+          _LegalTocCard(
+            title: l10n.termsScreenToc,
+            items: tocItems,
+            onTapKey: _scrollToSection,
+            isMobile: isMobile,
+          ),
+          SizedBox(height: isMobile ? 20 : 24),
+          ..._sections(l10n),
+          SizedBox(height: isMobile ? 8 : 16),
+          _LegalNoticeCard(
+            icon: 'info',
+            title: l10n.termsScreenLegalNotice,
+            body: l10n.termsScreenLegalNoticeBody,
+            isMobile: isMobile,
+          ),
+          SizedBox(height: isMobile ? 16 : 24),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _sections(AppLocalizations l10n) => [
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['acceptance']!,
+      title: l10n.termsScreenSection1Title,
+      body: l10n.termsScreenSection1Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['license']!,
+      title: l10n.termsScreenSection2Title,
+      body: l10n.termsScreenSection2Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['booking']!,
+      title: l10n.termsScreenSection3Title,
+      body: l10n.termsScreenSection3Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['payment']!,
+      title: l10n.termsScreenSection4Title,
+      body: l10n.termsScreenSection4Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['cancellation']!,
+      title: l10n.termsScreenSection5Title,
+      body: l10n.termsScreenSection5Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['responsibilities']!,
+      title: l10n.termsScreenSection6Title,
+      body: l10n.termsScreenSection6Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['liability']!,
+      title: l10n.termsScreenSection7Title,
+      body: l10n.termsScreenSection7Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['modifications']!,
+      title: l10n.termsScreenSection8Title,
+      body: l10n.termsScreenSection8Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['governing']!,
+      title: l10n.termsScreenSection9Title,
+      body: l10n.termsScreenSection9Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['contact']!,
+      title: l10n.termsScreenSection10Title,
+      body: l10n.termsScreenSection10Body,
+    ),
+  ];
 }
 
-class _LegalHeaderCard extends StatelessWidget {
-  const _LegalHeaderCard({
+/// Flat document header — eyebrow + display title + last-updated caption.
+/// Mirrors `legal.jsx` LegalDocHeader (no card wrap, design intentionally).
+class _LegalDocHeader extends StatelessWidget {
+  const _LegalDocHeader({
     required this.eyebrow,
     required this.title,
     required this.lastUpdated,
@@ -256,26 +337,57 @@ class _LegalHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
-    return BbCard(
-      padding: EdgeInsets.all(isMobile ? 16 : 20),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          eyebrow,
+          style: BBType.eyebrow(context).copyWith(color: c.primary),
+        ),
+        SizedBox(height: isMobile ? 8 : 12),
+        Text(
+          title,
+          style: isMobile ? BBType.h1(context) : BBType.display(context),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          lastUpdated,
+          style: BBType.bodyNum(context).copyWith(color: c.textTertiary),
+        ),
+      ],
+    );
+  }
+}
+
+/// Flat section — BbSectionHeader (h3) + body Text. No card.
+class _LegalFlatSection extends StatelessWidget {
+  const _LegalFlatSection({
+    required this.sectionKey,
+    required this.title,
+    required this.body,
+  });
+
+  final GlobalKey sectionKey;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Padding(
+      key: sectionKey,
+      padding: const EdgeInsets.only(bottom: 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          BbSectionHeader(title: title, level: BbSectionHeaderLevel.h3),
           Text(
-            eyebrow,
-            style: BBType.eyebrow(context).copyWith(color: c.primary),
-          ),
-          SizedBox(height: isMobile ? 8 : 12),
-          Text(
-            title,
-            style: isMobile ? BBType.h1(context) : BBType.display(context),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            lastUpdated,
-            style: BBType.bodyNum(context).copyWith(color: c.textTertiary),
+            body,
+            style: BBType.body(
+              context,
+            ).copyWith(height: 1.7, color: c.textSecondary),
           ),
         ],
       ),
@@ -283,6 +395,7 @@ class _LegalHeaderCard extends StatelessWidget {
   }
 }
 
+/// Mobile/tablet TOC — card containing tappable jump-links.
 class _LegalTocCard extends StatelessWidget {
   const _LegalTocCard({
     required this.title,
@@ -338,44 +451,86 @@ class _LegalTocCard extends StatelessWidget {
   }
 }
 
-class _LegalSectionCard extends StatelessWidget {
-  const _LegalSectionCard({
-    required this.sectionKey,
+/// Desktop sticky-sidebar TOC. Flat list with eyebrow label, jump-links,
+/// last-modified mini surface. Mirrors `legal.jsx` LegalToc.
+class _LegalTocSidebar extends StatelessWidget {
+  const _LegalTocSidebar({
     required this.title,
-    required this.body,
-    required this.isMobile,
+    required this.items,
+    required this.onTapKey,
+    required this.lastUpdatedLabel,
+    required this.lastUpdatedValue,
   });
 
-  final GlobalKey sectionKey;
   final String title;
-  final String body;
-  final bool isMobile;
+  final List<(String, String)> items;
+  final void Function(String) onTapKey;
+  final String lastUpdatedLabel;
+  final String lastUpdatedValue;
 
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
-    return Padding(
-      key: sectionKey,
-      padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
-      child: BbCard(
-        padding: EdgeInsets.all(isMobile ? 16 : 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            BbSectionHeader(title: title, level: BbSectionHeaderLevel.h3),
-            Text(
-              body,
-              style: BBType.body(
-                context,
-              ).copyWith(height: 1.7, color: c.textSecondary),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: BBType.eyebrow(
+            context,
+          ).copyWith(color: c.textTertiary, fontWeight: FontWeight.w700),
         ),
-      ),
+        const SizedBox(height: 12),
+        for (final item in items)
+          InkWell(
+            onTap: () => onTapKey(item.$2),
+            borderRadius: BBRadius.smAll,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 12),
+              child: Text(
+                item.$1,
+                style: BBType.body(context).copyWith(
+                  color: c.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: c.surfaceVariant,
+            borderRadius: BBRadius.smAll,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                lastUpdatedLabel.toUpperCase(),
+                style: BBType.eyebrow(context).copyWith(color: c.textTertiary),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                lastUpdatedValue,
+                style: BBType.bodyNum(context).copyWith(
+                  color: c.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
+/// Inline notice card — primary accent-left card with icon disc + title + body.
 class _LegalNoticeCard extends StatelessWidget {
   const _LegalNoticeCard({
     required this.icon,

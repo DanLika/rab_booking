@@ -41,7 +41,10 @@ void main() {
 
     test('fromJson throws on invalid types', () {
       expect(() => converter.fromJson(false), throwsArgumentError);
-      expect(() => converter.fromJson(_MockJSDate('not-a-date')), throwsArgumentError);
+      expect(
+        () => converter.fromJson(_MockJSDate('not-a-date')),
+        throwsArgumentError,
+      );
     });
 
     test('toJson converts DateTime correctly', () {

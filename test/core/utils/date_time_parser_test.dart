@@ -94,7 +94,10 @@ void main() {
       final dateTime = DateTime(2024, 12, 4);
       final timestamp = Timestamp.fromDate(dateTime);
       final defaultDate = DateTime(2020, 1, 1);
-      final parsed = DateTimeParser.fromTimestampOrDefault(timestamp, defaultDate);
+      final parsed = DateTimeParser.fromTimestampOrDefault(
+        timestamp,
+        defaultDate,
+      );
       expect(parsed.isAtSameMomentAs(dateTime), isTrue);
     });
 
@@ -132,7 +135,9 @@ void main() {
 
     test('parseFlexible handles Unix timestamp in milliseconds', () {
       final dateTime = DateTime(2024, 12, 4);
-      final parsed = DateTimeParser.parseFlexible(dateTime.millisecondsSinceEpoch);
+      final parsed = DateTimeParser.parseFlexible(
+        dateTime.millisecondsSinceEpoch,
+      );
       expect(parsed!.isAtSameMomentAs(dateTime), isTrue);
     });
 

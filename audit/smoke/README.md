@@ -23,5 +23,5 @@ wired into CI, run manually before rules deploys).
    on 2 dev docs. Backfilled to canonical `ical_export_token` + orphans removed;
    feed verified live (200 + 403 negative control). PROD unaffected (all 13
    units carry the canonical field per the earlier audit/92 matrix).
-2. **`npm run test:rules` not in CI** — rules regressions only caught when run
-   manually.
+2. ~~`npm run test:rules` not in CI~~ — CLOSED 2026-06-11: wired into the
+   always-running `validate-firestore-rules` job (Java 17 + emulator suite).

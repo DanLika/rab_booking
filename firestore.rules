@@ -616,7 +616,15 @@ service cloud.firestore {
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid
       );
       allow create: if false; // DISABLED - use subcollection path
-      allow update, delete: if isAuthenticated() &&
+      // F-98-01 (audit/98): mirror the subcollection's SF-068 deny — the
+      // CF-managed sync stats must not be direct-writable on legacy docs
+      // either (fake activity / freeze scheduled sync via future last_synced).
+      allow update: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['sync_count', 'event_count', 'last_synced']);
+      allow delete: if isAuthenticated() &&
         ('property_id' in resource.data) &&
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }

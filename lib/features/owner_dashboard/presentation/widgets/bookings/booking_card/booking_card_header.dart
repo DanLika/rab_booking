@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/constants/enums.dart';
+import '../../../../../../core/design/tokens.dart';
 import '../../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../../shared/models/booking_model.dart';
 import '../../../../../../shared/widgets/platform_icon.dart';
@@ -50,10 +51,8 @@ class BookingCardHeader extends StatelessWidget {
         isMobile ? 10 : 12,
       ),
       decoration: BoxDecoration(
-        // Modern subtle gradient-like background
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.grey.shade100.withValues(alpha: 0.7),
+        // Handoff surface-variant header band (#F5F5F5 / #1E1E1E).
+        color: BBColor.of(context).surfaceVariant,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(16),
           topRight: Radius.circular(16),
@@ -75,26 +74,29 @@ class BookingCardHeader extends StatelessWidget {
                 ),
               ),
             ),
-            // Imported badge
+            // Imported badge — handoff imported tone (info-blue tint + text),
+            // matching BbStatusBadge's imported treatment.
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.grey.shade500,
+                color: BBColor.of(
+                  context,
+                ).statusImported.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.cloud_download_outlined,
                     size: 12,
-                    color: Colors.white,
+                    color: BBColor.of(context).statusImported,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     l10n.tooltipImportedBooking,
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: Colors.white,
+                      color: BBColor.of(context).statusImported,
                       fontWeight: FontWeight.w600,
                       fontSize: 10,
                     ),

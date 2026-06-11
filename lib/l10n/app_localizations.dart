@@ -15046,6 +15046,12 @@ abstract class AppLocalizations {
   /// **'Cancelled'**
   String get bookingsTabCancelled;
 
+  /// No description provided for @bookingsTabCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get bookingsTabCompleted;
+
   /// No description provided for @bookingsTabImported.
   ///
   /// In en, this message translates to:

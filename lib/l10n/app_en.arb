@@ -3518,6 +3518,7 @@
   "bookingsTabPending": "Pending",
   "bookingsTabConfirmed": "Confirmed",
   "bookingsTabCancelled": "Cancelled",
+  "bookingsTabCompleted": "Completed",
   "bookingsTabImported": "Imported",
   "ownerProfileCompletionStatus": "Profile {percentage}% complete",
   "@ownerProfileCompletionStatus": {

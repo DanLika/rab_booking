@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/widgets/redesign.dart';
 import '../../providers/owner_bookings_provider.dart';
@@ -19,10 +20,13 @@ class BookingsTabBar extends ConsumerWidget {
 
     // Map BookingStatus to L10n strings
     // null status = "All", special 'imported' marker for imported tab
+    // Handoff RZP tab order: Sve · Na čekanju · Potvrđene · Završene ·
+    // Otkazane · Uvezene — each with a status-toned dot.
     final tabs = <(Object?, String)>[
       (null, l10n.bookingsTabAll),
       (BookingStatus.pending, l10n.bookingsTabPending),
       (BookingStatus.confirmed, l10n.bookingsTabConfirmed),
+      (BookingStatus.completed, l10n.bookingsTabCompleted),
       (BookingStatus.cancelled, l10n.bookingsTabCancelled),
       ('imported', l10n.bookingsTabImported), // Special marker for imported
     ];
@@ -91,17 +95,17 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final Color dot = isImportedTab
-        ? Colors.grey.shade600
-        : (status?.color ?? theme.colorScheme.primary);
+    // Handoff RZP tabs: every non-"Sve" tab carries a status-toned dot
+    // (imported = info blue), theme-aware via colorOf / BBColor.
+    final Color? dot = isImportedTab
+        ? BBColor.of(context).statusImported
+        : status?.colorOf(context);
 
     return BbChip(
       label: label,
       selected: isSelected,
       onTap: onTap,
-      iconLeft: isImportedTab ? 'cloud_download' : null,
-      dotColor: isImportedTab ? null : (status != null ? dot : null),
+      dotColor: dot,
     );
   }
 }

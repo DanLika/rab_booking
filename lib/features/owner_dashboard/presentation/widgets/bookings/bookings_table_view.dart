@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../core/constants/booking_status_extensions.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/utils/error_display_utils.dart';
@@ -363,7 +364,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         ),
 
         // Source
-        DataCell(_buildSourceBadge(booking.source, l10n)),
+        DataCell(_buildSourceBadge(context, booking.source, l10n)),
 
         // Actions menu
         DataCell(_buildActionsMenu(booking, l10n)),
@@ -371,12 +372,20 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
     );
   }
 
-  Widget _buildSourceBadge(String? source, AppLocalizations l10n) {
+  Widget _buildSourceBadge(
+    BuildContext context,
+    String? source,
+    AppLocalizations l10n,
+  ) {
     if (source == null) {
       return Text(l10n.ownerTableSourceDirect);
     }
 
-    // Map source to display name and fallback icon/color
+    final c = BBColor.of(context);
+
+    // Map source to display name and fallback icon/color — channel tones per
+    // handoff (direct/widget = primary, booking = info, airbnb = error red,
+    // imported/ical = statusImported, manual = neutral).
     String displayName;
     IconData fallbackIcon;
     Color color;
@@ -385,34 +394,34 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       case 'ical':
         displayName = l10n.ownerTableSourceIcal;
         fallbackIcon = Icons.sync;
-        color = AppColors.authSecondary;
+        color = c.statusImported;
         break;
       case 'booking_com':
       case 'booking.com':
         displayName = l10n.ownerTableSourceBookingCom;
         fallbackIcon = Icons.public;
-        color = Colors.orange;
+        color = c.info;
         break;
       case 'airbnb':
         displayName = l10n.ownerTableSourceAirbnb;
         fallbackIcon = Icons.home;
-        color = Colors.red;
+        color = c.error;
         break;
       case 'widget':
         displayName = l10n.ownerTableSourceWidget;
         fallbackIcon = Icons.web;
-        color = Colors.green;
+        color = c.primary;
         break;
       case 'admin':
       case 'manual':
         displayName = l10n.ownerTableSourceManual;
         fallbackIcon = Icons.person;
-        color = Colors.grey;
+        color = c.textTertiary;
         break;
       default:
         displayName = source;
         fallbackIcon = Icons.help_outline;
-        color = Colors.grey;
+        color = c.textTertiary;
     }
 
     // Use PlatformIcon for external sources (booking_com, airbnb, ical)

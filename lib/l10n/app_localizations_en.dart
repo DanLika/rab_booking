@@ -8340,6 +8340,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingsTabCancelled => 'Cancelled';
 
   @override
+  String get bookingsTabCompleted => 'Completed';
+
+  @override
   String get bookingsTabImported => 'Imported';
 
   @override

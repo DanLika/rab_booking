@@ -281,3 +281,17 @@ Operator should re-run `audit/smoke/f92-01-probe.js` after deploy to confirm 0/0
 - `[[pr482-j-smoke-2026-05-26]]` — PR #482 J-phase smoke
 - `audit/90` §1 — PROD `ICAL_TOKEN_PEPPER` gap (blocks PR #482 deploy)
 - `docs/SECURITY_FIXES.md` SF-063 — short-form security entry
+
+
+---
+
+## Re-run 2026-06-11 (audit/smoke prune)
+
+`f92-01-probe.js` re-run on bookbed-dev with corrected post-SF-063 verdicts:
+**2/2 `ical_export_enabled` units = BROKEN-FEED** (only PR #482
+`ical_export_token_{plaintext,hash}` present; read-side `icalExport.ts:177-182`
+still reads `ical_export_token` → `tokenToCompare=""` → fail-CLOSED 403 on
+every request). Security: CLOSED (nothing exploitable). Functional: the
+schema-mismatch half of this finding is OPEN — new-schema units ship dead
+feed URLs until the read-side accepts `_plaintext` (or verifies `_hash`).
+Probe + run recipe live in `audit/smoke/README.md`.

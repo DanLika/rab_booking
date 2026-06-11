@@ -11,10 +11,9 @@
 - [TODO.md](./TODO.md) — neaktivni planning itemi (izvučeno iz CLAUDE.md)
 - [setup.md](./setup.md) — lokalni dev/test/deploy setup
 - [ICAL_SYNC_ARCHITECTURE.md](./ICAL_SYNC_ARCHITECTURE.md) — iCal sync arhitektura
-- [FREE_TRIAL_IMPLEMENTATION.md](./FREE_TRIAL_IMPLEMENTATION.md) — trial sustav (detalji u `features/free-trial/`)
+- trial sustav → `features/free-trial/` (TECHNICAL_ARCHITECTURE.md je živi dom; root guide obrisan)
 - [FORCE_UPDATE_SETUP.md](./FORCE_UPDATE_SETUP.md) — force-update mehanizam
 - [STORE_SUBMISSION_GUIDE.md](./STORE_SUBMISSION_GUIDE.md) — App Store / Play submission
-- [widget_firestore_single_field_indexes.md](./widget_firestore_single_field_indexes.md)
 
 ## Direktoriji
 

@@ -63,6 +63,33 @@ service cloud.firestore {
           .data.get('accountStatus', null) in ['trial', 'active'];
     }
 
+    // audit/123 F-123: server-authoritative AI usage counter at
+    // users/{uid}/data/ai_usage = {day, count}. `day` is pinned to request.time
+    // (server clock) so a client cannot fake a fresh day to reset its budget,
+    // and `count` may only increment by 1 within a day (or reset to 1 on a new
+    // server day). This makes the daily Gemini cap tamper-resistant — the old
+    // client-side in-memory counter reset to 0 on every app launch.
+    function aiUsageToday() {
+      return request.time.year() * 10000 +
+        request.time.month() * 100 + request.time.day();
+    }
+    function isValidAiUsageCreate() {
+      return request.resource.data.keys().hasOnly(['day', 'count']) &&
+        request.resource.data.day == aiUsageToday() &&
+        request.resource.data.count == 1;
+    }
+    function isValidAiUsageUpdate() {
+      return request.resource.data.keys().hasOnly(['day', 'count']) &&
+        request.resource.data.day == aiUsageToday() && (
+          // same server-day → monotonic +1
+          (resource.data.day == aiUsageToday() &&
+            request.resource.data.count == resource.data.count + 1) ||
+          // new server-day → reset to 1
+          (resource.data.day != aiUsageToday() &&
+            request.resource.data.count == 1)
+        );
+    }
+
     // ========================================================================
     // USERS COLLECTION
     // ========================================================================
@@ -107,6 +134,8 @@ service cloud.firestore {
       match /data/{document} {
         allow read: if isOwner(userId) || isAdmin();
         // Same logic as parent document: user can't change status fields.
+        // audit/123 F-123: the ai_usage doc additionally requires the
+        // increment-only shape so the daily AI cap can't be self-reset.
         allow create: if (isOwner(userId) && !request.resource.data.keys().hasAny([
             'accountStatus', 'trialStartDate', 'trialExpiresAt',
             'statusChangedAt', 'statusChangedBy',
@@ -116,7 +145,7 @@ service cloud.firestore {
             // SF-vibe57 H-01: same deny-list as parent users/{uid} doc.
             'stripe_account_id', 'stripe_customer_id', 'stripe_connected_at',
             'stripeSubscriptionId', 'stripeCustomerId'
-          ])) || isAdmin();
+          ]) && (document != 'ai_usage' || isValidAiUsageCreate())) || isAdmin();
         allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
             'accountStatus', 'trialStartDate', 'trialExpiresAt',
             'statusChangedAt', 'statusChangedBy',
@@ -126,14 +155,27 @@ service cloud.firestore {
             // SF-vibe57 H-01: same deny-list as parent users/{uid} doc.
             'stripe_account_id', 'stripe_customer_id', 'stripe_connected_at',
             'stripeSubscriptionId', 'stripeCustomerId'
-          ])) || isAdmin();
-        allow delete: if isOwner(userId) || isAdmin();
+          ]) && (document != 'ai_usage' || isValidAiUsageUpdate())) || isAdmin();
+        // audit/123 F-123: owner may delete their own data docs, EXCEPT
+        // ai_usage. Without this carve-out an owner could delete the counter
+        // and immediately re-create it with count == 1 (a valid create),
+        // resetting the daily Gemini cap at will and defeating the
+        // increment-only update guard. ai_usage is created once and only
+        // mutated via isValidAiUsageUpdate thereafter; admins can still purge.
+        allow delete: if (isOwner(userId) && document != 'ai_usage') || isAdmin();
       }
 
       // AI chat sessions subcollection
       // Path: users/{userId}/ai_chats/{chatId}
+      // audit/123 F-123: owner-scoped, but bound the messages array so a
+      // tampered client can't balloon its own subtree (self-scoped cost abuse;
+      // Firestore's 1 MB doc ceiling is the hard backstop, this fails earlier).
       match /ai_chats/{chatId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) &&
+          (!('messages' in request.resource.data) ||
+            request.resource.data.messages.size() <= 200);
+        allow delete: if isOwner(userId);
       }
 
       // Notifications subcollection

@@ -817,7 +817,10 @@ function escapeIcal(text: string): string {
     .replace(/\\/g, "\\\\")
     .replace(/,/g, "\\,")
     .replace(/;/g, "\\;")
-    .replace(/\n/g, "\\n");
+    // RFC 5545: fold every line break — CRLF, lone CR, lone LF — to a single
+    // escaped \n. Escaping only \n left a raw CR able to inject a fresh content
+    // line (e.g. an owner unit name "Unit\rX-PROP:val" breaking the feed).
+    .replace(/\r\n|\r|\n/g, "\\n");
 }
 
 /**

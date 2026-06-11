@@ -2,7 +2,29 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-29 | **Version**: 7.03
+**Last Updated**: 2026-06-11 | **Version**: 7.14
+
+---
+
+**Changelog 7.14**: consolidated 2026-05-30 → 2026-06-11 (detalji: CLAUDE.md audit index + git history; 7.04–7.13 nisu dobili zasebne unose):
+
+### Security
+- **audit/99 sweep + same-day wave** (2026-05-30/31): F-99-01 bookings `affectedKeys` deny (PR #609) + H-1 returnUrl `new URL()` host-only + 5 MED/LOW fixes, dev-deployed; residual ledger u audit/99 (8 LOW/INFO deliberate deferrals).
+- **audit/107 top findings CLOSED** (2026-06-11 verify): F-107-01 widget_secrets `hasOnly` rules + F-107-02 CORS na 5 callables (PR #720), F-107-03 widget CSP; F-101-03 L2 `enforceRateLimit` (Firestore-backed, instance-global) na 3 hot anonimna callable-a + loginLockout/atomicBooking/stripePayment.
+- **audit/123 full sweep** (2026-06-11): 165+ checks, 9 agenata + gitleaks history + semgrep + npm audit → 0 CRIT/HIGH novih; same-day fix wave F-123-01 (payment bounds + deposit≤total + throw-on-fee-anomaly), F-123-02 (iCal SUMMARY/DESCRIPTION sanitize), F-123-04 (5MB feed cap), F-123-06/07 (CORS intent + Connect rate limits). SF-081 ledger entry s PROD-pickup checklistom.
+- F-92-01 iCal empty-token bypass FULLY CLOSED (data backfill + live verify); F-98-01 legacy ical_feeds stats deny + emulator cells.
+
+### Production
+- **PROD cutover** (2026-05-31, audit/102): CFs+regrant 35/35, indexes no-drift, rules+storage smoke 4/4, SF-067 IAM confirmed.
+
+### Features / Design
+- **Owner redesign waves**: premium Pregled (hero/radial/AI insight, PR #675-677), purple-chrome retirement 46 fajlova (audit/120), handoff color audit 16 stranica oba theme-a (audit/121) — token root-fix `surfaceDark #121212`, dark lifts, KPI strip handoff order + NOVI GOSTI (`distinctGuests`), arrivals card + desktop grid (`cd108f21`).
+- **Admin responsive shell** (audit/122): 260px sidebar ≥1100 / 72px rail 800–1100 / drawer <800 + dashboard breakpoints.
+
+### Maintenance
+- **53 open PR-ova riješeno na nulu** (2026-06-11): real work merged (uklj. Jules swarm konsolidacija s atribucijom), security-regresije odbijene s obrazloženjem po klasi.
+- **Docs prune 5 pass-ova**: audit/ 149→27 + docs/ 11 superseded fajlova obrisano (sve verificirano prije brisanja; recovery: `git log --diff-filter=D`).
+- CI: `validate-firestore-rules` job sada vrti emulator rules suite (159 testova).
 
 ---
 

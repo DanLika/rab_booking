@@ -128,6 +128,22 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         if (key.isNotEmpty) guestKeys.add(key);
       }
 
+      // Revenue per source bucket (handoff PVChannels "Zarada po kanalu").
+      // Native channels (widget/manual/admin/null) fold into 'direct';
+      // zero-priced bookings (iCal imports carry no price) are skipped.
+      final revenueBySource = <String, double>{};
+      for (final b in confirmedAndCompletedBookings) {
+        final price = (b['total_price'] as num?)?.toDouble() ?? 0.0;
+        if (price <= 0) continue;
+        final bucket = switch ((b['source'] as String?)?.toLowerCase()) {
+          null || 'manual' || 'direct' || 'widget' || 'admin' => 'direct',
+          'booking_com' => 'booking_com',
+          'airbnb' => 'airbnb',
+          _ => 'other',
+        };
+        revenueBySource[bucket] = (revenueBySource[bucket] ?? 0) + price;
+      }
+
       // Calculate occupancy rate based on UNITS (not properties)
       final totalDaysInRange = dateRange.endDate
           .difference(dateRange.startDate)
@@ -172,6 +188,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         bookings: bookingsCount,
         upcomingCheckIns: upcomingCheckIns.length,
         distinctGuests: guestKeys.length,
+        revenueBySource: revenueBySource,
         occupancyRate: occupancyRate,
         revenueHistory: revenueHistory,
         bookingHistory: bookingHistory,

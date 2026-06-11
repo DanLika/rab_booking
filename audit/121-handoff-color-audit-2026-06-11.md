@@ -73,6 +73,10 @@
 
 `flutter analyze lib/` 91 baseline infos / 0 errors; full `flutter test` green (3rd run).
 
+## Fourth pass — Zarada po kanalu real data (handoff gap closed)
+
+`UnifiedDashboardData.revenueBySource` (direct/booking_com/airbnb/other buckets from booking `source`, zero-priced iCal imports skipped) computed in the provider from the same confirmed+completed set as `revenue` — channel amounts sum exactly to the hero total. `_PregledChannelMix` un-gated (kDebug + `PREGLED_CHANNEL_MIX` define + placeholder proportions removed), renders real buckets, hides on no-priced-revenue periods. Live verify bookbed-dev: Direktno €360 18% / Airbnb €390 19% / Ostalo €1270 63% = €2020. Remaining product gaps now only: PROSJEČNA OCJENA (reviews feature) + NAPLAĆENI DEPOZITI (deposit aggregation).
+
 ## Known residuals (not fixed, by design or out of scope)
 - Legacy `AppColors.primaryGradient/heroGradient` still old hexes — 0 callers (dead), cleanup PR candidate
 - Subscription `_TrialHero` white-on-gradient is intentional (purple hero both themes), no dark branch needed

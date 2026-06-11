@@ -354,6 +354,7 @@ class DashboardOverviewTab extends ConsumerWidget {
       bookings: 45,
       upcomingCheckIns: 3,
       distinctGuests: 38,
+      revenueBySource: {'direct': 8625, 'booking_com': 2750, 'airbnb': 1125},
       occupancyRate: 85.5,
       revenueHistory: List.generate(7, (i) {
         return RevenueDataPoint(
@@ -510,9 +511,9 @@ class DashboardOverviewTab extends ConsumerWidget {
                       error: (_, _) => const SizedBox.shrink(),
                     ),
 
-                    // Revenue-by-channel (handoff PVChannels) — placeholder
-                    // surface, real provider wiring tracked in audit/114.
-                    // Always renders (handoff has no empty-state branch).
+                    // Revenue-by-channel (handoff PVChannels) — real
+                    // per-source aggregation from revenueBySource; hides
+                    // itself while the period has no priced revenue.
                     dashboardAsync.when(
                       data: (data) => Padding(
                         padding: EdgeInsets.only(top: isMobile ? 16 : 20),
@@ -2272,40 +2273,39 @@ class _PregledChannelMix extends StatelessWidget {
 
   const _PregledChannelMix({required this.data, required this.isMobile});
 
-  static const bool _enabled = bool.fromEnvironment('PREGLED_CHANNEL_MIX');
+  // Real per-source revenue from UnifiedDashboardData.revenueBySource
+  // (handoff PVChannels). Bucket order/colors fixed; zero buckets dropped.
+  List<_ChannelEntry> _entries(BBColorSet c) {
+    final src = data.revenueBySource;
+    final total = src.values.fold<double>(0, (a, b) => a + b);
+    if (total <= 0) return const [];
 
-  List<_ChannelEntry> _placeholderEntries(BBColorSet c) {
-    final total = math.max(data.revenue, 1);
-    // Placeholder mix mirroring handoff PVChannels proportions.
+    // HR-only owner surface labels.
+    final buckets = <({String key, String label, Color color})>[
+      (key: 'direct', label: 'Direktno', color: c.primary),
+      (key: 'booking_com', label: 'Booking.com', color: c.info),
+      (key: 'airbnb', label: 'Airbnb', color: c.error),
+      (key: 'other', label: 'Ostalo', color: c.tertiary),
+    ];
+
     return [
-      _ChannelEntry(
-        // HR-only owner surface.
-        label: 'Direktno',
-        pct: 69,
-        amount: total * 0.69,
-        color: c.primary,
-      ),
-      _ChannelEntry(
-        label: 'Booking.com',
-        pct: 22,
-        amount: total * 0.22,
-        color: c.info,
-      ),
-      _ChannelEntry(
-        label: 'Airbnb',
-        pct: 9,
-        amount: total * 0.09,
-        color: c.error,
-      ),
+      for (final b in buckets)
+        if ((src[b.key] ?? 0) > 0)
+          _ChannelEntry(
+            label: b.label,
+            // Min flex 1 so thin-but-real slices stay visible in the bar.
+            pct: math.max(1, (src[b.key]! / total * 100).round()),
+            amount: src[b.key]!,
+            color: b.color,
+          ),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_enabled && !kDebugMode) return const SizedBox.shrink();
-
     final c = BBColor.of(context);
-    final entries = _placeholderEntries(c);
+    final entries = _entries(c);
+    if (entries.isEmpty) return const SizedBox.shrink();
 
     return BbCard(
       padding: EdgeInsets.all(isMobile ? 16 : 20),

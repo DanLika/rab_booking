@@ -20,6 +20,11 @@ class UnifiedDashboardData with _$UnifiedDashboardData {
     /// Distinct guests in the selected period (deduped by guest email/name)
     @Default(0) int distinctGuests,
 
+    /// Revenue per booking source for the selected period (EUR). Canonical
+    /// bucket keys: 'direct' (widget/manual/admin), 'booking_com', 'airbnb',
+    /// 'other' (ical/external/unknown). Zero-revenue buckets omitted.
+    @Default(<String, double>{}) Map<String, double> revenueBySource,
+
     /// Occupancy rate for the selected period (0-100%)
     required double occupancyRate,
 

@@ -130,176 +130,194 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
   Widget build(BuildContext context) {
     final ownersAsync = ref.watch(ownersListProvider);
     final notifier = ref.read(ownersListProvider.notifier);
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < _mobileBreakpoint;
     final palette = _UsersListPalette.of(context, ref);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(BBSpace.md),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                  width: 0.5,
-                ),
+      // Content-width breakpoint (audit/122): the adaptive shell reserves
+      // 260/72px for sidebar/rail, so window width over-reports space.
+      body: LayoutBuilder(
+        builder: (context, constraints) => _buildBody(
+          context,
+          ownersAsync,
+          notifier,
+          palette,
+          constraints.maxWidth < _mobileBreakpoint,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    AsyncValue<List<UserModel>> ownersAsync,
+    OwnersListNotifier notifier,
+    _UsersListPalette palette,
+    bool isMobile,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(BBSpace.md),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).dividerColor,
+                width: 0.5,
               ),
             ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const BbSectionHeader(title: 'Users Management'),
-                          Text(
-                            'Manage platform owners and licenses',
-                            style: BBType.body(
-                              context,
-                            ).copyWith(color: palette.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                    BbButton(
-                      label: 'Refresh',
-                      iconLeft: 'refresh',
-                      onPressed: notifier.loadInitial,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: BBSpace.sm),
-                BbInput(
-                  controller: _searchController,
-                  placeholder: 'Search users by name or email...',
-                  iconLeft: 'search',
-                  trailingAction: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                          },
-                        )
-                      : null,
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                ),
-                const SizedBox(height: BBSpace.sm),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      for (final type in AccountType.values)
-                        Padding(
-                          padding: const EdgeInsets.only(right: BBSpace.xs),
-                          child: BbChip(
-                            label: type.name.toUpperCase(),
-                            selected: _selectedAccountTypes.contains(type),
-                            size: BbChipSize.sm,
-                            onTap: () {
-                              setState(() {
-                                if (_selectedAccountTypes.contains(type)) {
-                                  _selectedAccountTypes.remove(type);
-                                } else {
-                                  _selectedAccountTypes.add(type);
-                                }
-                              });
-                            },
-                          ),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const BbSectionHeader(title: 'Users Management'),
+                        Text(
+                          'Manage platform owners and licenses',
+                          style: BBType.body(
+                            context,
+                          ).copyWith(color: palette.textSecondary),
                         ),
+                      ],
+                    ),
+                  ),
+                  BbButton(
+                    label: 'Refresh',
+                    iconLeft: 'refresh',
+                    onPressed: notifier.loadInitial,
+                  ),
+                ],
+              ),
+              const SizedBox(height: BBSpace.sm),
+              BbInput(
+                controller: _searchController,
+                placeholder: 'Search users by name or email...',
+                iconLeft: 'search',
+                trailingAction: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                    : null,
+                onChanged: (value) => setState(() => _searchQuery = value),
+              ),
+              const SizedBox(height: BBSpace.sm),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final type in AccountType.values)
                       Padding(
                         padding: const EdgeInsets.only(right: BBSpace.xs),
                         child: BbChip(
-                          label: _dateRange != null
-                              ? '${_dateRange!.start.day}.${_dateRange!.start.month}.${_dateRange!.start.year} - ${_dateRange!.end.day}.${_dateRange!.end.month}.${_dateRange!.end.year}'
-                              : 'Date Range',
-                          iconLeft: 'date_range',
-                          selected: _dateRange != null,
+                          label: type.name.toUpperCase(),
+                          selected: _selectedAccountTypes.contains(type),
                           size: BbChipSize.sm,
-                          onTap: _pickDateRange,
+                          onTap: () {
+                            setState(() {
+                              if (_selectedAccountTypes.contains(type)) {
+                                _selectedAccountTypes.remove(type);
+                              } else {
+                                _selectedAccountTypes.add(type);
+                              }
+                            });
+                          },
                         ),
                       ),
-                      const SizedBox(width: BBSpace.xs),
-                      _SortDropdown(
-                        sortField: _sortField,
-                        sortAscending: _sortAscending,
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() {
-                            if (_sortField == value) {
-                              _sortAscending = !_sortAscending;
-                            } else {
-                              _sortField = value;
-                              _sortAscending = value != _SortField.createdAt;
-                            }
-                          });
-                        },
+                    Padding(
+                      padding: const EdgeInsets.only(right: BBSpace.xs),
+                      child: BbChip(
+                        label: _dateRange != null
+                            ? '${_dateRange!.start.day}.${_dateRange!.start.month}.${_dateRange!.start.year} - ${_dateRange!.end.day}.${_dateRange!.end.month}.${_dateRange!.end.year}'
+                            : 'Date Range',
+                        iconLeft: 'date_range',
+                        selected: _dateRange != null,
+                        size: BbChipSize.sm,
+                        onTap: _pickDateRange,
                       ),
-                      if (_hasActiveFilters)
-                        Padding(
-                          padding: const EdgeInsets.only(left: BBSpace.xs),
-                          child: BbChip(
-                            label: 'Clear',
-                            iconLeft: 'clear_all',
-                            size: BbChipSize.sm,
-                            onTap: _clearAllFilters,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ownersAsync.when(
-              data: (owners) {
-                final filtered = _filterAndSortOwners(owners);
-                if (filtered.isEmpty) {
-                  return const _EmptyState();
-                }
-                final showLoadMore = notifier.hasMore && !_hasActiveFilters;
-                return isMobile
-                    ? _UsersList(
-                        owners: filtered,
-                        hasMore: showLoadMore,
-                        onLoadMore: notifier.loadMore,
-                        palette: palette,
-                      )
-                    : _UsersTable(
-                        owners: filtered,
-                        hasMore: showLoadMore,
-                        onLoadMore: notifier.loadMore,
-                        palette: palette,
-                      );
-              },
-              loading: () => const Center(child: BbSpinner(size: 24)),
-              error: (err, _) => Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Error loading users: $err',
-                      style: BBType.body(
-                        context,
-                      ).copyWith(color: palette.textSecondary),
                     ),
-                    const SizedBox(height: BBSpace.sm),
-                    BbButton(label: 'Retry', onPressed: notifier.loadInitial),
+                    const SizedBox(width: BBSpace.xs),
+                    _SortDropdown(
+                      sortField: _sortField,
+                      sortAscending: _sortAscending,
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() {
+                          if (_sortField == value) {
+                            _sortAscending = !_sortAscending;
+                          } else {
+                            _sortField = value;
+                            _sortAscending = value != _SortField.createdAt;
+                          }
+                        });
+                      },
+                    ),
+                    if (_hasActiveFilters)
+                      Padding(
+                        padding: const EdgeInsets.only(left: BBSpace.xs),
+                        child: BbChip(
+                          label: 'Clear',
+                          iconLeft: 'clear_all',
+                          size: BbChipSize.sm,
+                          onTap: _clearAllFilters,
+                        ),
+                      ),
                   ],
                 ),
               ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ownersAsync.when(
+            data: (owners) {
+              final filtered = _filterAndSortOwners(owners);
+              if (filtered.isEmpty) {
+                return const _EmptyState();
+              }
+              final showLoadMore = notifier.hasMore && !_hasActiveFilters;
+              return isMobile
+                  ? _UsersList(
+                      owners: filtered,
+                      hasMore: showLoadMore,
+                      onLoadMore: notifier.loadMore,
+                      palette: palette,
+                    )
+                  : _UsersTable(
+                      owners: filtered,
+                      hasMore: showLoadMore,
+                      onLoadMore: notifier.loadMore,
+                      palette: palette,
+                    );
+            },
+            loading: () => const Center(child: BbSpinner(size: 24)),
+            error: (err, _) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Error loading users: $err',
+                    style: BBType.body(
+                      context,
+                    ).copyWith(color: palette.textSecondary),
+                  ),
+                  const SizedBox(height: BBSpace.sm),
+                  BbButton(label: 'Retry', onPressed: notifier.loadInitial),
+                ],
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

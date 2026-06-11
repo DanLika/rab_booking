@@ -14,16 +14,14 @@
 - [FREE_TRIAL_IMPLEMENTATION.md](./FREE_TRIAL_IMPLEMENTATION.md) — trial sustav (detalji u `features/free-trial/`)
 - [FORCE_UPDATE_SETUP.md](./FORCE_UPDATE_SETUP.md) — force-update mehanizam
 - [STORE_SUBMISSION_GUIDE.md](./STORE_SUBMISSION_GUIDE.md) — App Store / Play submission
-- [ANDROID_ADAPTIVE_ICON.md](./ANDROID_ADAPTIVE_ICON.md)
 - [widget_firestore_single_field_indexes.md](./widget_firestore_single_field_indexes.md)
 
 ## Direktoriji
 
 | Dir | Sadržaj |
 |---|---|
-| `features/` | Feature dokumentacija: `email-templates/` (EMAIL_SYSTEM.md), `free-trial/`, `overbooking-detection/`, `pwa/`, `stripe/` (integracija + debug guide), `analytics/` |
-| `security/` | Modul-level sigurnosne analize (atomicBooking, emailVerification, inputSanitization, opća) |
-| `testing/` | Test planovi + widget test matrice (browseri, zoom, legacy sites) + `test-calendar.ics` fixture |
+| `features/` | Feature dokumentacija: `email-templates/` (EMAIL_SYSTEM.md), `free-trial/` (Phase 1 operativni docs; FUTURE_* planovi obrisani — git history), `overbooking-detection/`, `pwa/`, `stripe/` (integracija + debug guide), `analytics/` |
+| `testing/` | [AUTOMATED_TESTING.md](./testing/AUTOMATED_TESTING.md) + `test-calendar.ics` fixture (widget test matrice obrisane — pokriveno audit/114/115) |
 | `user-guide/` | Korisnička dokumentacija (getting-started, calendar, payments, pricing, properties, settings, widget, troubleshooting) |
 | `bugs/` | [consolidated-bugs-archive.md](./bugs/consolidated-bugs-archive.md) — povijesni bug fix-evi s code primjerima |
 | `setup/` | `deployment/SUBDOMAIN_SETUP.md` |

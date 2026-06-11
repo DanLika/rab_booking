@@ -10,10 +10,18 @@ wired into CI, run manually before rules deploys).
 
 ## Kept scripts
 
+All runs need `NODE_PATH=<repo>/functions/node_modules` (scripts live outside
+a package).
+
+*Deleted 2026-06-11 after a final live 16/16 PASS:*
+`audit86-direct-write-smoke.js` — fully subsumed by (a) the emulator rules
+suite now in CI (`validate-firestore-rules` job) for behavior and (b) the
+daily `firestore-rules-drift.yml` cron for deployed≡repo equivalence.
+Recover via `git log --diff-filter=D -- audit/smoke/`.
+
 | Script | What | Run |
 |---|---|---|
-| `audit86-direct-write-smoke.js` | LIVE deployed-rules deny smoke (properties/ical_feeds/widget_settings direct-write, owner + foreign UID). Complements the emulator suite by exercising the deployed ruleset. Creates + tears down throwaway docs. | `BOOKBED_DEV_WEB_API_KEY=<web.apiKey> BOOKBED_DEV_OWNER_PASS=<memory: test-account.md> GOOGLE_CLOUD_PROJECT=bookbed-dev node audit/smoke/audit86-direct-write-smoke.js` (cwd `functions/` for node_modules) |
-| `complete-booking-smoke.js` | `completeBooking` CF end-to-end (F-67-01 path): throwaway confirmed booking → CF call → post-state assert → cleanup. | `BB_TEST_PW=<memory: test-account.md> node audit/smoke/complete-booking-smoke.js` (cwd `functions/`) |
+| `complete-booking-smoke.js` | `completeBooking` CF end-to-end (F-67-01 path): throwaway confirmed booking → CF call → post-state assert → idempotency reject → cleanup. Last run 2026-06-11: PASS. | `NODE_PATH=functions/node_modules BB_TEST_PW=<memory: test-account.md> GOOGLE_CLOUD_PROJECT=bookbed-dev node audit/smoke/complete-booking-smoke.js` |
 | `f92-01-probe.js` | READ-ONLY iCal export token matrix. Post-SF-063 nothing is exploitable (`verifyIcalToken` empty-fail-CLOSED); verdicts are `OK` / `BROKEN-FEED` (PR #482 `_plaintext`/`_hash` schema present but read-side `icalExport.ts` reads `ical_export_token` → 403 on every request — audit/92 schema mismatch, OPEN) / `FAIL-CLOSED`. Re-run 2026-06-11: 2/2 BROKEN-FEED -> root cause = ORPHANED PR #482-era `_plaintext`/`_hash` fields (that schema was abandoned; current writer = Flutter export screen writes `ical_export_token`). Dev backfill executed same day: canonical field restored, orphans deleted -> probe 2/2 OK + live feed GET 200 VCALENDAR / wrong-token 403. **audit/92 FULLY CLOSED** (docs deleted; this probe is the regression tool). | `GOOGLE_CLOUD_PROJECT=bookbed-dev node ../audit/smoke/f92-01-probe.js` (cwd `functions/`) |
 
 ## Open follow-ups surfaced here

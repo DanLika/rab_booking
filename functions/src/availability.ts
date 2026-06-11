@@ -4,10 +4,10 @@
  * Serves unit availability windows to the public widget without exposing PII.
  *
  * Unblocks SF-023 (locking `ical_events` public-read in `firestore.rules`) by
- * routing the widget calendar through this callable. Also lays the groundwork
- * for T11c (eventually locking the `bookings` `unit_id+status` public-read
- * clause once the widget bookings stream is migrated here too — out of scope
- * for this PR; see `audit/06-availability-cf-design.md`).
+ * routing the widget calendar through this callable. T11c since landed
+ * (2026-05-22): the `bookings` `unit_id+status` public-read clause is gone
+ * and the widget bookings stream consumes this CF (design doc deleted —
+ * git history).
  *
  * Returns:
  *   - `windows: AvailabilityWindow[]` — sorted, PII-stripped blocked ranges
@@ -160,7 +160,7 @@ export const getUnitAvailability = onCall<GetUnitAvailabilityInput, Promise<GetU
     // SF-079 L2 trial gate: refuse availability windows for units whose
     // owner is trial_expired / suspended / unknown. Widget calendar
     // (availability_checker.dart:199-212) catches CF errors and renders
-    // fail-CLOSED gracefully. See audit/112 §3.
+    // fail-CLOSED gracefully. See audit/112 §3 (doc deleted — git history).
     await requireActiveUnitOwner(propertyId, "getUnitAvailability");
 
     const startTs = admin.firestore.Timestamp.fromDate(startDate);

@@ -22,8 +22,8 @@ Uz to, stariji PROD gapovi koji se voze istim talasom:
   (memorija: prod-hosting-headers-deploy-gap). `firebase deploy --only hosting:owner,hosting:admin --project production`.
 - **SF-026 prod migracija** — `normalize-booking-nights.js` PROD dry-run odrađen 2026-05-23
   (`audit/migrations/…DRYRUN.log`); `--force` run nikad potvrđen. Re-dry-run pa force.
-- **accountStatus backfill** — `scripts/backfill-accountstatus.js` (audit/111); PROD dry-run log
-  2026-06-03 postoji, force pending.
+- ~~accountStatus backfill~~ — **DONE-verified 2026-06-11**: PROD dry-run re-run = 24/24 known-canonical,
+  0 UPDATE / 0 TRIAGE (`audit/migrations/2026-06-11-…-DRYRUN-clean.log`); audit/111 obrisan.
 - **B-2 subscription Prices** — tek uz Phase 2 billing ship: kreiraj LIVE Prices pa popuni
   `ALLOWED_SUBSCRIPTION_PRICE_IDS` u `.env.rab-booking-248fc` (deny-all do tada je ispravno; vidi `.claude/rules/stripe.md`).
 

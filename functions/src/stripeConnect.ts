@@ -17,7 +17,7 @@ import {getCorsAllowlist} from "./utils/corsAllowlist";
 export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
   // SF-078: trial gate BEFORE rate-limit so trial_expired callers don't burn
   // their per-uid budget. Owner subscription/upgrade flow is the separate
-  // `createSubscriptionCheckoutSession` callable (EXEMPT) — see audit/110.
+  // `createSubscriptionCheckoutSession` callable (EXEMPT) — see audit/110 (doc deleted — git history).
   const ownerId = await requireActiveOwner(request.auth);
 
   // Rate Limiting: Prevent abuse of Stripe Account Link generation

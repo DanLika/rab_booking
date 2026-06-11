@@ -187,7 +187,7 @@ export const createStripeCheckoutSession = onCall({
   // SF-079 L2 trial gate: refuse checkout for units whose owner is
   // trial_expired / suspended / unknown. stripe_service.dart:96-100 has an
   // explicit failed-precondition handler that surfaces the gate's message
-  // cleanly to the guest. See audit/112 §3 Path C.
+  // cleanly to the guest. See audit/112 §3 Path C (doc deleted — git history).
   await requireActiveUnitOwner(propertyId, "createStripeCheckoutSession");
 
   // SECURITY: Validate return URL format and against whitelist

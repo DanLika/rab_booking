@@ -1,0 +1,46 @@
+SF-078 backfill — accountStatus drift normalise
+Project: rab-booking-248fc
+Mode:    DRY RUN (no writes)
+Started: 2026-06-11T20:42:30.971Z
+Log:     audit/migrations/2026-06-11-accountstatus-backfill-prod-DRYRUN.log
+
+Found 24 user document(s).
+
+  0rt8PRpXEcWsoAkfkBTG5PXa0Uf1         | active           → active                       | NOOP            | known-canonical
+  2JC9FKFzqfZKb8sVtwOjbzrLiQF2         | trial            → trial                        | NOOP            | known-canonical
+  2LOl2WdyEbP0l3y8dD3KMp1tX0G3         | trial            → trial                        | NOOP            | known-canonical
+  2OG1YV0TUGPv8bh6wdxtMHfF0AG2         | trial_expired    → trial_expired                | NOOP            | known-canonical
+  2iVruRvCKIcsGgbmSEO5fGkGQZ83         | active           → active                       | NOOP            | known-canonical
+  9VRdH47hW6RqEBBcvbqZwneP9hR2         | trial_expired    → trial_expired                | NOOP            | known-canonical
+  CgcQVSNb2NTiqx49G85BbqSsfTm2         | active           → active                       | NOOP            | known-canonical
+  KCSOjCd3SHfstOOEjDMrXtSnDxK2         | trial_expired    → trial_expired                | NOOP            | known-canonical
+  LBsmbcegJkZlmPQDJTXb7j0wVJy1         | trial            → trial                        | NOOP            | known-canonical
+  NxHKPgoGC6PcerUgEfJlLJm77Uj1         | trial_expired    → trial_expired                | NOOP            | known-canonical
+  WMvD7nZDcjUWcX1HLKPcpyIgzRA3         | trial            → trial                        | NOOP            | known-canonical
+  WrfEIVOYxaeYEJ4yU4bcRxIKsFL2         | trial_expired    → trial_expired                | NOOP            | known-canonical
+  YWA4l5m70ZOWNLczkRngzYDjOlC2         | active           → active                       | NOOP            | known-canonical
+  YkHXCzZnwYOcgEikRle9qWmkgkv2         | trial            → trial                        | NOOP            | known-canonical
+  giv29DaX37csOg6Umfa3MnIelAg1         | trial            → trial                        | NOOP            | known-canonical
+  gp5MYghhpROZqj5iC7KNFzxXrZu1         | trial_expired    → trial_expired                | NOOP            | known-canonical
+  hyzVro9gimWEtaQKJw7byZn1MD23         | trial            → trial                        | NOOP            | known-canonical
+  jXt4S6TvYxUPUaYitJBYmSj3mnr2         | trial            → trial                        | NOOP            | known-canonical
+  ngbxi8qkmcT0m2p7zikcXkP0ZRJ2         | active           → active                       | NOOP            | known-canonical
+  nz4hyOoIOqaje7976DLsJZnXctT2         | active           → active                       | NOOP            | known-canonical
+  oukYAL9LlRWBOK0nbE7Ef9rLpph1         | trial            → trial                        | NOOP            | known-canonical
+  qJMif6jRHmN4ZEyWd3rXpwldHEr1         | trial_expired    → trial_expired                | NOOP            | known-canonical
+  qmsJUVRJnxSGd9j0QepRYBndC6V2         | trial_expired    → trial_expired                | NOOP            | known-canonical
+  uRutRjNEtrexEz4vtdSM1DmHB6q2         | trial            → trial                        | NOOP            | known-canonical
+
+─── Summary ───────────────────────────────────────────────
+  UPDATE              0
+  NOOP               24
+  MANUAL_REVIEW       0
+  MANUAL_TRIAGE       0
+
+─── By reason ─────────────────────────────────────────────
+  known-canonical                            24
+
+DRY RUN complete — no writes performed.
+  0 UPDATE candidate(s); 0 MANUAL_REVIEW; 0 MANUAL_TRIAGE.
+Re-run with --execute to apply UPDATE rows. MANUAL_REVIEW / MANUAL_TRIAGE rows are NEVER auto-applied.
+Finished: 2026-06-11T20:42:31.639Z

@@ -20,7 +20,7 @@
  * widget_settings / pricing_calendar / owner-side bookings subcollection
  * are NOT closed by this gate; "rules zadnje" per audit/22 §1).
  *
- * Audit trail: `audit/110-trial-gate-map.md`.
+ * Audit trail: audit/110 (deleted — git history); live inventory = this util's callers.
  */
 
 import {HttpsError} from "firebase-functions/v2/https";

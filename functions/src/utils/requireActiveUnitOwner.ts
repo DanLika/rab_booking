@@ -36,7 +36,7 @@
  * coalescing. The cost is one extra Firestore read per gated call, which is
  * dwarfed by the existing reads in each callable.
  *
- * Audit: `audit/112-l2-gate-map.md`.
+ * Audit: audit/112 (deleted — git history); live inventory = this util's callers.
  */
 
 import {HttpsError} from "firebase-functions/v2/https";

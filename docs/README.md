@@ -10,7 +10,7 @@
 - [CHANGELOG.md](./CHANGELOG.md) — povijest verzija
 - [TODO.md](./TODO.md) — neaktivni planning itemi (izvučeno iz CLAUDE.md)
 - [setup.md](./setup.md) — lokalni dev/test/deploy setup
-- [ICAL_SYNC_ARCHITECTURE.md](./ICAL_SYNC_ARCHITECTURE.md) — iCal sync arhitektura
+- iCal sync: živi dom = kod (`icalSync.ts`/`icalExport.ts` + echo-detection util) + `user-guide/calendar/` (arhitekturni plan-doc iz 02-05 obrisan — sve faze shipped)
 - trial sustav → `features/free-trial/` (TECHNICAL_ARCHITECTURE.md je živi dom; root guide obrisan)
 - [FORCE_UPDATE_SETUP.md](./FORCE_UPDATE_SETUP.md) — force-update mehanizam
 - [STORE_SUBMISSION_GUIDE.md](./STORE_SUBMISSION_GUIDE.md) — App Store / Play submission
@@ -24,5 +24,4 @@
 | `user-guide/` | Korisnička dokumentacija (getting-started, calendar, payments, pricing, properties, settings, widget, troubleshooting) |
 | `bugs/` | [consolidated-bugs-archive.md](./bugs/consolidated-bugs-archive.md) — povijesni bug fix-evi s code primjerima |
 | `setup/` | `deployment/SUBDOMAIN_SETUP.md` |
-| `cloud-mcp-tools/` | [CLAUDE_MCP_TOOLS.md](./cloud-mcp-tools/CLAUDE_MCP_TOOLS.md) — MCP serveri, slash commands |
 | `widgets/` | UNIVERSAL_LOADER_GUIDE.md |

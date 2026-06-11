@@ -54,6 +54,12 @@ Attacker-controlled feed (owner pastes arbitrary URL) can inject `<script>`/HTML
 
 ### F-123-03 🟡 MEDIUM (product decision) — Trial-gate absent on 3 subcollections
 `firestore.rules:268` (units), `:401` (widget_secrets), `:431` (ical_feeds) + CG write paths.
+
+> Context: the SF-078/079/080 trial-gate system is fully MERGED (#666/#668/#669 + #670 banner;
+> backfill verified clean 2026-06-11 — 24/24 canonical). audit/113 §2 *intentionally* left these
+> paths out of the SF-080 map at ship time; the decision here is whether to extend `isActiveOwner()`
+> (rules:59) to them. Pre-flight maps audit/110/112/113 deleted 2026-06-11 — full texts in git
+> history; the live gate inventory is the rules file itself.
 SF-080 `isActiveOwner()` gates properties/bookings/daily_prices/widget_settings but NOT units, widget_secrets, ical_feeds — expired-trial owner can still mutate these.
 **Fix:** product call — if intended, document; else add `&& isActiveOwner()` to the 6 rules.
 

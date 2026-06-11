@@ -236,22 +236,23 @@ async function updateInBatches(
         error: batchError instanceof Error ? batchError.message : String(batchError),
       });
 
-      for (const doc of chunk) {
-        try {
-          await doc.ref.update({
-            status: "completed",
-            updated_at: now,
-          });
+      // Parallel fallback updates (PR #696) — chunk is batchSize-bounded;
+      // counter mutations are safe under Node's single-threaded event loop.
+      await Promise.all(chunk.map((doc) =>
+        doc.ref.update({
+          status: "completed",
+          updated_at: now,
+        }).then(() => {
           results.successCount++;
-        } catch (docError) {
+        }).catch((docError) => {
           results.failedCount++;
           results.failedIds.push(doc.id);
           logError(`[AutoComplete] Failed to update booking ${doc.id}`, docError, {
             bookingId: doc.id,
             bookingReference: doc.data().booking_reference,
           });
-        }
-      }
+        })
+      ));
     }
   }
 

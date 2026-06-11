@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/design/tokens.dart';
 import 'package:intl/intl.dart';
 
 /// Timeline date header components
@@ -108,27 +109,43 @@ class TimelineDayHeader extends StatelessWidget {
     this.screenWidth,
   });
 
+  // HR weekday abbreviations indexed by DateTime.weekday (1..7).
+  static const List<String> _hrDays = <String>[
+    'Pon',
+    'Uto',
+    'Sri',
+    'Čet',
+    'Pet',
+    'Sub',
+    'Ned',
+  ];
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final c = BBColor.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isToday = DateUtils.isSameDay(date, DateTime.now());
     final isWeekend =
         date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
     final isFirstDayOfMonth = date.day == 1;
 
-    // Fixed sizing — matches fixed TimelineDimensions for all devices
+    // Fixed sizing — matches fixed TimelineDimensions for all devices.
+    // Weekday eyebrow + number circle must stay within the fixed 38px
+    // day-header band (FROZEN dimensions), hence the compact metrics.
     const minHeight = 38.0;
-    const verticalPadding = 6.0;
-    const circleSize = 24.0;
+    const verticalPadding = 2.0;
+    const circleSize = 22.0;
     const fontSize = 12.0;
 
     return Container(
       width: dayWidth,
       constraints: const BoxConstraints(minHeight: minHeight),
       decoration: BoxDecoration(
+        // Handoff today tint: primary-tint-bg 6% light / 8% dark.
         color: isToday
-            ? theme.colorScheme.primary.withValues(alpha: 0.2)
-            : Colors.transparent, // Transparent to show parent gradient
+            ? theme.colorScheme.primary.withValues(alpha: isDark ? 0.08 : 0.06)
+            : Colors.transparent,
         border: Border(
           left: BorderSide(
             color: isFirstDayOfMonth
@@ -143,30 +160,46 @@ class TimelineDayHeader extends StatelessWidget {
         vertical: verticalPadding,
         horizontal: 4,
       ),
-      child: Center(
-        child: Container(
-          width: circleSize,
-          height: circleSize,
-          decoration: isToday
-              ? BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  shape: BoxShape.circle,
-                )
-              : null,
-          alignment: Alignment.center,
-          child: Text(
-            '${date.day}',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: fontSize,
-              height: 1.2,
-              // Weekend: use softer orange instead of error red
-              color: isToday
-                  ? theme.colorScheme.onPrimary
-                  : (isWeekend ? const Color(0xFFE67E22) : null),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Weekday eyebrow (handoff day header) — tertiary tone on
+          // weekends, text-tertiary otherwise.
+          Text(
+            _hrDays[(date.weekday - 1).clamp(0, 6)],
+            style: TextStyle(
+              fontSize: 8,
+              height: 1.1,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+              color: isWeekend ? c.tertiary : c.textTertiary,
             ),
           ),
-        ),
+          const SizedBox(height: 1),
+          Container(
+            width: circleSize,
+            height: circleSize,
+            decoration: isToday
+                ? BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    shape: BoxShape.circle,
+                  )
+                : null,
+            alignment: Alignment.center,
+            child: Text(
+              '${date.day}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: fontSize,
+                height: 1.2,
+                color: isToday
+                    ? theme.colorScheme.onPrimary
+                    : (isWeekend ? c.tertiary : null),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

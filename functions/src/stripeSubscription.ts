@@ -18,7 +18,11 @@ import {getCorsAllowlist} from "./utils/corsAllowlist";
  * 3. Create Checkout Session with the selected Price ID.
  * 4. Return the session URL.
  */
-export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
+// F-107-10: region pinned explicitly — both subscription callables were
+// created in the v2 default us-central1 and CF regions are immutable;
+// the pin documents the drift vs the eu-west1 fleet (migration = dual
+// deploy + Stripe webhook URL update, tracked in docs/TODO.md).
+export const createSubscriptionCheckoutSession = onCall({region: "us-central1", secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
   // 1. Rate Limiting
   const rawRequest = request.rawRequest as { ip?: string; headers?: Record<string, string> } | undefined;
   const clientIp = rawRequest?.ip ||
@@ -162,7 +166,7 @@ export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretK
  * Cloud Function: Create Customer Portal Session
  * Allows users to manage their billing (cancel, update payment method)
  */
-export const createCustomerPortalSession = onCall({secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
+export const createCustomerPortalSession = onCall({region: "us-central1", secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be logged in.");
   }

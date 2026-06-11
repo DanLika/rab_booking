@@ -181,7 +181,10 @@ export const getUnitAvailability = onCall<GetUnitAvailabilityInput, Promise<GetU
           .doc(unitId)
           .collection("daily_prices")
           .where("date", ">=", startTs)
-          .where("date", "<=", endTs)
+          // F-86-01: exclusive end — checkout-day midnight must not pull the
+          // checkout day's manual_block into the window list (bookings +
+          // ical_events post-filters below already use exclusive-end).
+          .where("date", "<", endTs)
           .where("available", "==", false)
           .limit(MAX_PRICES_PER_QUERY)
           .get(),

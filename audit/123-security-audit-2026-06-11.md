@@ -113,7 +113,7 @@ Gitignored/untracked; dev-machine risk only. **Fix (optional):** env-var injecti
 | F-99-11 / F-107-11 / F-123-08 | LOW (MED footgun) | `web_utils_web.dart:325,332` `sendMessageToParent` `targetOrigin:'*'` (leaks `cs_*` session IDs to any embedder) | single non-PII-critical caller today; resolve target from trusted-list before adding callers |
 | F-99-12/13/14 / F-107-15 | LOW | CSP scoping: `unsafe-inline`+`unsafe-eval` (CanvasKit needs eval), `*.cloudfunctions.net` wildcard, `*.a.run.app` absent | hardening-sprint batch: change + 3-surface redeploy + smoke as one unit |
 | F-99-15 | INFO latent | deep-link cold-start auth race | guard when wiring app_links stream (F-62-05 class) |
-| F-99-16 | INFO | FCM SW `bookingId` concat without format check | trust-bounded by FCM signing; add `/^[A-Z0-9_-]{6,40}$/i` opportunistically |
+| ~~F-99-16~~ | ~~INFO~~ | ~~FCM SW `bookingId` concat without format check~~ | **CLOSED in code 2026-06-11**: shape guard in `firebase-messaging-sw.js` click handler; ships with next hosting deploy (already on the PROD-pickup checklist) |
 | F-99-17 / F-107-07 | LOW | `uuid <11.1.1` via firebase-admin@12 (8 npm-audit moderates, unreachable in CF paths) | clears with firebase-admin 13/14 bump — separate smoke-tested PR (+ firebase-functions 6→7, F-107-08) |
 
 ### OPEN residuals (absorbed from audit/107 KNOWN-OPEN)
@@ -121,8 +121,8 @@ Gitignored/untracked; dev-machine risk only. **Fix (optional):** env-var injecti
 | ID | Sev | Item | Note |
 |---|---|---|---|
 | F-107-05 | MED partial (SF-068) | `properties.create` accepts client `subdomain` (format-valid squat) before CF reservation | drop `subdomain` from create payload in owner repo + strip from `create.affectedKeys`; force `setPropertySubdomain` callable |
-| F-107-09 / F-86-02 | LOW | availability CG queries lack date-range filter (500-limit silent truncation) | + F-86-01/03 siblings — table in `audit/edge-0530/README.md` |
-| F-107-10 | LOW | `stripeSubscription.ts` no explicit `region` (us-central1 drift) | pin explicit or migrate to eu-west1 (webhook URL update) |
+| F-107-09 / F-86-02 | LOW | availability CG queries lack date-range filter (500-limit silent truncation) | F-86-01 sibling **FIXED 2026-06-11** (`<=`→`<` exclusive end, dev-deployed, t3 live-verified); F-86-03 still open — table in `audit/edge-0530/README.md` |
+| ~~F-107-10~~ | ~~LOW~~ | ~~`stripeSubscription.ts` no explicit `region`~~ | **CLOSED 2026-06-11**: `region: "us-central1"` pinned explicitly on both callables (region immutable; migration tracked in docs/TODO.md) |
 | F-107-12 / F-67-03 | LOW partial | widget form persistence keeps PII 15min in SharedPreferences keyed by `unitId` (`notes` scrubbed) | move to sessionStorage on web (deferred refactor) |
 | F-107-13 | LOW | `firestore.rules:654` deprecated top-level `ical_feeds` read `resource == null` short-circuit → authed feedId existence probe (re-verified open 2026-06-11) | drop short-circuit or delete block (already `create: if false`); sibling of closed F-98-01 |
 | F-107-14 | LOW | `users.create` deny-list without `hasOnly` shape bind (arbitrary unmodeled fields at signup) | optional allowlist; update deny-list is the real gate |

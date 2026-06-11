@@ -114,7 +114,13 @@ self.addEventListener('notificationclick', (event) => {
 
   event.notification.close();
 
-  const bookingId = event.notification.data?.bookingId;
+  // F-99-16: payload is trust-bounded by FCM signing, but the id is still
+  // concatenated into a URL + postMessage — shape-check as defense-in-depth.
+  const rawBookingId = event.notification.data?.bookingId;
+  const bookingId =
+    typeof rawBookingId === 'string' && /^[A-Za-z0-9_-]{6,40}$/.test(rawBookingId)
+      ? rawBookingId
+      : null;
 
   let urlToOpen = '/owner/bookings';
   if (bookingId) {

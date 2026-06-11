@@ -467,8 +467,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       } else {
         await actions.rejectBooking(bookingId);
       }
+      // F-T3-Notif-01: markAsRead is best-effort. A stale / orphan notification
+      // doc (test artifact, deleted upstream, rules-deny path) must NOT poison
+      // the success toast — the success-critical write (approve/reject CF)
+      // already committed above. Swallow + log.
       if (!notification.isRead) {
-        await actions.markAsRead(notification.id);
+        try {
+          await actions.markAsRead(notification.id);
+        } catch (e) {
+          debugPrint('[notifications] markAsRead best-effort failed: $e');
+        }
       }
       if (!context.mounted || messenger == null) return;
       messenger.showSnackBar(

@@ -778,8 +778,18 @@ class _RezPendingCardState extends ConsumerState<_RezPendingCard> {
       } else {
         await repo.rejectBooking(widget.preview.id);
       }
-      // Refresh the bookings list so the card vanishes.
-      await ref.read(windowedBookingsNotifierProvider.notifier).refresh();
+      // F-T3-Notif-01: refresh() is best-effort. The success-critical write
+      // (approve/reject CF) already committed; the windowed-bookings stream
+      // listener picks up the status flip on the next tick and the card
+      // vanishes anyway. A transient refresh() failure (rules-deny on a
+      // sibling doc, network blip) must NOT poison the success toast.
+      try {
+        await ref.read(windowedBookingsNotifierProvider.notifier).refresh();
+      } catch (e) {
+        debugPrint(
+          '[premium-header] post-action refresh best-effort failed: $e',
+        );
+      }
       if (!mounted) return;
       messenger?.showSnackBar(
         SnackBar(

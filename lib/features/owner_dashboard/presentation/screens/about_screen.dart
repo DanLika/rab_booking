@@ -178,7 +178,6 @@ class _AboutIdentityCard extends StatelessWidget {
                       ],
                     )
                   : Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const BbLogo(size: 72),
                         const SizedBox(width: 20),

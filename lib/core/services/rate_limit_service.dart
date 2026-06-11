@@ -164,7 +164,6 @@ class RateLimitService {
       return LoginAttempt(
         email: email,
         attemptCount: 1,
-        lockedUntil: null,
         lastAttemptAt: DateTime.now(),
       );
     }

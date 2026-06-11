@@ -400,17 +400,46 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                         ),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(minHeight: minHeight),
-                          child: Center(
-                            child: _buildGlassCard(
-                              context,
-                              theme,
-                              rd,
-                              c,
-                              l10n,
-                              isCompact,
-                              isSmallHeight,
-                            ),
-                          ),
+                          // Handoff auth.jsx desktop split (≥1200): brand
+                          // pitch panel left, 560px login card right.
+                          // Narrower widths keep the centered card.
+                          child: constraints.maxWidth >= 1200
+                              ? Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      child: _LoginPitchPanel(
+                                        minHeight: minHeight,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 560,
+                                      child: Center(
+                                        child: _buildGlassCard(
+                                          context,
+                                          theme,
+                                          rd,
+                                          c,
+                                          l10n,
+                                          isCompact,
+                                          isSmallHeight,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Center(
+                                  child: _buildGlassCard(
+                                    context,
+                                    theme,
+                                    rd,
+                                    c,
+                                    l10n,
+                                    isCompact,
+                                    isSmallHeight,
+                                  ),
+                                ),
                         ),
                       ),
                     );
@@ -730,6 +759,168 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Desktop brand/pitch panel (handoff `auth.jsx` AuthLoginDesktop left side):
+/// logo + wordmark top, pitch block with eyebrow/headline/copy/stats in the
+/// middle, legal footer at the bottom. Copy is handoff-spec HR marketing.
+class _LoginPitchPanel extends StatelessWidget {
+  final double minHeight;
+
+  const _LoginPitchPanel({required this.minHeight});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(80, 64, 80, 64),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minHeight: (minHeight - 128).clamp(0, double.infinity),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const BbLogo(size: 40),
+                const SizedBox(width: 12),
+                Text(
+                  'BookBed',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.44,
+                    color: c.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'OWNER APLIKACIJA',
+                    style: BBType.eyebrow(context).copyWith(color: c.primary),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Sve vaše rezervacije.\nJedno mjesto.',
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1.44,
+                      height: 1.1,
+                      color: c.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Booking.com, Airbnb i vlastiti widget — sinkronizirano '
+                    'svakih 15 minuta. Bez dvostrukih rezervacija.',
+                    style: BBType.bodyLg(
+                      context,
+                    ).copyWith(color: c.textSecondary, height: 1.5),
+                  ),
+                  const SizedBox(height: 32),
+                  const Row(
+                    children: [
+                      _PitchStat(value: '45+', label: 'aktivnih vlasnika'),
+                      SizedBox(width: 24),
+                      _PitchStat(value: '12k', label: 'rezervacija godišnje'),
+                      SizedBox(width: 24),
+                      _PitchStat(value: '99.9%', label: 'uptime'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 6,
+              children: [
+                Text(
+                  '© 2026 BookBed Inc.',
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textTertiary),
+                ),
+                Text(
+                  '·',
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textTertiary),
+                ),
+                InkWell(
+                  onTap: () => context.push(OwnerRoutes.termsConditions),
+                  child: Text(
+                    'Uvjeti',
+                    style: BBType.caption(
+                      context,
+                    ).copyWith(color: c.textTertiary),
+                  ),
+                ),
+                Text(
+                  '·',
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textTertiary),
+                ),
+                InkWell(
+                  onTap: () => context.push(OwnerRoutes.privacyPolicy),
+                  child: Text(
+                    'Privatnost',
+                    style: BBType.caption(
+                      context,
+                    ).copyWith(color: c.textTertiary),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Pitch stat (handoff PitchStat): tabular value in primary + caption label.
+class _PitchStat extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _PitchStat({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.56,
+            color: c.primary,
+            fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: BBType.caption(context).copyWith(color: c.textSecondary),
+        ),
+      ],
     );
   }
 }

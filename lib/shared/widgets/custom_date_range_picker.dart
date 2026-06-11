@@ -80,11 +80,16 @@ class _CustomDateRangePickerDialogState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with brand gradient
+            // Theme-aware shell header
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
+                color: theme.colorScheme.surface,
+                border: Border(
+                  bottom: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.4),
+                  ),
+                ),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(15),
                 ),
@@ -92,14 +97,14 @@ class _CustomDateRangePickerDialogState
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.date_range,
-                      color: Colors.white,
+                      color: theme.colorScheme.primary,
                       size: 20,
                     ),
                   ),
@@ -108,7 +113,7 @@ class _CustomDateRangePickerDialogState
                     child: AutoSizeText(
                       'Odaberi raspon',
                       style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
+                        color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                       ),
                       maxLines: 1,
@@ -116,7 +121,7 @@ class _CustomDateRangePickerDialogState
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
                     onPressed: () => Navigator.of(context).pop(),
                     tooltip: 'Zatvori',
                   ),
@@ -212,12 +217,9 @@ class _CustomDateRangePickerDialogState
                   const SizedBox(width: 8),
                   Container(
                     decoration: BoxDecoration(
-                      gradient: (_startDate != null && _endDate != null)
-                          ? context.gradients.brandPrimary
-                          : null,
-                      color: (_startDate == null || _endDate == null)
-                          ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
-                          : null,
+                      color: (_startDate != null && _endDate != null)
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Material(

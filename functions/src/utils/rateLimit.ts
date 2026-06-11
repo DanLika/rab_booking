@@ -11,9 +11,19 @@
  * @module rateLimit
  */
 
+import * as crypto from "crypto";
 import {db} from "../firebase";
 import {HttpsError} from "firebase-functions/v2/https";
 import {logError} from "../logger";
+
+/**
+ * Derive a stable, non-reversible Firestore-safe key from a raw scope value
+ * (e.g. a client IP) for use as the `userId` segment of [enforceRateLimit].
+ * Keeps PII (raw IPs) out of Firestore paths. (F-101-03)
+ */
+export function hashRateKey(raw: string): string {
+  return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 24);
+}
 
 // ==========================================
 // IN-MEMORY RATE LIMITING

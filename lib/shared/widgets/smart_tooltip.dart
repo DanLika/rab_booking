@@ -322,9 +322,11 @@ class _TooltipPositioner extends StatelessWidget {
                 decoration:
                     decoration ??
                     BoxDecoration(
+                      // Inverted tooltip surface — palette refs (audit/121):
+                      // dark = sectionDividerDark, light = text-primary ink.
                       color: isDark
                           ? const Color(0xFF2D2D3A)
-                          : const Color(0xFF424242),
+                          : const Color(0xFF2D3748),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(

@@ -414,7 +414,8 @@ class _StripeConnectSetupScreenState
 
     return Container(
       decoration: BoxDecoration(
-        gradient: context.gradients.brandPrimary,
+        color: theme.colorScheme.surface,
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
         borderRadius: BorderRadius.circular(16),
         boxShadow: isDark ? AppShadows.elevation3Dark : AppShadows.elevation3,
       ),
@@ -429,10 +430,14 @@ class _StripeConnectSetupScreenState
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(statusIcon, size: 32, color: Colors.white),
+                  child: Icon(
+                    statusIcon,
+                    size: 32,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -450,7 +455,9 @@ class _StripeConnectSetupScreenState
                       Text(
                         statusDescription,
                         style: TextStyle(
-                          color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                           fontSize: 14,
                         ),
                       ),
@@ -469,7 +476,9 @@ class _StripeConnectSetupScreenState
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha((0.15 * 255).toInt()),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.6,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -478,13 +487,13 @@ class _StripeConnectSetupScreenState
                     Icon(
                       Icons.badge_outlined,
                       size: 16,
-                      color: Colors.white.withAlpha((0.8 * 255).toInt()),
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'ID: $_stripeAccountId',
                       style: TextStyle(
-                        color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                        color: theme.colorScheme.onSurfaceVariant,
                         fontSize: 12,
                         fontFamily: 'monospace',
                       ),
@@ -501,7 +510,6 @@ class _StripeConnectSetupScreenState
                 label: actionLabel,
                 iconLeft: actionIcon,
                 onPressed: actionOnPressed,
-                variant: BbButtonVariant.onGradientSolid,
                 size: BbButtonSize.lg,
                 fullWidth: true,
                 loading: _isConnecting,
@@ -517,7 +525,7 @@ class _StripeConnectSetupScreenState
                 onPressed: _isConnecting
                     ? null
                     : () => _confirmDisconnect(context),
-                variant: BbButtonVariant.onGradient,
+                variant: BbButtonVariant.secondary,
                 size: BbButtonSize.lg,
                 fullWidth: true,
                 loading: _isConnecting,

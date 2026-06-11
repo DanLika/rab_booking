@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/utils/image_utils.dart';
@@ -19,7 +18,7 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
-import '../../../../shared/widgets/gradient_button.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../widgets/embed_code_generator_dialog.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/owner_properties_provider.dart';
@@ -445,15 +444,19 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                           ),
                           const SizedBox(height: AppDimensions.spaceM),
 
-                          // Modern Gradient Save Button
-                          GradientButton(
-                            text: _isEditing
+                          // Primary save CTA on design-system `BbButton` —
+                          // replaces hand-rolled `GradientButton` with the
+                          // handoff `--bb-primary` + `--bb-shadow-purple-sm`
+                          // surface (matches Bank Account / Edit Profile / iCal).
+                          BbButton(
+                            label: _isEditing
                                 ? l10n.unitFormSaveChanges
                                 : l10n.unitFormAddUnit,
-                            onPressed: _handleSave,
-                            isLoading: _isLoading,
-                            icon: _isEditing ? Icons.save : Icons.add,
-                            width: double.infinity,
+                            iconLeft: _isEditing ? 'save' : 'add',
+                            size: BbButtonSize.lg,
+                            fullWidth: true,
+                            loading: _isLoading,
+                            onPressed: _isLoading ? null : _handleSave,
                           ),
 
                           // Widget Settings & Embed Code section (only when editing)
@@ -472,7 +475,12 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                   ),
                                 ),
                                 const SizedBox(height: AppDimensions.spaceM),
-                                OutlinedButton.icon(
+                                BbButton(
+                                  label: l10n.unitFormWidgetSettings,
+                                  iconLeft: 'settings',
+                                  variant: BbButtonVariant.secondary,
+                                  size: BbButtonSize.lg,
+                                  fullWidth: true,
                                   onPressed: () {
                                     context.push(
                                       OwnerRoutes.unitWidgetSettings.replaceAll(
@@ -481,22 +489,15 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                       ),
                                     );
                                   },
-                                  icon: const Icon(Icons.settings),
-                                  label: Text(l10n.unitFormWidgetSettings),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                      horizontal: 24,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
                                 ),
                                 const SizedBox(height: AppDimensions.spaceS),
-                                OutlinedButton.icon(
+                                BbButton(
+                                  label: l10n.unitFormGenerateEmbed,
+                                  iconLeft: 'code',
+                                  variant: BbButtonVariant.secondary,
+                                  size: BbButtonSize.lg,
+                                  fullWidth: true,
                                   onPressed: () async {
-                                    // Fetch property to get subdomain
                                     final property = await ref.read(
                                       propertyByIdProvider(
                                         widget.propertyId,
@@ -516,17 +517,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                           ),
                                     );
                                   },
-                                  icon: const Icon(Icons.code),
-                                  label: Text(l10n.unitFormGenerateEmbed),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                      horizontal: 24,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
                                 ),
                               ],
                             ),
@@ -554,19 +544,16 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.all(16),
-                                    decoration: const BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          AppColors.primary,
-                                          AppColors.authSecondary,
-                                        ],
-                                      ),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const CircularProgressIndicator(
+                                    child: CircularProgressIndicator(
                                       strokeWidth: 3,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
+                                        Theme.of(context).colorScheme.onPrimary,
                                       ),
                                     ),
                                   ),

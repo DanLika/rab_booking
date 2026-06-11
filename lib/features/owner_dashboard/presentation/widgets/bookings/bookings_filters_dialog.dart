@@ -12,6 +12,7 @@ import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/models/property_model.dart';
 import '../../../../../shared/widgets/custom_date_range_picker.dart';
+import '../../../../../shared/widgets/redesign.dart';
 import '../../providers/owner_bookings_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
 
@@ -72,26 +73,38 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with gradient - matches CommonAppBar height (52px)
+            // Dialog header — theme-aware shell strip. Previously a brand
+            // purple `gradient` rendered a "hero on a dialog" which read as
+            // heavier than the design's dialogs (`design_handoff/source/dialogs.jsx`
+            // PV_PANEL_BG header).
             Container(
               height: ResponsiveDialogUtils.kHeaderHeight,
               padding: EdgeInsets.symmetric(horizontal: headerPadding),
               decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
+                color: theme.colorScheme.surface,
+                border: Border(
+                  bottom: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.4),
+                  ),
+                ),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(11),
                 ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.filter_list, color: Colors.white, size: 22),
+                  Icon(
+                    Icons.filter_list,
+                    color: theme.colorScheme.primary,
+                    size: 22,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: AutoSizeText(
                       l10n.ownerFiltersTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
                         fontSize: 16,
                       ),
                       maxLines: 1,
@@ -99,7 +112,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
                     onPressed: () => Navigator.of(context).pop(),
                     tooltip: l10n.ownerDetailsClose,
                   ),
@@ -492,47 +505,18 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     bool isFullWidth,
     AppLocalizations l10n,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: context.gradients.brandPrimary,
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            // Apply filters using individual setters
-            final notifier = ref.read(bookingsFiltersNotifierProvider.notifier);
-
-            // Apply each filter individually
-            notifier.setStatus(_filters.status);
-            notifier.setProperty(_filters.propertyId);
-            notifier.setDateRange(_filters.startDate, _filters.endDate);
-
-            Navigator.of(context).pop();
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
-              children: [
-                const Icon(Icons.check, color: Colors.white),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.ownerFiltersApply,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return BbButton(
+      label: l10n.ownerFiltersApply,
+      iconLeft: 'check',
+      size: BbButtonSize.lg,
+      fullWidth: isFullWidth,
+      onPressed: () {
+        final notifier = ref.read(bookingsFiltersNotifierProvider.notifier);
+        notifier.setStatus(_filters.status);
+        notifier.setProperty(_filters.propertyId);
+        notifier.setDateRange(_filters.startDate, _filters.endDate);
+        Navigator.of(context).pop();
+      },
     );
   }
 
@@ -541,28 +525,21 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     bool isFullWidth,
     AppLocalizations l10n,
   ) {
-    return OutlinedButton.icon(
+    return BbButton(
+      label: l10n.ownerFiltersClear,
+      iconLeft: 'clear_all',
+      variant: BbButtonVariant.secondary,
+      size: BbButtonSize.lg,
+      fullWidth: isFullWidth,
       onPressed: () {
-        // Clear local state
         setState(() {
           _filters = const BookingsFilters();
           _selectedStartDate = null;
           _selectedEndDate = null;
         });
-
-        // Also immediately apply cleared filters to the provider
         final notifier = ref.read(bookingsFiltersNotifierProvider.notifier);
         notifier.clearFilters();
       },
-      icon: const Icon(Icons.clear_all),
-      label: Text(l10n.ownerFiltersClear),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        side: BorderSide(
-          color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
     );
   }
 

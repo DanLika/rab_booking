@@ -164,7 +164,7 @@ Dodaju se u Firebase Console → Hosting → Add custom domain:
 
 ## Per-env URLs in Dart code — use `EnvironmentConfig`
 
-`lib/core/config/environment.dart` is the single source of truth for hosts and base URLs. Never hardcode `view.bookbed.io` / `app.bookbed.io` / `bookbed.io` / project IDs in Dart code. T13 (`audit/08-environment-url-centralization.md`, commit `b0bad83c`) centralized all 6 prod-path callsites.
+`lib/core/config/environment.dart` is the single source of truth for hosts and base URLs. Never hardcode `view.bookbed.io` / `app.bookbed.io` / `bookbed.io` / project IDs in Dart code. T13 (commit `b0bad83c`) centralized all 6 prod-path callsites.
 
 API:
 ```dart
@@ -229,7 +229,7 @@ tool/build_aab.sh                    # release + lib/main.dart
 tool/build_aab.sh --release --target lib/widget_main.dart
 ```
 
-**CI**: `.github/workflows/ci.yml` `build-android` job (Job 3) je ENABLED i koristi `./tool/build_aab.sh --release`. NE vraćaj na direktni `flutter build appbundle` — pukne. Reference: `audit/16-android-regression-full.md` Appendix B, `memory/aab-build-blocker.md`.
+**CI**: `.github/workflows/ci.yml` `build-android` job (Job 3) je ENABLED i koristi `./tool/build_aab.sh --release`. NE vraćaj na direktni `flutter build appbundle` — pukne. Reference: `memory/aab-build-blocker.md` + `tool/build_aab.sh` header.
 
 ### Pokretanje
 

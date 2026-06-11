@@ -30,7 +30,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin} from "./firebase";
 import {logInfo, logWarn} from "./logger";
-import {checkRateLimit} from "./utils/rateLimit";
+import {checkRateLimit, enforceRateLimit} from "./utils/rateLimit";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {sanitizeEmail} from "./utils/inputSanitization";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
@@ -110,6 +110,14 @@ export const recordLoginFailure = onCall(
       logWarn("[LoginLockout] Rate limit hit on recordLoginFailure", {ipHash: ipKey});
       throw new HttpsError("resource-exhausted", "Too many failure reports from this IP.");
     }
+    // F-101-03: in-memory limit above is per-instance — scale-out resets it.
+    // Firestore-backed layer makes the IP budget instance-global. Fail-closed
+    // (default): blocking a failure-report on limiter outage is safe.
+    await enforceRateLimit(`ip_${ipKey}`, "record_login_failure", {
+      maxCalls: RECORD_FAILURE_MAX,
+      windowMs: RECORD_FAILURE_WINDOW_SECONDS * 1000,
+      errorMessage: "Too many failure reports from this IP.",
+    });
 
     const docId = emailToDocId(sanitized);
     const ref = admin.firestore().collection("loginAttempts").doc(docId);

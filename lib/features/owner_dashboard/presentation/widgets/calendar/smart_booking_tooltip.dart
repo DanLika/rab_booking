@@ -544,14 +544,16 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: status.color.withAlpha((0.2 * 255).toInt()),
+        color: status.colorOf(context).withAlpha((0.2 * 255).toInt()),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: status.color.withAlpha((0.5 * 255).toInt())),
+        border: Border.all(
+          color: status.colorOf(context).withAlpha((0.5 * 255).toInt()),
+        ),
       ),
       child: Text(
         _getStatusText(status),
         style: TextStyle(
-          color: status.color,
+          color: status.colorOf(context),
           fontSize: 10,
           fontWeight: FontWeight.bold,
         ),

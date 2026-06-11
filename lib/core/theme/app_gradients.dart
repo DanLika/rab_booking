@@ -58,13 +58,17 @@ class AppGradients extends ThemeExtension<AppGradients> {
   // CENTRAL COLOR DEFINITIONS - CHANGE HERE = UPDATE EVERYWHERE!
   // ============================================================================
 
-  // Light theme: Cool lavender-gray → White (matches purple brand)
-  static const Color _lightStart = Color(0xFFF5F3F9); // Lavender-gray
-  static const Color _lightEnd = Color(0xFFFFFFFF); // White
+  // Light theme: handoff `--bb-shell-bg = #F0F1F5` flat, mirroring
+  // `BbRedesignTokens.light.shellBg` (pregled-premium.jsx PV_SHELL_BG).
+  // Start/end identical so the `LinearGradient` infrastructure is preserved
+  // without a visible wash — design has no gradient on dashboard shells.
+  static const Color _lightStart = Color(0xFFF0F1F5);
+  static const Color _lightEnd = Color(0xFFF0F1F5);
 
-  // Dark theme: Cool dark purple-gray (matches purple brand)
-  static const Color _darkStart = Color(0xFF1A1820); // Dark purple-gray
-  static const Color _darkEnd = Color(0xFF211F26); // Slightly lighter
+  // Dark theme: handoff `--bb-shell-bg = #000000` flat, mirroring
+  // `BbRedesignTokens.dark.shellBg`. OLED-friendly true black, no gradient.
+  static const Color _darkStart = Color(0xFF000000);
+  static const Color _darkEnd = Color(0xFF000000);
 
   // Brand purple (same for light & dark)
   static const Color _brandStart = Color(0xFF6B4CE6); // Purple
@@ -74,17 +78,21 @@ class AppGradients extends ThemeExtension<AppGradients> {
   static const Color _premiumStart = Color(0xFF5233CC); // Deep purple
   static const Color _premiumEnd = Color(0xFF8B66F7); // Lavender purple
 
-  // Section border colors (cool tones to match backgrounds)
-  static const Color _lightBorder = Color(0xFFE0DCE8); // Cool gray
-  static const Color _darkBorder = Color(0xFF35323D); // Dark cool gray
+  // Section border colors — handoff hairline (`--bb-panel-border`).
+  // Light: rgba(20,24,45,.05) over panel; dark: rgba(255,255,255,.06).
+  static const Color _lightBorder = Color(0xFFE0DCE8);
+  static const Color _darkBorder = Color(0xFF35323D);
 
-  // Card background colors (flat, no gradient)
-  static const Color _lightCard = Color(0xFFFFFFFF); // White
-  static const Color _darkCard = Color(0xFF252330); // Dark purple-gray
+  // Card background colors (flat, no gradient).
+  // Light = `panelBg` `#FBFBFD`; dark = `panelBg` `#0B0B0D` per handoff
+  // (`BbRedesignTokens.panelBg`).
+  static const Color _lightCard = Color(0xFFFBFBFD);
+  static const Color _darkCard = Color(0xFF0B0B0D);
 
-  // Input fill colors (for text fields, dropdowns)
-  static const Color _lightInputFill = Color(0xFFF5F3F9); // Subtle lavender
-  static const Color _darkInputFill = Color(0xFF1E1C24); // Darker purple-gray
+  // Input fill colors — handoff `--bb-surface-variant` (subtle off-shell).
+  // Light: shellBg lifted toward white; dark: panelBg lifted toward purple.
+  static const Color _lightInputFill = Color(0xFFF5F6FA);
+  static const Color _darkInputFill = Color(0xFF15151A);
 
   // ============================================================================
   // PREDEFINED THEME INSTANCES
@@ -97,10 +105,9 @@ class AppGradients extends ThemeExtension<AppGradients> {
       stops: [0.0, 0.6],
     ),
     sectionBackground: LinearGradient(
-      begin: Alignment.centerRight,
-      end: Alignment.centerLeft,
-      colors: [Color(0xFFEFECF5), Color(0xFFF8F7FB)],
-      stops: [0.0, 0.5],
+      // handoff `--bb-panel-bg = #FBFBFD` flat. Section/sub-card surfaces sit
+      // on top of `shellBg` per pregled-premium.jsx PV_PANEL_BG.
+      colors: [Color(0xFFFBFBFD), Color(0xFFFBFBFD)],
     ),
     brandPrimary: LinearGradient(
       begin: Alignment.topLeft,
@@ -124,10 +131,8 @@ class AppGradients extends ThemeExtension<AppGradients> {
       stops: [0.0, 0.6],
     ),
     sectionBackground: LinearGradient(
-      begin: Alignment.centerRight,
-      end: Alignment.centerLeft,
-      colors: [Color(0xFF252330), Color(0xFF1E1C24)],
-      stops: [0.0, 0.5],
+      // handoff dark `--bb-panel-bg = #0B0B0D` flat.
+      colors: [Color(0xFF0B0B0D), Color(0xFF0B0B0D)],
     ),
     brandPrimary: LinearGradient(
       begin: Alignment.topLeft,

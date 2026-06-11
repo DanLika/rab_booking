@@ -14,6 +14,7 @@ import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/message_box.dart';
 import '../../../../shared/widgets/platform_icon.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import 'edit_booking_dialog.dart';
@@ -280,11 +281,15 @@ class BookingDetailsDialogV2 extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
     return Container(
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        gradient: context.gradients.brandPrimary,
+        color: theme.colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.4)),
+        ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
       ),
       child: Row(
@@ -292,12 +297,12 @@ class BookingDetailsDialogV2 extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.receipt_long,
-              color: Colors.white,
+              color: theme.colorScheme.primary,
               size: 20,
             ),
           ),
@@ -305,10 +310,10 @@ class BookingDetailsDialogV2 extends ConsumerWidget {
           Expanded(
             child: Text(
               l10n.ownerDetailsTitle,
-              style: const TextStyle(
-                fontSize: 18, // Increased from 16px
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -316,7 +321,7 @@ class BookingDetailsDialogV2 extends ConsumerWidget {
           ),
           AccessibleIconButton(
             icon: Icons.close,
-            color: Colors.white,
+            color: theme.colorScheme.onSurface,
             onPressed: () => Navigator.of(context).pop(),
             semanticLabel: l10n.close,
             padding: EdgeInsets.zero,
@@ -360,7 +365,6 @@ class BookingDetailsDialogV2 extends ConsumerWidget {
                   Navigator.of(context).pop();
                   showEditBookingDialog(context, ref, booking);
                 },
-                gradient: context.gradients.brandPrimary,
               ),
             ),
             const SizedBox(width: 6),
@@ -373,7 +377,6 @@ class BookingDetailsDialogV2 extends ConsumerWidget {
                 Navigator.of(context).pop();
                 showSendEmailDialog(context, ref, booking);
               },
-              gradient: context.gradients.brandPrimary,
             ),
           ),
           if (booking.status != BookingStatus.cancelled) ...[
@@ -383,7 +386,6 @@ class BookingDetailsDialogV2 extends ConsumerWidget {
                 icon: Icons.replay_outlined,
                 label: l10n.ownerDetailsResend,
                 onPressed: () => _resendConfirmationEmail(context, ref, l10n),
-                gradient: context.gradients.brandPrimary,
               ),
             ),
           ],
@@ -592,7 +594,7 @@ class _StatusBadgeV2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = status.color;
+    final statusColor = status.colorOf(context);
     final statusText = status.displayNameLocalized(context);
 
     return Container(
@@ -614,64 +616,38 @@ class _StatusBadgeV2 extends StatelessWidget {
 }
 
 /// Action button for footer - compact but readable
+/// Compact dialog footer action — thin BbButton wrapper translating the
+/// legacy `IconData` + brand-purple convention into the design-system
+/// primitive. Was a hand-rolled `Container(gradient) + Material + InkWell`
+/// with white-on-purple text.
 class _ActionButtonV2 extends StatelessWidget {
   const _ActionButtonV2({
     required this.icon,
     required this.label,
     required this.onPressed,
-    required this.gradient,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
-  final Gradient gradient;
+
+  // Maps the three legacy IconData callers (edit / email / replay) to
+  // Material Symbols glyph names BbIcon understands.
+  String _glyph() {
+    if (icon == Icons.edit_outlined) return 'edit';
+    if (icon == Icons.email_outlined) return 'mail';
+    if (icon == Icons.replay_outlined) return 'replay';
+    return 'check';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(
-              context,
-            ).colorScheme.primary.withAlpha((0.25 * 255).toInt()),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 9),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 15, color: Colors.white),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return BbButton(
+      label: label,
+      iconLeft: _glyph(),
+      size: BbButtonSize.sm,
+      fullWidth: true,
+      onPressed: onPressed,
     );
   }
 }
@@ -709,11 +685,18 @@ class _ResendEmailDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
+            // Header — shell-tone strip with soft primary-tinted icon (same
+            // pattern as `_buildHeader` on the parent dialog and the bookings
+            // filters dialog).
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
+                color: theme.colorScheme.surface,
+                border: Border(
+                  bottom: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.4),
+                  ),
+                ),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(11),
                 ),
@@ -723,12 +706,12 @@ class _ResendEmailDialog extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.email,
-                      color: Colors.white,
+                      color: theme.colorScheme.primary,
                       size: 18,
                     ),
                   ),
@@ -736,16 +719,16 @@ class _ResendEmailDialog extends StatelessWidget {
                   Expanded(
                     child: Text(
                       l10n.ownerDetailsResendTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ),
                   AccessibleIconButton(
                     icon: Icons.close,
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     onPressed: () => Navigator.of(context).pop(false),
                     semanticLabel: l10n.close,
                     padding: EdgeInsets.zero,
@@ -828,31 +811,12 @@ class _ResendEmailDialog extends StatelessWidget {
                   bottom: Radius.circular(11),
                 ),
               ),
-              child: SizedBox(
-                width: double.infinity,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: context.gradients.brandPrimary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ElevatedButton.icon(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: Colors.white,
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    icon: const Icon(Icons.send, size: 18),
-                    label: Text(l10n.ownerDetailsSend),
-                  ),
-                ),
+              child: BbButton(
+                label: l10n.ownerDetailsSend,
+                iconLeft: 'send',
+                size: BbButtonSize.lg,
+                fullWidth: true,
+                onPressed: () => Navigator.of(context).pop(true),
               ),
             ),
           ],

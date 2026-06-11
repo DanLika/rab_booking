@@ -7,6 +7,7 @@ import {LookupAddress} from "dns";
 import * as net from "net";
 import {admin} from "./firebase";
 import {logInfo, logError, logWarn, logSuccess} from "./logger";
+import {enforceRateLimit} from "./utils/rateLimit";
 import {setUser, captureMessage} from "./sentry";
 import {analyzeEvent, ExistingBooking} from "./utils/echoDetection";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
@@ -412,6 +413,14 @@ export const syncIcalFeedNow = onCall({cors: getCorsAllowlist()}, async (request
 
   // Set user context for Sentry error tracking
   setUser(callerUid);
+
+  // F-99-08 (audit/99): manual sync fans out to external HTTP fetches —
+  // Firestore-backed bound (instance-global) per owner.
+  await enforceRateLimit(callerUid, "ical_sync_now", {
+    maxCalls: 10,
+    windowMs: 60000,
+    errorMessage: "Too many manual syncs. Try again in a minute.",
+  });
 
   const {feedId, propertyId} = request.data;
 

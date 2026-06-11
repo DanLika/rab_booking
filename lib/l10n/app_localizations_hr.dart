@@ -1615,6 +1615,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerUpcomingCheckIns => 'Nadolazeći check-in';
 
   @override
+  String get ownerDashboardNewGuests => 'Novi gosti';
+
+  @override
+  String get ownerDashboardAvgRating => 'Prosječna ocjena';
+
+  @override
   String get ownerActiveProperties => 'Aktivne nekretnine';
 
   @override
@@ -2287,6 +2293,10 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get ownerDetailsTitle => 'Detalji rezervacije';
+
+  @override
+  String get ownerDetailsAwaitingApproval =>
+      'Ova rezervacija čeka vaše odobrenje';
 
   @override
   String get ownerDetailsBookingInfo => 'Informacije o rezervaciji';

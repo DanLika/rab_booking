@@ -3062,6 +3062,18 @@ abstract class AppLocalizations {
   /// **'Upcoming check-ins'**
   String get ownerUpcomingCheckIns;
 
+  /// No description provided for @ownerDashboardNewGuests.
+  ///
+  /// In en, this message translates to:
+  /// **'New guests'**
+  String get ownerDashboardNewGuests;
+
+  /// No description provided for @ownerDashboardAvgRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Average rating'**
+  String get ownerDashboardAvgRating;
+
   /// No description provided for @ownerActiveProperties.
   ///
   /// In en, this message translates to:
@@ -4313,6 +4325,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Booking details'**
   String get ownerDetailsTitle;
+
+  /// No description provided for @ownerDetailsAwaitingApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking is awaiting your approval'**
+  String get ownerDetailsAwaitingApproval;
 
   /// No description provided for @ownerDetailsBookingInfo.
   ///

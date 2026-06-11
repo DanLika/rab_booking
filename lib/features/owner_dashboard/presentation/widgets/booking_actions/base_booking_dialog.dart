@@ -49,7 +49,8 @@ class BaseBookingDialog extends StatelessWidget {
   /// Callback when confirm is pressed
   final VoidCallback onConfirm;
 
-  /// Optional custom gradient for header (defaults to brandPrimary)
+  /// Optional custom gradient for header (status-action variants pass a
+  /// colored gradient; default null → theme-aware shell-tone header)
   final Gradient? headerGradient;
 
   /// Optional custom color for confirm button (defaults to primary)
@@ -101,31 +102,70 @@ class BaseBookingDialog extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, double padding) {
+    final theme = Theme.of(context);
+    // Status-action variants pass a colored gradient (e.g. error/warning) and
+    // render white-on-color. Default: theme-aware shell-tone with primary-tint
+    // icon tile.
+    if (headerGradient != null) {
+      return Container(
+        height: ResponsiveDialogUtils.kHeaderHeight,
+        padding: EdgeInsets.symmetric(horizontal: padding),
+        decoration: BoxDecoration(
+          gradient: headerGradient,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(51),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Container(
       height: ResponsiveDialogUtils.kHeaderHeight,
       padding: EdgeInsets.symmetric(horizontal: padding),
       decoration: BoxDecoration(
-        gradient: headerGradient ?? context.gradients.brandPrimary,
+        color: theme.colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.4)),
+        ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(51),
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: Colors.white, size: 20),
+            child: Icon(icon, color: theme.colorScheme.primary, size: 20),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),

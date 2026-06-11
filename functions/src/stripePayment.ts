@@ -22,7 +22,7 @@ import {
 import {sanitizeText, sanitizeEmail, sanitizePhone} from "./utils/inputSanitization";
 import {logInfo, logError, logWarn, logSuccess} from "./logger";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
-import {checkRateLimit} from "./utils/rateLimit";
+import {checkRateLimit, enforceRateLimit, hashRateKey} from "./utils/rateLimit";
 import {requireActiveUnitOwner} from "./utils/requireActiveUnitOwner";
 import {
   logSecurityEvent,
@@ -84,6 +84,17 @@ export const createStripeCheckoutSession = onCall({
       "Too many checkout attempts. Please wait a few minutes before trying again."
     );
   }
+
+  // F-101-03: instance-global Firestore-backed layer behind the in-memory
+  // L1 (scale-out resets the Map). failOpen — checkout is the revenue path;
+  // L1 still guards if the limiter store hiccups.
+  await enforceRateLimit(`ip_${hashRateKey(clientIp)}`, "stripe_checkout", {
+    maxCalls: 10,
+    windowMs: 300000,
+    failOpen: true,
+    errorMessage:
+      "Too many checkout attempts. Please wait a few minutes before trying again.",
+  });
 
   const {
     // Booking data (from atomicBooking validation result)

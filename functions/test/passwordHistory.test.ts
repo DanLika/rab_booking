@@ -25,6 +25,12 @@ jest.mock("firebase-admin", () => {
   };
 });
 
+jest.mock("../src/utils/rateLimit", () => ({
+  checkRateLimit: jest.fn().mockReturnValue(true),
+  enforceRateLimit: jest.fn().mockResolvedValue(undefined),
+  hashRateKey: jest.fn((raw: string) => `hash_${raw}`),
+}));
+
 jest.mock("bcrypt", () => ({
   hash: jest.fn().mockResolvedValue("hashed-password"),
   compare: jest.fn(),

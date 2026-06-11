@@ -1,264 +1,272 @@
 {
-    "firestore": {
-        "rules": "firestore.rules",
-        "indexes": "firestore.indexes.json"
-    },
-    "functions": [
-        {
-            "source": "functions",
-            "codebase": "default",
-            "ignore": [
-                "node_modules",
-                ".git",
-                "firebase-debug.log",
-                "firebase-debug.*.log",
-                "*.local"
-            ],
-            "predeploy": [
-                "npm --prefix \"$RESOURCE_DIR\" run build"
-            ]
-        }
-    ],
-    "hosting": [
-        {
-            "target": "owner",
-            "public": "build/web_owner",
-            "ignore": [
-                "firebase.json",
-                "**/node_modules/**",
-                "**/*.map"
-            ],
-            "rewrites": [
-                {
-                    "source": "**",
-                    "destination": "/index.html"
-                }
-            ],
-            "headers": [
-                {
-                    "source": "/.well-known/assetlinks.json",
-                    "headers": [
-                        {
-                            "key": "Content-Type",
-                            "value": "application/json"
-                        }
-                    ]
-                },
-                {
-                    "source": "**",
-                    "headers": [
-                        {
-                            "key": "X-Frame-Options",
-                            "value": "DENY"
-                        },
-                        {
-                            "key": "Content-Security-Policy",
-                            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.gstatic.com https://*.googleapis.com https://apis.google.com https://*.firebaseio.com https://*.cloudfunctions.net https://js.stripe.com https://*.sentry.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://*.gstatic.com https://*.googleusercontent.com https://firebasestorage.googleapis.com; connect-src 'self' https://*.gstatic.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://*.sentry.io https://api.stripe.com https://*.ingest.sentry.io; frame-src https://js.stripe.com https://hooks.stripe.com https://*.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'"
-                        },
-                        {
-                            "key": "X-Content-Type-Options",
-                            "value": "nosniff"
-                        },
-                        {
-                            "key": "Referrer-Policy",
-                            "value": "strict-origin-when-cross-origin"
-                        },
-                        {
-                            "key": "Strict-Transport-Security",
-                            "value": "max-age=31536000; includeSubDomains; preload"
-                        },
-                        {
-                            "key": "Permissions-Policy",
-                            "value": "geolocation=(), camera=(), microphone=(), payment=(self), interest-cohort=()"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "target": "widget",
-            "public": "build/web_widget",
-            "ignore": [
-                "firebase.json",
-                "**/.*",
-                "**/node_modules/**",
-                "**/*.map"
-            ],
-            "rewrites": [
-                {
-                    "source": "**",
-                    "destination": "/index.html"
-                }
-            ],
-            "headers": [
-                {
-                    "source": "**/*.@(js|json)",
-                    "headers": [
-                        {
-                            "key": "Cache-Control",
-                            "value": "no-cache, must-revalidate"
-                        }
-                    ]
-                },
-                {
-                    "source": "**/*.html",
-                    "headers": [
-                        {
-                            "key": "Cache-Control",
-                            "value": "no-store"
-                        }
-                    ]
-                },
-                {
-                    "source": "**",
-                    "headers": [
-                        {
-                            "key": "X-Frame-Options",
-                            "value": "ALLOWALL"
-                        },
-                        {
-                            "key": "Content-Security-Policy",
-                            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.gstatic.com https://*.googleapis.com https://apis.google.com https://*.firebaseio.com https://*.cloudfunctions.net https://js.stripe.com https://*.sentry.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://*.gstatic.com https://*.googleusercontent.com https://firebasestorage.googleapis.com; connect-src 'self' https://*.gstatic.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://*.sentry.io https://api.stripe.com https://*.ingest.sentry.io; frame-src https://js.stripe.com https://hooks.stripe.com https://*.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors *"
-                        },
-                        {
-                            "key": "X-Content-Type-Options",
-                            "value": "nosniff"
-                        },
-                        {
-                            "key": "Referrer-Policy",
-                            "value": "strict-origin-when-cross-origin"
-                        },
-                        {
-                            "key": "Strict-Transport-Security",
-                            "value": "max-age=31536000; includeSubDomains; preload"
-                        },
-                        {
-                            "key": "Permissions-Policy",
-                            "value": "geolocation=(), camera=(), microphone=(), payment=(self), interest-cohort=()"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "target": "admin",
-            "public": "build/web_admin",
-            "ignore": [
-                "firebase.json",
-                "**/.*",
-                "**/node_modules/**",
-                "**/*.map"
-            ],
-            "rewrites": [
-                {
-                    "source": "**",
-                    "destination": "/index.html"
-                }
-            ],
-            "headers": [
-                {
-                    "source": "**",
-                    "headers": [
-                        {
-                            "key": "X-Frame-Options",
-                            "value": "DENY"
-                        },
-                        {
-                            "key": "Content-Security-Policy",
-                            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.gstatic.com https://*.googleapis.com https://apis.google.com https://*.firebaseio.com https://*.cloudfunctions.net https://js.stripe.com https://*.sentry.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://*.gstatic.com https://*.googleusercontent.com https://firebasestorage.googleapis.com; connect-src 'self' https://*.gstatic.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://*.sentry.io https://api.stripe.com https://*.ingest.sentry.io; frame-src https://js.stripe.com https://hooks.stripe.com https://*.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'"
-                        },
-                        {
-                            "key": "X-Content-Type-Options",
-                            "value": "nosniff"
-                        },
-                        {
-                            "key": "Referrer-Policy",
-                            "value": "strict-origin-when-cross-origin"
-                        },
-                        {
-                            "key": "Strict-Transport-Security",
-                            "value": "max-age=31536000; includeSubDomains; preload"
-                        },
-                        {
-                            "key": "Permissions-Policy",
-                            "value": "geolocation=(), camera=(), microphone=(), payment=(self), interest-cohort=()"
-                        }
-                    ]
-                }
-            ]
-        }
-    ],
-    "storage": {
-        "rules": "storage.rules"
-    },
-    "emulators": {
-        "auth": {
-            "port": 9099
-        },
-        "functions": {
-            "port": 5001
-        },
-        "firestore": {
-            "port": 8080
-        },
-        "hosting": {
-            "port": 5000
-        },
-        "storage": {
-            "port": 9199
-        },
-        "ui": {
-            "enabled": true
-        },
-        "singleProjectMode": true
-    },
-    "remoteconfig": {
-        "template": " "
-    },
-    "extensions": {},
-    "flutter": {
-        "platforms": {
-            "android": {
-                "default": {
-                    "projectId": "bookbed-dev",
-                    "appId": "1:733027606474:android:90cb9dbd5e2e4adbebf933",
-                    "fileOutput": "android/app/google-services.json"
-                }
-            },
-            "ios": {
-                "default": {
-                    "projectId": "bookbed-dev",
-                    "appId": "1:733027606474:ios:600363248e5e0e5aebf933",
-                    "uploadDebugSymbols": true,
-                    "fileOutput": "ios/Runner/GoogleService-Info.plist"
-                }
-            },
-            "dart": {
-                "lib/firebase_options.dart": {
-                    "projectId": "rab-booking-248fc",
-                    "configurations": {
-                        "android": "1:592597958982:android:2d92ef51ce178fe1d3e547",
-                        "ios": "1:592597958982:ios:157b8d20e9e17aa7d3e547",
-                        "web": "1:592597958982:web:7703de3f5a2ab47dd3e547"
-                    }
-                },
-                "lib/firebase_options_dev.dart": {
-                    "projectId": "bookbed-dev",
-                    "configurations": {
-                        "android": "1:733027606474:android:90cb9dbd5e2e4adbebf933",
-                        "ios": "1:733027606474:ios:600363248e5e0e5aebf933",
-                        "web": "1:733027606474:web:cdac74e20c8fb05aebf933"
-                    }
-                },
-                "lib/firebase_options_staging.dart": {
-                    "projectId": "bookbed-staging",
-                    "configurations": {
-                        "android": "1:584902480248:android:a53609e3e6dc177d94f88d",
-                        "ios": "1:584902480248:ios:c7e20d5f21438baf94f88d",
-                        "web": "1:584902480248:web:767f9d3bc1837eea94f88d"
-                    }
-                }
-            }
-        }
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
     }
+  ],
+  "hosting": [
+    {
+      "target": "owner",
+      "public": "build/web_owner",
+      "ignore": [
+        "firebase.json",
+        "**/node_modules/**",
+        "**/*.map"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "headers": [
+        {
+          "source": "/.well-known/assetlinks.json",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.gstatic.com https://*.googleapis.com https://apis.google.com https://*.firebaseio.com https://*.cloudfunctions.net https://js.stripe.com https://*.sentry.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://*.gstatic.com https://*.googleusercontent.com https://firebasestorage.googleapis.com; connect-src 'self' https://*.gstatic.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://*.sentry.io https://api.stripe.com https://*.ingest.sentry.io; frame-src https://js.stripe.com https://hooks.stripe.com https://*.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains; preload"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "geolocation=(), camera=(), microphone=(), payment=(self), interest-cohort=()"
+            },
+            {
+              "key": "Cross-Origin-Opener-Policy",
+              "value": "same-origin-allow-popups"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "widget",
+      "public": "build/web_widget",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**",
+        "**/*.map"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "headers": [
+        {
+          "source": "**/*.@(js|json)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, must-revalidate"
+            }
+          ]
+        },
+        {
+          "source": "**/*.html",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-store"
+            }
+          ]
+        },
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "X-Frame-Options",
+              "value": "ALLOWALL"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.gstatic.com https://*.googleapis.com https://apis.google.com https://*.firebaseio.com https://*.cloudfunctions.net https://js.stripe.com https://*.sentry.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://*.gstatic.com https://*.googleusercontent.com https://firebasestorage.googleapis.com; connect-src 'self' https://*.gstatic.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://*.sentry.io https://api.stripe.com https://*.ingest.sentry.io; frame-src https://js.stripe.com https://hooks.stripe.com https://*.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors *"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains; preload"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "geolocation=(), camera=(), microphone=(), payment=(self), interest-cohort=()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "admin",
+      "public": "build/web_admin",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**",
+        "**/*.map"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.gstatic.com https://*.googleapis.com https://apis.google.com https://*.firebaseio.com https://*.cloudfunctions.net https://js.stripe.com https://*.sentry.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://*.gstatic.com https://*.googleusercontent.com https://firebasestorage.googleapis.com; connect-src 'self' https://*.gstatic.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://*.sentry.io https://api.stripe.com https://*.ingest.sentry.io; frame-src https://js.stripe.com https://hooks.stripe.com https://*.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains; preload"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "geolocation=(), camera=(), microphone=(), payment=(self), interest-cohort=()"
+            },
+            {
+              "key": "Cross-Origin-Opener-Policy",
+              "value": "same-origin-allow-popups"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "hosting": {
+      "port": 5000
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  },
+  "remoteconfig": {
+    "template": " "
+  },
+  "extensions": {},
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "bookbed-dev",
+          "appId": "1:733027606474:android:90cb9dbd5e2e4adbebf933",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "bookbed-dev",
+          "appId": "1:733027606474:ios:600363248e5e0e5aebf933",
+          "uploadDebugSymbols": true,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "rab-booking-248fc",
+          "configurations": {
+            "android": "1:592597958982:android:2d92ef51ce178fe1d3e547",
+            "ios": "1:592597958982:ios:157b8d20e9e17aa7d3e547",
+            "web": "1:592597958982:web:7703de3f5a2ab47dd3e547"
+          }
+        },
+        "lib/firebase_options_dev.dart": {
+          "projectId": "bookbed-dev",
+          "configurations": {
+            "android": "1:733027606474:android:90cb9dbd5e2e4adbebf933",
+            "ios": "1:733027606474:ios:600363248e5e0e5aebf933",
+            "web": "1:733027606474:web:cdac74e20c8fb05aebf933"
+          }
+        },
+        "lib/firebase_options_staging.dart": {
+          "projectId": "bookbed-staging",
+          "configurations": {
+            "android": "1:584902480248:android:a53609e3e6dc177d94f88d",
+            "ios": "1:584902480248:ios:c7e20d5f21438baf94f88d",
+            "web": "1:584902480248:web:767f9d3bc1837eea94f88d"
+          }
+        }
+      }
+    }
+  }
 }

@@ -880,7 +880,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.overbookingConflictDetails(guest1, guest2)),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.error,
         action: SnackBarAction(
           label: l10n.overbookingViewBooking,
           textColor: Colors.white,
@@ -953,11 +953,29 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.ownerBookingsNotFound),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
     }
+  }
+
+  // HR plural (last-digit rule): 1 → konflikt, 2-4 → konflikta, 5+/0 →
+  // konflikata. 11-14 are the special-case exceptions to the last-digit rule.
+  String _formatConflictLabel(int n) {
+    final mod100 = n % 100;
+    final mod10 = n % 10;
+    final String form;
+    if (mod100 >= 11 && mod100 <= 14) {
+      form = 'konflikata';
+    } else if (mod10 == 1) {
+      form = 'konflikt';
+    } else if (mod10 >= 2 && mod10 <= 4) {
+      form = 'konflikta';
+    } else {
+      form = 'konflikata';
+    }
+    return '$n $form';
   }
 
   Widget _buildFiltersSection(
@@ -1013,46 +1031,50 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               ),
               const Spacer(),
 
-              // View mode toggle button
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
+              // View mode toggle — desktop/tablet only. On mobile the table
+              // view crowds the filter title into a "Filteri i Pre…" ellipsis
+              // and a horizontally-scrolling table is unusable on a 402px
+              // canvas, so the toggle is hidden there.
+              if (!isMobile)
+                Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  borderRadius: BorderRadius.circular(10),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _ViewModeButton(
+                        icon: Icons.view_agenda_outlined,
+                        isSelected: viewMode == BookingsViewMode.card,
+                        onTap: () {
+                          ref
+                              .read(ownerBookingsViewProvider.notifier)
+                              .setView(BookingsViewMode.card);
+                          ref
+                              .read(windowedBookingsNotifierProvider.notifier)
+                              .setViewMode(isTableView: false);
+                        },
+                        tooltip: l10n.ownerBookingsCardView,
+                      ),
+                      _ViewModeButton(
+                        icon: Icons.table_rows_outlined,
+                        isSelected: viewMode == BookingsViewMode.table,
+                        onTap: () {
+                          ref
+                              .read(ownerBookingsViewProvider.notifier)
+                              .setView(BookingsViewMode.table);
+                          ref
+                              .read(windowedBookingsNotifierProvider.notifier)
+                              .setViewMode(isTableView: true);
+                        },
+                        tooltip: l10n.ownerBookingsTableView,
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _ViewModeButton(
-                      icon: Icons.view_agenda_outlined,
-                      isSelected: viewMode == BookingsViewMode.card,
-                      onTap: () {
-                        ref
-                            .read(ownerBookingsViewProvider.notifier)
-                            .setView(BookingsViewMode.card);
-                        ref
-                            .read(windowedBookingsNotifierProvider.notifier)
-                            .setViewMode(isTableView: false);
-                      },
-                      tooltip: l10n.ownerBookingsCardView,
-                    ),
-                    _ViewModeButton(
-                      icon: Icons.table_rows_outlined,
-                      isSelected: viewMode == BookingsViewMode.table,
-                      onTap: () {
-                        ref
-                            .read(ownerBookingsViewProvider.notifier)
-                            .setView(BookingsViewMode.table);
-                        ref
-                            .read(windowedBookingsNotifierProvider.notifier)
-                            .setViewMode(isTableView: true);
-                      },
-                      tooltip: l10n.ownerBookingsTableView,
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
 
@@ -1067,25 +1089,25 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade100,
+                  color: AppColors.error.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red.shade300),
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.warning_amber_rounded,
-                      color: Colors.red.shade700,
+                      color: AppColors.errorDark,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      conflictCount == 1
-                          ? '1 conflict'
-                          : '$conflictCount conflicts',
-                      style: TextStyle(
-                        color: Colors.red.shade700,
+                      _formatConflictLabel(conflictCount),
+                      style: const TextStyle(
+                        color: AppColors.errorDark,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1812,13 +1834,16 @@ class _BookingCard extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade100,
+                  color: AppColors.error.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.red.shade300, width: 2),
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.4),
+                    width: 2,
+                  ),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.warning_amber_rounded,
-                  color: Colors.red.shade700,
+                  color: AppColors.errorDark,
                   size: 20,
                 ),
               ),
@@ -2110,16 +2135,16 @@ class _BookingConflictBanner extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      color: Colors.red.withValues(alpha: 0.1),
+      color: AppColors.error.withValues(alpha: 0.1),
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 12 : 16,
         vertical: 8,
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.warning_amber_rounded,
-            color: Colors.red.shade700,
+            color: AppColors.errorDark,
             size: 18,
           ),
           const SizedBox(width: 8),
@@ -2127,7 +2152,7 @@ class _BookingConflictBanner extends ConsumerWidget {
             child: Text(
               'Overbooking: Conflicting with ${otherGuestName ?? "another guest"}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.red.shade900,
+                color: AppColors.errorDark,
                 fontWeight: FontWeight.bold,
               ),
             ),

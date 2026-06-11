@@ -16,6 +16,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as bcrypt from "bcrypt";
 import {logInfo, logWarn} from "./logger";
+import {checkRateLimit} from "./utils/rateLimit";
 import {setUser} from "./sentry";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
 
@@ -89,6 +90,15 @@ export const checkPasswordHistory = onCall(
     // Set user context for Sentry error tracking
     setUser(userId);
 
+    // F-99-02 (audit/99): bcrypt compare loop is asymmetric compute — bound
+    // self-scope call rate before doing any hashing work.
+    if (!checkRateLimit(`pwhist:${userId}`, 10, 300)) {
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many password checks. Try again in a few minutes."
+      );
+    }
+
     const {password} = request.data as {password?: string};
     if (!password) {
       throw new HttpsError("invalid-argument", "Password is required");
@@ -150,6 +160,15 @@ export const savePasswordToHistory = onCall(
 
     // Set user context for Sentry error tracking
     setUser(userId);
+
+    // F-99-02 (audit/99): bcrypt hash is compute-heavy — same self-scope
+    // bound as checkPasswordHistory.
+    if (!checkRateLimit(`pwhist:${userId}`, 10, 300)) {
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many password operations. Try again in a few minutes."
+      );
+    }
 
     const {password} = request.data as {password?: string};
     if (!password) {

@@ -14,11 +14,11 @@ class AppColors {
   /// Updated to modern Purple-Blue theme (2025)
   static const Color primary = Color(0xFF6B4CE6); // Purple
 
-  /// Primary variant - Deeper purple
-  static const Color primaryDark = Color(0xFF5B3DD6); // Deep Purple
+  /// Primary variant - Deeper purple (`tokens.css --bb-primary-dark`)
+  static const Color primaryDark = Color(0xFF5638C7); // Deep Purple
 
-  /// Primary light - Light purple
-  static const Color primaryLight = Color(0xFF9B86F3); // Light Purple
+  /// Primary light - Light purple (`tokens.css --bb-primary-light`)
+  static const Color primaryLight = Color(0xFFB5A4F0); // Light Purple
 
   /// Primary — dark-mode lift
   /// Resolves `theme.colorScheme.primary` in dark mode to mockup `--bb-primary`
@@ -31,8 +31,8 @@ class AppColors {
   /// Inspired by Mediterranean sunsets and warmth
   static const Color secondary = Color(0xFFFF6B6B); // Coral Red
 
-  /// Secondary dark
-  static const Color secondaryDark = Color(0xFFE63946); // Deep Coral
+  /// Secondary dark (`tokens.css --bb-secondary-dark`)
+  static const Color secondaryDark = Color(0xFFE14F4F); // Deep Coral
 
   /// Secondary light
   static const Color secondaryLight = Color(0xFFFF8E8E); // Light Coral
@@ -42,8 +42,8 @@ class AppColors {
   /// Inspired by sun-kissed beaches
   static const Color tertiary = Color(0xFFFFB84D); // Golden Sand
 
-  /// Tertiary dark
-  static const Color tertiaryDark = Color(0xFFFF9500); // Deep Gold
+  /// Tertiary dark (`tokens.css --bb-tertiary-dark`)
+  static const Color tertiaryDark = Color(0xFFE69A28); // Deep Gold
 
   /// Tertiary light
   static const Color tertiaryLight = Color(0xFFFFCA80); // Light Gold
@@ -51,6 +51,11 @@ class AppColors {
   // ============================================================================
   // NEUTRAL COLORS - LIGHT THEME
   // ============================================================================
+
+  /// Console shell background (`tokens.css --bb-shell-bg`) — the L1 layer
+  /// app bars and page gutters sit on (shell → panel → cards).
+  static const Color shellBgLight = Color(0xFFF0F1F5);
+  static const Color shellBgDark = Color(0xFF000000);
 
   /// Background color - Warm White
   static const Color backgroundLight = Color(0xFFFAFAFA); // Warm White
@@ -99,7 +104,8 @@ class AppColors {
   /// 0xFF121212 → 0xFF0B0B0D (audit/119: aligns with design_handoff/source/tokens.css
   /// `.theme-dark { --bb-panel-bg: #0B0B0D }`). Cards now read closer to OLED shell.
   /// Used for: Cards, elevated containers
-  static const Color surfaceDark = Color(0xFF0B0B0D); // mockup --bb-panel-bg
+  // mockup `--bb-surface` dark — cards lift above the #0B0B0D panel
+  static const Color surfaceDark = Color(0xFF121212);
 
   /// Surface variant - Elevated surface
   /// UPGRADED: Was 0xFF4A5568 → Now 0xFF1E1E1E (higher elevation)
@@ -137,28 +143,32 @@ class AppColors {
   // SEMANTIC COLORS
   // ============================================================================
 
-  /// Success color - Green
-  static const Color success = Color(0xFF10B981); // Emerald 500
-  static const Color successLight = Color(0xFF34D399); // Emerald 400
-  static const Color successDark = Color(0xFF059669); // Emerald 600
+  // Semantic palette aligned to `design_handoff/source/tokens.css`
+  // (`--bb-success/-warning/-error/-info`); *Light = dark-theme lift
+  // (`.theme-dark` values), *Dark = pressed/deep variant.
 
-  /// Error color - Red
-  static const Color error = Color(0xFFEF4444); // Red 500
-  static const Color errorLight = Color(0xFFF87171); // Red 400
-  static const Color errorDark = Color(0xFFDC2626); // Red 600
+  /// Success color - Green (`--bb-success`)
+  static const Color success = Color(0xFF2E7D5B);
+  static const Color successLight = Color(0xFF4FAE7F); // dark-theme lift
+  static const Color successDark = Color(0xFF236147);
 
-  /// Warning color - Amber (consistent with SnackBarColors and MessageBox)
-  static const Color warning = Color(0xFFF59E0B); // Amber 500
-  static const Color warningLight = Color(0xFFFBBF24); // Amber 400
-  static const Color warningDark = Color(0xFFD97706); // Amber 600
+  /// Error color - Coral (`--bb-error`, same as secondary)
+  static const Color error = Color(0xFFFF6B6B);
+  static const Color errorLight = Color(0xFFFF8080); // dark-theme lift
+  static const Color errorDark = Color(0xFFE14F4F);
 
-  /// Text color for warning backgrounds (dark for contrast on orange)
+  /// Warning color - Golden Sand (`--bb-warning`, same as tertiary)
+  static const Color warning = Color(0xFFFFB84D);
+  static const Color warningLight = Color(0xFFFFC872); // dark-theme lift
+  static const Color warningDark = Color(0xFFE69A28);
+
+  /// Text color for warning backgrounds (dark for contrast on amber)
   static const Color textOnWarning = Color(0xFF1C1917); // Stone 900
 
-  /// Info color - Blue
-  static const Color info = Color(0xFF3B82F6); // Blue 500
-  static const Color infoLight = Color(0xFF60A5FA); // Blue 400
-  static const Color infoDark = Color(0xFF2563EB); // Blue 600
+  /// Info color - Blue (`--bb-info`)
+  static const Color info = Color(0xFF4A90D9);
+  static const Color infoLight = Color(0xFF6BA8E8); // dark-theme lift
+  static const Color infoDark = Color(0xFF3576BC);
 
   // ============================================================================
   // STATE COLORS
@@ -203,11 +213,11 @@ class AppColors {
   /// Favorite/like color
   static const Color favorite = Color(0xFFEC4899); // Pink 500
 
-  /// Booking status colors
-  static const Color statusPending = Color(0xFFF59E0B); // Amber 500
-  static const Color statusConfirmed = Color(0xFF10B981); // Emerald 500
-  static const Color statusCancelled = Color(0xFFEF4444); // Red 500
-  static const Color statusCompleted = Color(0xFF6B7280); // Gray 500
+  /// Booking status colors (`tokens.css --bb-status-*` light table)
+  static const Color statusPending = Color(0xFFB7791F); // AA-safe amber
+  static const Color statusConfirmed = Color(0xFF2E7D5B);
+  static const Color statusCancelled = Color(0xFF4A5568);
+  static const Color statusCompleted = Color(0xFF6B4CE6);
 
   /// Activity type colors
   static const Color activityBooking = Color(
@@ -289,24 +299,19 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
-  /// Auth background gradient - Cool lavender-gray to White (Light Mode)
-  /// Use for: auth screen background in light mode
+  /// Auth background gradient — handoff `softBg` (pale lavender wash, light).
+  /// Mirrors `BbRedesignTokens.light.softBg` per `design_handoff/screens/15-owner.png`.
+  /// Auth/hero only — dashboard pages use `pageBackground` (flat shellBg).
   static const LinearGradient authBackgroundGradient = LinearGradient(
-    colors: [
-      Color(0xFFF5F3F9), // Cool lavender-gray
-      Color(0xFFFFFFFF), // White
-    ],
+    colors: [Color(0xFFFAFAFA), Color(0xFFF4F1FF)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Auth background gradient - Cool dark purple-gray (Dark Mode)
-  /// Use for: auth screen background in dark mode
+  /// Auth background gradient — handoff `softBg` (OLED-friendly near-black with
+  /// subtle purple tint, dark). Mirrors `BbRedesignTokens.dark.softBg`.
   static const LinearGradient authBackgroundGradientDark = LinearGradient(
-    colors: [
-      Color(0xFF1A1820), // Cool dark purple-gray
-      Color(0xFF211F26), // Slightly lighter
-    ],
+    colors: [Color(0xFF0B0813), Color(0xFF14101F)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

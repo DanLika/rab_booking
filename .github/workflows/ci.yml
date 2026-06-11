@@ -342,7 +342,7 @@ jobs:
   validate-firestore-rules:
     name: Validate Firestore Rules
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -381,6 +381,22 @@ jobs:
           else
             echo "⚠️ No storage.rules file found"
           fi
+
+      # Emulator-backed rules behavior suite (functions/test/firestore_rules,
+      # 10 suites). Added 2026-06-11 — previously these deny-invariants
+      # (SF-068/SF-078/F-98-01 etc.) only ran when invoked manually.
+      - name: Setup Java (Firestore emulator)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install functions dependencies
+        # TEMP: npm install mirrors test-functions job (lock file out of sync)
+        run: cd functions && npm install
+
+      - name: Run Firestore rules emulator suite
+        run: cd functions && npm run test:rules
 
   # Job 9: Security Scan (Trivy vulnerability scanner)
   # DISABLED: Requires GitHub Advanced Security license for private repos

@@ -175,15 +175,18 @@ service cloud.firestore {
       // Devices subcollection - user device tracking for session management
       // SF-NEW (audit/50 F-50-09): updates restricted to mutable telemetry keys
       // observed in lib/core/services/security_events_service.dart trackDevice()
-      // (lastSeenAt + fcmToken on every call; platform stable but rewritten via
-      // set(merge:true); appVersion forward-compat). Immutable forensics fields
-      // (deviceId, createdAt, userAgent) cannot change once written.
+      // (lastSeenAt + fcmToken on every call; appVersion forward-compat).
+      // F-99-06 (audit/99): `platform` dropped from the allowlist — it is a
+      // forensic identity field; the client's set(merge:true) re-sends the
+      // SAME value so it never enters affectedKeys (legit refresh unaffected,
+      // see memory firestore-affectedkeys-set-merge). Immutable forensics
+      // fields (deviceId, createdAt, userAgent, platform) cannot change.
       match /devices/{deviceId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update: if isOwner(userId) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-            'lastSeenAt', 'fcmToken', 'appVersion', 'platform'
+            'lastSeenAt', 'fcmToken', 'appVersion'
           ]);
         allow delete: if isOwner(userId);
       }
@@ -616,7 +619,15 @@ service cloud.firestore {
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid
       );
       allow create: if false; // DISABLED - use subcollection path
-      allow update, delete: if isAuthenticated() &&
+      // F-98-01 (audit/98): mirror the subcollection's SF-068 deny — the
+      // CF-managed sync stats must not be direct-writable on legacy docs
+      // either (fake activity / freeze scheduled sync via future last_synced).
+      allow update: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['sync_count', 'event_count', 'last_synced']);
+      allow delete: if isAuthenticated() &&
         ('property_id' in resource.data) &&
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }

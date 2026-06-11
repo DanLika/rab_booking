@@ -15,6 +15,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import {logInfo, logWarn} from "./logger";
+import {checkRateLimit} from "./utils/rateLimit";
 import {setUser} from "./sentry";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
 
@@ -50,6 +51,15 @@ export const revokeAllRefreshTokens = onCall(
 
     // Set user context for Sentry error tracking
     setUser(userId);
+
+    // F-99-07 (audit/99): bound self-storm (Auth API load + own-device
+    // sign-out cascade) — 3 revocations / 5 min is generous for legit use.
+    if (!checkRateLimit(`revoke:${userId}`, 3, 300)) {
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many session revocations. Try again in a few minutes."
+      );
+    }
 
     try {
       // Revoke all refresh tokens

@@ -68,6 +68,7 @@ jest.mock("../src/notificationService", () => ({
 jest.mock("../src/utils/rateLimit", () => ({
   enforceRateLimit: jest.fn().mockResolvedValue(undefined),
   checkRateLimit: jest.fn().mockReturnValue(true),
+  hashRateKey: jest.fn((raw: string) => `hash_${raw}`),
 }));
 
 // SF-078: mock the L1 owner-management gate at the helper boundary. Asserts

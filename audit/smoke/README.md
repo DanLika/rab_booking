@@ -14,14 +14,14 @@ wired into CI, run manually before rules deploys).
 |---|---|---|
 | `audit86-direct-write-smoke.js` | LIVE deployed-rules deny smoke (properties/ical_feeds/widget_settings direct-write, owner + foreign UID). Complements the emulator suite by exercising the deployed ruleset. Creates + tears down throwaway docs. | `BOOKBED_DEV_WEB_API_KEY=<web.apiKey> BOOKBED_DEV_OWNER_PASS=<memory: test-account.md> GOOGLE_CLOUD_PROJECT=bookbed-dev node audit/smoke/audit86-direct-write-smoke.js` (cwd `functions/` for node_modules) |
 | `complete-booking-smoke.js` | `completeBooking` CF end-to-end (F-67-01 path): throwaway confirmed booking → CF call → post-state assert → cleanup. | `BB_TEST_PW=<memory: test-account.md> node audit/smoke/complete-booking-smoke.js` (cwd `functions/`) |
-| `f92-01-probe.js` | READ-ONLY iCal export token matrix. Post-SF-063 nothing is exploitable (`verifyIcalToken` empty-fail-CLOSED); verdicts are `OK` / `BROKEN-FEED` (PR #482 `_plaintext`/`_hash` schema present but read-side `icalExport.ts` reads `ical_export_token` → 403 on every request — audit/92 schema mismatch, OPEN) / `FAIL-CLOSED`. Re-run 2026-06-11: dev 2/2 BROKEN-FEED. | `GOOGLE_CLOUD_PROJECT=bookbed-dev node ../audit/smoke/f92-01-probe.js` (cwd `functions/`) |
+| `f92-01-probe.js` | READ-ONLY iCal export token matrix. Post-SF-063 nothing is exploitable (`verifyIcalToken` empty-fail-CLOSED); verdicts are `OK` / `BROKEN-FEED` (PR #482 `_plaintext`/`_hash` schema present but read-side `icalExport.ts` reads `ical_export_token` → 403 on every request — audit/92 schema mismatch, OPEN) / `FAIL-CLOSED`. Re-run 2026-06-11: 2/2 BROKEN-FEED -> root cause = ORPHANED PR #482-era `_plaintext`/`_hash` fields (that schema was abandoned; current writer = Flutter export screen writes `ical_export_token`). Dev backfill executed same day: canonical field restored, orphans deleted -> probe 2/2 OK + live feed GET 200 VCALENDAR / wrong-token 403. **audit/92 FULLY CLOSED** (docs deleted; this probe is the regression tool). | `GOOGLE_CLOUD_PROJECT=bookbed-dev node ../audit/smoke/f92-01-probe.js` (cwd `functions/`) |
 
 ## Open follow-ups surfaced here
 
-1. **iCal read-side schema reconciliation** (audit/92, functional not security):
-   `functions/src/icalExport.ts:177-182` must also accept
-   `widget_secrets.ical_export_token_plaintext` (or verify the peppered
-   `_hash`) before the legacy fallback — otherwise every unit provisioned via
-   the PR #482 writer ships a dead feed URL.
+1. ~~iCal read-side schema reconciliation~~ — CLOSED 2026-06-11: no code change
+   needed; the `_plaintext`/`_hash` schema was an abandoned PR #482-era artifact
+   on 2 dev docs. Backfilled to canonical `ical_export_token` + orphans removed;
+   feed verified live (200 + 403 negative control). PROD unaffected (all 13
+   units carry the canonical field per the earlier audit/92 matrix).
 2. **`npm run test:rules` not in CI** — rules regressions only caught when run
    manually.

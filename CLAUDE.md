@@ -24,8 +24,6 @@
 - 🚨 [67-chrome-deepflow](./audit/67-chrome-deepflow-2026-05-28.md) — F-67-01 P1 Confirm/Reject silent no-op + 5 more (2026-05-28)
 - 🚨 [90-prod-cutover-runbook](./audit/90-prod-cutover-runbook.md) — F-90-01 PROD loginLockout IAM gap; PR #565→#482 order (2026-05-29)
 - 🚨 [91-f91-02-storage-delete](./audit/91-f91-02-storage-delete.md) — F-91-02 DELETE deny + SEC-001/SF-025 silent no-op closure SF-067 (2026-05-30)
-- 🟡 [92-cf-smoke-ical-email](./audit/92-cf-smoke-ical-email-2026-05-30.md) — F-92-01 MED iCal empty-token bypass; 15-CF matrix (2026-05-30)
-- 🟡 [92-f92-01-ical-token](./audit/92-f92-01-ical-token.md) — F-92-01 fix; `verifyIcalToken` empty-fail-CLOSED (SF-063, 2026-05-30)
 - 🚨 [93-cf-smoke-payment](./audit/93-cf-smoke-payment-2026-05-30.md) — F-93-02 P1 `findBookingById` Strategy 2 path; PR #572 (2026-05-30)
 - [95-f93-bundle](./audit/95-f93-bundle.md) — SF numbering reconciliation + F-93 P3 bundle SF-071/072/073 (2026-05-30)
 - [98-dev-cutover-smoke](./audit/98-dev-cutover-smoke.md) — bookbed-dev cutover dry-run; F-CUT-01 lockfile drift closed via commit `167e6353` (2026-05-30)

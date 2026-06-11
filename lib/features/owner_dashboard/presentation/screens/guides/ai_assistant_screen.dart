@@ -161,9 +161,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? BBColor.surfaceVarDark
-                            : BBColor.surfaceVarLight,
+                        color: BBColor.of(context).surfaceVariant,
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: AppShadows.getElevation(1, isDark: isDark),
                       ),
@@ -588,7 +586,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         child: Material(
           color: isSelected
               ? theme.colorScheme.primary.withValues(alpha: 0.08)
-              : (isDark ? BBColor.surfaceVarDark : BBColor.surfaceLight),
+              : BBColor.of(context).surface,
           borderRadius: BorderRadius.circular(12),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
@@ -618,7 +616,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                         height: 20,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isDark ? BBColor.surfaceVarDark : Colors.white,
+                          color: BBColor.of(context).surface,
                           border: Border.all(
                             color: theme.colorScheme.primary.withValues(
                               alpha: 0.2,
@@ -803,7 +801,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                 height: 28,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isDark ? BBColor.surfaceVarDark : BBColor.surfaceLight,
+                  color: BBColor.of(context).surface,
                   border: Border.all(
                     color: theme.colorScheme.primary.withValues(alpha: 0.2),
                   ),
@@ -837,11 +835,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                           end: Alignment.bottomRight,
                         )
                       : null,
-                  color: isUser
-                      ? null
-                      : (isDark
-                            ? BBColor.surfaceVarDark
-                            : BBColor.surfaceLight),
+                  color: isUser ? null : BBColor.of(context).surface,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
@@ -892,9 +886,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                             fontSize: 14,
                           ),
                           code: TextStyle(
-                            backgroundColor: isDark
-                                ? BBColor.surfaceVarDark
-                                : BBColor.surfaceVarLight,
+                            backgroundColor: BBColor.of(context).surfaceVariant,
                             color: theme.colorScheme.onSurface,
                             fontSize: 13,
                           ),
@@ -978,7 +970,6 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
 
   Widget _buildQuickChips(AiChatState chatState, AppLocalizations l10n) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final chips = [
       l10n.aiAssistantChipAddUnit,
@@ -998,9 +989,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
             chip,
             style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface),
           ),
-          backgroundColor: isDark
-              ? BBColor.surfaceVarDark
-              : BBColor.surfaceVarLight,
+          backgroundColor: BBColor.of(context).surfaceVariant,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(
@@ -1059,7 +1048,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         MediaQuery.paddingOf(context).bottom + 16,
       ),
       decoration: BoxDecoration(
-        color: isDark ? BBColor.surfaceDark : BBColor.surfaceLight,
+        color: BBColor.of(context).surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),

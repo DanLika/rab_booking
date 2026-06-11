@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../shared/models/unit_model.dart';
@@ -808,9 +809,10 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
 }
 
 /// Status legend row above the timeline grid — handoff
-/// `screens/03-owner.png` (Potvrđeno · Na čekanju · Završeno · Otkazano).
-/// Mirrors `MonthCalendarScreen._buildStatusLegend` shape but stays self-
-/// contained so it doesn't drag a state-bound private builder across files.
+/// `calendar-timeline.jsx` legend (Potvrđeno · Na čekanju · Završeno ·
+/// Otkazano · Uvezene). Mirrors `MonthCalendarScreen._buildStatusLegend`
+/// shape but stays self-contained so it doesn't drag a state-bound private
+/// builder across files.
 class _TimelineStatusLegend extends StatelessWidget {
   const _TimelineStatusLegend();
 
@@ -826,23 +828,28 @@ class _TimelineStatusLegend extends StatelessWidget {
         children: [
           _legendItem(
             theme,
-            BookingStatus.confirmed.color,
+            BookingStatus.confirmed.colorOf(context),
             l10n.ownerStatusConfirmed,
           ),
           _legendItem(
             theme,
-            BookingStatus.pending.color,
+            BookingStatus.pending.colorOf(context),
             l10n.ownerStatusPending,
           ),
           _legendItem(
             theme,
-            BookingStatus.completed.color,
+            BookingStatus.completed.colorOf(context),
             l10n.ownerStatusCompleted,
           ),
           _legendItem(
             theme,
-            BookingStatus.cancelled.color,
+            BookingStatus.cancelled.colorOf(context),
             l10n.ownerStatusCancelled,
+          ),
+          _legendItem(
+            theme,
+            BBColor.of(context).statusImported,
+            l10n.bookingsTabImported,
           ),
         ],
       ),

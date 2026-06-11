@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/design/tokens.dart';
 import 'timeline_date_header.dart';
 import 'timeline_dimensions.dart';
 
@@ -32,8 +33,11 @@ class TimelineDateHeadersWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    // Handoff timeline header row: solid surface-variant band
+    // (#F5F5F5 light / #1E1E1E dark) instead of the page gradient.
+    return Container(
       height: dimensions.headerHeight,
+      color: BBColor.of(context).surfaceVariant,
       child: Row(
         children: [
           // Empty space for unit names column

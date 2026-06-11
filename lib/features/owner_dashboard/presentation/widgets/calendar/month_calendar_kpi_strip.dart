@@ -137,6 +137,11 @@ class _Tile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
+    // Handoff per-tone tile tints (calendar-month.jsx): primary uses the
+    // soft primary-tint-bg (6%), tertiary 16%, success/info 12%.
+    final double tintAlpha = tone == c.primary
+        ? 0.06
+        : (tone == c.tertiary ? 0.16 : 0.12);
     return BbCard(
       padding: EdgeInsets.all(isMobile ? 12 : 16),
       child: Row(
@@ -145,7 +150,7 @@ class _Tile extends StatelessWidget {
             width: isMobile ? 28 : 32,
             height: isMobile ? 28 : 32,
             decoration: BoxDecoration(
-              color: tone.withValues(alpha: 0.14),
+              color: tone.withValues(alpha: tintAlpha),
               borderRadius: BorderRadius.circular(9),
             ),
             alignment: Alignment.center,

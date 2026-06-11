@@ -134,7 +134,8 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      // Content-width breakpoint (audit/122): the adaptive shell reserves
+      // Content-width breakpoint (audit/122, doc deleted — git history):
+      // the adaptive shell reserves
       // 260/72px for sidebar/rail, so window width over-reports space.
       body: LayoutBuilder(
         builder: (context, constraints) => _buildBody(

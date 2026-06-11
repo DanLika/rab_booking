@@ -88,7 +88,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent, // Uses shell background
-      // Content-width breakpoint (audit/122): the adaptive shell reserves
+      // Content-width breakpoint (audit/122, doc deleted — git history):
+      // the adaptive shell reserves
       // 260/72px for sidebar/rail, so window width over-reports space.
       body: LayoutBuilder(
         builder: (context, constraints) =>

@@ -84,12 +84,28 @@ describe("Deprecated top-level collections read lockdown", () => {
     });
   });
 
-  // F-98-01 (audit/98): legacy top-level ical_feeds must mirror the
-  // subcollection's SF-068 deny on CF-managed sync stats.
-  describe("/ical_feeds/{feedId} (deprecated top-level)", () => {
-    test("owner update of benign field is ALLOWED", async () => {
+  // F-107-13 (2026-06-11): legacy top-level ical_feeds retired wholesale —
+  // zero docs verified on both envs, block is now `read, write: if false`.
+  // (Supersedes the F-98-01 partial deny on CF-managed sync stats.)
+  describe("/ical_feeds/{feedId} (deprecated top-level, fully closed)", () => {
+    // NOTE: the property-owner CG clause `/{path=**}/ical_feeds/{feedId}`
+    // also matches the top-level path, so the legacy-property OWNER can
+    // still read their own doc through THAT clause (harmless: owner-scoped
+    // + zero legacy docs on both envs). The security property F-107-13
+    // closes is the authed-stranger existence probe below.
+    test("owner read resolves via the owner-scoped CG clause (documented)", async () => {
       const ctx = testEnv.authenticatedContext(OWNER_UID);
-      await assertSucceeds(
+      await assertSucceeds(ctx.firestore().doc("ical_feeds/feed-1").get());
+    });
+
+    test("authed stranger existence-probe (read of unknown feedId) is DENIED", async () => {
+      const ctx = testEnv.authenticatedContext("stranger-uid");
+      await assertFails(ctx.firestore().doc("ical_feeds/nope").get());
+    });
+
+    test("owner update of benign field is DENIED", async () => {
+      const ctx = testEnv.authenticatedContext(OWNER_UID);
+      await assertFails(
         ctx.firestore().doc("ical_feeds/feed-1").update({
           url: "https://example.com/renamed.ics",
         })
@@ -100,15 +116,6 @@ describe("Deprecated top-level collections read lockdown", () => {
       const ctx = testEnv.authenticatedContext(OWNER_UID);
       await assertFails(
         ctx.firestore().doc("ical_feeds/feed-1").update({sync_count: 999})
-      );
-    });
-
-    test("owner direct-write of last_synced is DENIED", async () => {
-      const ctx = testEnv.authenticatedContext(OWNER_UID);
-      await assertFails(
-        ctx.firestore().doc("ical_feeds/feed-1").update({
-          last_synced: new Date("2030-01-01"),
-        })
       );
     });
   });

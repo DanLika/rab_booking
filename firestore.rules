@@ -201,14 +201,17 @@ service cloud.firestore {
       // F-NEW-09: field-shape guard prevents arbitrary attribute injection
       // (audit-trail poisoning). Limits create to the known SecurityEventType
       // payload shape from `lib/core/services/security_events_service.dart`.
-      // TODO: bind timestamp to request.time after client switches from
-      // Timestamp.fromDate(client_clock) to FieldValue.serverTimestamp().
+      // F-107-16 (2026-06-11): timestamp bound to request.time — client now
+      // sends FieldValue.serverTimestamp() (which evaluates equal to
+      // request.time in rules), so a forged/backdated audit timestamp is
+      // rejected at the rule layer.
       match /securityEvents/{eventId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
           && request.resource.data.keys().hasOnly(
             ['type', 'timestamp', 'deviceId', 'ipAddress', 'location', 'metadata']
           )
+          && request.resource.data.timestamp == request.time
           && request.resource.data.type is string
           && request.resource.data.type.size() <= 64;
         allow update, delete: if false; // Immutable audit log
@@ -240,19 +243,26 @@ service cloud.firestore {
     // code path reads /user_profiles/{uid} for those fields.
     match /user_profiles/{userId} {
       allow read: if isOwner(userId);
+      // F-99-03 (2026-06-11): Stripe-linkage keys mirrored from the users/{uid}
+      // deny-list (SF-vibe57 H-01) so a fallback profile read can never be
+      // seeded with client-forged Stripe identifiers.
       allow create: if isOwner(userId) && !request.resource.data.keys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',
           'account_type', 'admin_override_account_type',
           'lifetime_license_granted_at', 'lifetime_license_granted_by',
-          'role', 'isAdmin'
+          'role', 'isAdmin',
+          'stripe_account_id', 'stripe_customer_id', 'stripe_connected_at',
+          'stripeSubscriptionId', 'stripeCustomerId'
         ]);
       allow update: if isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',
           'account_type', 'admin_override_account_type',
           'lifetime_license_granted_at', 'lifetime_license_granted_by',
-          'role', 'isAdmin'
+          'role', 'isAdmin',
+          'stripe_account_id', 'stripe_customer_id', 'stripe_connected_at',
+          'stripeSubscriptionId', 'stripeCustomerId'
         ]);
       allow delete: if isOwner(userId);
     }
@@ -651,27 +661,14 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // DEPRECATED: Root-level iCal feeds
-    // iCal feeds are now stored as subcollections: properties/{propertyId}/ical_feeds/{feedId}
-    // This rule is kept for backward compatibility with legacy data
-    // TODO: Remove after confirming no legacy feeds remain
+    // DEPRECATED: Root-level iCal feeds — fully closed (F-107-13, 2026-06-11).
+    // Canonical path: properties/{propertyId}/ical_feeds/{feedId}. Verified
+    // ZERO legacy docs on both bookbed-dev and rab-booking-248fc via Admin
+    // SDK read, so the back-compat owner read/update/delete (whose
+    // `resource == null` short-circuit also let any authed user probe feedId
+    // existence) is retired wholesale.
     match /ical_feeds/{feedId} {
-      allow read: if isAuthenticated() && (
-        resource == null ||
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid
-      );
-      allow create: if false; // DISABLED - use subcollection path
-      // F-98-01 (audit/98): mirror the subcollection's SF-068 deny — the
-      // CF-managed sync stats must not be direct-writable on legacy docs
-      // either (fake activity / freeze scheduled sync via future last_synced).
-      allow update: if isAuthenticated() &&
-        ('property_id' in resource.data) &&
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid &&
-        !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['sync_count', 'event_count', 'last_synced']);
-      allow delete: if isAuthenticated() &&
-        ('property_id' in resource.data) &&
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
+      allow read, write: if false;
     }
 
     // SF-023 follow-up (2026-05-22): the `/booking_services/*` collection

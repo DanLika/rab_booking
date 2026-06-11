@@ -60,7 +60,9 @@ class SecurityEventsService {
             .collection('securityEvents')
             .add({
               'type': event.type.name,
-              'timestamp': Timestamp.fromDate(event.timestamp),
+              // F-107-16: rules bind timestamp == request.time; only
+              // serverTimestamp() satisfies that (client clock rejected).
+              'timestamp': FieldValue.serverTimestamp(),
               'deviceId': event.deviceId,
               'ipAddress': event.ipAddress,
               'location': event.location,
@@ -76,7 +78,7 @@ class SecurityEventsService {
               .collection('securityEvents')
               .add({
                 'type': event.type.name,
-                'timestamp': Timestamp.fromDate(event.timestamp),
+                'timestamp': FieldValue.serverTimestamp(),
                 'deviceId': event.deviceId,
                 'ipAddress': event.ipAddress,
                 'location': event.location,

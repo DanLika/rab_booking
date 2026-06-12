@@ -46,6 +46,7 @@ class BbInput extends StatefulWidget {
     this.disabled = false,
     this.charLimit,
     this.size = BbInputSize.md,
+    this.maxLines = 1,
     this.keyboardType,
     this.onChanged,
     this.onSubmitted,
@@ -67,6 +68,13 @@ class BbInput extends StatefulWidget {
   final bool disabled;
   final int? charLimit;
   final BbInputSize size;
+
+  /// Visible line count. `1` (default) keeps the fixed [size]-driven height;
+  /// `> 1` switches the field to a multiline area (minHeight = [size] height,
+  /// grows with content, icon top-aligned). [charLimit] is hard-enforced via
+  /// `TextField.maxLength` (built-in counter suppressed — the chrome renders
+  /// its own `x/limit` counter).
+  final int maxLines;
   final TextInputType? keyboardType;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
@@ -201,8 +209,14 @@ class _BbInputState extends State<BbInput> {
           const SizedBox(height: 6),
         ],
         Container(
-          height: _height,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          height: widget.maxLines > 1 ? null : _height,
+          constraints: widget.maxLines > 1
+              ? BoxConstraints(minHeight: _height)
+              : null,
+          padding: EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: widget.maxLines > 1 ? 10 : 0,
+          ),
           decoration: BoxDecoration(
             color: c.surface,
             borderRadius: BBRadius.smAll,
@@ -214,6 +228,9 @@ class _BbInputState extends State<BbInput> {
                 : null,
           ),
           child: Row(
+            crossAxisAlignment: widget.maxLines > 1
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
             children: <Widget>[
               if (widget.iconLeft != null) ...<Widget>[
                 BbIcon(name: widget.iconLeft!, size: 18, color: c.textTertiary),
@@ -226,6 +243,8 @@ class _BbInputState extends State<BbInput> {
                   obscureText: widget.obscureText,
                   enabled: !widget.disabled,
                   keyboardType: widget.keyboardType,
+                  maxLines: widget.maxLines,
+                  maxLength: widget.charLimit,
                   onChanged: onChangedInner,
                   onSubmitted: (String v) {
                     widget.onSubmitted?.call(v);
@@ -237,6 +256,7 @@ class _BbInputState extends State<BbInput> {
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
+                    counterText: '',
                     hintText: widget.placeholder,
                     hintStyle: BBType.body(
                       context,

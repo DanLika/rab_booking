@@ -18,6 +18,13 @@ jobs:
     name: Detect Changed Paths
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    # dorny/paths-filter v4 (dependabot bump 65d2d393) reads PR files via the
+    # GitHub API and fails "Resource not accessible by integration" without an
+    # explicit pull-requests grant (v3 tolerated the default token). Failure
+    # here cascades: heavy jobs skip + coverage job gets canceled.
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       heavy: ${{ steps.filter.outputs.heavy }}
       functions: ${{ steps.filter.outputs.functions }}

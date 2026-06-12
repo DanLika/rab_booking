@@ -315,9 +315,18 @@ service cloud.firestore {
       allow delete: if isResourceOwner();
 
       // Units subcollection
+      // SF-080 extension (audit 2026-06-12): units were the one owner-content
+      // write path outside the original SF-080 trial-gate scope. Gate
+      // create/update; delete stays ungated (cleanup off-ramp, mirrors
+      // properties). Admin bypass via OR, mirrors properties block. NOTE:
+      // the /{path=**}/units CG block below matches the same docs — rules OR
+      // across blocks, so the gate is mirrored there too.
       match /units/{unitId} {
         allow read: if true; // Public read for widget
-        allow create, update, delete: if isPropertyOwner(propertyId);
+        allow create, update: if
+          (isPropertyOwner(propertyId) && isActiveOwner())
+          || isAdmin() || isAdminFromFirestore();
+        allow delete: if isPropertyOwner(propertyId);
 
         // Bookings subcollection
         // SECURITY: T11c CLOSED (2026-05-22) — clause 1 (`unit_id`+`status`)
@@ -400,7 +409,12 @@ service cloud.firestore {
         // Path: properties/{propertyId}/units/{unitId}/additional_services/{serviceId}
         match /additional_services/{serviceId} {
           allow read: if true; // Widget needs to read services for display
-          allow create, update, delete: if isPropertyOwner(propertyId);
+          // SF-080 extension (audit 2026-06-12): same class as units —
+          // trial-gate create/update, delete stays as cleanup off-ramp.
+          allow create, update: if
+            (isPropertyOwner(propertyId) && isActiveOwner())
+            || isAdmin() || isAdminFromFirestore();
+          allow delete: if isPropertyOwner(propertyId);
         }
       }
 
@@ -450,14 +464,32 @@ service cloud.firestore {
       // enable flow.
       match /widget_secrets/{unitId} {
         allow read, delete: if isPropertyOwner(propertyId);
-        allow create, update: if isPropertyOwner(propertyId)
+        // updated_at bound to request.time WHEN WRITTEN (audit 2026-06-12,
+        // mirrors F-107-16): sole client writer (ical_export_list_screen.dart)
+        // sends FieldValue.serverTimestamp(), which rules evaluate equal to
+        // request.time. Omitting the field stays allowed (subset writes);
+        // only a forged/backdated value is rejected.
+        allow create: if isPropertyOwner(propertyId)
           && request.resource.data.keys().hasOnly([
             'ical_export_token',
             'property_id',
             'owner_id',
             'unit_id',
             'updated_at'
-          ]);
+          ])
+          && (!('updated_at' in request.resource.data)
+              || request.resource.data.updated_at == request.time);
+        allow update: if isPropertyOwner(propertyId)
+          && request.resource.data.keys().hasOnly([
+            'ical_export_token',
+            'property_id',
+            'owner_id',
+            'unit_id',
+            'updated_at'
+          ])
+          && (!request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(['updated_at'])
+              || request.resource.data.updated_at == request.time);
       }
 
       // iCal events subcollection — SF-023 LOCKED 2026-05-22
@@ -494,13 +526,22 @@ service cloud.firestore {
     // ========================================================================
 
     // Collection group: units
+    // SF-080 extension (audit 2026-06-12): trial-gate mirrored from the
+    // canonical properties/{p}/units block — rules OR across matching blocks,
+    // so leaving this clause ungated would void the canonical gate. Delete
+    // stays ungated (cleanup off-ramp).
     match /{path=**}/units/{unitId} {
       allow read: if true;
       // Writes via property_id lookup
       allow create: if isAuthenticated() &&
         ('property_id' in request.resource.data) &&
-        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
-      allow update, delete: if isAuthenticated() &&
+        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid &&
+        isActiveOwner();
+      allow update: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid &&
+        isActiveOwner();
+      allow delete: if isAuthenticated() &&
         ('property_id' in resource.data) &&
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }

@@ -2,6 +2,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "../firebase";
 import {logError, logSuccess, logWarn} from "../logger";
 import {getCorsAllowlist} from "../utils/corsAllowlist";
+import {enforceRateLimit} from "../utils/rateLimit";
 
 /**
  * Admin: Set Lifetime License
@@ -46,6 +47,14 @@ export const setLifetimeLicense = onCall(
         "This function can only be called by an administrator."
       );
     }
+
+    // 2b. Rate limit (audit 2026-06-12 LOW): caps scripted abuse of a
+    // compromised admin session; legit admin use stays far under this.
+    await enforceRateLimit(request.auth.uid, "admin_action", {
+      maxCalls: 20,
+      windowMs: 60_000,
+      errorMessage: "Too many admin actions. Please wait a moment.",
+    });
 
     const {userId, grant} = request.data as SetLifetimeLicenseRequest;
     const adminUid = request.auth.uid;

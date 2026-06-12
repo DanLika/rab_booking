@@ -52,6 +52,12 @@ jest.mock("../src/utils/bookingRefund", () => ({
   processStripeRefund: jest.fn(),
 }));
 
+// Audit 2026-06-12: booking actions share a Firestore-backed limiter; the
+// suite covers handler logic, the limiter has its own tests.
+jest.mock("../src/utils/rateLimit", () => ({
+  enforceRateLimit: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock("../src/logger", () => ({
   logInfo: jest.fn(),
   logError: jest.fn(),
@@ -176,6 +182,22 @@ describe("bookingActions (F-67-01)", () => {
       expect(update.status).toBe("confirmed");
       expect(update.approved_at).toBeDefined();
       expect(update.updated_at).toBeDefined();
+    });
+
+    it("consumes the shared booking_action rate limit for the caller", async () => {
+      const {findBookingById} = require("../src/utils/bookingLookup");
+      findBookingById.mockResolvedValue({
+        doc: {ref: bookingRef},
+        data: {status: "pending"},
+        propertyId: PROPERTY_ID,
+      });
+      const {enforceRateLimit} = require("../src/utils/rateLimit");
+      await wrapped({data: {bookingId: BOOKING_ID}, auth: {uid: OWNER_UID}});
+      expect(enforceRateLimit).toHaveBeenCalledWith(
+        OWNER_UID,
+        "booking_action",
+        expect.objectContaining({maxCalls: 30}),
+      );
     });
   });
 

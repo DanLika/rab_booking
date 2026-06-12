@@ -2,6 +2,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "../firebase";
 import {logError, logSuccess} from "../logger";
 import {getCorsAllowlist} from "../utils/corsAllowlist";
+import {enforceRateLimit} from "../utils/rateLimit";
 
 /**
  * Admin: Update User Status
@@ -49,6 +50,14 @@ export const updateUserStatus = onCall(
         "This function can only be called by an administrator."
       );
     }
+
+    // 2b. Rate limit (audit 2026-06-12 LOW): caps scripted abuse of a
+    // compromised admin session; legit admin use stays far under this.
+    await enforceRateLimit(request.auth.uid, "admin_action", {
+      maxCalls: 20,
+      windowMs: 60_000,
+      errorMessage: "Too many admin actions. Please wait a moment.",
+    });
 
     const {userId, newStatus, reason} = request.data as UpdateUserStatusRequest;
     const adminUid = request.auth.uid;

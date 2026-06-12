@@ -25,6 +25,7 @@ import {
   RulesTestContext,
   RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
+import {serverTimestamp} from "firebase/firestore";
 
 const RULES_FILE = path.resolve(__dirname, "../../../firestore.rules");
 const PROJECT_ID = "bookbed-rules-test-widget-secrets";
@@ -38,12 +39,14 @@ const UNIT_ID = "unit-WS";
 
 const SECRETS_PATH = `properties/${PROPERTY_ID}/widget_secrets/${UNIT_ID}`;
 
+// updated_at must be serverTimestamp(): since the 2026-06-12 audit fix the
+// rules bind a written updated_at to request.time (forged clock rejected).
 const ALLOWED_BASE = {
   ical_export_token: "tok-abc-123",
   property_id: PROPERTY_ID,
   owner_id: OWNER_UID,
   unit_id: UNIT_ID,
-  updated_at: new Date("2026-06-06"),
+  updated_at: serverTimestamp(),
 };
 
 beforeAll(async () => {
@@ -120,6 +123,16 @@ describe("widget_secrets.create — F-107-01 hasOnly allowlist", () => {
     );
   });
 
+  test("create with client-clock updated_at DENIED (request.time bind)", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(SECRETS_PATH).set({
+        ...ALLOWED_BASE,
+        updated_at: new Date("1999-01-01"),
+      }),
+    );
+  });
+
   test("create as FOREIGN uid DENIED (isPropertyOwner unchanged)", async () => {
     const ctx = testEnv.authenticatedContext(FOREIGN_UID);
     await assertFails(ctx.firestore().doc(SECRETS_PATH).set(ALLOWED_BASE));
@@ -154,6 +167,26 @@ describe("widget_secrets.update — F-107-01 hasOnly allowlist", () => {
     await assertFails(
       ctx.firestore().doc(SECRETS_PATH).set(
         {ical_export_token: "tok2", planted: "by-owner"},
+        {merge: true},
+      ),
+    );
+  });
+
+  test("update touching updated_at with serverTimestamp ALLOWED", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertSucceeds(
+      ctx.firestore().doc(SECRETS_PATH).set(
+        {ical_export_token: "tok-rotated", updated_at: serverTimestamp()},
+        {merge: true},
+      ),
+    );
+  });
+
+  test("update backdating updated_at with client clock DENIED", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(SECRETS_PATH).set(
+        {updated_at: new Date("1999-01-01")},
         {merge: true},
       ),
     );

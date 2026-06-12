@@ -9,7 +9,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
-import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../widget/domain/models/widget_settings.dart';
@@ -179,56 +178,21 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
     if (val) {
       // Check if bank details exist in profile
       if (_companyDetails == null || !_companyDetails!.hasBankDetails) {
-        // Show dialog to go to profile
+        // Show dialog to go to profile — BbDialog (string body, two actions)
         final goToProfile = await showDialog<bool>(
           context: context,
-          builder: (ctx) {
-            final theme = Theme.of(ctx);
-            return AlertDialog(
-              title: Text(
-                l10n.widgetSettingsBankNotEntered,
-                textAlign: TextAlign.center,
-              ),
-              content: Text(
-                l10n.widgetSettingsBankNotEnteredDesc,
-                textAlign: TextAlign.center,
-              ),
-              actionsAlignment: MainAxisAlignment.center,
-              actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-              actions: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Cancel button - outlined style
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: Text(l10n.cancel),
-                    ),
-                    const SizedBox(height: 8),
-                    // Add bank details button - filled style
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: theme.colorScheme.onPrimary,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 14,
-                          ),
-                        ),
-                        child: Text(
-                          l10n.widgetSettingsAddBankDetails,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
+          builder: (ctx) => BbDialog(
+            title: l10n.widgetSettingsBankNotEntered,
+            body: l10n.widgetSettingsBankNotEnteredDesc,
+            secondary: BbDialogAction(
+              label: l10n.cancel,
+              onPressed: () => Navigator.pop(ctx, false),
+            ),
+            primary: BbDialogAction(
+              label: l10n.widgetSettingsAddBankDetails,
+              onPressed: () => Navigator.pop(ctx, true),
+            ),
+          ),
         );
 
         if (goToProfile == true && mounted) {
@@ -307,14 +271,16 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
             Builder(
               builder: (context) {
                 final l10n = AppLocalizations.of(context);
-                return TextButton(
+                return BbButton(
+                  label: l10n.edit,
+                  variant: BbButtonVariant.tertiary,
+                  size: BbButtonSize.sm,
                   onPressed: () async {
                     await context.push(OwnerRoutes.bankAccount);
                     // OPTIMIZED: Invalidate provider to trigger stream refresh
                     // The build() watch will auto-update _companyDetails
                     ref.invalidate(companyDetailsProvider);
                   },
-                  child: Text(l10n.edit),
                 );
               },
             ),
@@ -389,29 +355,23 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
           ),
           const SizedBox(height: 8),
           // Edit button - full width below details
-          SizedBox(
-            width: double.infinity,
-            child: Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context);
-                return OutlinedButton.icon(
-                  onPressed: () async {
-                    await context.push(OwnerRoutes.bankAccount);
-                    // OPTIMIZED: Invalidate provider to trigger stream refresh
-                    // The build() watch will auto-update _companyDetails
-                    ref.invalidate(companyDetailsProvider);
-                  },
-                  icon: const Icon(Icons.edit, size: 16),
-                  label: Text(l10n.edit),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    side: BorderSide(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                    ),
-                  ),
-                );
-              },
-            ),
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context);
+              return BbButton(
+                label: l10n.edit,
+                iconLeft: 'edit',
+                variant: BbButtonVariant.secondary,
+                size: BbButtonSize.sm,
+                fullWidth: true,
+                onPressed: () async {
+                  await context.push(OwnerRoutes.bankAccount);
+                  // OPTIMIZED: Invalidate provider to trigger stream refresh
+                  // The build() watch will auto-update _companyDetails
+                  ref.invalidate(companyDetailsProvider);
+                },
+              );
+            },
           ),
         ],
       ),
@@ -824,63 +784,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
               ),
               const SizedBox(height: 12),
               ...WidgetMode.values.map(
-                (mode) => InkWell(
-                  onTap: () {
-                    setState(() => _selectedMode = mode);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        // Custom radio indicator to avoid deprecated API
-                        Container(
-                          width: 20,
-                          height: 20,
-                          margin: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _selectedMode == mode
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.onSurface
-                                        .withValues(alpha: 0.3),
-                              width: 2,
-                            ),
-                          ),
-                          child: _selectedMode == mode
-                              ? Center(
-                                  child: Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                                  ),
-                                )
-                              : null,
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(mode.displayName),
-                              Text(
-                                mode.description,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                (mode) => BbRadio<WidgetMode>(
+                  value: mode,
+                  groupValue: _selectedMode,
+                  onChanged: (m) => setState(() => _selectedMode = m),
+                  label: mode.displayName,
+                  subtitle: mode.description,
                 ),
               ),
             ],
@@ -1131,46 +1040,37 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                     const SizedBox(height: 12),
 
                     // Payment deadline dropdown
-                    Builder(
-                      builder: (ctx) => DropdownButtonFormField<int>(
-                        initialValue: _bankPaymentDeadlineDays,
-                        dropdownColor: InputDecorationHelper.getDropdownColor(
-                          ctx,
+                    BbDropdown<int>(
+                      value: _bankPaymentDeadlineDays,
+                      label: l10n.widgetSettingsPaymentDeadline,
+                      size: BbInputSize.lg,
+                      items: [
+                        BbDropdownItem(
+                          value: 1,
+                          label: '1 ${l10n.widgetSettingsDay}',
                         ),
-                        decoration: InputDecorationHelper.buildDecoration(
-                          labelText: l10n.widgetSettingsPaymentDeadline,
-                          context: ctx,
+                        BbDropdownItem(
+                          value: 3,
+                          label: '3 ${l10n.widgetSettingsDays}',
                         ),
-                        menuMaxHeight: 300,
-                        isExpanded: true,
-                        items: [
-                          DropdownMenuItem(
-                            value: 1,
-                            child: Text('1 ${l10n.widgetSettingsDay}'),
-                          ),
-                          DropdownMenuItem(
-                            value: 3,
-                            child: Text('3 ${l10n.widgetSettingsDays}'),
-                          ),
-                          DropdownMenuItem(
-                            value: 5,
-                            child: Text('5 ${l10n.widgetSettingsDays}'),
-                          ),
-                          DropdownMenuItem(
-                            value: 7,
-                            child: Text('7 ${l10n.widgetSettingsDays}'),
-                          ),
-                          DropdownMenuItem(
-                            value: 14,
-                            child: Text('14 ${l10n.widgetSettingsDays}'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() => _bankPaymentDeadlineDays = value);
-                          }
-                        },
-                      ),
+                        BbDropdownItem(
+                          value: 5,
+                          label: '5 ${l10n.widgetSettingsDays}',
+                        ),
+                        BbDropdownItem(
+                          value: 7,
+                          label: '7 ${l10n.widgetSettingsDays}',
+                        ),
+                        BbDropdownItem(
+                          value: 14,
+                          label: '14 ${l10n.widgetSettingsDays}',
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _bankPaymentDeadlineDays = value);
+                        }
+                      },
                     ),
 
                     const SizedBox(height: 16),
@@ -1193,17 +1093,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                     // Custom notes text field (conditional)
                     if (_bankUseCustomNotes) ...[
                       const SizedBox(height: 12),
-                      Builder(
-                        builder: (ctx) => TextFormField(
-                          controller: _bankCustomNotesController,
-                          decoration: InputDecorationHelper.buildDecoration(
-                            labelText: l10n.widgetSettingsNoteMaxChars,
-                            helperText: l10n.widgetSettingsNoteHelper,
-                            context: ctx,
-                          ),
-                          maxLines: 3,
-                          maxLength: 500,
-                        ),
+                      BbInput(
+                        controller: _bankCustomNotesController,
+                        label: l10n.widgetSettingsNoteMaxChars,
+                        helper: l10n.widgetSettingsNoteHelper,
+                        maxLines: 3,
+                        charLimit: 500,
                       ),
                     ],
                   ],
@@ -1302,21 +1197,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                   ],
                 ),
               ),
-              Switch(
-                value: enabled,
-                onChanged: onToggle,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                activeThumbColor: Theme.of(context).colorScheme.primary,
-                activeTrackColor: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.5),
-                inactiveThumbColor: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.4),
-                inactiveTrackColor: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.12),
-              ),
+              BbSwitch(value: enabled, onChanged: onToggle),
             ],
           ),
 
@@ -1402,21 +1283,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
               ],
             ),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            activeThumbColor: Theme.of(context).colorScheme.primary,
-            activeTrackColor: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.5),
-            inactiveThumbColor: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: 0.4),
-            inactiveTrackColor: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: 0.12),
-          ),
+          BbSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );
@@ -1750,23 +1617,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
     required int value,
     required ValueChanged<int> onChanged,
   }) {
-    final theme = Theme.of(context);
-    return TextFormField(
+    return BbInput(
       initialValue: value.toString(),
       keyboardType: TextInputType.number,
-      decoration:
-          InputDecorationHelper.buildDecoration(
-            context: context,
-            labelText: label,
-            prefixIcon: const Icon(Icons.today),
-          ).copyWith(
-            // Show hint as helper text BELOW the field (stays visible while typing)
-            helperText: hint,
-            helperStyle: TextStyle(
-              fontSize: 12,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
-          ),
+      label: label,
+      iconLeft: 'today',
+      // Hint shown as helper text BELOW the field (stays visible while typing)
+      helper: hint,
       onChanged: (text) {
         final parsed = int.tryParse(text) ?? 0;
         onChanged(parsed.clamp(0, 730));
@@ -1841,21 +1698,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
           ),
           const SizedBox(width: 8),
           // Trailing switch
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            activeThumbColor: Theme.of(context).colorScheme.primary,
-            activeTrackColor: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.5),
-            inactiveThumbColor: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: 0.4),
-            inactiveTrackColor: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: 0.12),
-          ),
+          BbSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );

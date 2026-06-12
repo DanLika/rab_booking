@@ -11,7 +11,6 @@ import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/redesign.dart';
 
@@ -20,7 +19,9 @@ import '../../../../shared/widgets/redesign.dart';
 /// Visual layer rebuilt with [BbLogo], [BbButton] + mail-icon state-mark disc
 /// on a glass card with `BbRedesignTokens.softBg` backdrop — matches the
 /// auth-family pattern established by [ForgotPasswordScreen] (PR #622) and
-/// [EnhancedLoginScreen] (PR #613).
+/// [EnhancedLoginScreen] (PR #613). Both dialogs (resend-password,
+/// change-email) run on [_BbFormDialog] + [BbInput] (audit/124 follow-up —
+/// last legacy Material widgets in the auth family removed).
 ///
 /// FROZEN / preserved logic:
 ///  - `sendEmailVerification` via `enhancedAuthProvider`
@@ -216,51 +217,39 @@ class _EmailVerificationScreenState
     try {
       return await showDialog(
         context: context,
-        builder: (context) {
-          final l10n = AppLocalizations.of(context);
-          return AlertDialog(
-            title: Text(l10n.authResendVerificationEmail),
-            content: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    l10n.authPasswordHelper,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  Builder(
-                    builder: (ctx) => TextFormField(
-                      controller: passwordController,
-                      obscureText: true,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        labelText: l10n.authPasswordLabel,
-                        prefixIcon: const Icon(Icons.lock),
-                        context: ctx,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return l10n.passwordRequired;
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
+        builder: (dialogContext) {
+          final l10n = AppLocalizations.of(dialogContext);
+          return Form(
+            key: formKey,
+            child: _BbFormDialog(
+              title: l10n.authResendVerificationEmail,
+              intro: l10n.authPasswordHelper,
+              fields: [
+                BbInput(
+                  key: const ValueKey('resend_verification_password'),
+                  controller: passwordController,
+                  label: l10n.authPasswordLabel,
+                  iconLeft: 'lock',
+                  obscureText: true,
+                  size: BbInputSize.lg,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return l10n.passwordRequired;
+                    }
+                    return null;
+                  },
+                ),
+              ],
+              secondary: BbDialogAction(
+                label: l10n.cancel,
+                onPressed: () => Navigator.of(dialogContext).pop(),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.cancel),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
+              primary: BbDialogAction(
+                label: l10n.submit,
                 onPressed: () async {
                   if (!formKey.currentState!.validate()) return;
 
-                  final navigator = Navigator.of(context);
+                  final navigator = Navigator.of(dialogContext);
                   navigator.pop();
 
                   setState(() => _isResending = true);
@@ -276,7 +265,7 @@ class _EmailVerificationScreenState
 
                     if (mounted) {
                       ErrorDisplayUtils.showSuccessSnackBar(
-                        this.context,
+                        context,
                         l10n.authVerifyEmailSuccess,
                         duration: const Duration(seconds: 3),
                       );
@@ -284,7 +273,7 @@ class _EmailVerificationScreenState
                     }
                   } catch (e) {
                     if (mounted) {
-                      ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                      ErrorDisplayUtils.showErrorSnackBar(context, e);
                     }
                   } finally {
                     if (mounted) {
@@ -292,9 +281,8 @@ class _EmailVerificationScreenState
                     }
                   }
                 },
-                child: Text(l10n.submit),
               ),
-            ],
+            ),
           );
         },
       );
@@ -333,120 +321,89 @@ class _EmailVerificationScreenState
     try {
       return await showDialog(
         context: context,
-        builder: (context) {
-          final l10n = AppLocalizations.of(context);
-          return AlertDialog(
-            title: Row(
-              children: [
-                Icon(
-                  Icons.email_outlined,
-                  color: Theme.of(context).primaryColor,
+        builder: (dialogContext) {
+          final l10n = AppLocalizations.of(dialogContext);
+          final c = BBColor.of(dialogContext);
+          return Form(
+            key: formKey,
+            child: _BbFormDialog(
+              title: l10n.authChangeEmailTitle,
+              intro: l10n.authChangeEmailDesc,
+              fields: [
+                BbInput(
+                  key: const ValueKey('change_email_new_email'),
+                  controller: emailController,
+                  label: l10n.authNewEmailLabel,
+                  iconLeft: 'mail',
+                  size: BbInputSize.lg,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.emailRequired;
+                    }
+                    if (!value.contains('@') || !value.contains('.')) {
+                      return l10n.validEmailRequired;
+                    }
+                    return null;
+                  },
                 ),
-                const SizedBox(width: 8),
-                Text(l10n.authChangeEmailTitle),
+                const SizedBox(height: BBSpace.sm),
+                BbInput(
+                  key: const ValueKey('change_email_password'),
+                  controller: passwordController,
+                  label: l10n.authPasswordLabel,
+                  iconLeft: 'lock',
+                  obscureText: true,
+                  helper: l10n.authPasswordHelper,
+                  size: BbInputSize.lg,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return l10n.passwordRequired;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                // Logout-warning tip — same token recipe as the screen's
+                // info-tip block (surfaceVariant chip on the dialog surface).
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: c.surfaceVariant,
+                    borderRadius: BBRadius.smAll,
+                    border: Border.all(color: c.border),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 20,
+                        color: c.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          l10n.authLogoutHint,
+                          style: BBType.caption(
+                            dialogContext,
+                          ).copyWith(color: c.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
-            ),
-            content: SingleChildScrollView(
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.authChangeEmailDesc,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 20),
-                    Builder(
-                      builder: (ctx) => TextFormField(
-                        controller: emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecorationHelper.buildDecoration(
-                          labelText: l10n.authNewEmailLabel,
-                          prefixIcon: const Icon(Icons.email),
-                          context: ctx,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return l10n.emailRequired;
-                          }
-                          if (!value.contains('@') || !value.contains('.')) {
-                            return l10n.validEmailRequired;
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Builder(
-                      builder: (ctx) => TextFormField(
-                        controller: passwordController,
-                        obscureText: true,
-                        decoration: InputDecorationHelper.buildDecoration(
-                          labelText: l10n.authPasswordLabel,
-                          prefixIcon: const Icon(Icons.lock),
-                          helperText: l10n.authPasswordHelper,
-                          context: ctx,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return l10n.passwordRequired;
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.tertiary,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              l10n.authLogoutHint,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              secondary: BbDialogAction(
+                label: l10n.cancel,
+                onPressed: () => Navigator.of(dialogContext).pop(),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.cancel),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
+              primary: BbDialogAction(
+                label: l10n.authChangeEmail,
                 onPressed: () async {
                   if (!formKey.currentState!.validate()) return;
 
-                  final navigator = Navigator.of(context);
+                  final navigator = Navigator.of(dialogContext);
                   navigator.pop();
 
                   try {
@@ -460,19 +417,18 @@ class _EmailVerificationScreenState
 
                     if (mounted) {
                       ErrorDisplayUtils.showSuccessSnackBar(
-                        this.context,
+                        context,
                         l10n.authUpdateEmailSuccess,
                       );
                     }
                   } catch (e) {
                     if (mounted) {
-                      ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                      ErrorDisplayUtils.showErrorSnackBar(context, e);
                     }
                   }
                 },
-                child: Text(l10n.authChangeEmail),
               ),
-            ],
+            ),
           );
         },
       );
@@ -732,6 +688,79 @@ class _EmailVerificationScreenState
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Premium form-dialog shell — replicates [BbDialog]'s visual recipe
+/// (surface / BBRadius.lg / BBShadow.modal / h2-body type ramp / BbButton
+/// action row) but hosts widget [fields] between intro and actions, which
+/// [BbDialog] can't (its `body` is String-only). Inlined per the R5
+/// inlined-helper precedent; wrap in a [Form] to use BbInput validators.
+class _BbFormDialog extends StatelessWidget {
+  const _BbFormDialog({
+    required this.title,
+    required this.intro,
+    required this.fields,
+    required this.primary,
+    required this.secondary,
+  });
+
+  final String title;
+  final String intro;
+  final List<Widget> fields;
+  final BbDialogAction primary;
+  final BbDialogAction secondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final BBColorSet c = BBColor.of(context);
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(BBSpace.md),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Container(
+          decoration: BoxDecoration(
+            color: c.surface,
+            borderRadius: BBRadius.lgAll,
+            boxShadow: BBShadow.modal(context),
+          ),
+          padding: const EdgeInsets.all(BBSpace.md),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Text(title, style: BBType.h2(context)),
+                const SizedBox(height: BBSpace.xs),
+                Text(
+                  intro,
+                  style: BBType.body(context).copyWith(color: c.textSecondary),
+                ),
+                const SizedBox(height: BBSpace.sm),
+                ...fields,
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    BbButton(
+                      label: secondary.label,
+                      variant: BbButtonVariant.tertiary,
+                      onPressed: secondary.onPressed,
+                    ),
+                    const SizedBox(width: BBSpace.xs),
+                    BbButton(
+                      label: primary.label,
+                      onPressed: primary.onPressed,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

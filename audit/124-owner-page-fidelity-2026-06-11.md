@@ -61,3 +61,4 @@
 - **Hero dual-series chart**: handoff shows current+previous ghost line; impl uses single sparkline + prev-period caption (provider has no prior-period series; caption covers the comparison).
 - **Tab count badges** (handoff RZP tabs show per-status counts): needs per-status count providers; not wired this pass.
 - Page background stays `context.gradients.pageBackground` (user-mandated TIP 1 diagonal gradient) vs handoff flat `--bb-bg` — per user's standing instruction, not drift.
+- **Sections too (2026-06-12, PR #730):** `sectionBackground` token = user-mandated TIP 1 (2 opaque colors, stops `[0.0, 0.3]`, topRight → bottomLeft; light `#ECEDF2 → #FFFFFF`, dark `#1A1A1A → #2D2D2D`) vs handoff flat `--bb-panel-bg` — NOT drift, do NOT revert to flat. Covers Jedinice endDrawer + desktop master panel + Cjenovnik sections (Osnovna cijena / bulk-edit header / calendar grid) + all dialog content surfaces on the token.

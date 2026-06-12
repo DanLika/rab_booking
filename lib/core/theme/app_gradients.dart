@@ -94,6 +94,15 @@ class AppGradients extends ThemeExtension<AppGradients> {
   static const Color _lightInputFill = Color(0xFFF5F6FA);
   static const Color _darkInputFill = Color(0xFF15151A);
 
+  // Section TIP 1 colors — user-mandated simple diagonal section gradient:
+  // 2 colors @100% opacity, 2 stops, topRight → bottomLeft, fade ends at 30%.
+  // Light start is a cool light gray (user: replace #F8F9FA with a gray that
+  // pairs with shell #F0F1F5 / border #E0DCE8). Dark pair is per user spec.
+  static const Color _lightSectionStart = Color(0xFFECEDF2);
+  static const Color _lightSectionEnd = Color(0xFFFFFFFF);
+  static const Color _darkSectionStart = Color(0xFF1A1A1A);
+  static const Color _darkSectionEnd = Color(0xFF2D2D2D);
+
   // ============================================================================
   // PREDEFINED THEME INSTANCES
   // ============================================================================
@@ -105,9 +114,12 @@ class AppGradients extends ThemeExtension<AppGradients> {
       stops: [0.0, 0.6],
     ),
     sectionBackground: LinearGradient(
-      // handoff `--bb-panel-bg = #FBFBFD` flat. Section/sub-card surfaces sit
-      // on top of `shellBg` per pregled-premium.jsx PV_PANEL_BG.
-      colors: [Color(0xFFFBFBFD), Color(0xFFFBFBFD)],
+      // User TIP 1 (overrides handoff flat `--bb-panel-bg`): simple diagonal,
+      // 2 opaque colors, fade ends at 30% of the surface.
+      begin: Alignment.topRight,
+      end: Alignment.bottomLeft,
+      colors: [_lightSectionStart, _lightSectionEnd],
+      stops: [0.0, 0.3],
     ),
     brandPrimary: LinearGradient(
       begin: Alignment.topLeft,
@@ -131,8 +143,12 @@ class AppGradients extends ThemeExtension<AppGradients> {
       stops: [0.0, 0.6],
     ),
     sectionBackground: LinearGradient(
-      // handoff dark `--bb-panel-bg = #0B0B0D` flat.
-      colors: [Color(0xFF0B0B0D), Color(0xFF0B0B0D)],
+      // User TIP 1 (overrides handoff flat `--bb-panel-bg`): simple diagonal,
+      // 2 opaque colors, fade ends at 30% of the surface.
+      begin: Alignment.topRight,
+      end: Alignment.bottomLeft,
+      colors: [_darkSectionStart, _darkSectionEnd],
+      stops: [0.0, 0.3],
     ),
     brandPrimary: LinearGradient(
       begin: Alignment.topLeft,

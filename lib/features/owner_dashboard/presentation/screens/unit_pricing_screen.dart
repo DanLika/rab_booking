@@ -474,7 +474,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: context.gradients.sectionBorder,

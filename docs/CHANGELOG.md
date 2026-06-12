@@ -2,7 +2,20 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-11 | **Version**: 7.15
+**Last Updated**: 2026-06-12 | **Version**: 7.16
+
+---
+
+**Changelog 7.16** (2026-06-12):
+
+### Security — audit/125 sweep + SF-084 LOW fix wave (PR #731)
+- Dva passa: /vibe-security delta (clean) + full 165+-check re-run (6 agenata, HUGE strategija): **0 CRIT/HIGH/MED novih, 5 LOW**. Dvije agent-tvrdnje ubijene firsthand verifikacijom (migrateTrialStatus auth = false positive; "10 funkcija bez RL" naduvano).
+- **SF-084 fixes** (`b37f1eba`): SF-080 extension — units + additional_services create/update trial-gated (kanonski + CG blok, permissive-union mirror; delete = cleanup off-ramp); `widget_secrets.updated_at` request.time bind when-written (mirror F-107-16, zero client change); Firestore-backed rate limits na 4 booking-action callable-a (30/min shared) + 2 admin callable-a (20/min).
+- Deferred: uuid moderates → `firebase-admin@14` major (F-107-07/08, vulnerable buf path nekorišten); Node 20→22 prije Oct 2026 EOL.
+- Verifikacija: rules emulator 196 pass (+14 ćelija), jest 463/463 (+1), tsc clean; rules dev-deployani. PROD pickup: rules + 6 CF na sljedećem deploy wave-u.
+
+### CI
+- **paths-filter v4 regresija**: dependabot v3→v4 bump (`65d2d393`) ruši detect-changes job na svakom PR-u ("Resource not accessible by integration") → heavy skip + coverage cancel kaskada (ista klasa kao #728 "2s infra fail"). Fix: eksplicitni `permissions: pull-requests: read` na job.
 
 ---
 

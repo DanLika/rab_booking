@@ -23,6 +23,7 @@ import {db} from "./firebase";
 import {logInfo, logSuccess, logWarn} from "./logger";
 import {setUser} from "./sentry";
 import {findBookingById} from "./utils/bookingLookup";
+import {enforceRateLimit} from "./utils/rateLimit";
 import {processStripeRefund} from "./utils/bookingRefund";
 import {stripeSecretKey} from "./stripe";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
@@ -138,6 +139,27 @@ function requireAuth(request: CallableRequest<BookingActionInput>): string {
 }
 
 /**
+ * Auth + Firestore-backed rate limit shared across all four booking actions.
+ * Callers are already ownership-checked downstream; the limiter only caps
+ * scripted self-spam (audit 2026-06-12 LOW), so one shared bucket suffices.
+ *
+ * @param {CallableRequest<BookingActionInput>} request - callable request.
+ * @return {Promise<string>} authenticated UID.
+ */
+async function requireAuthRateLimited(
+  request: CallableRequest<BookingActionInput>
+): Promise<string> {
+  const uid = requireAuth(request);
+  await enforceRateLimit(uid, "booking_action", {
+    maxCalls: 30,
+    windowMs: 60_000,
+    errorMessage:
+      "Too many booking actions. Please wait a moment and try again.",
+  });
+  return uid;
+}
+
+/**
  * approveBooking — transitions a pending booking to `confirmed` and stamps
  * `approved_at`. Guests receive the confirmation email via the existing
  * `onBookingStatusChange` Firestore trigger (bookingManagement.ts).
@@ -154,7 +176,7 @@ export const approveBooking = onCall<
     cors: getCorsAllowlist(),
   },
   async (request) => {
-    const uid = requireAuth(request);
+    const uid = await requireAuthRateLimited(request);
     const bookingId = requireString(request.data?.bookingId, "bookingId");
 
     logInfo("[approveBooking] start", {bookingId, uid});
@@ -190,7 +212,7 @@ export const rejectBooking = onCall<
     cors: getCorsAllowlist(),
   },
   async (request) => {
-    const uid = requireAuth(request);
+    const uid = await requireAuthRateLimited(request);
     const bookingId = requireString(request.data?.bookingId, "bookingId");
 
     const rawReason = request.data?.reason;
@@ -252,7 +274,7 @@ export const cancelBooking = onCall<
     secrets: [stripeSecretKey],
   },
   async (request) => {
-    const uid = requireAuth(request);
+    const uid = await requireAuthRateLimited(request);
     const bookingId = requireString(request.data?.bookingId, "bookingId");
 
     const rawReason = request.data?.reason;
@@ -426,7 +448,7 @@ export const completeBooking = onCall<
     cors: getCorsAllowlist(),
   },
   async (request) => {
-    const uid = requireAuth(request);
+    const uid = await requireAuthRateLimited(request);
     const bookingId = requireString(request.data?.bookingId, "bookingId");
 
     logInfo("[completeBooking] start", {bookingId, uid});

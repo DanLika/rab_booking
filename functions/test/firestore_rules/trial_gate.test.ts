@@ -101,6 +101,11 @@ beforeEach(async () => {
         property_id: `prop-${uid}`,
         name: "U",
       });
+      // Pre-existing additional service for the update/delete arms of the
+      // 2026-06-12 SF-080-extension cells.
+      await db
+        .doc(`properties/prop-${uid}/units/${UNIT_ID}/additional_services/svc-1`)
+        .set({name: "Cleaning", price: 30});
     }
     // Common property used by admin/foreign-arm tests (owner = ACTIVE_UID).
     await db.doc(`properties/${PROPERTY_ID}`).set({
@@ -502,6 +507,128 @@ describe("SF-080 — widget_settings gated by isActiveOwner()", () => {
 });
 
 // ---------------------------------------------------------------------------
+// 5b. SF-080 extension (2026-06-12): units + additional_services
+//     create/update gated; delete stays ungated (cleanup off-ramp). The
+//     canonical properties/{p}/units block AND the /{path=**}/units CG block
+//     match the same docs and rules OR across blocks, so a single DENY here
+//     proves BOTH blocks carry the gate.
+// ---------------------------------------------------------------------------
+
+describe("SF-080-ext — units create/update gated by isActiveOwner()", () => {
+  test("active owner create ALLOWED", async () => {
+    const ctx = testEnv.authenticatedContext(ACTIVE_UID);
+    await assertSucceeds(
+      ctx.firestore().doc(`properties/prop-${ACTIVE_UID}/units/new-unit`).set({
+        property_id: `prop-${ACTIVE_UID}`,
+        name: "new",
+      }),
+    );
+  });
+
+  test("trial owner create ALLOWED", async () => {
+    const ctx = testEnv.authenticatedContext(TRIAL_UID);
+    await assertSucceeds(
+      ctx.firestore().doc(`properties/prop-${TRIAL_UID}/units/new-unit`).set({
+        property_id: `prop-${TRIAL_UID}`,
+        name: "new",
+      }),
+    );
+  });
+
+  test("expired owner create DENIED", async () => {
+    const ctx = testEnv.authenticatedContext(EXPIRED_UID);
+    await assertFails(
+      ctx.firestore().doc(`properties/prop-${EXPIRED_UID}/units/new-unit`).set({
+        property_id: `prop-${EXPIRED_UID}`,
+        name: "new",
+      }),
+    );
+  });
+
+  test("suspended owner update DENIED", async () => {
+    const ctx = testEnv.authenticatedContext(SUSPENDED_UID);
+    await assertFails(
+      ctx
+        .firestore()
+        .doc(`properties/prop-${SUSPENDED_UID}/units/${UNIT_ID}`)
+        .update({name: "renamed"}),
+    );
+  });
+
+  test("missing accountStatus field update DENIED (fail-closed)", async () => {
+    const ctx = testEnv.authenticatedContext(MISSING_FIELD_UID);
+    await assertFails(
+      ctx
+        .firestore()
+        .doc(`properties/prop-${MISSING_FIELD_UID}/units/${UNIT_ID}`)
+        .update({name: "renamed"}),
+    );
+  });
+
+  test("expired owner delete ALLOWED (cleanup off-ramp)", async () => {
+    const ctx = testEnv.authenticatedContext(EXPIRED_UID);
+    await assertSucceeds(
+      ctx
+        .firestore()
+        .doc(`properties/prop-${EXPIRED_UID}/units/${UNIT_ID}`)
+        .delete(),
+    );
+  });
+
+  test("admin claim create on foreign property ALLOWED (bypass)", async () => {
+    const ctx = testEnv.authenticatedContext(ADMIN_CLAIM_UID, {isAdmin: true});
+    await assertSucceeds(
+      ctx.firestore().doc(`properties/${PROPERTY_ID}/units/admin-unit`).set({
+        property_id: PROPERTY_ID,
+        name: "admin",
+      }),
+    );
+  });
+});
+
+describe("SF-080-ext — additional_services create/update gated by isActiveOwner()", () => {
+  test("active owner create ALLOWED", async () => {
+    const ctx = testEnv.authenticatedContext(ACTIVE_UID);
+    await assertSucceeds(
+      ctx
+        .firestore()
+        .doc(`properties/prop-${ACTIVE_UID}/units/${UNIT_ID}/additional_services/svc-new`)
+        .set({name: "Breakfast", price: 12}),
+    );
+  });
+
+  test("expired owner create DENIED", async () => {
+    const ctx = testEnv.authenticatedContext(EXPIRED_UID);
+    await assertFails(
+      ctx
+        .firestore()
+        .doc(`properties/prop-${EXPIRED_UID}/units/${UNIT_ID}/additional_services/svc-new`)
+        .set({name: "Breakfast", price: 12}),
+    );
+  });
+
+  test("expired owner update DENIED", async () => {
+    const ctx = testEnv.authenticatedContext(EXPIRED_UID);
+    await assertFails(
+      ctx
+        .firestore()
+        .doc(`properties/prop-${EXPIRED_UID}/units/${UNIT_ID}/additional_services/svc-1`)
+        .update({price: 99}),
+    );
+  });
+
+  test("expired owner delete ALLOWED (cleanup off-ramp)", async () => {
+    const ctx = testEnv.authenticatedContext(EXPIRED_UID);
+    await assertSucceeds(
+      ctx
+        .firestore()
+        .doc(`properties/prop-${EXPIRED_UID}/units/${UNIT_ID}/additional_services/svc-1`)
+        .delete(),
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 6. Frozen happy-path sanity (regression guard)
 // ---------------------------------------------------------------------------
 
@@ -510,7 +637,8 @@ describe("SF-080 — Frozen happy-path regression guard (active owner)", () => {
     // Order matches what unified_unit_hub_screen.dart's publish flow does
     // (rules-side only — we are not invoking the actual Dart code here).
     const ctx = testEnv.authenticatedContext(ACTIVE_UID);
-    // 1. Unit doc — NOT gated by SF-080 (preserved by design).
+    // 1. Unit doc — gated since the 2026-06-12 SF-080 extension; active
+    //    owner passes (this cell guards exactly that).
     await assertSucceeds(
       ctx
         .firestore()

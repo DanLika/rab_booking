@@ -30,7 +30,9 @@ Agent tvrdnje ubijene verifikacijom (NISU nalazi):
 2. **widget_secrets timestamp bind (rules)**: pisani `updated_at` mora biti `== request.time` (mirror F-107-16); omission dozvoljen (subset writes — striktna verzija bi srušila 2 legitimna cell-a). Jedini klijentski writer (`ical_export_list_screen.dart:219`) već šalje `FieldValue.serverTimestamp()` — zero client change.
 3. **Rate limits (CF)**: `approveBooking`/`rejectBooking`/`cancelBooking`/`completeBooking` → shared Firestore-backed `booking_action` bucket 30/min; admin `updateUserStatus` + `setLifetimeLicense` → `admin_action` 20/min.
 
-**Verifikacija**: rules emulator 12 suita / **196 pass** (+14 ćelija: units/services arms, admin bypass, off-ramp, timestamp bind ×3); functions jest **463/463** (+1 RL assertion); tsc clean. Rules deployani na bookbed-dev; **PROD pickup = sljedeći deploy wave (rules + 6 CF: bookingActions ×4 + 2 admin)**.
+**Verifikacija**: rules emulator 12 suita / **196 pass** (+14 ćelija: units/services arms, admin bypass, off-ramp, timestamp bind ×3); functions jest **463/463** (+1 RL assertion); tsc clean. Rules deployani na bookbed-dev.
+
+**PROD pickup ZAVRŠEN 2026-06-12** (post-merge `a5cd544f`): rules + svih 6 CF (approve/reject/cancel/completeBooking + updateUserStatus + setLifetimeLicense, eu-west1) deployani na `rab-booking-248fc`; reachability verify — svih 6 vraća strukturirani `UNAUTHENTICATED` JSON (invoker IAM intaktan, nema cors-shape IAM strip-a). Merge po local-verified protokolu: GitHub billing block se vratio na drugom CI runu (nijedan job nije startao); prvi run prije kaskade: Run Tests + Validate Firestore Rules PASS.
 
 ## 4. CI regresija nađena usput (fix u istom PR-u)
 

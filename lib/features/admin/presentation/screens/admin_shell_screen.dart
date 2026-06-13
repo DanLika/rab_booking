@@ -106,9 +106,10 @@ class AdminShellScreen extends ConsumerWidget {
             colorScheme: ColorScheme.dark(
               primary: AppColors.primaryLight,
               surface: BbAdminDarkTokens.preset.panelBg,
-              surfaceContainer: const Color(0xFF25253A), // Drawer color
+              surfaceContainer:
+                  BbAdminDarkTokens.preset.shellBg, // sidebar/rail/drawer
             ),
-            scaffoldBackgroundColor: const Color(0xFF161621),
+            scaffoldBackgroundColor: BbAdminDarkTokens.preset.shellBg,
             extensions: const <ThemeExtension<dynamic>>[
               BbAdminDarkTokens.preset,
             ],
@@ -116,7 +117,7 @@ class AdminShellScreen extends ConsumerWidget {
         : ThemeData.light(useMaterial3: true).copyWith(
             colorScheme: const ColorScheme.light(
               primary: AppColors.primary,
-              surface: Color(0xFFF4F5F9),
+              surface: AppColors.surfaceVariantLight,
               surfaceContainer: Colors.white,
               // Override MD3 defaults (~#1C1B1F / ~#49454F) with canonical
               // BookBed design slate from tokens.css :root
@@ -128,7 +129,7 @@ class AdminShellScreen extends ConsumerWidget {
               onSurface: BBColor.textPrimaryLight,
               onSurfaceVariant: BBColor.textSecondaryLight,
             ),
-            scaffoldBackgroundColor: const Color(0xFFF3F4F6),
+            scaffoldBackgroundColor: AppColors.shellBgLight,
           );
 
     final content = Column(

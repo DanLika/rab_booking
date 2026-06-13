@@ -550,10 +550,10 @@ class _AccountTypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (type) {
-      AccountType.trial => Colors.orange,
-      AccountType.premium => Colors.green,
-      AccountType.enterprise => Colors.blue,
-      AccountType.lifetime => Colors.purple,
+      AccountType.trial => AppColors.warning,
+      AccountType.premium => AppColors.success,
+      AccountType.enterprise => AppColors.info,
+      AccountType.lifetime => AppColors.primary,
     };
 
     return Container(

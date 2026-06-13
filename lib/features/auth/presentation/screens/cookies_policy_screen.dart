@@ -6,6 +6,7 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../shared/widgets/redesign.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../widgets/legal_tabs_row.dart';
 
 class CookiesPolicyScreen extends StatefulWidget {
@@ -111,40 +112,43 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
           }
         },
       ),
-      body: SafeArea(
-        child: Stack(
-          alignment: Alignment.topLeft,
-          children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1200),
-                child: isDesktop
-                    ? _buildDesktop(
-                        l10n: l10n,
-                        horizontalPadding: horizontalPadding,
-                        tocItems: tocItems,
-                        lastUpdated: lastUpdated,
-                      )
-                    : _buildMobile(
-                        l10n: l10n,
-                        horizontalPadding: horizontalPadding,
-                        isMobile: isMobile,
-                        tocItems: tocItems,
-                        lastUpdated: lastUpdated,
-                      ),
-              ),
-            ),
-            if (_showScrollToTop)
-              Positioned(
-                bottom: isMobile ? 16 : 24,
-                right: isMobile ? 16 : 24,
-                child: FloatingActionButton(
-                  onPressed: _scrollToTop,
-                  backgroundColor: theme.colorScheme.primary,
-                  child: const Icon(Icons.arrow_upward, color: Colors.white),
+      body: Container(
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: SafeArea(
+          child: Stack(
+            alignment: Alignment.topLeft,
+            children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 980),
+                  child: isDesktop
+                      ? _buildDesktop(
+                          l10n: l10n,
+                          horizontalPadding: horizontalPadding,
+                          tocItems: tocItems,
+                          lastUpdated: lastUpdated,
+                        )
+                      : _buildMobile(
+                          l10n: l10n,
+                          horizontalPadding: horizontalPadding,
+                          isMobile: isMobile,
+                          tocItems: tocItems,
+                          lastUpdated: lastUpdated,
+                        ),
                 ),
               ),
-          ],
+              if (_showScrollToTop)
+                Positioned(
+                  bottom: isMobile ? 16 : 24,
+                  right: isMobile ? 16 : 24,
+                  child: FloatingActionButton(
+                    onPressed: _scrollToTop,
+                    backgroundColor: theme.colorScheme.primary,
+                    child: const Icon(Icons.arrow_upward, color: Colors.white),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

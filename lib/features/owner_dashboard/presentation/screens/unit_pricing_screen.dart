@@ -78,6 +78,10 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
     final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    // Desktop two-column layout only when rendered as a standalone screen
+    // (showAppBar). When embedded in the unit hub Pricing tab the content
+    // stays single-column (frozen tab content) — see _buildMainContent.
+    final isDesktop = widget.showAppBar && screenWidth >= 1200;
 
     // If unit was not provided, load all units and allow selection
     if (widget.unit == null) {
@@ -151,6 +155,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
                     units: units,
                     showUnitSelector: true,
                     l10n: l10n,
+                    isDesktop: isDesktop,
                   ),
                 ),
               ),
@@ -207,6 +212,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
               units: null,
               showUnitSelector: false,
               l10n: l10n,
+              isDesktop: isDesktop,
             ),
           ),
         ),
@@ -219,33 +225,73 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
     required List<UnitModel>? units,
     required bool showUnitSelector,
     required AppLocalizations l10n,
+    bool isDesktop = false,
   }) {
     if (_selectedUnit == null) return const SizedBox.shrink();
 
     final padding = context.horizontalPadding;
     final gap = isMobile ? 8.0 : 16.0;
 
+    // FROZEN tab content (pricing grid + base price + Spremi) — built once and
+    // only REPOSITIONED by the desktop layout below; never modified.
+    final unitSelector = (showUnitSelector && units != null)
+        ? _buildUnitSelector(units, isMobile, l10n)
+        : null;
+    final basePriceSection = _buildBasePriceSection(isMobile, l10n);
+    final calendar = PriceListCalendarWidget(unit: _selectedUnit!);
+
+    // Desktop (≥1200, standalone): controls in a fixed left column, calendar
+    // takes the remaining width. Each column scrolls independently.
+    if (isDesktop) {
+      return Padding(
+        padding: EdgeInsets.all(padding),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: 400,
+              child: SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: Column(
+                  children: [
+                    if (unitSelector != null) ...[
+                      unitSelector,
+                      SizedBox(height: gap),
+                    ],
+                    basePriceSection,
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 24),
+            Expanded(child: calendar),
+          ],
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Column(
         children: [
           // Unit selector (only when accessed from drawer)
-          if (showUnitSelector && units != null)
+          if (unitSelector != null)
             Padding(
               padding: EdgeInsets.fromLTRB(padding, padding, padding, gap),
-              child: _buildUnitSelector(units, isMobile, l10n),
+              child: unitSelector,
             ),
 
           // Base price section
           Padding(
             padding: EdgeInsets.fromLTRB(padding, padding, padding, gap),
-            child: _buildBasePriceSection(isMobile, l10n),
+            child: basePriceSection,
           ),
 
           // Calendar section
           Padding(
             padding: EdgeInsets.fromLTRB(padding, gap, padding, padding),
-            child: PriceListCalendarWidget(unit: _selectedUnit!),
+            child: calendar,
           ),
 
           // Bottom spacing

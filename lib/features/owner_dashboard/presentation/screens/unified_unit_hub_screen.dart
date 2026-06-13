@@ -32,12 +32,12 @@ import '../widgets/units/units_premium_header.dart';
 // CONSTANTS
 // ============================================================================
 
-/// Master panel width for desktop layout
-const double _kMasterPanelWidth = 320.0;
+/// Master panel width for desktop sidebar + mobile/tablet endDrawer
+const double _kMasterPanelWidth = 280.0;
 
-/// Breakpoint for desktop layout (consistent with CLAUDE.md: Desktop ≥1200px)
-const double _kDesktopBreakpoint =
-    900.0; // Using 900 for this screen per existing behavior
+/// Breakpoint for desktop layout (CLAUDE.md: Desktop ≥1200px). At/above this
+/// the master panel is a persistent sidebar; below it lives in the endDrawer.
+const double _kDesktopBreakpoint = 1200.0;
 
 /// Breakpoint for tablet layout (between mobile and desktop)
 const double _kTabletBreakpoint = 800.0;

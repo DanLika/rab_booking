@@ -5,12 +5,12 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/design/tokens.dart';
-import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/config/environment.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
+import '../../../../../shared/widgets/redesign.dart';
 import '../../../../../shared/models/property_model.dart';
 import '../../../../../shared/models/unit_model.dart';
 
@@ -65,14 +65,16 @@ class _EmbedWidgetGuideScreenState
       builder: (sheetContext) => Container(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(BBRadius.md),
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Handle bar
             Container(
-              margin: const EdgeInsets.only(top: 12),
+              margin: const EdgeInsets.only(top: BBSpace.sm),
               width: 40,
               height: 4,
               decoration: BoxDecoration(
@@ -82,14 +84,19 @@ class _EmbedWidgetGuideScreenState
             ),
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              padding: const EdgeInsets.fromLTRB(
+                BBSpace.md,
+                BBSpace.md,
+                BBSpace.md,
+                BBSpace.sm,
+              ),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(BBSpace.xs),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(BBRadius.sm),
                     ),
                     child: Icon(
                       Icons.help_outline,
@@ -97,25 +104,23 @@ class _EmbedWidgetGuideScreenState
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: BBSpace.sm),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           l10n.embedGuideQuickHelpTitle,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: BBType.h3(
+                            context,
+                          ).copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           l10n.embedGuideSimpleStepsTitle,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.6,
-                            ),
-                          ),
+                          style: BBType.caption(
+                            context,
+                          ).copyWith(color: BBColor.of(context).textTertiary),
                         ),
                       ],
                     ),
@@ -131,7 +136,7 @@ class _EmbedWidgetGuideScreenState
             ),
             // Simplified steps as compact list
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: BBSpace.md),
               child: Column(
                 children: [
                   _buildCompactStep(
@@ -157,10 +162,15 @@ class _EmbedWidgetGuideScreenState
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: BBSpace.sm),
             // CTA Button to full help
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(
+                BBSpace.md,
+                0,
+                BBSpace.md,
+                BBSpace.md,
+              ),
               child: SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -177,7 +187,7 @@ class _EmbedWidgetGuideScreenState
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(BBRadius.sm),
                     ),
                   ),
                 ),
@@ -209,15 +219,13 @@ class _EmbedWidgetGuideScreenState
             alignment: Alignment.center,
             child: Text(
               number,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
+              style: BBType.caption(
+                context,
+              ).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
+          const SizedBox(width: BBSpace.sm),
+          Expanded(child: Text(text, style: BBType.body(context))),
         ],
       ),
     );
@@ -249,12 +257,12 @@ class _EmbedWidgetGuideScreenState
         child: SafeArea(
           child: ListView(
             physics: PlatformScrollPhysics.adaptive,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(BBSpace.sm),
             children: [
               // Hero Section - Premium
               _buildHeroSection(isDark),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: BBSpace.sm),
 
               // Responsive layout: Steps + Test side by side on desktop
               LayoutBuilder(
@@ -268,7 +276,7 @@ class _EmbedWidgetGuideScreenState
                       children: [
                         // Left: Installation Steps
                         Expanded(child: _buildInstallationStepsSection()),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: BBSpace.sm),
                         // Right: Test Widget
                         Expanded(child: _buildTestWidgetSection()),
                       ],
@@ -279,29 +287,29 @@ class _EmbedWidgetGuideScreenState
                   return Column(
                     children: [
                       _buildInstallationStepsSection(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: BBSpace.sm),
                       _buildTestWidgetSection(),
                     ],
                   );
                 },
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: BBSpace.md),
 
               // Developer Customization Info
               _buildDeveloperInfoSection(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: BBSpace.md),
 
               // Your Embed Codes - The main content
               _buildYourEmbedCodesSection(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: BBSpace.md),
 
               // Help Links
               _buildHelpLinks(),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: BBSpace.lg),
             ],
           ),
         ),
@@ -312,14 +320,9 @@ class _EmbedWidgetGuideScreenState
   Widget _buildHeroSection(bool isDark) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final c = BBColor.of(context);
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
-        borderRadius: BorderRadius.circular(20),
-      ),
+    return BbCard(
       child: Stack(
         children: [
           // Background pattern/decoration
@@ -332,60 +335,48 @@ class _EmbedWidgetGuideScreenState
               color: theme.colorScheme.primary.withValues(alpha: 0.06),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(
-                          alpha: 0.10,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(BBSpace.xs),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(BBRadius.sm),
+                    ),
+                    child: Icon(
+                      Icons.integration_instructions_outlined,
+                      size: 24,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: BBSpace.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.embedGuideHeaderTitle,
+                          style: BBType.h2(context).copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.integration_instructions_outlined,
-                        size: 24,
-                        color: theme.colorScheme.primary,
-                      ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.embedGuideHeaderSubtitle,
+                          style: BBType.body(
+                            context,
+                          ).copyWith(color: c.textSecondary, height: 1.4),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.embedGuideHeaderTitle,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: theme.colorScheme.onSurface,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.embedGuideHeaderSubtitle,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.7,
-                              ),
-                              fontWeight: FontWeight.w400,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
@@ -401,26 +392,16 @@ class _EmbedWidgetGuideScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: BBSpace.xs,
+            vertical: BBSpace.sm,
+          ),
           child: Text(
             l10n.embedGuideQuickHelpTitle,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
-            ),
+            style: BBType.h3(context).copyWith(fontWeight: FontWeight.bold),
           ),
         ),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: context.gradients.sectionBorder),
-            boxShadow: AppShadows.getElevation(
-              1,
-              isDark: theme.brightness == Brightness.dark,
-            ),
-          ),
+        BbCard(
           child: Column(
             children: [
               _buildModernStep(
@@ -484,9 +465,8 @@ class _EmbedWidgetGuideScreenState
                 alignment: Alignment.center,
                 child: Text(
                   number,
-                  style: TextStyle(
+                  style: BBType.body(context).copyWith(
                     color: theme.colorScheme.onPrimary,
-                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -504,19 +484,16 @@ class _EmbedWidgetGuideScreenState
                 ),
             ],
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: BBSpace.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 6, bottom: 20),
+                  padding: const EdgeInsets.only(top: 6, bottom: BBSpace.md),
                   child: Text(
                     text,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                      height: 1.4,
-                    ),
+                    style: BBType.bodyLg(context).copyWith(height: 1.4),
                   ),
                 ),
               ],
@@ -533,24 +510,17 @@ class _EmbedWidgetGuideScreenState
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
-      ),
-      padding: const EdgeInsets.all(20),
+    return BbCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(BBSpace.xs),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(BBRadius.sm),
                 ),
                 child: Icon(
                   Icons.developer_mode,
@@ -558,11 +528,11 @@ class _EmbedWidgetGuideScreenState
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: BBSpace.sm),
               Expanded(
                 child: Text(
                   l10n.embedGuideDeveloperInfoTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  style: BBType.h3(context).copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.tertiary,
                   ),
@@ -570,20 +540,19 @@ class _EmbedWidgetGuideScreenState
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: BBSpace.sm),
           Text(
             l10n.embedGuideDeveloperInfoDesc,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-              height: 1.5,
-            ),
+            style: BBType.body(
+              context,
+            ).copyWith(color: BBColor.of(context).textSecondary, height: 1.5),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: BBSpace.sm),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(BBSpace.sm),
             decoration: BoxDecoration(
               color: isDark ? BBColor.surfaceVarDark : BBColor.surfaceVarLight,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(BBRadius.sm),
               border: Border.all(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
               ),
@@ -597,14 +566,14 @@ class _EmbedWidgetGuideScreenState
                   example: 'width: 600px; height: 800px;',
                   theme: theme,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: BBSpace.xs),
                 _buildDevInfoItem(
                   icon: Icons.rounded_corner,
                   label: l10n.embedGuideDeveloperBorder,
                   example: 'border: 1px solid #ccc; border-radius: 8px;',
                   theme: theme,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: BBSpace.xs),
                 _buildDevInfoItem(
                   icon: Icons.fit_screen,
                   label: l10n.embedGuideDeveloperResponsive,
@@ -614,13 +583,13 @@ class _EmbedWidgetGuideScreenState
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: BBSpace.sm),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(BBSpace.sm),
             decoration: BoxDecoration(
               // handoff `--bb-info-tint`
               color: BBColor.info.withValues(alpha: isDark ? 0.18 : 0.12),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(BBRadius.sm),
               border: Border.all(
                 color: theme.colorScheme.primary.withValues(alpha: 0.2),
               ),
@@ -635,14 +604,13 @@ class _EmbedWidgetGuideScreenState
                       size: 16,
                       color: theme.colorScheme.primary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: BBSpace.xs),
                     Expanded(
                       child: Text(
                         l10n.embedGuideDeveloperScrollProtection,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurface,
-                        ),
+                        style: BBType.caption(
+                          context,
+                        ).copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
                     SizedBox(
@@ -665,8 +633,8 @@ class _EmbedWidgetGuideScreenState
                 const SizedBox(height: 4),
                 Text(
                   l10n.embedGuideDeveloperScrollProtectionDesc,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  style: BBType.caption(context).copyWith(
+                    color: BBColor.of(context).textTertiary,
                     height: 1.4,
                   ),
                 ),
@@ -676,16 +644,15 @@ class _EmbedWidgetGuideScreenState
                     Expanded(
                       child: SelectableText(
                         '<script src="https://view.bookbed.io/bookbed-overlay.js" defer></script>',
-                        style: TextStyle(
-                          fontFamily: 'monospace',
+                        style: BBType.mono(context).copyWith(
                           fontSize: 11,
                           color: theme.colorScheme.primary,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: BBSpace.xs),
                     InkWell(
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(BBRadius.xs),
                       onTap: () {
                         Clipboard.setData(
                           const ClipboardData(
@@ -712,12 +679,12 @@ class _EmbedWidgetGuideScreenState
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: BBSpace.sm),
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(BBSpace.xs),
             decoration: BoxDecoration(
               color: theme.colorScheme.error.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(BBRadius.xs),
               border: Border.all(
                 color: theme.colorScheme.error.withValues(alpha: 0.2),
               ),
@@ -729,11 +696,11 @@ class _EmbedWidgetGuideScreenState
                   size: 18,
                   color: theme.colorScheme.error,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: BBSpace.xs),
                 Expanded(
                   child: Text(
                     l10n.embedGuideDeveloperWarning,
-                    style: theme.textTheme.bodySmall?.copyWith(
+                    style: BBType.caption(context).copyWith(
                       color: theme.colorScheme.error,
                       fontWeight: FontWeight.w500,
                     ),
@@ -809,9 +776,9 @@ class _EmbedWidgetGuideScreenState
                     Expanded(
                       child: Text(
                         l10n.embedGuideDeveloperScrollHowTitle,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: BBType.h3(
+                          context,
+                        ).copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
                     SizedBox(
@@ -836,10 +803,8 @@ class _EmbedWidgetGuideScreenState
                   children: [
                     Text(
                       l10n.embedGuideDeveloperScrollHowDesc,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.8,
-                        ),
+                      style: BBType.body(context).copyWith(
+                        color: BBColor.of(context).textSecondary,
                         height: 1.6,
                       ),
                     ),
@@ -856,14 +821,13 @@ class _EmbedWidgetGuideScreenState
                         Expanded(
                           child: Text(
                             l10n.embedGuideDeveloperScrollExample,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurface,
-                            ),
+                            style: BBType.caption(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
                         InkWell(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(BBRadius.xs),
                           onTap: () {
                             Clipboard.setData(
                               const ClipboardData(text: exampleCode),
@@ -891,7 +855,7 @@ class _EmbedWidgetGuideScreenState
                         color: isDark
                             ? BBColor.surfaceVarDark
                             : BBColor.surfaceVarLight,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(BBRadius.sm),
                         border: Border.all(
                           color: theme.colorScheme.onSurface.withValues(
                             alpha: 0.1,
@@ -900,8 +864,7 @@ class _EmbedWidgetGuideScreenState
                       ),
                       child: SelectableText(
                         exampleCode,
-                        style: TextStyle(
-                          fontFamily: 'monospace',
+                        style: BBType.mono(context).copyWith(
                           fontSize: 12,
                           height: 1.6,
                           color: theme.colorScheme.primary,
@@ -935,17 +898,15 @@ class _EmbedWidgetGuideScreenState
             children: [
               Text(
                 label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
-                ),
+                style: BBType.caption(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w600),
               ),
               Text(
                 example,
-                style: TextStyle(
-                  fontFamily: 'monospace',
+                style: BBType.mono(context).copyWith(
                   fontSize: 11,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: BBColor.of(context).textTertiary,
                 ),
               ),
             ],
@@ -964,14 +925,8 @@ class _EmbedWidgetGuideScreenState
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
     final unitsAsync = ref.watch(ownerUnitsProvider);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: AppShadows.getElevation(2, isDark: isDark),
-      ),
-      padding: const EdgeInsets.all(24),
+    return BbCard(
+      padding: const EdgeInsets.all(BBSpace.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -979,7 +934,7 @@ class _EmbedWidgetGuideScreenState
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(BBSpace.xs),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
@@ -990,12 +945,11 @@ class _EmbedWidgetGuideScreenState
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: BBSpace.sm),
               Expanded(
                 child: Text(
                   l10n.embedGuideTestLinksTitle,
-                  style: TextStyle(
-                    fontSize: 20,
+                  style: BBType.h2(context).copyWith(
                     fontWeight: FontWeight.w800,
                     color: theme.colorScheme.primary,
                     letterSpacing: -0.5,
@@ -1004,7 +958,7 @@ class _EmbedWidgetGuideScreenState
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: BBSpace.md),
 
           // Unit selector + Preview button
           propertiesAsync.when(
@@ -1033,8 +987,7 @@ class _EmbedWidgetGuideScreenState
                         enabled: false,
                         child: Text(
                           property.name,
-                          style: TextStyle(
-                            fontSize: 12,
+                          style: BBType.caption(context).copyWith(
                             fontWeight: FontWeight.w700,
                             color: theme.colorScheme.primary,
                             letterSpacing: 0.5,
@@ -1050,7 +1003,7 @@ class _EmbedWidgetGuideScreenState
                         value: unit,
                         child: Text(
                           properties.length > 1 ? '  ${unit.name}' : unit.name,
-                          style: const TextStyle(fontSize: 14),
+                          style: BBType.body(context),
                         ),
                       ),
                     );
@@ -1092,7 +1045,7 @@ class _EmbedWidgetGuideScreenState
                         });
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: BBSpace.sm),
 
                     // Preview button
                     SizedBox(
@@ -1114,12 +1067,11 @@ class _EmbedWidgetGuideScreenState
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(BBRadius.sm),
                           ),
-                          textStyle: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          textStyle: BBType.bodyLg(
+                            context,
+                          ).copyWith(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
@@ -1129,7 +1081,7 @@ class _EmbedWidgetGuideScreenState
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: BBSpace.sm),
 
           // Live demo link (kept as secondary option)
           _buildTestLinkCard(
@@ -1160,7 +1112,7 @@ class _EmbedWidgetGuideScreenState
         color: isDark
             ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
             : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(BBRadius.sm),
         border: Border.all(
           color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
         ),
@@ -1169,40 +1121,36 @@ class _EmbedWidgetGuideScreenState
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _launchUrl(url, l10n),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(BBRadius.sm),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(BBSpace.sm),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(BBSpace.xs),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(BBRadius.sm),
                   ),
                   child: Icon(icon, size: 22, color: theme.colorScheme.primary),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: BBSpace.sm),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: BBType.bodyLg(
+                          context,
+                        ).copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         description,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
+                        style: BBType.label(
+                          context,
+                        ).copyWith(color: BBColor.of(context).textTertiary),
                       ),
                     ],
                   ),
@@ -1234,42 +1182,33 @@ class _EmbedWidgetGuideScreenState
 
   Widget _buildHelpLinks() {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: AppShadows.getElevation(2, isDark: isDark),
-      ),
-      padding: const EdgeInsets.all(24),
+    return BbCard(
+      padding: const EdgeInsets.all(BBSpace.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             l10n.embedGuideNeedHelp,
-            style: TextStyle(
-              fontSize: 14,
+            style: BBType.body(context).copyWith(
               fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              color: BBColor.of(context).textTertiary,
               letterSpacing: 1.0,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: BBSpace.md),
           _buildHelpLinkButton(
             icon: Icons.menu_book_rounded,
             label: l10n.embedGuideInstallationGuide,
             tab: EmbedHelpTab.installation,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: BBSpace.sm),
           _buildHelpLinkButton(
             icon: Icons.tune_rounded,
             label: l10n.embedGuideAdvancedOptions,
             tab: EmbedHelpTab.advanced,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: BBSpace.sm),
           _buildHelpLinkButton(
             icon: Icons.build_circle_outlined,
             label: l10n.embedGuideTroubleshooting,
@@ -1294,7 +1233,7 @@ class _EmbedWidgetGuideScreenState
         color: isDark
             ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
             : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(BBRadius.sm),
       ),
       child: Material(
         color: Colors.transparent,
@@ -1306,28 +1245,29 @@ class _EmbedWidgetGuideScreenState
               ),
             );
           },
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(BBRadius.sm),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(
+              horizontal: BBSpace.sm,
+              vertical: 14,
+            ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(BBSpace.xs),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, size: 20, color: theme.colorScheme.primary),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: BBSpace.sm),
                 Expanded(
                   child: Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
-                    ),
+                    style: BBType.bodyLg(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
                 Icon(
@@ -1347,143 +1287,126 @@ class _EmbedWidgetGuideScreenState
   Widget _buildYourEmbedCodesSection() {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
     final unitsAsync = ref.watch(ownerUnitsProvider);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: AppShadows.getElevation(2, isDark: isDark),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.code_rounded,
-                    color: theme.colorScheme.primary,
-                    size: 24,
-                  ),
+    return BbCard(
+      padding: const EdgeInsets.all(BBSpace.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(BBSpace.xs),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 16),
+                child: Icon(
+                  Icons.code_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: BBSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.embedGuideYourEmbedCodes,
+                      style: BBType.h2(context).copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: theme.colorScheme.primary,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.embedGuideCopyIframe,
+                      style: BBType.label(
+                        context,
+                      ).copyWith(color: BBColor.of(context).textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: BBSpace.sm),
+
+          // Language info note
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(BBRadius.sm),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.15),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.translate,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: BBSpace.sm),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.embedGuideYourEmbedCodes,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: theme.colorScheme.primary,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.embedGuideCopyIframe,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    l10n.embedGuideLanguageNote,
+                    style: BBType.label(context),
                   ),
                 ),
               ],
             ),
+          ),
 
-            const SizedBox(height: 16),
+          const SizedBox(height: BBSpace.md),
 
-            // Language info note
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.translate,
-                    size: 20,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      l10n.embedGuideLanguageNote,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          // Content based on data state
+          propertiesAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Text('${l10n.error}: $e'),
+            data: (properties) {
+              if (properties.isEmpty) {
+                return _buildEmptyState(l10n.embedGuideNoProperties);
+              }
 
-            const SizedBox(height: 20),
+              return unitsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Text('${l10n.error}: $e'),
+                data: (units) {
+                  if (units.isEmpty) {
+                    return _buildEmptyState(l10n.embedGuideNoUnits);
+                  }
 
-            // Content based on data state
-            propertiesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text('${l10n.error}: $e'),
-              data: (properties) {
-                if (properties.isEmpty) {
-                  return _buildEmptyState(l10n.embedGuideNoProperties);
-                }
+                  // Group units by property
+                  return Column(
+                    children: properties.map((property) {
+                      final propertyUnits = units
+                          .where((u) => u.propertyId == property.id)
+                          .toList();
+                      if (propertyUnits.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
 
-                return unitsAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Text('${l10n.error}: $e'),
-                  data: (units) {
-                    if (units.isEmpty) {
-                      return _buildEmptyState(l10n.embedGuideNoUnits);
-                    }
-
-                    // Group units by property
-                    return Column(
-                      children: properties.map((property) {
-                        final propertyUnits = units
-                            .where((u) => u.propertyId == property.id)
-                            .toList();
-                        if (propertyUnits.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-
-                        return _buildPropertyUnitsSection(
-                          property,
-                          propertyUnits,
-                        );
-                      }).toList(),
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
+                      return _buildPropertyUnitsSection(
+                        property,
+                        propertyUnits,
+                      );
+                    }).toList(),
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -1532,10 +1455,9 @@ class _EmbedWidgetGuideScreenState
                     Expanded(
                       child: Text(
                         property.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
+                        style: BBType.body(
+                          context,
+                        ).copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -1555,10 +1477,9 @@ class _EmbedWidgetGuideScreenState
                     ),
                     child: Text(
                       '${property.subdomain}.${EnvironmentConfig.widgetHost}',
-                      style: TextStyle(
+                      style: BBType.mono(context).copyWith(
                         fontSize: 11,
                         color: theme.colorScheme.primary,
-                        fontFamily: 'monospace',
                       ),
                     ),
                   ),
@@ -1615,16 +1536,15 @@ class _EmbedWidgetGuideScreenState
               Expanded(
                 child: Text(
                   unit.name,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
-                  ),
+                  style: BBType.label(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.2),
                 ),
               ),
               Container(
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(BBRadius.sm),
                 ),
                 child: TextButton.icon(
                   onPressed: () {
@@ -1641,8 +1561,7 @@ class _EmbedWidgetGuideScreenState
                   ),
                   label: Text(
                     l10n.embedCodeCopy,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: BBType.caption(context).copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
                     ),
@@ -1668,7 +1587,7 @@ class _EmbedWidgetGuideScreenState
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: isDark ? BBColor.surfaceVarDark : BBColor.surfaceVarLight,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(BBRadius.sm),
               border: Border.all(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
               ),
@@ -1693,16 +1612,14 @@ class _EmbedWidgetGuideScreenState
     required String unitId,
     required ThemeData theme,
   }) {
-    final normalStyle = TextStyle(
+    final normalStyle = BBType.mono(context).copyWith(
       fontSize: 12,
-      fontFamily: 'monospace',
       color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
       height: 1.5,
     );
 
-    final boldStyle = TextStyle(
+    final boldStyle = BBType.mono(context).copyWith(
       fontSize: 12,
-      fontFamily: 'monospace',
       color: theme.colorScheme.primary,
       fontWeight: FontWeight.w900,
       backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
@@ -1769,9 +1686,9 @@ class _EmbedWidgetGuideScreenState
           const SizedBox(height: 12),
           Text(
             message,
-            style: TextStyle(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
+            style: BBType.body(
+              context,
+            ).copyWith(color: BBColor.of(context).textTertiary),
             textAlign: TextAlign.center,
           ),
         ],

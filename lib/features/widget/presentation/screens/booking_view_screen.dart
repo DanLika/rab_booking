@@ -2,7 +2,6 @@ import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../providers/theme_provider.dart';
 import '../providers/booking_lookup_provider.dart';
 import '../providers/subdomain_provider.dart';
@@ -15,6 +14,7 @@ import '../l10n/widget_translations.dart';
 import 'subdomain_not_found_screen.dart';
 import 'booking_details_screen.dart';
 import '../widgets/common/widget_powered_by.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../../../../core/services/logging_service.dart';
 
 /// Safely convert error to string, handling null and edge cases
@@ -309,7 +309,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
                   child: _isLoading
                       ? _buildLoadingState(colors, tr)
                       : _errorMessage != null
-                      ? _buildErrorState(colors, isDarkMode, tr)
+                      ? _buildErrorState(colors, tr)
                       : const SizedBox.shrink(),
                 ),
               ),
@@ -332,7 +332,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
         const SizedBox(height: BBSpace.sm),
         Text(
           tr.loadingYourBooking,
-          style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 14),
+          style: BBType.body(context).copyWith(color: colors.textSecondary),
         ),
       ],
     );
@@ -340,11 +340,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
 
   /// Premium error state — concentric status mark + headline + ink CTA,
   /// mirroring the widget design handoff (`widget-error`).
-  Widget _buildErrorState(
-    WidgetColorScheme colors,
-    bool isDarkMode,
-    WidgetTranslations tr,
-  ) {
+  Widget _buildErrorState(WidgetColorScheme colors, WidgetTranslations tr) {
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 460),
       child: Column(
@@ -355,7 +351,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
           Text(
             tr.unableToLoadBooking,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: BBType.display(context).copyWith(
               color: colors.textPrimary,
               fontSize: 26,
               fontWeight: FontWeight.w800,
@@ -367,47 +363,27 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
           Text(
             _errorMessage!,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              color: colors.textSecondary,
-              fontSize: 15,
-              height: 1.55,
-            ),
+            style: BBType.bodyLg(
+              context,
+            ).copyWith(color: colors.textSecondary, fontSize: 15, height: 1.55),
           ),
           const SizedBox(height: BBSpace.lg),
-          SizedBox(
-            height: 52,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                // Defensive check: ensure GoRouter is available before navigation
-                try {
-                  context.go('/');
-                } catch (e) {
-                  unawaited(LoggingService.logError('Navigation failed', e));
-                  // If navigation fails, try Navigator.pop as fallback
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  }
+          BbButton(
+            label: tr.goToHome,
+            iconLeft: 'home',
+            size: BbButtonSize.lg,
+            onPressed: () {
+              // Defensive check: ensure GoRouter is available before navigation
+              try {
+                context.go('/');
+              } catch (e) {
+                unawaited(LoggingService.logError('Navigation failed', e));
+                // If navigation fails, try Navigator.pop as fallback
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
                 }
-              },
-              icon: const Icon(Icons.home_outlined, size: 18),
-              label: Text(
-                tr.goToHome,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.buttonPrimary,
-                foregroundColor: colors.buttonPrimaryText,
-                elevation: isDarkMode ? 0 : 6,
-                shadowColor: const Color(0x591B2330),
-                padding: const EdgeInsets.symmetric(horizontal: 22),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
+              }
+            },
           ),
         ],
       ),
@@ -455,7 +431,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
                 ),
               ],
             ),
-            child: Icon(Icons.error_outline, color: tone, size: 30),
+            child: BbIcon(name: 'error', size: 30, color: tone, fill: 0),
           ),
         ],
       ),

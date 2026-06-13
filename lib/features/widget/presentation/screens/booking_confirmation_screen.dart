@@ -11,6 +11,7 @@ import '../../../../core/utils/web_utils.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/widgets/redesign.dart';
+import '../widgets/common/widget_powered_by.dart';
 import '../../domain/models/widget_settings.dart';
 import '../widgets/common/info_card_widget.dart';
 import '../widgets/confirmation/confirmation_header.dart';
@@ -468,14 +469,8 @@ class _BookingConfirmationScreenState
 
                       const SizedBox(height: BBSpace.sm),
 
-                      // Powered-by footer (handoff WCPoweredBy).
-                      Text(
-                        tr.poweredByBookBed,
-                        textAlign: TextAlign.center,
-                        style: BBType.caption(
-                          context,
-                        ).copyWith(color: c.textTertiary, fontSize: 11),
-                      ),
+                      // Powered-by footer — canonical WidgetPoweredBy mark.
+                      const WidgetPoweredBy(),
                     ],
                   ),
                 ),

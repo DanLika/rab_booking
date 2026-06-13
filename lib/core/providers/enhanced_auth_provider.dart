@@ -928,22 +928,54 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       // like admin_override_account_type, lifetime_license_granted_at, etc.
       // which are blocked by Firestore security rules on user creation.
       // Explicitly list only the fields allowed for new user registration.
-      await _firestore.collection('users').doc(user.uid).set({
-        'id': userModel.id,
-        'email': userModel.email,
-        'first_name': userModel.firstName,
-        'last_name': userModel.lastName,
-        'role': userModel.role.name,
-        'accountType': userModel.accountType.name,
-        'emailVerified': userModel.emailVerified,
-        'phone': userModel.phone,
-        'avatar_url': userModel.avatarUrl,
-        'displayName': userModel.displayName,
-        'onboardingCompleted': userModel.onboardingCompleted,
-        'createdAt': FieldValue.serverTimestamp(),
-        'profileCompleted': userModel.profileCompleted,
-        'newsletterOptIn': newsletterOptIn,
-      });
+      //
+      // CRITICAL: this profile doc MUST land. The Auth user already exists
+      // (created just above) — if this write is denied/fails and we let the
+      // account stand, it is orphaned: Auth succeeds but every later login
+      // dies in _loadUserProfile ("access denied", no users/{uid} doc). So we
+      // fail LOUD and roll the Auth user back, keeping registration atomic and
+      // freeing the email for a clean retry instead of breaking login later.
+      try {
+        await _firestore.collection('users').doc(user.uid).set({
+          'id': userModel.id,
+          'email': userModel.email,
+          'first_name': userModel.firstName,
+          'last_name': userModel.lastName,
+          'role': userModel.role.name,
+          'accountType': userModel.accountType.name,
+          'emailVerified': userModel.emailVerified,
+          'phone': userModel.phone,
+          'avatar_url': userModel.avatarUrl,
+          'displayName': userModel.displayName,
+          'onboardingCompleted': userModel.onboardingCompleted,
+          'createdAt': FieldValue.serverTimestamp(),
+          'profileCompleted': userModel.profileCompleted,
+          'newsletterOptIn': newsletterOptIn,
+        });
+      } catch (profileError, profileStack) {
+        unawaited(
+          LoggingService.logError(
+            'REGISTER_PROFILE_WRITE_FAILED — rolling back orphaned Auth user',
+            profileError,
+            profileStack,
+          ),
+        );
+        // Best-effort rollback so login can't break later. The user was just
+        // created, so delete() still has a fresh credential. If even the
+        // rollback fails we still surface the error — an orphan we logged for
+        // manual cleanup beats a silent half-account the user can't recover.
+        try {
+          await user.delete();
+        } catch (rollbackError) {
+          unawaited(
+            LoggingService.logError(
+              'REGISTER_ROLLBACK_FAILED — Auth user orphaned, manual cleanup needed',
+              rollbackError,
+            ),
+          );
+        }
+        throw 'Registration could not be completed. Please try again.';
+      }
 
       // Update display name in Firebase Auth
       await user.updateDisplayName('$firstName $lastName');

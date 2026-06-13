@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design/tokens.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/async_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
@@ -218,320 +219,329 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
         child: Scaffold(
           resizeToAvoidBottomInset: true,
           backgroundColor: c.bg,
-          body: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Get keyboard height to adjust padding dynamically (with null safety)
-                final mediaQuery = MediaQuery.maybeOf(context);
-                final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0)
-                    .clamp(0.0, double.infinity);
-                final isKeyboardOpen = keyboardHeight > 0;
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: context.gradients.pageBackground,
+            ),
+            child: SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Get keyboard height to adjust padding dynamically (with null safety)
+                  final mediaQuery = MediaQuery.maybeOf(context);
+                  final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0)
+                      .clamp(0.0, double.infinity);
+                  final isKeyboardOpen = keyboardHeight > 0;
 
-                // Calculate minHeight safely - ensure it's always finite and valid
-                double minHeight;
-                if (isKeyboardOpen &&
-                    constraints.maxHeight.isFinite &&
-                    constraints.maxHeight > 0) {
-                  final calculated = constraints.maxHeight - keyboardHeight;
-                  minHeight = calculated.clamp(0.0, constraints.maxHeight);
-                } else {
-                  minHeight = constraints.maxHeight.isFinite
-                      ? constraints.maxHeight
-                      : 0.0;
-                }
-                // Ensure minHeight is always finite (never infinity)
-                minHeight = minHeight.isFinite ? minHeight : 0.0;
+                  // Calculate minHeight safely - ensure it's always finite and valid
+                  double minHeight;
+                  if (isKeyboardOpen &&
+                      constraints.maxHeight.isFinite &&
+                      constraints.maxHeight > 0) {
+                    final calculated = constraints.maxHeight - keyboardHeight;
+                    minHeight = calculated.clamp(0.0, constraints.maxHeight);
+                  } else {
+                    minHeight = constraints.maxHeight.isFinite
+                        ? constraints.maxHeight
+                        : 0.0;
+                  }
+                  // Ensure minHeight is always finite (never infinity)
+                  minHeight = minHeight.isFinite ? minHeight : 0.0;
 
-                return SingleChildScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.all(BBSpace.md),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: minHeight),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 680),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Back row
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: IconButton(
-                                  onPressed: _exit,
-                                  icon: const Icon(Icons.arrow_back),
-                                  tooltip: l10n.back,
+                  return SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.all(BBSpace.md),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: minHeight),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 680),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Back row
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: IconButton(
+                                    onPressed: _exit,
+                                    icon: const Icon(Icons.arrow_back),
+                                    tooltip: l10n.back,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: BBSpace.xs),
+                                const SizedBox(height: BBSpace.xs),
 
-                              // Form panel
-                              BbCard(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    // Premium eyebrow + icon header — settings.jsx
-                                    // §246 ChangePasswordContent layered identity.
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 40,
-                                          height: 40,
-                                          decoration: BoxDecoration(
-                                            color: c.primary.withValues(
-                                              alpha: 0.10,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              BBRadius.sm,
-                                            ),
-                                          ),
-                                          alignment: Alignment.center,
-                                          child: BbIcon(
-                                            name: 'lock_reset',
-                                            size: 22,
-                                            color: c.primary,
-                                          ),
-                                        ),
-                                        const SizedBox(width: BBSpace.sm),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                'SIGURNOST RAČUNA',
-                                                style: BBType.eyebrow(
-                                                  context,
-                                                ).copyWith(color: c.primary),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                l10n.changePassword,
-                                                style: BBType.h3(context)
-                                                    .copyWith(
-                                                      color: c.textPrimary,
-                                                      fontWeight:
-                                                          FontWeight.w800,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: BBSpace.sm),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: BBSpace.md,
-                                      ),
-                                      child: Text(
-                                        l10n.enterCurrentAndNewPassword,
-                                        style: BBType.body(
-                                          context,
-                                        ).copyWith(color: c.textSecondary),
-                                      ),
-                                    ),
-
-                                    // Current password — Phase 1.1 native validator
-                                    BbInput(
-                                      controller: _currentPasswordController,
-                                      label: l10n.currentPassword,
-                                      iconLeft: 'lock',
-                                      obscureText: _obscureCurrentPassword,
-                                      size: BbInputSize.lg,
-                                      autovalidateMode:
-                                          AutovalidateMode.onUserInteraction,
-                                      trailingAction: IconButton(
-                                        // SF-017: Add tooltip for accessibility
-                                        tooltip: _obscureCurrentPassword
-                                            ? l10n.showPassword
-                                            : l10n.hidePassword,
-                                        icon: Icon(
-                                          _obscureCurrentPassword
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          color: c.textTertiary,
-                                          size: 18,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _obscureCurrentPassword =
-                                                !_obscureCurrentPassword;
-                                          });
-                                        },
-                                      ),
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return l10n
-                                              .pleaseEnterCurrentPassword;
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                    const SizedBox(height: BBSpace.md),
-
-                                    // New password — Phase 1.1 native validator
-                                    BbInput(
-                                      controller: _newPasswordController,
-                                      label: l10n.newPassword,
-                                      iconLeft: 'lock',
-                                      obscureText: _obscureNewPassword,
-                                      size: BbInputSize.lg,
-                                      autovalidateMode:
-                                          AutovalidateMode.onUserInteraction,
-                                      trailingAction: IconButton(
-                                        tooltip: _obscureNewPassword
-                                            ? l10n.showPassword
-                                            : l10n.hidePassword,
-                                        icon: Icon(
-                                          _obscureNewPassword
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          color: c.textTertiary,
-                                          size: 18,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _obscureNewPassword =
-                                                !_obscureNewPassword;
-                                          });
-                                        },
-                                      ),
-                                      validator: (value) {
-                                        if (value ==
-                                            _currentPasswordController.text) {
-                                          return l10n.passwordsMustBeDifferent;
-                                        }
-                                        return PasswordValidator.validateSimple(
-                                          value,
-                                        );
-                                      },
-                                    ),
-
-                                    // Password strength meter (kept inline,
-                                    // dynamic — can't live in BbInput.helper).
-                                    if (_newPasswordController.text.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          top: BBSpace.xs,
-                                        ),
-                                        child: _PasswordStrengthMeter(
-                                          strength: _passwordStrength,
-                                          missingRequirements:
-                                              _missingRequirements,
-                                          l10n: l10n,
-                                          c: c,
-                                        ),
-                                      ),
-                                    const SizedBox(height: BBSpace.md),
-
-                                    // Confirm new password — cross-field validator
-                                    BbInput(
-                                      controller: _confirmPasswordController,
-                                      label: l10n.confirmNewPassword,
-                                      iconLeft: 'lock_open',
-                                      obscureText: _obscureConfirmPassword,
-                                      size: BbInputSize.lg,
-                                      autovalidateMode:
-                                          AutovalidateMode.onUserInteraction,
-                                      trailingAction: IconButton(
-                                        tooltip: _obscureConfirmPassword
-                                            ? l10n.showPassword
-                                            : l10n.hidePassword,
-                                        icon: Icon(
-                                          _obscureConfirmPassword
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          color: c.textTertiary,
-                                          size: 18,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _obscureConfirmPassword =
-                                                !_obscureConfirmPassword;
-                                          });
-                                        },
-                                      ),
-                                      validator: (value) {
-                                        return PasswordValidator.validateConfirmPassword(
-                                          _newPasswordController.text,
-                                          value,
-                                        );
-                                      },
-                                    ),
-                                    const SizedBox(height: BBSpace.md),
-
-                                    // Info banner (info accent left)
-                                    BbCard(
-                                      variant: BbCardVariant.accentLeft,
-                                      accentTone: BbCardAccentTone.info,
-                                      child: Row(
+                                // Form panel
+                                BbCard(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      // Premium eyebrow + icon header — settings.jsx
+                                      // §246 ChangePasswordContent layered identity.
+                                      Row(
                                         children: [
-                                          Icon(
-                                            Icons.info_outline,
-                                            size: 18,
-                                            color: c.info,
-                                          ),
-                                          const SizedBox(width: BBSpace.xs),
-                                          Expanded(
-                                            child: Text(
-                                              l10n.youWillStayLoggedIn,
-                                              style: BBType.caption(context)
-                                                  .copyWith(
-                                                    color: c.textSecondary,
+                                          Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              color: c.primary.withValues(
+                                                alpha: 0.10,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    BBRadius.sm,
                                                   ),
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: BbIcon(
+                                              name: 'lock_reset',
+                                              size: 22,
+                                              color: c.primary,
+                                            ),
+                                          ),
+                                          const SizedBox(width: BBSpace.sm),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  'SIGURNOST RAČUNA',
+                                                  style: BBType.eyebrow(
+                                                    context,
+                                                  ).copyWith(color: c.primary),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  l10n.changePassword,
+                                                  style: BBType.h3(context)
+                                                      .copyWith(
+                                                        color: c.textPrimary,
+                                                        fontWeight:
+                                                            FontWeight.w800,
+                                                      ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],
                                       ),
-                                    ),
-                                    const SizedBox(height: BBSpace.md),
+                                      const SizedBox(height: BBSpace.sm),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: BBSpace.md,
+                                        ),
+                                        child: Text(
+                                          l10n.enterCurrentAndNewPassword,
+                                          style: BBType.body(
+                                            context,
+                                          ).copyWith(color: c.textSecondary),
+                                        ),
+                                      ),
 
-                                    // TODO(B4b): wire `revokeAllRefreshTokens`
-                                    //   CF (eu-west1) behind a "Odjavi me sa
-                                    //   svih ostalih uređaja" toggle row.
-                                    //   settings.jsx §267 spec. CF exists at
-                                    //   functions/src/revokeTokens.ts. Skipped
-                                    //   from B4a to avoid touching shared l10n
-                                    //   files (screens-only ownership rule).
+                                      // Current password — Phase 1.1 native validator
+                                      BbInput(
+                                        controller: _currentPasswordController,
+                                        label: l10n.currentPassword,
+                                        iconLeft: 'lock',
+                                        obscureText: _obscureCurrentPassword,
+                                        size: BbInputSize.lg,
+                                        autovalidateMode:
+                                            AutovalidateMode.onUserInteraction,
+                                        trailingAction: IconButton(
+                                          // SF-017: Add tooltip for accessibility
+                                          tooltip: _obscureCurrentPassword
+                                              ? l10n.showPassword
+                                              : l10n.hidePassword,
+                                          icon: Icon(
+                                            _obscureCurrentPassword
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                            color: c.textTertiary,
+                                            size: 18,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscureCurrentPassword =
+                                                  !_obscureCurrentPassword;
+                                            });
+                                          },
+                                        ),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return l10n
+                                                .pleaseEnterCurrentPassword;
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      const SizedBox(height: BBSpace.md),
 
-                                    // Submit
-                                    BbButton(
-                                      label: l10n.changePassword,
-                                      size: BbButtonSize.lg,
-                                      fullWidth: true,
-                                      iconLeft: 'lock_reset',
-                                      loading: _isLoading,
-                                      onPressed: _isLoading
-                                          ? null
-                                          : _changePassword,
-                                    ),
-                                    const SizedBox(height: BBSpace.xs),
+                                      // New password — Phase 1.1 native validator
+                                      BbInput(
+                                        controller: _newPasswordController,
+                                        label: l10n.newPassword,
+                                        iconLeft: 'lock',
+                                        obscureText: _obscureNewPassword,
+                                        size: BbInputSize.lg,
+                                        autovalidateMode:
+                                            AutovalidateMode.onUserInteraction,
+                                        trailingAction: IconButton(
+                                          tooltip: _obscureNewPassword
+                                              ? l10n.showPassword
+                                              : l10n.hidePassword,
+                                          icon: Icon(
+                                            _obscureNewPassword
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                            color: c.textTertiary,
+                                            size: 18,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscureNewPassword =
+                                                  !_obscureNewPassword;
+                                            });
+                                          },
+                                        ),
+                                        validator: (value) {
+                                          if (value ==
+                                              _currentPasswordController.text) {
+                                            return l10n
+                                                .passwordsMustBeDifferent;
+                                          }
+                                          return PasswordValidator.validateSimple(
+                                            value,
+                                          );
+                                        },
+                                      ),
 
-                                    // Cancel
-                                    BbButton(
-                                      label: l10n.cancel,
-                                      variant: BbButtonVariant.tertiary,
-                                      fullWidth: true,
-                                      onPressed: _exit,
-                                    ),
-                                  ],
+                                      // Password strength meter (kept inline,
+                                      // dynamic — can't live in BbInput.helper).
+                                      if (_newPasswordController
+                                          .text
+                                          .isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: BBSpace.xs,
+                                          ),
+                                          child: _PasswordStrengthMeter(
+                                            strength: _passwordStrength,
+                                            missingRequirements:
+                                                _missingRequirements,
+                                            l10n: l10n,
+                                            c: c,
+                                          ),
+                                        ),
+                                      const SizedBox(height: BBSpace.md),
+
+                                      // Confirm new password — cross-field validator
+                                      BbInput(
+                                        controller: _confirmPasswordController,
+                                        label: l10n.confirmNewPassword,
+                                        iconLeft: 'lock_open',
+                                        obscureText: _obscureConfirmPassword,
+                                        size: BbInputSize.lg,
+                                        autovalidateMode:
+                                            AutovalidateMode.onUserInteraction,
+                                        trailingAction: IconButton(
+                                          tooltip: _obscureConfirmPassword
+                                              ? l10n.showPassword
+                                              : l10n.hidePassword,
+                                          icon: Icon(
+                                            _obscureConfirmPassword
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                            color: c.textTertiary,
+                                            size: 18,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscureConfirmPassword =
+                                                  !_obscureConfirmPassword;
+                                            });
+                                          },
+                                        ),
+                                        validator: (value) {
+                                          return PasswordValidator.validateConfirmPassword(
+                                            _newPasswordController.text,
+                                            value,
+                                          );
+                                        },
+                                      ),
+                                      const SizedBox(height: BBSpace.md),
+
+                                      // Info banner (info accent left)
+                                      BbCard(
+                                        variant: BbCardVariant.accentLeft,
+                                        accentTone: BbCardAccentTone.info,
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.info_outline,
+                                              size: 18,
+                                              color: c.info,
+                                            ),
+                                            const SizedBox(width: BBSpace.xs),
+                                            Expanded(
+                                              child: Text(
+                                                l10n.youWillStayLoggedIn,
+                                                style: BBType.caption(context)
+                                                    .copyWith(
+                                                      color: c.textSecondary,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: BBSpace.md),
+
+                                      // TODO(B4b): wire `revokeAllRefreshTokens`
+                                      //   CF (eu-west1) behind a "Odjavi me sa
+                                      //   svih ostalih uređaja" toggle row.
+                                      //   settings.jsx §267 spec. CF exists at
+                                      //   functions/src/revokeTokens.ts. Skipped
+                                      //   from B4a to avoid touching shared l10n
+                                      //   files (screens-only ownership rule).
+
+                                      // Submit
+                                      BbButton(
+                                        label: l10n.changePassword,
+                                        size: BbButtonSize.lg,
+                                        fullWidth: true,
+                                        iconLeft: 'lock_reset',
+                                        loading: _isLoading,
+                                        onPressed: _isLoading
+                                            ? null
+                                            : _changePassword,
+                                      ),
+                                      const SizedBox(height: BBSpace.xs),
+
+                                      // Cancel
+                                      BbButton(
+                                        label: l10n.cancel,
+                                        variant: BbButtonVariant.tertiary,
+                                        fullWidth: true,
+                                        onPressed: _exit,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ),

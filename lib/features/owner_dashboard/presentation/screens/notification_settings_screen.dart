@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design/tokens.dart';
 import '../../../../core/services/logging_service.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/notification_preferences_model.dart';
@@ -177,193 +178,201 @@ class _NotificationSettingsScreenState
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
       backgroundColor: c.bg,
-      body: preferencesAsync.when(
-        data: (preferences) {
-          // Initialize with default preferences if none exist
-          _currentPreferences ??=
-              preferences ??
-              NotificationPreferences(
-                userId: FirebaseAuth.instance.currentUser?.uid ?? '',
-              );
+      body: Container(
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: preferencesAsync.when(
+              data: (preferences) {
+                // Initialize with default preferences if none exist
+                _currentPreferences ??=
+                    preferences ??
+                    NotificationPreferences(
+                      userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+                    );
 
-          final masterEnabled = _currentPreferences!.masterEnabled;
-          final categories = _currentPreferences!.categories;
+                final masterEnabled = _currentPreferences!.masterEnabled;
+                final categories = _currentPreferences!.categories;
 
-          return ListView(
-            padding: EdgeInsets.symmetric(
-              horizontal: horizontalPadding,
-              vertical: BBSpace.sm,
-            ),
-            children: <Widget>[
-              // Premium info banner — payments are critical, always sent via email.
-              // Mirrors settings.jsx §381 SInfoBanner (info tone). Static copy:
-              // no behavior implied, just sets user expectation.
-              BbCard(
-                variant: BbCardVariant.accentLeft,
-                accentTone: BbCardAccentTone.info,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                return ListView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: BBSpace.sm,
+                  ),
                   children: <Widget>[
-                    BbIcon(name: 'notifications_active', color: c.info),
-                    const SizedBox(width: BBSpace.xs),
-                    Expanded(
-                      child: Text(
-                        'Odaberite kako želite biti obaviješteni. Kritične '
-                        'obavijesti o plaćanju uvijek šaljemo e-poštom.',
-                        style: BBType.body(
-                          context,
-                        ).copyWith(color: c.textSecondary, fontSize: 13),
+                    // Premium info banner — payments are critical, always sent via email.
+                    // Mirrors settings.jsx §381 SInfoBanner (info tone). Static copy:
+                    // no behavior implied, just sets user expectation.
+                    BbCard(
+                      variant: BbCardVariant.accentLeft,
+                      accentTone: BbCardAccentTone.info,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          BbIcon(name: 'notifications_active', color: c.info),
+                          const SizedBox(width: BBSpace.xs),
+                          Expanded(
+                            child: Text(
+                              'Odaberite kako želite biti obaviješteni. Kritične '
+                              'obavijesti o plaćanju uvijek šaljemo e-poštom.',
+                              style: BBType.body(
+                                context,
+                              ).copyWith(color: c.textSecondary, fontSize: 13),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: BBSpace.sm),
+                    const SizedBox(height: BBSpace.sm),
 
-              // Master switch card
-              BbCard(
-                child: BbSwitch(
-                  value: masterEnabled,
-                  onChanged: _isSaving ? null : _toggleMasterSwitch,
-                  label: l10n.notificationSettingsEnableAll,
-                  subtitle: l10n.notificationSettingsMasterSwitch,
-                ),
-              ),
+                    // Master switch card
+                    BbCard(
+                      child: BbSwitch(
+                        value: masterEnabled,
+                        onChanged: _isSaving ? null : _toggleMasterSwitch,
+                        label: l10n.notificationSettingsEnableAll,
+                        subtitle: l10n.notificationSettingsMasterSwitch,
+                      ),
+                    ),
 
-              // Warning banner when master OFF — accent-left info card
-              if (!masterEnabled) ...<Widget>[
-                const SizedBox(height: BBSpace.sm),
-                BbCard(
-                  variant: BbCardVariant.accentLeft,
-                  accentTone: BbCardAccentTone.error,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      BbIcon(name: 'info', color: c.error),
-                      const SizedBox(width: BBSpace.xs),
-                      Expanded(
-                        child: Text(
-                          l10n.notificationSettingsDisabledWarning,
-                          style: BBType.body(
-                            context,
-                          ).copyWith(color: c.textSecondary),
+                    // Warning banner when master OFF — accent-left info card
+                    if (!masterEnabled) ...<Widget>[
+                      const SizedBox(height: BBSpace.sm),
+                      BbCard(
+                        variant: BbCardVariant.accentLeft,
+                        accentTone: BbCardAccentTone.error,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            BbIcon(name: 'info', color: c.error),
+                            const SizedBox(width: BBSpace.xs),
+                            Expanded(
+                              child: Text(
+                                l10n.notificationSettingsDisabledWarning,
+                                style: BBType.body(
+                                  context,
+                                ).copyWith(color: c.textSecondary),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                  ),
-                ),
-              ],
 
-              const SizedBox(height: BBSpace.md),
+                    const SizedBox(height: BBSpace.md),
 
-              // Categories group header
-              BbSectionHeader(
-                title: l10n.notificationSettingsCategories,
-                level: BbSectionHeaderLevel.h3,
-              ),
+                    // Categories group header
+                    BbSectionHeader(
+                      title: l10n.notificationSettingsCategories,
+                      level: BbSectionHeaderLevel.h3,
+                    ),
 
-              // Payments category card (only effectively-active category;
-              // bookings removed per inline comment in original; calendar +
-              // marketing intentionally hidden until backend wires them up).
-              BbCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: c.primary.withValues(alpha: 0.12),
-                            borderRadius: BBRadius.smAll,
-                          ),
-                          child: Icon(
-                            Icons.payment,
-                            color: c.primary,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: BBSpace.xs),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    // Payments category card (only effectively-active category;
+                    // bookings removed per inline comment in original; calendar +
+                    // marketing intentionally hidden until backend wires them up).
+                    BbCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Row(
                             children: <Widget>[
-                              Text(
-                                l10n.notificationSettingsPayments,
-                                style: BBType.label(
-                                  context,
-                                ).copyWith(color: c.textPrimary),
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: c.primary.withValues(alpha: 0.12),
+                                  borderRadius: BBRadius.smAll,
+                                ),
+                                child: Icon(
+                                  Icons.payment,
+                                  color: c.primary,
+                                  size: 20,
+                                ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                l10n.notificationSettingsPaymentsDesc,
-                                style: BBType.caption(
-                                  context,
-                                ).copyWith(color: c.textTertiary),
+                              const SizedBox(width: BBSpace.xs),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      l10n.notificationSettingsPayments,
+                                      style: BBType.label(
+                                        context,
+                                      ).copyWith(color: c.textPrimary),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      l10n.notificationSettingsPaymentsDesc,
+                                      style: BBType.caption(
+                                        context,
+                                      ).copyWith(color: c.textTertiary),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: BBSpace.xs),
-                    Divider(height: 1, thickness: 1, color: c.border),
-                    // Eyebrow row — column header chrome (mockup §305 NotifTable
-                    // header). Single category surface, so renders as compact
-                    // "KANALI · EMAIL + PUSH" label vs full table grid.
-                    Padding(
-                      padding: const EdgeInsets.only(top: BBSpace.xs),
-                      child: Text(
-                        'KANALI · EMAIL + PUSH',
-                        style: BBType.eyebrow(
-                          context,
-                        ).copyWith(color: c.textTertiary, fontSize: 10),
+                          const SizedBox(height: BBSpace.xs),
+                          Divider(height: 1, thickness: 1, color: c.border),
+                          // Eyebrow row — column header chrome (mockup §305 NotifTable
+                          // header). Single category surface, so renders as compact
+                          // "KANALI · EMAIL + PUSH" label vs full table grid.
+                          Padding(
+                            padding: const EdgeInsets.only(top: BBSpace.xs),
+                            child: Text(
+                              'KANALI · EMAIL + PUSH',
+                              style: BBType.eyebrow(
+                                context,
+                              ).copyWith(color: c.textTertiary, fontSize: 10),
+                            ),
+                          ),
+                          const SizedBox(height: BBSpace.xxs),
+                          BbSwitch(
+                            value: masterEnabled && categories.payments.email,
+                            onChanged: (masterEnabled && !_isSaving)
+                                ? (bool value) => _updateCategory(
+                                    'payments',
+                                    categories.payments.copyWith(email: value),
+                                  )
+                                : null,
+                            label: l10n.notificationSettingsEmailChannel,
+                            subtitle: l10n.notificationSettingsEmailChannelDesc,
+                          ),
+                          BbSwitch(
+                            value: masterEnabled && categories.payments.push,
+                            onChanged: (masterEnabled && !_isSaving)
+                                ? (bool value) => _updateCategory(
+                                    'payments',
+                                    categories.payments.copyWith(push: value),
+                                  )
+                                : null,
+                            label: l10n.notificationSettingsPushChannel,
+                            subtitle: l10n.notificationSettingsPushChannelDesc,
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: BBSpace.xxs),
-                    BbSwitch(
-                      value: masterEnabled && categories.payments.email,
-                      onChanged: (masterEnabled && !_isSaving)
-                          ? (bool value) => _updateCategory(
-                              'payments',
-                              categories.payments.copyWith(email: value),
-                            )
-                          : null,
-                      label: l10n.notificationSettingsEmailChannel,
-                      subtitle: l10n.notificationSettingsEmailChannelDesc,
-                    ),
-                    BbSwitch(
-                      value: masterEnabled && categories.payments.push,
-                      onChanged: (masterEnabled && !_isSaving)
-                          ? (bool value) => _updateCategory(
-                              'payments',
-                              categories.payments.copyWith(push: value),
-                            )
-                          : null,
-                      label: l10n.notificationSettingsPushChannel,
-                      subtitle: l10n.notificationSettingsPushChannelDesc,
-                    ),
+                    const SizedBox(height: BBSpace.md),
                   ],
+                );
+              },
+              loading: () => Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(c.primary),
                 ),
               ),
-              const SizedBox(height: BBSpace.md),
-            ],
-          );
-        },
-        loading: () => Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(c.primary),
-          ),
-        ),
-        error: (error, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(BBSpace.lg),
-            child: BbEmptyState(
-              icon: 'error_outline',
-              title: l10n.notificationSettingsLoadError,
-              body: error.toString(),
-              compact: true,
+              error: (error, stack) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(BBSpace.lg),
+                  child: BbEmptyState(
+                    icon: 'error_outline',
+                    title: l10n.notificationSettingsLoadError,
+                    body: error.toString(),
+                    compact: true,
+                  ),
+                ),
+              ),
             ),
           ),
         ),

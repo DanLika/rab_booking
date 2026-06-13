@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -692,134 +693,146 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
         child: Scaffold(
           resizeToAvoidBottomInset: true,
           backgroundColor: c.bg,
-          body: SafeArea(
-            child: userDataAsync.when(
-              data: (userData) {
-                final effectiveUserData =
-                    userData ??
-                    UserData(
-                      profile: UserProfile(
-                        userId: FirebaseAuth.instance.currentUser!.uid,
-                        displayName: authState.userModel?.fullName ?? '',
-                        emailContact: authState.userModel?.email ?? '',
-                        phoneE164: authState.userModel?.phone ?? '',
-                      ),
-                    );
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: context.gradients.pageBackground,
+            ),
+            child: SafeArea(
+              child: userDataAsync.when(
+                data: (userData) {
+                  final effectiveUserData =
+                      userData ??
+                      UserData(
+                        profile: UserProfile(
+                          userId: FirebaseAuth.instance.currentUser!.uid,
+                          displayName: authState.userModel?.fullName ?? '',
+                          emailContact: authState.userModel?.email ?? '',
+                          phoneE164: authState.userModel?.phone ?? '',
+                        ),
+                      );
 
-                _loadData(effectiveUserData);
-                _currentAvatarUrl = authState.userModel?.avatarUrl;
+                  _loadData(effectiveUserData);
+                  _currentAvatarUrl = authState.userModel?.avatarUrl;
 
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    final mediaQuery = MediaQuery.maybeOf(context);
-                    final keyboardHeight =
-                        (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final mediaQuery = MediaQuery.maybeOf(context);
+                      final keyboardHeight =
+                          (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
+                            0.0,
+                            double.infinity,
+                          );
+                      final isKeyboardOpen = keyboardHeight > 0;
+
+                      double minHeight;
+                      if (isKeyboardOpen &&
+                          constraints.maxHeight.isFinite &&
+                          constraints.maxHeight > 0) {
+                        final calculated =
+                            constraints.maxHeight - keyboardHeight;
+                        minHeight = calculated.clamp(
                           0.0,
-                          double.infinity,
+                          constraints.maxHeight,
                         );
-                    final isKeyboardOpen = keyboardHeight > 0;
+                      } else {
+                        minHeight = constraints.maxHeight.isFinite
+                            ? constraints.maxHeight
+                            : 0.0;
+                      }
+                      minHeight = minHeight.isFinite ? minHeight : 0.0;
 
-                    double minHeight;
-                    if (isKeyboardOpen &&
-                        constraints.maxHeight.isFinite &&
-                        constraints.maxHeight > 0) {
-                      final calculated = constraints.maxHeight - keyboardHeight;
-                      minHeight = calculated.clamp(0.0, constraints.maxHeight);
-                    } else {
-                      minHeight = constraints.maxHeight.isFinite
-                          ? constraints.maxHeight
-                          : 0.0;
-                    }
-                    minHeight = minHeight.isFinite ? minHeight : 0.0;
-
-                    return SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: const EdgeInsets.all(BBSpace.sm),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(minHeight: minHeight),
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 680),
-                            child: Form(
-                              key: _formKey,
-                              autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: IconButton(
-                                      onPressed: _exit,
-                                      icon: const Icon(Icons.arrow_back),
-                                      tooltip: l10n.back,
-                                    ),
-                                  ),
-                                  const SizedBox(height: BBSpace.xs),
-                                  Center(
-                                    child: BbAvatarUpload(
-                                      key: const ValueKey(
-                                        'edit_profile_avatar',
+                      return SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: const EdgeInsets.all(BBSpace.sm),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: minHeight),
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 680),
+                              child: Form(
+                                key: _formKey,
+                                autovalidateMode:
+                                    AutovalidateMode.onUserInteraction,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: IconButton(
+                                        onPressed: _exit,
+                                        icon: const Icon(Icons.arrow_back),
+                                        tooltip: l10n.back,
                                       ),
-                                      imageUrl: _currentAvatarUrl,
-                                      initials: authState.userModel?.initials,
-                                      size: BbAvatarSize.xl,
-                                      isUploading: _isSaving,
-                                      ring: false,
-                                      onImageSelected: (bytes, name) {
-                                        setState(() {
-                                          _profileImageBytes = bytes;
-                                          _profileImageName = name;
-                                          _markDirty();
-                                        });
-                                      },
                                     ),
-                                  ),
-                                  const SizedBox(height: BBSpace.md),
-                                  Text(
-                                    l10n.editProfileTitle,
-                                    textAlign: TextAlign.center,
-                                    style: BBType.h2(context).copyWith(
-                                      color: c.textPrimary,
-                                      fontWeight: FontWeight.w700,
+                                    const SizedBox(height: BBSpace.xs),
+                                    Center(
+                                      child: BbAvatarUpload(
+                                        key: const ValueKey(
+                                          'edit_profile_avatar',
+                                        ),
+                                        imageUrl: _currentAvatarUrl,
+                                        initials: authState.userModel?.initials,
+                                        size: BbAvatarSize.xl,
+                                        isUploading: _isSaving,
+                                        ring: false,
+                                        onImageSelected: (bytes, name) {
+                                          setState(() {
+                                            _profileImageBytes = bytes;
+                                            _profileImageName = name;
+                                            _markDirty();
+                                          });
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: BBSpace.xs),
-                                  Text(
-                                    l10n.editProfileSubtitle,
-                                    textAlign: TextAlign.center,
-                                    style: BBType.body(
-                                      context,
-                                    ).copyWith(color: c.textSecondary),
-                                  ),
-                                  const SizedBox(height: BBSpace.md),
-                                  if (authState.requiresProfileCompletion) ...[
-                                    _buildWelcomeBanner(l10n, c),
+                                    const SizedBox(height: BBSpace.md),
+                                    Text(
+                                      l10n.editProfileTitle,
+                                      textAlign: TextAlign.center,
+                                      style: BBType.h2(context).copyWith(
+                                        color: c.textPrimary,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: BBSpace.xs),
+                                    Text(
+                                      l10n.editProfileSubtitle,
+                                      textAlign: TextAlign.center,
+                                      style: BBType.body(
+                                        context,
+                                      ).copyWith(color: c.textSecondary),
+                                    ),
+                                    const SizedBox(height: BBSpace.md),
+                                    if (authState
+                                        .requiresProfileCompletion) ...[
+                                      _buildWelcomeBanner(l10n, c),
+                                      const SizedBox(height: BBSpace.md),
+                                    ],
+                                    _buildPersonalCard(l10n, c),
+                                    const SizedBox(height: BBSpace.md),
+                                    _buildAddressCard(l10n, c),
+                                    const SizedBox(height: BBSpace.md),
+                                    _buildCompanyCard(l10n, c),
+                                    const SizedBox(height: BBSpace.md),
+                                    _buildActionButtons(l10n),
                                     const SizedBox(height: BBSpace.md),
                                   ],
-                                  _buildPersonalCard(l10n, c),
-                                  const SizedBox(height: BBSpace.md),
-                                  _buildAddressCard(l10n, c),
-                                  const SizedBox(height: BBSpace.md),
-                                  _buildCompanyCard(l10n, c),
-                                  const SizedBox(height: BBSpace.md),
-                                  _buildActionButtons(l10n),
-                                  const SizedBox(height: BBSpace.md),
-                                ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) =>
-                  Center(child: Text(l10n.errorWithMessage(error.toString()))),
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(
+                  child: Text(l10n.errorWithMessage(error.toString())),
+                ),
+              ),
             ),
           ),
         ),

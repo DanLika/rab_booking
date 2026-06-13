@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/config/environment.dart';
 import '../../../core/design/bb_redesign_tokens.dart';
 import '../../../core/design/tokens.dart';
+import '../../../core/theme/gradient_extensions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/common_app_bar.dart';
 import '../../../shared/widgets/redesign.dart';
@@ -47,10 +48,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         onLeadingIconTap: (BuildContext ctx) => Scaffold.of(ctx).openDrawer(),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'subscription'),
-      body: SafeArea(
-        child: kIsWeb
-            ? _buildWebContent(context, c, l10n)
-            : _buildNativeRedirectContent(context, c, scheme, l10n),
+      body: Container(
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: SafeArea(
+          child: kIsWeb
+              ? _buildWebContent(context, c, l10n)
+              : _buildNativeRedirectContent(context, c, scheme, l10n),
+        ),
       ),
     );
   }

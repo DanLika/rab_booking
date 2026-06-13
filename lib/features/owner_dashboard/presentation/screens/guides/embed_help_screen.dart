@@ -1,13 +1,13 @@
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
-import '../../../../../core/theme/app_color_extensions.dart';
-import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/error_display_utils.dart';
+import '../../../../../shared/widgets/common_app_bar.dart';
+import '../../../../../shared/widgets/redesign.dart';
 
 /// Tabs for the Embed Help Screen
 enum EmbedHelpTab { installation, advanced, troubleshooting }
@@ -56,120 +56,139 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final c = BBColor.of(context);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        title: AutoSizeText(
-          l10n.embedHelpTitle,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
-          ),
-          maxLines: 1,
-          minFontSize: 14,
-        ),
-        backgroundColor: theme.colorScheme.surface,
-        foregroundColor: theme.colorScheme.onSurface,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: theme.colorScheme.primary,
-          unselectedLabelColor: theme.colorScheme.onSurface.withValues(
-            alpha: 0.6,
-          ),
-          indicatorColor: theme.colorScheme.primary,
-          indicatorWeight: 3,
-          tabs: [
-            Tab(
-              icon: const Icon(Icons.menu_book, size: 20),
-              text: l10n.embedHelpTabInstallation,
-            ),
-            Tab(
-              icon: const Icon(Icons.tune, size: 20),
-              text: l10n.embedHelpTabAdvanced,
-            ),
-            Tab(
-              icon: const Icon(Icons.build, size: 20),
-              text: l10n.embedHelpTabTroubleshooting,
-            ),
-          ],
-        ),
+      // Pushed detail screen (back arrow) — launched from the embed-widget
+      // guide with an `initialTab`. NOT a drawer destination.
+      appBar: CommonAppBar(
+        title: l10n.embedHelpTitle,
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (ctx) => Navigator.of(ctx).pop(),
       ),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildInstallationTab(isDark),
-            _buildAdvancedTab(isDark),
-            _buildTroubleshootingTab(isDark),
-          ],
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (BuildContext _, BoxConstraints constraints) {
+              // Center body column on wider viewports — mirrors faq_screen so
+              // the guide pages share one responsive column (no edge-to-edge
+              // tabs + content on 1440 desktop).
+              final double maxColumn = constraints.maxWidth >= 1024
+                  ? 800
+                  : constraints.maxWidth >= 600
+                  ? 620
+                  : double.infinity;
+
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxColumn),
+                  child: Column(
+                    children: [
+                      TabBar(
+                        controller: _tabController,
+                        labelColor: c.primary,
+                        unselectedLabelColor: c.textTertiary,
+                        indicatorColor: c.primary,
+                        indicatorWeight: 3,
+                        dividerColor: c.border,
+                        labelStyle: BBType.label(
+                          context,
+                        ).copyWith(fontWeight: FontWeight.w700),
+                        unselectedLabelStyle: BBType.label(context),
+                        tabs: [
+                          Tab(
+                            icon: const Icon(Icons.menu_book, size: 20),
+                            text: l10n.embedHelpTabInstallation,
+                          ),
+                          Tab(
+                            icon: const Icon(Icons.tune, size: 20),
+                            text: l10n.embedHelpTabAdvanced,
+                          ),
+                          Tab(
+                            icon: const Icon(Icons.build, size: 20),
+                            text: l10n.embedHelpTabTroubleshooting,
+                          ),
+                        ],
+                      ),
+                      Expanded(
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildInstallationTab(),
+                            _buildAdvancedTab(),
+                            _buildTroubleshootingTab(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
   /// Installation Guide Tab - Simplified to 2 essential steps
-  Widget _buildInstallationTab(bool isDark) {
+  Widget _buildInstallationTab() {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
 
     return ListView(
       physics: PlatformScrollPhysics.adaptive,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BBSpace.sm),
       children: [
         // Step 1: Add to Website (was Step 3)
         _buildStep(
           stepNumber: 1,
           title: l10n.embedGuideStep3Title,
           icon: Icons.web,
-          isDark: isDark,
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 l10n.embedGuideStep3Intro,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: BBType.body(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: BBSpace.sm),
               Text(
                 l10n.embedGuideStep3WordPress,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: BBType.body(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: BBSpace.xs),
               _buildBulletPoint(l10n.embedGuideStep3WP1),
               _buildBulletPoint(l10n.embedGuideStep3WP2),
               _buildBulletPoint(l10n.embedGuideStep3WP3),
               _buildBulletPoint(l10n.embedGuideStep3WP4),
-              const SizedBox(height: 16),
+              const SizedBox(height: BBSpace.sm),
               Text(
                 l10n.embedGuideStep3Static,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: BBType.body(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: BBSpace.xs),
               _buildBulletPoint(l10n.embedGuideStep3HTML1),
               _buildBulletPoint(l10n.embedGuideStep3HTML2),
               _buildBulletPoint(l10n.embedGuideStep3HTML3),
               _buildBulletPoint(l10n.embedGuideStep3HTML4),
-              const SizedBox(height: 16),
+              const SizedBox(height: BBSpace.sm),
               // Code example
               Text(
                 l10n.embedGuideStep2ExampleCode,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: BBType.body(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 8),
-              _buildCodeBlock(isDark),
+              const SizedBox(height: BBSpace.xs),
+              _buildCodeBlock(),
             ],
           ),
         ),
@@ -179,120 +198,95 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
           stepNumber: 2,
           title: l10n.embedGuideStep4Title,
           icon: Icons.check_circle,
-          isDark: isDark,
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.embedGuideStep4Intro),
-              const SizedBox(height: 12),
+              Text(l10n.embedGuideStep4Intro, style: BBType.body(context)),
+              const SizedBox(height: BBSpace.sm),
               _buildBulletPoint(l10n.embedGuideStep4Check1),
               _buildBulletPoint(l10n.embedGuideStep4Check2),
               _buildBulletPoint(l10n.embedGuideStep4Check3),
               _buildBulletPoint(l10n.embedGuideStep4Check4),
-              const SizedBox(height: 16),
+              const SizedBox(height: BBSpace.sm),
               // Test Links section
-              _buildTestLinksSection(isDark),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? theme.colorScheme.success.withAlpha((0.2 * 255).toInt())
-                      : theme.colorScheme.success.withAlpha(
-                          (0.1 * 255).toInt(),
-                        ),
-                  border: Border.all(
-                    color: isDark
-                        ? theme.colorScheme.success.withAlpha(
-                            (0.5 * 255).toInt(),
-                          )
-                        : theme.colorScheme.success.withAlpha(
-                            (0.3 * 255).toInt(),
-                          ),
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: theme.colorScheme.success,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.embedGuideStep4Success,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildTestLinksSection(),
+              const SizedBox(height: BBSpace.sm),
+              _buildSuccessNote(l10n.embedGuideStep4Success),
             ],
           ),
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: BBSpace.md),
       ],
     );
   }
 
-  /// Test Links section for testing widget before embedding
-  Widget _buildTestLinksSection(bool isDark) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+  /// Success confirmation note (installation step 2 footer).
+  Widget _buildSuccessNote(String text) {
+    final c = BBColor.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
-            : theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
-        border: Border.all(
-          color: isDark
-              ? theme.colorScheme.primary.withAlpha((0.4 * 255).toInt())
-              : theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
-        ),
-        borderRadius: BorderRadius.circular(8),
+        color: c.success.withValues(alpha: 0.12),
+        border: Border.all(color: c.success.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(BBRadius.sm),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle, color: c.success, size: 20),
+          const SizedBox(width: BBSpace.xs),
+          Expanded(
+            child: Text(
+              text,
+              style: BBType.caption(
+                context,
+              ).copyWith(fontWeight: FontWeight.w500, color: c.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Test Links section for testing widget before embedding
+  Widget _buildTestLinksSection() {
+    final l10n = AppLocalizations.of(context);
+    final c = BBColor.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(BBSpace.sm),
+      decoration: BoxDecoration(
+        color: c.primary.withValues(alpha: 0.10),
+        border: Border.all(color: c.primary.withValues(alpha: 0.25)),
+        borderRadius: BorderRadius.circular(BBRadius.sm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.open_in_new,
-                size: 18,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 8),
+              Icon(Icons.open_in_new, size: 18, color: c.primary),
+              const SizedBox(width: BBSpace.xs),
               Text(
                 l10n.embedGuideTestLinksTitle,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: theme.colorScheme.primary,
-                ),
+                style: BBType.body(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w700, color: c.primary),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: BBSpace.sm),
           _buildTestLink(
             title: l10n.embedGuideTestWidgetTitle,
             description: l10n.embedGuideTestWidgetDesc,
             url: 'https://view.bookbed.io/test',
-            isDark: isDark,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: BBSpace.xs),
           _buildTestLink(
             title: l10n.embedGuideLiveExampleTitle,
             description: l10n.embedGuideLiveExampleDesc,
             url: 'https://view.bookbed.io/demo',
-            isDark: isDark,
           ),
         ],
       ),
@@ -304,44 +298,35 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
     required String title,
     required String description,
     required String url,
-    required bool isDark,
   }) {
-    final theme = Theme.of(context);
+    final c = BBColor.of(context);
 
     return InkWell(
       onTap: () => _launchUrl(url),
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(BBRadius.xs),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
-            Icon(Icons.link, size: 16, color: theme.colorScheme.primary),
-            const SizedBox(width: 8),
+            Icon(Icons.link, size: 16, color: c.primary),
+            const SizedBox(width: BBSpace.xs),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: BBType.label(context).copyWith(
                       fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: theme.colorScheme.primary,
+                      color: c.primary,
                       decoration: TextDecoration.underline,
                     ),
                   ),
                   Text(
                     description,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isDark
-                          ? theme.colorScheme.onSurface.withAlpha(
-                              (0.7 * 255).toInt(),
-                            )
-                          : theme.colorScheme.onSurface.withAlpha(
-                              (0.6 * 255).toInt(),
-                            ),
-                    ),
+                    style: BBType.caption(
+                      context,
+                    ).copyWith(color: c.textTertiary),
                   ),
                 ],
               ),
@@ -349,7 +334,7 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
             Icon(
               Icons.arrow_forward_ios,
               size: 12,
-              color: theme.colorScheme.primary.withAlpha((0.6 * 255).toInt()),
+              color: c.primary.withValues(alpha: 0.6),
             ),
           ],
         ),
@@ -373,135 +358,101 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
   }
 
   /// Advanced Options Tab
-  Widget _buildAdvancedTab(bool isDark) {
+  Widget _buildAdvancedTab() {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final c = BBColor.of(context);
 
     return ListView(
       physics: PlatformScrollPhysics.adaptive,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BBSpace.sm),
       children: [
-        Container(
-          decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.gradients.sectionBorder),
-            boxShadow: isDark
-                ? AppShadows.elevation2Dark
-                : AppShadows.elevation2,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.tune, color: theme.colorScheme.primary),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.embedGuideAdvancedOptions,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildAdvancedOption(
-                  l10n.embedGuideAdvResponsive,
-                  l10n.embedGuideAdvResponsiveDesc,
-                  isDark,
-                ),
-                _buildAdvancedOption(
-                  l10n.embedGuideAdvLanguage,
-                  l10n.embedGuideAdvLanguageDesc,
-                  isDark,
-                ),
-                _buildAdvancedOption(
-                  l10n.embedGuideAdvColors,
-                  l10n.embedGuideAdvColorsDesc,
-                  isDark,
-                ),
-                _buildAdvancedOption(
-                  l10n.embedGuideAdvMultiple,
-                  l10n.embedGuideAdvMultipleDesc,
-                  isDark,
-                ),
-              ],
-            ),
+        BbCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.tune, color: c.primary),
+                  const SizedBox(width: BBSpace.xs),
+                  Text(
+                    l10n.embedGuideAdvancedOptions,
+                    style: BBType.h3(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w700, color: c.primary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: BBSpace.sm),
+              _buildAdvancedOption(
+                l10n.embedGuideAdvResponsive,
+                l10n.embedGuideAdvResponsiveDesc,
+              ),
+              _buildAdvancedOption(
+                l10n.embedGuideAdvLanguage,
+                l10n.embedGuideAdvLanguageDesc,
+              ),
+              _buildAdvancedOption(
+                l10n.embedGuideAdvColors,
+                l10n.embedGuideAdvColorsDesc,
+              ),
+              _buildAdvancedOption(
+                l10n.embedGuideAdvMultiple,
+                l10n.embedGuideAdvMultipleDesc,
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: BBSpace.md),
       ],
     );
   }
 
   /// Troubleshooting Tab
-  Widget _buildTroubleshootingTab(bool isDark) {
+  Widget _buildTroubleshootingTab() {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final c = BBColor.of(context);
 
     return ListView(
       physics: PlatformScrollPhysics.adaptive,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BBSpace.sm),
       children: [
-        Container(
-          decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.gradients.sectionBorder),
-            boxShadow: isDark
-                ? AppShadows.elevation2Dark
-                : AppShadows.elevation2,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.build, color: theme.colorScheme.warning),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.embedGuideTroubleshooting,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.warning,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildTroubleshootItem(
-                  l10n.embedGuideTroubleNotShowing,
-                  l10n.embedGuideTroubleNotShowingSolution,
-                  isDark,
-                ),
-                _buildTroubleshootItem(
-                  l10n.embedGuideTroubleHeight,
-                  l10n.embedGuideTroubleHeightSolution,
-                  isDark,
-                ),
-                _buildTroubleshootItem(
-                  l10n.embedGuideTroublePayment,
-                  l10n.embedGuideTroublePaymentSolution,
-                  isDark,
-                ),
-                _buildTroubleshootItem(
-                  l10n.embedGuideTroubleOldData,
-                  l10n.embedGuideTroubleOldDataSolution,
-                  isDark,
-                ),
-              ],
-            ),
+        BbCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.build, color: c.warning),
+                  const SizedBox(width: BBSpace.xs),
+                  Text(
+                    l10n.embedGuideTroubleshooting,
+                    style: BBType.h3(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w700, color: c.warning),
+                  ),
+                ],
+              ),
+              const SizedBox(height: BBSpace.sm),
+              _buildTroubleshootItem(
+                l10n.embedGuideTroubleNotShowing,
+                l10n.embedGuideTroubleNotShowingSolution,
+              ),
+              _buildTroubleshootItem(
+                l10n.embedGuideTroubleHeight,
+                l10n.embedGuideTroubleHeightSolution,
+              ),
+              _buildTroubleshootItem(
+                l10n.embedGuideTroublePayment,
+                l10n.embedGuideTroublePaymentSolution,
+              ),
+              _buildTroubleshootItem(
+                l10n.embedGuideTroubleOldData,
+                l10n.embedGuideTroubleOldDataSolution,
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: BBSpace.md),
       ],
     );
   }
@@ -510,53 +461,45 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
     required int stepNumber,
     required String title,
     required IconData icon,
-    required bool isDark,
     required Widget content,
   }) {
     final theme = Theme.of(context);
+    final c = BBColor.of(context);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: BBSpace.sm),
+      child: BbCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: theme.colorScheme.primary,
+                  backgroundColor: c.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
                   radius: 14,
                   child: Text(
                     '$stepNumber',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                    style: BBType.caption(context).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onPrimary,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Icon(icon, size: 20, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
+                const SizedBox(width: BBSpace.sm),
+                Icon(icon, size: 20, color: c.primary),
+                const SizedBox(width: BBSpace.xs),
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    style: BBType.bodyLg(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: BBSpace.sm),
             content,
           ],
         ),
@@ -565,32 +508,36 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
   }
 
   Widget _buildBulletPoint(String text) {
+    final c = BBColor.of(context);
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8, left: 8),
+      padding: const EdgeInsets.only(bottom: BBSpace.xs, left: BBSpace.xs),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '• ',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: BBType.body(
+              context,
+            ).copyWith(fontWeight: FontWeight.w700, color: c.primary),
           ),
-          Expanded(child: Text(text, style: const TextStyle(height: 1.5))),
+          Expanded(child: Text(text, style: BBType.body(context))),
         ],
       ),
     );
   }
 
-  Widget _buildCodeBlock(bool isDark) {
-    final theme = Theme.of(context);
+  Widget _buildCodeBlock() {
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.surfaceContainerHighest
-            : theme.colorScheme.darkGray,
-        borderRadius: BorderRadius.circular(8),
+        color: isDark ? BBColor.surfaceVarDark : BBColor.surfaceVarLight,
+        borderRadius: BorderRadius.circular(BBRadius.sm),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -600,25 +547,10 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
             children: [
               Text(
                 'HTML',
-                style: TextStyle(
-                  color: isDark
-                      ? theme.colorScheme.onSurface.withAlpha(
-                          (0.7 * 255).toInt(),
-                        )
-                      : Colors.white70,
-                  fontSize: 12,
-                ),
+                style: BBType.caption(context).copyWith(color: c.textTertiary),
               ),
               IconButton(
-                icon: Icon(
-                  Icons.copy,
-                  color: isDark
-                      ? theme.colorScheme.onSurface.withAlpha(
-                          (0.7 * 255).toInt(),
-                        )
-                      : Colors.white70,
-                  size: 18,
-                ),
+                icon: Icon(Icons.copy, color: c.textTertiary, size: 18),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: _exampleCode));
                   ErrorDisplayUtils.showSuccessSnackBar(
@@ -631,54 +563,44 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
           ),
           SelectableText(
             _exampleCode,
-            style: TextStyle(
-              color: theme.colorScheme.primary,
-              fontSize: 12,
-              fontFamily: 'monospace',
-              height: 1.5,
-            ),
+            style: BBType.mono(
+              context,
+            ).copyWith(color: c.primary, fontSize: 12),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAdvancedOption(String title, String description, bool isDark) {
-    final theme = Theme.of(context);
+  Widget _buildAdvancedOption(String title, String description) {
+    final c = BBColor.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: BBSpace.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.star, size: 16, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
+              Icon(Icons.star, size: 16, color: c.primary),
+              const SizedBox(width: BBSpace.xs),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+                  style: BBType.body(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Padding(
-            padding: const EdgeInsets.only(left: 24),
+            padding: const EdgeInsets.only(left: BBSpace.md),
             child: Text(
               description,
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark
-                    ? theme.colorScheme.onSurfaceVariant
-                    : Colors.grey.shade700,
-                height: 1.4,
-              ),
+              style: BBType.body(context).copyWith(color: c.textSecondary),
             ),
           ),
         ],
@@ -686,30 +608,25 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
     );
   }
 
-  Widget _buildTroubleshootItem(String problem, String solution, bool isDark) {
-    final theme = Theme.of(context);
+  Widget _buildTroubleshootItem(String problem, String solution) {
+    final c = BBColor.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: BBSpace.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.warning_amber,
-                size: 18,
-                color: theme.colorScheme.warning,
-              ),
-              const SizedBox(width: 8),
+              Icon(Icons.warning_amber, size: 18, color: c.warning),
+              const SizedBox(width: BBSpace.xs),
               Expanded(
                 child: Text(
                   problem,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+                  style: BBType.body(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -719,15 +636,7 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
             padding: const EdgeInsets.only(left: 26),
             child: Text(
               solution,
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark
-                    ? theme.colorScheme.onSurface.withAlpha((0.8 * 255).toInt())
-                    : theme.colorScheme.onSurface.withAlpha(
-                        (0.7 * 255).toInt(),
-                      ),
-                height: 1.5,
-              ),
+              style: BBType.body(context).copyWith(color: c.textSecondary),
             ),
           ),
         ],

@@ -635,7 +635,7 @@ class _StatisticsCard extends ConsumerWidget {
                     error: (_, _) => '-',
                   ),
                   icon: Icons.home_work_outlined,
-                  color: Colors.blue,
+                  color: AppColors.info,
                 ),
               ),
               const SizedBox(width: BBSpace.sm),
@@ -648,7 +648,7 @@ class _StatisticsCard extends ConsumerWidget {
                     error: (_, _) => '-',
                   ),
                   icon: Icons.calendar_month_outlined,
-                  color: Colors.orange,
+                  color: AppColors.warning,
                 ),
               ),
             ],
@@ -721,10 +721,10 @@ class _UserStatusCard extends ConsumerWidget {
     final palette = _UserDetailPalette.of(context, ref);
 
     final statusColor = switch (currentStatus) {
-      'active' => Colors.green,
-      'suspended' => Colors.red,
-      'trial_expired' => Colors.orange,
-      _ => Colors.blue,
+      'active' => AppColors.success,
+      'suspended' => AppColors.error,
+      'trial_expired' => AppColors.warning,
+      _ => AppColors.info,
     };
 
     return BbCard(
@@ -878,7 +878,7 @@ class _LifetimeLicenseCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final palette = _UserDetailPalette.of(context, ref);
     final hasLifetime = user.accountType == AccountType.lifetime;
-    final accentColor = hasLifetime ? Colors.red : Colors.purple;
+    final accentColor = hasLifetime ? AppColors.error : AppColors.primary;
 
     return BbCard(
       variant: BbCardVariant.accentLeft,

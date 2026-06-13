@@ -20,6 +20,13 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/redesign.dart';
 import '../providers/user_profile_provider.dart';
 import '../../../../shared/widgets/universal_loader.dart';
+import '../../../../core/design/tokens.dart';
+import '../../../../core/config/environment.dart';
+import '../widgets/widget_settings_section.dart';
+import '../widgets/widget_embed_code_section.dart';
+import '../widgets/widget_platform_install_section.dart';
+import '../widgets/widget_live_preview_section.dart';
+import '../widgets/widget_appearance_section.dart';
 
 /// Widget Settings Screen - Configure embedded widget for each unit
 class WidgetSettingsScreen extends ConsumerStatefulWidget {
@@ -84,6 +91,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
   WidgetSettings? _existingSettings;
   CompanyDetails? _companyDetails;
 
+  // Appearance (Izgled) — accent/theme/radius/show-prices/branding. Persisted
+  // via the existing widget_settings write (theme_options sub-map; no frozen
+  // widget_secrets write is touched).
+  ThemeOptions _themeOptions = const ThemeOptions();
+
   @override
   void initState() {
     super.initState();
@@ -127,6 +139,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
     setState(() {
       // Widget Mode
       _selectedMode = settings.widgetMode;
+
+      // Appearance options (Izgled) — accent/theme/radius/prices/branding
+      _themeOptions = settings.themeOptions ?? const ThemeOptions();
 
       // Global deposit percentage
       _globalDepositPercentage = settings.globalDepositPercentage;
@@ -525,7 +540,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
         taxLegalConfig:
             _existingSettings?.taxLegalConfig ??
             const TaxLegalConfig(enabled: false),
-        themeOptions: _existingSettings?.themeOptions,
+        themeOptions: _themeOptions,
         createdAt: _existingSettings?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -598,59 +613,106 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
     final contentPadding = context.horizontalPadding;
     final l10n = AppLocalizations.of(context);
 
+    final accentHex = _themeOptions.primaryColor ?? '#6B4CE6';
+    final previewUrl =
+        '${EnvironmentConfig.widgetBaseUrl}/?property=${widget.propertyId}'
+        '&unit=${widget.unitId}';
+
     final bodyContent = _isLoading
         ? UniversalLoader.forSection()
-        : Form(
-            key: _formKey,
-            child: ListView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: EdgeInsets.all(contentPadding),
-              children: [
-                _buildWidgetModeSection(),
-
-                const SizedBox(height: 24),
-
-                // Payment Methods - ONLY for bookingInstant mode
-                if (_selectedMode == WidgetMode.bookingInstant) ...[
-                  _buildPaymentMethodsSection(),
-                  const SizedBox(height: 24),
-
-                  _buildBookingBehaviorSection(),
-                  const SizedBox(height: 24),
-                ],
-
-                // Info card - ONLY for bookingPending mode
-                if (_selectedMode == WidgetMode.bookingPending) ...[
-                  _buildInfoCard(
-                    icon: Icons.info_outline,
-                    title: l10n.widgetSettingsBookingWithoutPayment,
-                    message: l10n.widgetSettingsBookingWithoutPaymentDesc,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(height: 24),
-
-                  _buildBookingBehaviorSection(),
-                  const SizedBox(height: 24),
-                ],
-
-                const SizedBox(height: 32),
-
-                // Primary save CTA via `BbButton` (handoff brand purple +
-                // `--bb-shadow-purple-sm`). Replaces the hand-rolled
-                // `Container(gradient) + Material + InkWell + Icons.check`
-                // chrome so the surface tracks the design-system primary
-                // button (hover-lift, focus ring, loading spinner included).
-                BbButton(
-                  label: _isSaving
-                      ? l10n.widgetSettingsSaving
-                      : l10n.widgetSettingsSave,
-                  iconLeft: _isSaving ? null : 'check',
-                  size: BbButtonSize.lg,
-                  fullWidth: true,
-                  loading: _isSaving,
-                  onPressed: _isSaving ? null : _saveSettings,
+        : Container(
+            decoration: BoxDecoration(
+              gradient: context.gradients.pageBackground,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                // Desktop readable-width clamp (was edge-to-edge full-bleed).
+                constraints: const BoxConstraints(
+                  maxWidth: BBConstraint.maxNarrowContentWidth,
                 ),
-              ],
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.all(contentPadding),
+                    children: [
+                      // H1 header
+                      _buildHeader(),
+
+                      const SizedBox(height: BBSpace.lg),
+
+                      _buildWidgetModeSection(),
+
+                      const SizedBox(height: BBSpace.lg),
+
+                      // H5 Appearance (Izgled) — accent / theme / radius /
+                      // show-prices / powered-by, all via ThemeOptions.copyWith
+                      // into the existing save path.
+                      WidgetAppearanceSection(
+                        options: _themeOptions,
+                        onChanged: (o) => setState(() => _themeOptions = o),
+                        // isPro defaults to false → branding-removal stays
+                        // Pro-gated (locked + PRO pill).
+                        // TODO(wave1a): wire real subscription tier.
+                      ),
+
+                      const SizedBox(height: BBSpace.lg),
+
+                      // Payment Methods - ONLY for bookingInstant mode
+                      if (_selectedMode == WidgetMode.bookingInstant) ...[
+                        _buildPaymentMethodsSection(),
+                        const SizedBox(height: BBSpace.lg),
+
+                        _buildBookingBehaviorSection(),
+                        const SizedBox(height: BBSpace.lg),
+                      ],
+
+                      // Info card - ONLY for bookingPending mode
+                      if (_selectedMode == WidgetMode.bookingPending) ...[
+                        _buildInfoCard(
+                          icon: Icons.info_outline,
+                          title: l10n.widgetSettingsBookingWithoutPayment,
+                          message: l10n.widgetSettingsBookingWithoutPaymentDesc,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(height: BBSpace.lg),
+
+                        _buildBookingBehaviorSection(),
+                        const SizedBox(height: BBSpace.lg),
+                      ],
+
+                      // H2 embed code + H3 platform install + H4 live preview
+                      WidgetEmbedCodeSection(
+                        propertyId: widget.propertyId,
+                        unitId: widget.unitId,
+                        accentHex: accentHex,
+                      ),
+                      const SizedBox(height: BBSpace.lg),
+                      const WidgetPlatformInstallSection(),
+                      const SizedBox(height: BBSpace.lg),
+                      WidgetLivePreviewSection(
+                        accentHex: accentHex,
+                        previewUrl: previewUrl,
+                      ),
+
+                      const SizedBox(height: BBSpace.lg),
+
+                      // Primary save CTA via `BbButton`.
+                      BbButton(
+                        label: _isSaving
+                            ? l10n.widgetSettingsSaving
+                            : l10n.widgetSettingsSave,
+                        iconLeft: _isSaving ? null : 'check',
+                        size: BbButtonSize.lg,
+                        fullWidth: true,
+                        loading: _isSaving,
+                        onPressed: _isSaving ? null : _saveSettings,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           );
 
@@ -698,420 +760,289 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
     );
   }
 
-  Widget _buildWidgetModeSection() {
-    final theme = Theme.of(context);
-    final sectionPadding = context.horizontalPadding;
+  /// Page header (H1) — handoff `embed.jsx` EmbHeader: title + subtitle +
+  /// "Active" status badge.
+  Widget _buildHeader() {
     final l10n = AppLocalizations.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          decoration: BoxDecoration(
-            // TIP 1: Simple diagonal gradient (2 colors, 2 stops)
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
-          ),
-          padding: EdgeInsets.all(sectionPadding),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with icon - Minimalist style (matching euro icon from Cjenovnik)
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.widgets_outlined,
-                      color: theme.colorScheme.primary,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.widgetSettingsWidgetMode,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          height: 2,
-                          width: 40,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            borderRadius: BorderRadius.circular(1),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
+              Text(l10n.widgetSettingsHeaderTitle, style: BBType.h1(context)),
+              const SizedBox(height: BBSpace.xxs),
               Text(
-                l10n.widgetSettingsWidgetModeDesc,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-              const SizedBox(height: 12),
-              ...WidgetMode.values.map(
-                (mode) => BbRadio<WidgetMode>(
-                  value: mode,
-                  groupValue: _selectedMode,
-                  onChanged: (m) => setState(() => _selectedMode = m),
-                  label: mode.displayName,
-                  subtitle: mode.description,
-                ),
+                l10n.widgetSettingsHeaderSubtitle,
+                style: BBType.caption(context),
               ),
             ],
           ),
         ),
+        const SizedBox(width: BBSpace.sm),
+        BbStatusBadge(
+          status: BbBookingStatus.confirmed,
+          label: l10n.widgetSettingsStatusActive,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWidgetModeSection() {
+    final l10n = AppLocalizations.of(context);
+    return WidgetSettingsSection(
+      icon: 'widgets',
+      title: l10n.widgetSettingsWidgetMode,
+      subtitle: l10n.widgetSettingsWidgetModeDesc,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ...WidgetMode.values.map(
+            (mode) => BbRadio<WidgetMode>(
+              value: mode,
+              groupValue: _selectedMode,
+              onChanged: (m) => setState(() => _selectedMode = m),
+              label: mode.displayName,
+              subtitle: mode.description,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildPaymentMethodsSection() {
-    final theme = Theme.of(context);
-    final sectionPadding = context.horizontalPadding;
     final l10n = AppLocalizations.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
+    return WidgetSettingsSection(
+      icon: 'payments',
+      title: l10n.widgetSettingsPaymentMethods,
+      subtitle: l10n.widgetSettingsPaymentMethodsDesc,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Global Deposit Percentage Slider (applies to all payment methods)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.3),
+              ),
             ),
-          ),
-          padding: EdgeInsets.all(sectionPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with icon and title
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.percent,
+                      size: 22,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                    child: Icon(
-                      Icons.payment,
-                      color: theme.colorScheme.primary,
-                      size: 18,
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.widgetSettingsDepositAmount(
+                        _globalDepositPercentage,
+                      ),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.widgetSettingsPaymentMethods,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          height: 2,
-                          width: 40,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            borderRadius: BorderRadius.circular(1),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Info text
-              Text(
-                l10n.widgetSettingsPaymentMethodsDesc,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-
-              // Global Deposit Percentage Slider (applies to all payment methods)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
+                const SizedBox(height: 4),
+                Text(
+                  l10n.widgetSettingsDepositDesc,
+                  style: TextStyle(
+                    fontSize: 13,
                     color: Theme.of(
                       context,
-                    ).colorScheme.outline.withValues(alpha: 0.3),
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.percent,
-                          size: 22,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.widgetSettingsDepositAmount(
-                            _globalDepositPercentage,
-                          ),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
+                const SizedBox(height: 8),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: Theme.of(context).colorScheme.primary,
+                    inactiveTrackColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.2),
+                    thumbColor: Theme.of(context).colorScheme.primary,
+                    overlayColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.12),
+                    valueIndicatorColor: Theme.of(context).colorScheme.primary,
+                    valueIndicatorTextStyle: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 4),
+                  ),
+                  child: Slider(
+                    value: _globalDepositPercentage.toDouble(),
+                    max: 100,
+                    divisions: 20,
+                    label: '$_globalDepositPercentage%',
+                    onChanged: (value) {
+                      setState(() => _globalDepositPercentage = value.round());
+                    },
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     Text(
-                      l10n.widgetSettingsDepositDesc,
+                      '0% (${l10n.widgetSettingsFullPayment})',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ).colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: Theme.of(context).colorScheme.primary,
-                        inactiveTrackColor: Theme.of(
+                    Text(
+                      '100% (${l10n.widgetSettingsFullPayment})',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(
                           context,
-                        ).colorScheme.primary.withValues(alpha: 0.2),
-                        thumbColor: Theme.of(context).colorScheme.primary,
-                        overlayColor: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.12),
-                        valueIndicatorColor: Theme.of(
-                          context,
-                        ).colorScheme.primary,
-                        valueIndicatorTextStyle: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        ).colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
-                      child: Slider(
-                        value: _globalDepositPercentage.toDouble(),
-                        max: 100,
-                        divisions: 20,
-                        label: '$_globalDepositPercentage%',
-                        onChanged: (value) {
-                          setState(
-                            () => _globalDepositPercentage = value.round(),
-                          );
-                        },
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '0% (${l10n.widgetSettingsFullPayment})',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.5),
-                          ),
-                        ),
-                        Text(
-                          '100% (${l10n.widgetSettingsFullPayment})',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 16),
-
-              // Stripe Payment - Collapsible with approval option
-              _buildPaymentMethodExpansionTile(
-                icon: Icons.credit_card,
-                title: l10n.widgetSettingsStripePayment,
-                subtitle: l10n.widgetSettingsCardPayment,
-                enabled: _stripeEnabled,
-                onToggle: (val) => setState(() => _stripeEnabled = val),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-                    // Require Approval switch - Only applies to Stripe
-                    // Bank transfer and Pay on Arrival always require approval
-                    Builder(
-                      builder: (context) {
-                        final l10nInner = AppLocalizations.of(context);
-                        return _buildCompactSwitchCard(
-                          icon: Icons.approval,
-                          label: l10nInner.widgetSettingsRequireApproval,
-                          subtitle: l10nInner.widgetSettingsStripeApprovalNote,
-                          value: _requireApproval,
-                          onChanged: (val) =>
-                              setState(() => _requireApproval = val),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Bank Transfer - Collapsible with lazy validation
-              _buildPaymentMethodExpansionTile(
-                icon: Icons.account_balance,
-                title: l10n.widgetSettingsBankTransfer,
-                subtitle: l10n.widgetSettingsBankPayment,
-                enabled: _bankTransferEnabled,
-                onToggle: _handleBankTransferToggle,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-
-                    // Bank details from profile (read-only display)
-                    _buildBankDetailsFromProfile(),
-
-                    const SizedBox(height: 12),
-
-                    // Payment deadline dropdown
-                    BbDropdown<int>(
-                      value: _bankPaymentDeadlineDays,
-                      label: l10n.widgetSettingsPaymentDeadline,
-                      size: BbInputSize.lg,
-                      items: [
-                        BbDropdownItem(
-                          value: 1,
-                          label: '1 ${l10n.widgetSettingsDay}',
-                        ),
-                        BbDropdownItem(
-                          value: 3,
-                          label: '3 ${l10n.widgetSettingsDays}',
-                        ),
-                        BbDropdownItem(
-                          value: 5,
-                          label: '5 ${l10n.widgetSettingsDays}',
-                        ),
-                        BbDropdownItem(
-                          value: 7,
-                          label: '7 ${l10n.widgetSettingsDays}',
-                        ),
-                        BbDropdownItem(
-                          value: 14,
-                          label: '14 ${l10n.widgetSettingsDays}',
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _bankPaymentDeadlineDays = value);
-                        }
-                      },
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Custom notes switch
-                    Builder(
-                      builder: (context) {
-                        final l10nInner = AppLocalizations.of(context);
-                        return _buildCompactSwitchCard(
-                          icon: Icons.edit_note,
-                          label: l10nInner.widgetSettingsCustomNote,
-                          subtitle: l10nInner.widgetSettingsAddMessage,
-                          value: _bankUseCustomNotes,
-                          onChanged: (val) =>
-                              setState(() => _bankUseCustomNotes = val),
-                        );
-                      },
-                    ),
-
-                    // Custom notes text field (conditional)
-                    if (_bankUseCustomNotes) ...[
-                      const SizedBox(height: 12),
-                      BbInput(
-                        controller: _bankCustomNotesController,
-                        label: l10n.widgetSettingsNoteMaxChars,
-                        helper: l10n.widgetSettingsNoteHelper,
-                        maxLines: 3,
-                        charLimit: 500,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-              // Pay on Arrival toggle REMOVED - simplified logic:
-              // - bookingPending mode: No payment, manual approval (inherently "pay on arrival")
-              // - bookingInstant mode: Payment required (Stripe or Bank Transfer)
-              // See: atomicBooking.ts validation for server-side enforcement
-            ],
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 16),
+
+          // Stripe Payment - Collapsible with approval option
+          _buildPaymentMethodExpansionTile(
+            icon: Icons.credit_card,
+            title: l10n.widgetSettingsStripePayment,
+            subtitle: l10n.widgetSettingsCardPayment,
+            enabled: _stripeEnabled,
+            onToggle: (val) => setState(() => _stripeEnabled = val),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
+                // Require Approval switch - Only applies to Stripe
+                // Bank transfer and Pay on Arrival always require approval
+                Builder(
+                  builder: (context) {
+                    final l10nInner = AppLocalizations.of(context);
+                    return _buildCompactSwitchCard(
+                      icon: Icons.approval,
+                      label: l10nInner.widgetSettingsRequireApproval,
+                      subtitle: l10nInner.widgetSettingsStripeApprovalNote,
+                      value: _requireApproval,
+                      onChanged: (val) =>
+                          setState(() => _requireApproval = val),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Bank Transfer - Collapsible with lazy validation
+          _buildPaymentMethodExpansionTile(
+            icon: Icons.account_balance,
+            title: l10n.widgetSettingsBankTransfer,
+            subtitle: l10n.widgetSettingsBankPayment,
+            enabled: _bankTransferEnabled,
+            onToggle: _handleBankTransferToggle,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
+
+                // Bank details from profile (read-only display)
+                _buildBankDetailsFromProfile(),
+
+                const SizedBox(height: 12),
+
+                // Payment deadline dropdown
+                BbDropdown<int>(
+                  value: _bankPaymentDeadlineDays,
+                  label: l10n.widgetSettingsPaymentDeadline,
+                  size: BbInputSize.lg,
+                  items: [
+                    BbDropdownItem(
+                      value: 1,
+                      label: '1 ${l10n.widgetSettingsDay}',
+                    ),
+                    BbDropdownItem(
+                      value: 3,
+                      label: '3 ${l10n.widgetSettingsDays}',
+                    ),
+                    BbDropdownItem(
+                      value: 5,
+                      label: '5 ${l10n.widgetSettingsDays}',
+                    ),
+                    BbDropdownItem(
+                      value: 7,
+                      label: '7 ${l10n.widgetSettingsDays}',
+                    ),
+                    BbDropdownItem(
+                      value: 14,
+                      label: '14 ${l10n.widgetSettingsDays}',
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _bankPaymentDeadlineDays = value);
+                    }
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // Custom notes switch
+                Builder(
+                  builder: (context) {
+                    final l10nInner = AppLocalizations.of(context);
+                    return _buildCompactSwitchCard(
+                      icon: Icons.edit_note,
+                      label: l10nInner.widgetSettingsCustomNote,
+                      subtitle: l10nInner.widgetSettingsAddMessage,
+                      value: _bankUseCustomNotes,
+                      onChanged: (val) =>
+                          setState(() => _bankUseCustomNotes = val),
+                    );
+                  },
+                ),
+
+                // Custom notes text field (conditional)
+                if (_bankUseCustomNotes) ...[
+                  const SizedBox(height: 12),
+                  BbInput(
+                    controller: _bankCustomNotesController,
+                    label: l10n.widgetSettingsNoteMaxChars,
+                    helper: l10n.widgetSettingsNoteHelper,
+                    maxLines: 3,
+                    charLimit: 500,
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // Pay on Arrival toggle REMOVED - simplified logic:
+          // - bookingPending mode: No payment, manual approval (inherently "pay on arrival")
+          // - bookingInstant mode: Payment required (Stripe or Bank Transfer)
+          // See: atomicBooking.ts validation for server-side enforcement
+        ],
       ),
     );
   }
@@ -1214,39 +1145,29 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
     required String subtitle,
     required bool value,
     required ValueChanged<bool>? onChanged,
-    bool isWarning = false,
   }) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: value && !isWarning
-            ? Theme.of(
-                context,
-              ).colorScheme.primaryContainer.withValues(alpha: 0.3)
-            : isWarning
-            ? const Color(0xFFF3E8F5) // Cool lavender warning background
-            : Theme.of(
-                context,
-              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: value
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: value && !isWarning
-              ? Theme.of(context).colorScheme.primary
-              : isWarning
-              ? const Color(0xFF9C7BA8) // Cool purple warning border
-              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-          width: value || isWarning ? 2 : 1,
+          color: value
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outline.withValues(alpha: 0.3),
+          width: value ? 2 : 1,
         ),
       ),
       child: Row(
         children: [
           Icon(
             icon,
-            color: value && !isWarning
-                ? Theme.of(context).colorScheme.primary
-                : isWarning
-                ? const Color(0xFF7B5A8C) // Cool purple warning icon
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+            color: value
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
             size: 20,
           ),
           const SizedBox(width: 12),
@@ -1259,11 +1180,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                   style: TextStyle(
                     fontWeight: value ? FontWeight.w600 : FontWeight.normal,
                     fontSize: 14,
-                    color: value && !isWarning
-                        ? Theme.of(context).colorScheme.onSurface
-                        : isWarning
-                        ? const Color(0xFF7B5A8C) // Cool purple warning text
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: value
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1271,13 +1190,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isWarning
-                        ? const Color(
-                            0xFF9C7BA8,
-                          ) // Cool purple warning subtitle
-                        : Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.7,
+                    ),
                   ),
                 ),
               ],
@@ -1290,236 +1205,161 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
   }
 
   Widget _buildBookingBehaviorSection() {
-    final theme = Theme.of(context);
-    final sectionPadding = context.horizontalPadding;
     final l10n = AppLocalizations.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
-          ),
-          padding: EdgeInsets.all(sectionPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with icon and title
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.settings,
-                      color: theme.colorScheme.primary,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.widgetSettingsBookingBehavior,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          height: 2,
-                          width: 40,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            borderRadius: BorderRadius.circular(1),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Booking Behavior: Cancellation switch + deadline slider
-              // Note: Require Approval is now in Stripe section (only applies to Stripe)
-              // Bank transfer and Pay on Arrival always require approval
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final isDesktop = constraints.maxWidth >= 600;
-                  final l10nInner = AppLocalizations.of(context);
+    return WidgetSettingsSection(
+      icon: 'tune',
+      title: l10n.widgetSettingsBookingBehavior,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Booking Behavior: Cancellation switch + deadline slider
+          // Note: Require Approval is now in Stripe section (only applies to Stripe)
+          // Bank transfer and Pay on Arrival always require approval
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth >= 600;
+              final l10nInner = AppLocalizations.of(context);
 
-                  // Build cancellation switch card
-                  final cancellationCard = _buildBehaviorSwitchCard(
-                    icon: Icons.event_busy,
-                    label: l10nInner.widgetSettingsAllowCancellation,
-                    subtitle: l10nInner.widgetSettingsGuestsCanCancel,
-                    value: _allowCancellation,
-                    onChanged: (val) =>
-                        setState(() => _allowCancellation = val),
-                  );
+              // Build cancellation switch card
+              final cancellationCard = _buildBehaviorSwitchCard(
+                icon: Icons.event_busy,
+                label: l10nInner.widgetSettingsAllowCancellation,
+                subtitle: l10nInner.widgetSettingsGuestsCanCancel,
+                value: _allowCancellation,
+                onChanged: (val) => setState(() => _allowCancellation = val),
+              );
 
-                  // Build cancellation deadline card (only shown when cancellation is enabled)
-                  final deadlineCard = Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _allowCancellation
-                          ? Theme.of(context).colorScheme.primaryContainer
-                                .withValues(alpha: 0.3)
-                          : Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest
-                                .withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _allowCancellation
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                                context,
-                              ).colorScheme.outline.withValues(alpha: 0.3),
-                        width: _allowCancellation ? 2 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              // Build cancellation deadline card (only shown when cancellation is enabled)
+              final deadlineCard = Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: _allowCancellation
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                      : Theme.of(context).colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _allowCancellation
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(
+                            context,
+                          ).colorScheme.outline.withValues(alpha: 0.3),
+                    width: _allowCancellation ? 2 : 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.schedule,
-                              size: 20,
+                        Icon(
+                          Icons.schedule,
+                          size: 20,
+                          color: _allowCancellation
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: AutoSizeText(
+                            l10nInner.widgetSettingsCancellationDeadline(
+                              _cancellationHours,
+                            ),
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
                               color: _allowCancellation
-                                  ? Theme.of(context).colorScheme.primary
+                                  ? Theme.of(context).colorScheme.onSurface
                                   : Theme.of(
                                       context,
                                     ).colorScheme.onSurfaceVariant,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: AutoSizeText(
-                                l10nInner.widgetSettingsCancellationDeadline(
-                                  _cancellationHours,
-                                ),
-                                maxLines: 1,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: _allowCancellation
-                                      ? Theme.of(context).colorScheme.onSurface
-                                      : Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: _allowCancellation
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurfaceVariant
-                                      .withValues(alpha: 0.3),
-                            inactiveTrackColor: Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.2),
-                            thumbColor: _allowCancellation
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                            overlayColor: Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.12),
-                            valueIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
-                            valueIndicatorTextStyle: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          child: Slider(
-                            value: _cancellationHours.toDouble(),
-                            max: 360, // 15 days
-                            divisions: 60,
-                            label: '$_cancellationHours h',
-                            onChanged: _allowCancellation
-                                ? (value) {
-                                    setState(
-                                      () => _cancellationHours = value.round(),
-                                    );
-                                  }
-                                : null,
                           ),
                         ),
                       ],
                     ),
-                  );
-
-                  // Build advance booking card
-                  final advanceBookingCard = _buildAdvanceBookingCard(
-                    l10nInner,
-                  );
-
-                  // Desktop: cancellation switch left, deadline slider right
-                  if (isDesktop) {
-                    return Column(
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: cancellationCard),
-                            const SizedBox(width: 12),
-                            Expanded(child: deadlineCard),
-                          ],
+                    const SizedBox(height: 4),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: _allowCancellation
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurfaceVariant
+                                  .withValues(alpha: 0.3),
+                        inactiveTrackColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2),
+                        thumbColor: _allowCancellation
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        overlayColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.12),
+                        valueIndicatorColor: Theme.of(
+                          context,
+                        ).colorScheme.primary,
+                        valueIndicatorTextStyle: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(height: 12),
-                        advanceBookingCard,
-                      ],
-                    );
-                  } else {
-                    // Mobile: Vertical layout
-                    return Column(
+                      ),
+                      child: Slider(
+                        value: _cancellationHours.toDouble(),
+                        max: 360, // 15 days
+                        divisions: 60,
+                        label: '$_cancellationHours h',
+                        onChanged: _allowCancellation
+                            ? (value) {
+                                setState(
+                                  () => _cancellationHours = value.round(),
+                                );
+                              }
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
+              // Build advance booking card
+              final advanceBookingCard = _buildAdvanceBookingCard(l10nInner);
+
+              // Desktop: cancellation switch left, deadline slider right
+              if (isDesktop) {
+                return Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        cancellationCard,
-                        const SizedBox(height: 12),
-                        deadlineCard,
-                        const SizedBox(height: 12),
-                        advanceBookingCard,
+                        Expanded(child: cancellationCard),
+                        const SizedBox(width: 12),
+                        Expanded(child: deadlineCard),
                       ],
-                    );
-                  }
-                },
-              ),
-            ],
+                    ),
+                    const SizedBox(height: 12),
+                    advanceBookingCard,
+                  ],
+                );
+              } else {
+                // Mobile: Vertical layout
+                return Column(
+                  children: [
+                    cancellationCard,
+                    const SizedBox(height: 12),
+                    deadlineCard,
+                    const SizedBox(height: 12),
+                    advanceBookingCard,
+                  ],
+                );
+              }
+            },
           ),
-        ),
+        ],
       ),
     );
   }

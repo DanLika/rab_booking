@@ -337,6 +337,8 @@ class ThemeOptions {
   final String? customTitle; // Custom title text to display above calendar
   final String? customLogoUrl;
   final String? themeMode; // 'light', 'dark', 'system' (default: 'system')
+  final String? borderRadius; // 'sharp', 'rounded', 'soft' (default: 'rounded')
+  final bool showPrices; // Show nightly prices in the calendar (default: true)
 
   const ThemeOptions({
     this.primaryColor,
@@ -345,6 +347,8 @@ class ThemeOptions {
     this.customTitle,
     this.customLogoUrl,
     this.themeMode = 'system',
+    this.borderRadius = 'rounded',
+    this.showPrices = true,
   });
 
   factory ThemeOptions.fromMap(Map<String, dynamic> map) {
@@ -355,6 +359,8 @@ class ThemeOptions {
       customTitle: map['custom_title'],
       customLogoUrl: map['custom_logo_url'],
       themeMode: map['theme_mode'] ?? 'system',
+      borderRadius: map['border_radius'] ?? 'rounded',
+      showPrices: map['show_prices'] ?? true,
     );
   }
 
@@ -366,6 +372,8 @@ class ThemeOptions {
       'custom_title': customTitle,
       'custom_logo_url': customLogoUrl,
       'theme_mode': themeMode,
+      'border_radius': borderRadius,
+      'show_prices': showPrices,
     };
   }
 
@@ -376,6 +384,8 @@ class ThemeOptions {
     String? customTitle,
     String? customLogoUrl,
     String? themeMode,
+    String? borderRadius,
+    bool? showPrices,
   }) {
     return ThemeOptions(
       primaryColor: primaryColor ?? this.primaryColor,
@@ -384,6 +394,8 @@ class ThemeOptions {
       customTitle: customTitle ?? this.customTitle,
       customLogoUrl: customLogoUrl ?? this.customLogoUrl,
       themeMode: themeMode ?? this.themeMode,
+      borderRadius: borderRadius ?? this.borderRadius,
+      showPrices: showPrices ?? this.showPrices,
     );
   }
 }

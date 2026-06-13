@@ -179,6 +179,10 @@ flutter:
     - assets/google_fonts/Inter-Medium.ttf
     - assets/google_fonts/Inter-SemiBold.ttf
     - assets/google_fonts/Inter-Bold.ttf
+    # JetBrains Mono (weight 500 / Medium) — bundled so BBType.mono renders
+    # monospace under GoogleFonts.config.allowRuntimeFetching=false (mirrors
+    # the Inter bundling above). Without it google_fonts throws at runtime.
+    - assets/google_fonts/JetBrainsMono-Medium.ttf
     - assets/images/
     - assets/images/platforms/
     - assets/kb/

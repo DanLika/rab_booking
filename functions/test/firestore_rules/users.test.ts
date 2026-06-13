@@ -11,6 +11,14 @@
  *   Case 2 — regular user updates own `isAdmin`         → DENY
  *   Case 3 — admin updates own non-protected field      → ALLOW (admin bypass)
  *   Case 4 — admin promotes another user (`role=admin`) → ALLOW (admin bypass)
+ *   Case 10 — new user creates own doc with role:'owner' (registration) → ALLOW
+ *   Case 11 — new user creates own doc with role:'admin'                → DENY
+ *   Case 12 — new user creates own doc with isAdmin:true                → DENY
+ *
+ * Cases 10-12 guard the registration regression: blocking `role` on CREATE
+ * (not just UPDATE) denied every first profile write, orphaning the Auth user
+ * and breaking login. Create now permits role:'owner' only — 'admin'/isAdmin
+ * self-claim at create stays refused.
  *
  * Out of scope: identical guard on `users/{userId}/data/{document}` subcollection
  * (lines 81-94 in firestore.rules) — covered by spec but not by this smoke.
@@ -34,6 +42,8 @@ let testEnv: RulesTestEnvironment;
 const REGULAR_UID = "regular-user-uid-001";
 const ADMIN_UID = "admin-firestore-uid-002";
 const TARGET_UID = "target-user-uid-003";
+// Not seeded in beforeEach — exercises the first-create (registration) path.
+const NEW_REG_UID = "new-registrant-uid-004";
 
 beforeAll(async () => {
   testEnv = await initializeTestEnvironment({
@@ -144,6 +154,56 @@ describe("users rule — role-escalation blocklist (audit/38)", () => {
     const ctx = testEnv.authenticatedContext(REGULAR_UID);
     await assertFails(
       ctx.firestore().doc(`users/${REGULAR_UID}`).update({ stripe_connected_at: new Date() }),
+    );
+  });
+
+  // Registration regression guard (createUserWithEmailAndPassword +
+  // _createUserProfile both write the profile doc with role:'owner' on first
+  // create). Blocking `role` on CREATE denied this write → orphaned Auth user
+  // → "access denied" on next login.
+  test("Case 10 — new user creating own doc with role:'owner' (registration) → ALLOW", async () => {
+    const ctx = testEnv.authenticatedContext(NEW_REG_UID);
+    await assertSucceeds(
+      ctx.firestore().doc(`users/${NEW_REG_UID}`).set({
+        id: NEW_REG_UID,
+        email: "new@example.com",
+        first_name: "New",
+        last_name: "Owner",
+        role: "owner",
+        accountType: "trial",
+        emailVerified: false,
+        displayName: "New Owner",
+        onboardingCompleted: false,
+        profileCompleted: false,
+        newsletterOptIn: false,
+      }),
+    );
+  });
+
+  test("Case 11 — new user creating own doc with role:'admin' → DENY", async () => {
+    const ctx = testEnv.authenticatedContext(NEW_REG_UID);
+    await assertFails(
+      ctx.firestore().doc(`users/${NEW_REG_UID}`).set({
+        id: NEW_REG_UID,
+        email: "evil@example.com",
+        first_name: "E",
+        last_name: "Vil",
+        role: "admin",
+      }),
+    );
+  });
+
+  test("Case 12 — new user creating own doc with isAdmin:true → DENY", async () => {
+    const ctx = testEnv.authenticatedContext(NEW_REG_UID);
+    await assertFails(
+      ctx.firestore().doc(`users/${NEW_REG_UID}`).set({
+        id: NEW_REG_UID,
+        email: "evil2@example.com",
+        first_name: "E",
+        last_name: "Vil",
+        role: "owner",
+        isAdmin: true,
+      }),
     );
   });
 });

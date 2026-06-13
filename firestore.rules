@@ -102,19 +102,32 @@ service cloud.firestore {
       // Protected fields: subscription status, trial dates, account type, lifetime license,
       // and admin-elevation fields (`role`, `isAdmin`). `role` was the escalation vector that
       // turned `isAdminFromFirestore()` into a self-claimable admin gate.
-      allow create: if (isOwner(userId) && !request.resource.data.keys().hasAny([
-          'accountStatus', 'trialStartDate', 'trialExpiresAt',
-          'statusChangedAt', 'statusChangedBy',
-          'account_type', 'admin_override_account_type',
-          'lifetime_license_granted_at', 'lifetime_license_granted_by',
-          'role', 'isAdmin',
-          // SF-vibe57 H-01: Stripe linkage fields are server-managed (Admin SDK
-          // writes in stripeConnect/stripePayment/stripeSubscription). Allowing
-          // client writes lets user squat victim's stripeSubscriptionId →
-          // customer.subscription.deleted webhook downgrades wrong UID.
-          'stripe_account_id', 'stripe_customer_id', 'stripe_connected_at',
-          'stripeSubscriptionId', 'stripeCustomerId'
-        ])) || isAdmin() || isAdminFromFirestore();
+      // NOTE: `role` is intentionally NOT in this create blocklist (unlike the
+      // `update` rule below, which still blocks it outright). Registration AND
+      // social sign-in both write the profile doc with `role: 'owner'` on first
+      // create; blocking `role` here (regression from PR #514 anti-escalation
+      // hardening) denied EVERY first profile write → the Auth user was created
+      // but users/{uid} never landed → login later failed in _loadUserProfile
+      // ("access denied"). Instead the create-time role VALUE is pinned to the
+      // non-privileged 'owner' (guard below): 'admin' is still refused, so a
+      // fresh user can't self-trip isAdminFromFirestore() at create time. Any
+      // later role change is still fully blocked by the update rule.
+      allow create: if (isOwner(userId)
+          && !request.resource.data.keys().hasAny([
+            'accountStatus', 'trialStartDate', 'trialExpiresAt',
+            'statusChangedAt', 'statusChangedBy',
+            'account_type', 'admin_override_account_type',
+            'lifetime_license_granted_at', 'lifetime_license_granted_by',
+            'isAdmin',
+            // SF-vibe57 H-01: Stripe linkage fields are server-managed (Admin SDK
+            // writes in stripeConnect/stripePayment/stripeSubscription). Allowing
+            // client writes lets user squat victim's stripeSubscriptionId →
+            // customer.subscription.deleted webhook downgrades wrong UID.
+            'stripe_account_id', 'stripe_customer_id', 'stripe_connected_at',
+            'stripeSubscriptionId', 'stripeCustomerId'
+          ])
+          && (!('role' in request.resource.data) || request.resource.data.role == 'owner')
+        ) || isAdmin() || isAdminFromFirestore();
       allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',

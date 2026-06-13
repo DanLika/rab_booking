@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../../l10n/app_localizations.dart';
@@ -9,6 +8,7 @@ import '../../../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../../../core/exceptions/app_exceptions.dart';
 import '../../../../../../core/utils/error_display_utils.dart';
 import '../../../../../../shared/models/unit_model.dart';
+import '../../../../../../shared/widgets/common_app_bar.dart';
 import '../../../../../../shared/providers/repository_providers.dart';
 import '../../providers/owner_properties_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
@@ -399,17 +399,18 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
           // shellBg-flat top strip so step progress reads above content, not
           // below another hero. Title style now resolves through
           // `AppBarTheme` (matches `CommonAppBar`).
-          appBar: AppBar(
-            toolbarHeight: 56.0,
-            title: AutoSizeText(
-              widget.unitId == null
-                  ? l10n.unitWizardCreateTitle
-                  : l10n.unitWizardEditTitle,
-              maxLines: 1,
-              minFontSize: 14,
-              style: theme.appBarTheme.titleTextStyle,
-            ),
-            centerTitle: false,
+          appBar: CommonAppBar(
+            title: widget.unitId == null
+                ? l10n.unitWizardCreateTitle
+                : l10n.unitWizardEditTitle,
+            leadingIcon: Icons.arrow_back,
+            onLeadingIconTap: (context) {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/owner/properties');
+              }
+            },
           ),
           body: SafeArea(
             child: LayoutBuilder(

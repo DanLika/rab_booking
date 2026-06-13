@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../../../l10n/app_localizations.dart';
+import '../../../../../../core/design/tokens.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 
 /// Wizard Progress Bar - shows current step and completion status
@@ -65,7 +66,10 @@ class WizardProgressBar extends StatelessWidget {
     AppLocalizations l10n,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: BBSpace.md,
+        vertical: BBSpace.xs,
+      ),
       decoration: BoxDecoration(
         gradient: context.gradients.pageBackground,
         // Border removed for seamless gradient flow with content below
@@ -92,7 +96,7 @@ class WizardProgressBar extends StatelessWidget {
     final completedCount = completedSteps.values.where((v) => v).length;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: BBSpace.sm, vertical: 6),
       decoration: BoxDecoration(
         gradient: context.gradients.pageBackground,
         // Border removed for seamless gradient flow with content below
@@ -186,7 +190,10 @@ class WizardProgressBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: backgroundColor,
               shape: BoxShape.circle,
-              border: Border.all(color: borderColor, width: 2),
+              border: Border.all(
+                color: borderColor,
+                width: BBBorderWidth.thick,
+              ),
             ),
             child: Center(
               child: isCompleted
@@ -235,8 +242,8 @@ class WizardProgressBar extends StatelessWidget {
     final isCompleted = completedSteps[step] == true;
 
     return Container(
-      height: 2,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
+      height: BBBorderWidth.thick,
+      margin: const EdgeInsets.symmetric(horizontal: BBSpace.xs),
       color: isCompleted
           ? _completedColor // Green for completed
           : theme.colorScheme.outline.withValues(alpha: 0.3),

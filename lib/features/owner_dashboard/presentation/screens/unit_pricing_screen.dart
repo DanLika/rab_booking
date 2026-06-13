@@ -142,11 +142,16 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
                     }
                   },
                 ),
-                body: _buildMainContent(
-                  isMobile: isMobile,
-                  units: units,
-                  showUnitSelector: true,
-                  l10n: l10n,
+                body: Container(
+                  decoration: BoxDecoration(
+                    gradient: context.gradients.pageBackground,
+                  ),
+                  child: _buildMainContent(
+                    isMobile: isMobile,
+                    units: units,
+                    showUnitSelector: true,
+                    l10n: l10n,
+                  ),
                 ),
               ),
             ),
@@ -193,11 +198,16 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
               }
             },
           ),
-          body: _buildMainContent(
-            isMobile: isMobile,
-            units: null,
-            showUnitSelector: false,
-            l10n: l10n,
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: context.gradients.pageBackground,
+            ),
+            child: _buildMainContent(
+              isMobile: isMobile,
+              units: null,
+              showUnitSelector: false,
+              l10n: l10n,
+            ),
           ),
         ),
       ),
@@ -345,44 +355,47 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
           }
         },
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.spaceL),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.colorScheme.primary.withAlpha(
-                    (0.1 * 255).toInt(),
+      body: Container(
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.spaceL),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.1 * 255).toInt(),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.meeting_room_outlined,
+                    size: 70,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
-                child: Icon(
-                  Icons.meeting_room_outlined,
-                  size: 70,
-                  color: theme.colorScheme.primary,
+                const SizedBox(height: AppDimensions.spaceL),
+                Text(
+                  l10n.unitPricingNoUnits,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppDimensions.spaceL),
-              Text(
-                l10n.unitPricingNoUnits,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
+                const SizedBox(height: AppDimensions.spaceS),
+                Text(
+                  l10n.unitPricingNoUnitsDesc,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: context.textColorSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
                 ),
-              ),
-              const SizedBox(height: AppDimensions.spaceS),
-              Text(
-                l10n.unitPricingNoUnitsDesc,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: context.textColorSecondary,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -404,7 +417,10 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
           }
         },
       ),
-      body: UniversalLoader.forSection(),
+      body: Container(
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: UniversalLoader.forSection(),
+      ),
     );
   }
 
@@ -425,33 +441,36 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
           }
         },
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.spaceL),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: theme.colorScheme.error,
-              ),
-              const SizedBox(height: AppDimensions.spaceM),
-              Text(
-                l10n.unitPricingLoadError,
-                style: theme.textTheme.titleLarge?.copyWith(
+      body: Container(
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.spaceL),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
                   color: theme.colorScheme.error,
                 ),
-              ),
-              const SizedBox(height: AppDimensions.spaceXS),
-              Text(
-                error.toString(),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: context.textColorSecondary,
+                const SizedBox(height: AppDimensions.spaceM),
+                Text(
+                  l10n.unitPricingLoadError,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+                const SizedBox(height: AppDimensions.spaceXS),
+                Text(
+                  error.toString(),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: context.textColorSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -7,6 +7,17 @@
 // callables so the UI gets a clear success/error contract and the rules
 // surface can deny client status writes in a follow-up.
 //
+// SF-078/079 trial-gate scope: these handlers use `requireAuth` only, NOT
+// `requireActiveOwner`. Status transitions manage already-created bookings
+// (off-ramp + revenue confirm), not the new-booking funnel. The L2 gate
+// (`requireActiveUnitOwner` in `availability.ts` / `atomicBooking.ts` /
+// `stripePayment.ts`) blocks new booking CREATION on a trial-expired
+// property — pending inflow dries up after expiry. A trial-expired owner
+// CAN still approve / reject / cancel / complete a booking that landed
+// before expiry (intentional — they need to off-ramp the guest). If this
+// policy changes, gate `approveBooking` first (it's the only path that
+// confirms NEW revenue: pending → confirmed → charge).
+//
 // `cancelBooking` additionally handles the Stripe refund leg via the shared
 // `processStripeRefund` helper so guest + owner cancellation paths cannot
 // drift on refund behaviour.

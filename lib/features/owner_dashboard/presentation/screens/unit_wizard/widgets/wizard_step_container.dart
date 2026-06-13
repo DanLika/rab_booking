@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../../core/design/tokens.dart';
+
 /// Wizard Step Container - wraps each step content with consistent styling
-/// Provides title, subtitle, and scrollable content area
+/// Provides title, subtitle, and scrollable content area.
+///
+/// Premium pass (Wave 4): title/subtitle → [BBType], spacing → [BBSpace].
 class WizardStepContainer extends StatelessWidget {
   final String title; // Step title (e.g., "Basic Info")
   final String? subtitle; // Optional subtitle/description
@@ -18,12 +22,13 @@ class WizardStepContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = BBColor.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
     // Responsive padding
-    final contentPadding = padding ?? EdgeInsets.all(isMobile ? 16 : 24);
+    final contentPadding =
+        padding ?? EdgeInsets.all(isMobile ? BBSpace.sm : BBSpace.md);
 
     // Max content width (centered on desktop)
     final maxWidth = isMobile ? double.infinity : 800.0;
@@ -37,26 +42,20 @@ class WizardStepContainer extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Title
-              Text(
-                title,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
+              Text(title, style: BBType.h2(context)),
 
               // Subtitle (if provided)
               if (subtitle != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: BBSpace.xs),
                 Text(
                   subtitle!,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  style: BBType.bodyLg(
+                    context,
+                  ).copyWith(color: c.textSecondary),
                 ),
               ],
 
-              const SizedBox(height: 24),
+              const SizedBox(height: BBSpace.md),
 
               // Step content
               child,

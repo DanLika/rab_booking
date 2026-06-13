@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
+import '../../../../../../core/design/tokens.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../../shared/models/additional_service_model.dart';
 import '../../../../../../shared/repositories/firebase/firebase_additional_services_repository.dart';
@@ -228,7 +229,7 @@ class Step4Review extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(child: basicInfoCard),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: BBSpace.sm),
                       Expanded(child: pricingCard),
                     ],
                   ),
@@ -238,7 +239,7 @@ class Step4Review extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(child: capacityCard),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: BBSpace.sm),
                       Expanded(child: availabilityCard),
                     ],
                   ),

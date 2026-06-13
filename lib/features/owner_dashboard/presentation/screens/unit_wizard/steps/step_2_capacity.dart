@@ -6,8 +6,10 @@ import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
+import '../../../../../../core/design/tokens.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../../shared/models/additional_service_model.dart';
+import '../../../../../../shared/widgets/redesign.dart';
 import '../../../../../../shared/repositories/firebase/firebase_additional_services_repository.dart';
 import '../../../widgets/wizard/additional_service_dialog.dart';
 import '../state/unit_wizard_provider.dart';
@@ -409,7 +411,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
               gradient: context.gradients.pageBackground,
             ),
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(isMobile ? 16 : 20),
+              padding: EdgeInsets.all(isMobile ? BBSpace.sm : BBSpace.md),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 800),
@@ -419,19 +421,16 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
                       // Title
                       Text(
                         l10n.unitWizardStep2Title,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                        ),
+                        style: BBType.h2(context),
                       ),
                       const SizedBox(height: 8),
 
                       // Subtitle
                       Text(
                         l10n.unitWizardStep2Subtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                        style: BBType.body(
+                          context,
+                        ).copyWith(color: BBColor.of(context).textSecondary),
                       ),
                       const SizedBox(height: 24),
 
@@ -641,19 +640,9 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
                       const SizedBox(height: AppDimensions.spaceL),
 
                       // Info Card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiaryContainer.withValues(
-                            alpha: 0.1,
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: theme.colorScheme.tertiary.withValues(
-                              alpha: 0.3,
-                            ),
-                          ),
-                        ),
+                      BbCard(
+                        variant: BbCardVariant.accentLeft,
+                        accentTone: BbCardAccentTone.info,
                         child: Row(
                           children: [
                             Icon(
@@ -690,172 +679,141 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
     AppLocalizations l10n,
     bool isMobile,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return BbCard(
+      padding: EdgeInsets.all(isMobile ? BBSpace.sm : BBSpace.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with icon
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(BBSpace.xs),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.home_work,
+                  color: theme.colorScheme.primary,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l10n.unitWizardStep2UnitCapacity,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
+          const SizedBox(height: 8),
+          Text(
+            l10n.unitWizardStep2UnitCapacityDesc,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 20),
+
+          // Bedrooms & Bathrooms
+          ..._buildFieldPair(
+            isMobile: isMobile,
+            first: TextFormField(
+              controller: _bedroomsController,
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.unitWizardStep2Bedrooms,
+                hintText: '1',
+                prefixIcon: const Icon(Icons.bed),
+                isMobile: isMobile,
+                context: context,
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return l10n.unitWizardStep2Required;
+                }
+                final number = int.tryParse(value);
+                if (number == null || number < 0) {
+                  return l10n.unitWizardStep2InvalidNumber;
+                }
+                return null;
+              },
+            ),
+            second: TextFormField(
+              controller: _bathroomsController,
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.unitWizardStep2Bathrooms,
+                hintText: '1',
+                prefixIcon: const Icon(Icons.bathroom),
+                isMobile: isMobile,
+                context: context,
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return l10n.unitWizardStep2Required;
+                }
+                final number = int.tryParse(value);
+                if (number == null || number < 0) {
+                  return l10n.unitWizardStep2InvalidNumber;
+                }
+                return null;
+              },
             ),
           ),
-          child: Padding(
-            padding: EdgeInsets.all(isMobile ? 16 : 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with icon
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(
-                          alpha: 0.12,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.home_work,
-                        color: theme.colorScheme.primary,
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l10n.unitWizardStep2UnitCapacity,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.unitWizardStep2UnitCapacityDesc,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 20),
+          const SizedBox(height: AppDimensions.spaceM),
 
-                // Bedrooms & Bathrooms
-                ..._buildFieldPair(
-                  isMobile: isMobile,
-                  first: TextFormField(
-                    controller: _bedroomsController,
-                    decoration: InputDecorationHelper.buildDecoration(
-                      labelText: l10n.unitWizardStep2Bedrooms,
-                      hintText: '1',
-                      prefixIcon: const Icon(Icons.bed),
-                      isMobile: isMobile,
-                      context: context,
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.unitWizardStep2Required;
-                      }
-                      final number = int.tryParse(value);
-                      if (number == null || number < 0) {
-                        return l10n.unitWizardStep2InvalidNumber;
-                      }
-                      return null;
-                    },
-                  ),
-                  second: TextFormField(
-                    controller: _bathroomsController,
-                    decoration: InputDecorationHelper.buildDecoration(
-                      labelText: l10n.unitWizardStep2Bathrooms,
-                      hintText: '1',
-                      prefixIcon: const Icon(Icons.bathroom),
-                      isMobile: isMobile,
-                      context: context,
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.unitWizardStep2Required;
-                      }
-                      final number = int.tryParse(value);
-                      if (number == null || number < 0) {
-                        return l10n.unitWizardStep2InvalidNumber;
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.spaceM),
-
-                // Max Guests & Area
-                ..._buildFieldPair(
-                  isMobile: isMobile,
-                  first: TextFormField(
-                    controller: _maxGuestsController,
-                    decoration: InputDecorationHelper.buildDecoration(
-                      labelText: l10n.unitWizardStep2MaxGuests,
-                      hintText: '2',
-                      prefixIcon: const Icon(Icons.people),
-                      isMobile: isMobile,
-                      context: context,
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.unitWizardStep2Required;
-                      }
-                      final number = int.tryParse(value);
-                      if (number == null || number < 1) {
-                        return l10n.unitWizardStep2MinGuest;
-                      }
-                      return null;
-                    },
-                  ),
-                  second: TextFormField(
-                    controller: _areaSqmController,
-                    decoration: InputDecorationHelper.buildDecoration(
-                      labelText: l10n.unitWizardStep2Area,
-                      hintText: '50',
-                      prefixIcon: const Icon(Icons.square_foot),
-                      isMobile: isMobile,
-                      context: context,
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d+\.?\d{0,2}'),
-                      ),
-                    ],
-                  ),
-                ),
+          // Max Guests & Area
+          ..._buildFieldPair(
+            isMobile: isMobile,
+            first: TextFormField(
+              controller: _maxGuestsController,
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.unitWizardStep2MaxGuests,
+                hintText: '2',
+                prefixIcon: const Icon(Icons.people),
+                isMobile: isMobile,
+                context: context,
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return l10n.unitWizardStep2Required;
+                }
+                final number = int.tryParse(value);
+                if (number == null || number < 1) {
+                  return l10n.unitWizardStep2MinGuest;
+                }
+                return null;
+              },
+            ),
+            second: TextFormField(
+              controller: _areaSqmController,
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.unitWizardStep2Area,
+                hintText: '50',
+                prefixIcon: const Icon(Icons.square_foot),
+                isMobile: isMobile,
+                context: context,
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -890,67 +848,40 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
     required List<Widget> children,
     bool initiallyExpanded = false,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return BbCard(
+      padded: false,
+      child: Theme(
+        // Remove default divider lines from ExpansionTile
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          shape: const RoundedRectangleBorder(),
+          collapsedShape: const RoundedRectangleBorder(),
+          leading: Container(
+            padding: const EdgeInsets.all(BBSpace.xs),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: theme.colorScheme.primary, size: 18),
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
+          title: Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
             ),
           ),
-          child: Theme(
-            // Remove default divider lines from ExpansionTile
-            data: theme.copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              initiallyExpanded: initiallyExpanded,
-              tilePadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 4,
-              ),
-              childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              shape: const RoundedRectangleBorder(),
-              collapsedShape: const RoundedRectangleBorder(),
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: theme.colorScheme.primary, size: 18),
-              ),
-              title: Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: Text(
-                subtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              children: children,
+          subtitle: Text(
+            subtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
+          children: children,
         ),
       ),
     );

@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../../../l10n/app_localizations.dart';
+import '../../../../../../core/design/tokens.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../../core/utils/responsive_spacing_helper.dart';
+import '../../../../../../shared/widgets/redesign.dart';
 
 /// Wizard Navigation Buttons - Back, Skip, Next/Continue
-/// Provides consistent navigation controls across all wizard steps
+/// Provides consistent navigation controls across all wizard steps.
+///
+/// Premium pass (Wave 4): raw Material buttons → [BbButton] (handoff wizard.jsx
+/// footer — secondary "Natrag", tertiary "Odustani", primary "Dalje" /
+/// "Objavi jedinicu"). Logic (callbacks, enabled/loading gating, keys) unchanged.
 class WizardNavigationButtons extends StatelessWidget {
   final VoidCallback? onBack;
   final VoidCallback? onNext;
@@ -31,16 +37,27 @@ class WizardNavigationButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final screenType = ResponsiveSpacingHelper.getScreenType(context);
     final isVerySmall = ResponsiveSpacingHelper.isVerySmallScreen(context);
     final isLandscape = screenType == ScreenType.landscapeMobile;
     final isMobile = screenType == ScreenType.portraitMobile || isLandscape;
 
-    // Use responsive bottom bar padding
+    // Collapse the back button to an icon-only control on the tightest layouts.
+    final iconOnlyBack = isVerySmall || isLandscape;
+    final buttonSize = isMobile ? BbButtonSize.sm : BbButtonSize.md;
+
+    // Use responsive bottom bar padding.
     final bottomBarPadding = ResponsiveSpacingHelper.getBottomBarPadding(
       context,
     );
+
+    // Publish (final step) gets the rocket affordance; otherwise forward arrow.
+    // Shorter primary label on the tightest screens (kept from prior behaviour).
+    final isPublish = nextLabel == l10n.unitWizardPublish;
+    final nextButtonLabel =
+        (isVerySmall && nextLabel == l10n.unitWizardContinueToReview)
+        ? l10n.unitWizardProgressReview
+        : nextLabel;
 
     return Container(
       padding: bottomBarPadding,
@@ -52,32 +69,16 @@ class WizardNavigationButtons extends StatelessWidget {
         children: [
           // Back button - icon only on very small screens or landscape
           if (showBack)
-            isVerySmall || isLandscape
-                ? IconButton(
-                    onPressed: onBack,
-                    icon: const Icon(Icons.arrow_back, size: 20),
-                    style: IconButton.styleFrom(
-                      side: BorderSide(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    tooltip: l10n.unitWizardBack,
-                  )
-                : OutlinedButton.icon(
-                    key: const ValueKey('wizard_back'),
-                    onPressed: onBack,
-                    icon: const Icon(Icons.arrow_back, size: 18),
-                    label: Text(l10n.unitWizardBack),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 16 : 24,
-                        vertical: isMobile ? 12 : 14,
-                      ),
-                      side: BorderSide(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                      ),
-                    ),
-                  )
+            BbButton(
+              key: const ValueKey('wizard_back'),
+              label: iconOnlyBack ? null : l10n.unitWizardBack,
+              iconLeft: 'arrow_back',
+              variant: BbButtonVariant.secondary,
+              size: buttonSize,
+              asIcon: iconOnlyBack,
+              semanticLabel: l10n.unitWizardBack,
+              onPressed: onBack,
+            )
           else
             const SizedBox.shrink(),
 
@@ -85,82 +86,26 @@ class WizardNavigationButtons extends StatelessWidget {
 
           // Skip button (only on optional steps)
           if (showSkip) ...[
-            TextButton(
+            BbButton(
+              label: l10n.unitWizardSkip,
+              variant: BbButtonVariant.tertiary,
+              size: buttonSize,
               onPressed: onSkip,
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isVerySmall ? 8 : (isMobile ? 12 : 16),
-                ),
-              ),
-              child: Text(
-                l10n.unitWizardSkip,
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-              ),
             ),
-            SizedBox(width: isVerySmall ? 4 : (isMobile ? 8 : 12)),
+            SizedBox(width: isVerySmall ? BBSpace.xxs : BBSpace.xs),
           ],
 
-          // Next/Continue button - shorter label on very small screens or landscape
-          isVerySmall && nextLabel == l10n.unitWizardContinueToReview
-              ? FilledButton.icon(
-                  key: const ValueKey('wizard_next'),
-                  onPressed: nextEnabled && !isLoading ? onNext : null,
-                  icon: isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
-                          ),
-                        )
-                      : const Icon(Icons.arrow_forward, size: 18),
-                  label: Text(l10n.unitWizardProgressReview),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor:
-                        theme.colorScheme.surfaceContainerHighest,
-                    disabledForegroundColor: theme.colorScheme.onSurface
-                        .withValues(alpha: 0.38),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: isLandscape ? 8 : 12,
-                    ),
-                  ),
-                )
-              : FilledButton.icon(
-                  key: const ValueKey('wizard_next'),
-                  onPressed: nextEnabled && !isLoading ? onNext : null,
-                  icon: isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
-                          ),
-                        )
-                      : Icon(
-                          nextLabel == l10n.unitWizardPublish
-                              ? Icons.publish
-                              : Icons.arrow_forward,
-                          size: 18,
-                        ),
-                  label: Text(nextLabel),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor:
-                        theme.colorScheme.surfaceContainerHighest,
-                    disabledForegroundColor: theme.colorScheme.onSurface
-                        .withValues(alpha: 0.38),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isVerySmall ? 16 : (isMobile ? 20 : 32),
-                      vertical: isLandscape ? 8 : (isMobile ? 12 : 14),
-                    ),
-                  ),
-                ),
+          // Next/Continue/Publish button.
+          BbButton(
+            key: const ValueKey('wizard_next'),
+            label: nextButtonLabel,
+            iconLeft: isPublish ? 'rocket_launch' : null,
+            iconRight: isPublish ? null : 'arrow_forward',
+            // variant defaults to BbButtonVariant.primary (the publish/next CTA)
+            size: buttonSize,
+            loading: isLoading,
+            onPressed: nextEnabled ? onNext : null,
+          ),
         ],
       ),
     );

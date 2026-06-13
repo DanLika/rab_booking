@@ -12,7 +12,6 @@ import '../../../../core/utils/async_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/slug_utils.dart';
-import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -325,87 +324,81 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                       final isVerySmall =
                                           constraints.maxWidth < 500;
 
+                                      // Single source for both layouts —
+                                      // fields swapped onto BbInput (native
+                                      // validator + trailingAction slots).
+                                      final nameField = BbInput(
+                                        key: const ValueKey(
+                                          'property_form_name',
+                                        ),
+                                        controller: _nameController,
+                                        label: l10n.propertyFormPropertyName,
+                                        placeholder:
+                                            l10n.propertyFormPropertyNameHint,
+                                        size: BbInputSize.lg,
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return l10n
+                                                .propertyFormPropertyNameRequired;
+                                          }
+                                          return null;
+                                        },
+                                        onChanged: (value) {
+                                          _autoGenerateSlug();
+                                          _autoGenerateSubdomain();
+                                        },
+                                      );
+                                      final slugField = BbInput(
+                                        key: const ValueKey(
+                                          'property_form_slug',
+                                        ),
+                                        controller: _slugController,
+                                        label: l10n.propertyFormUrlSlug,
+                                        placeholder:
+                                            l10n.propertyFormUrlSlugHint,
+                                        helper: l10n.propertyFormUrlSlugHelper,
+                                        size: BbInputSize.lg,
+                                        trailingAction: IconButton(
+                                          icon: const Icon(Icons.refresh),
+                                          tooltip:
+                                              l10n.propertyFormRegenerateSlug,
+                                          onPressed: () {
+                                            setState(() {
+                                              _isManualSlugEdit = false;
+                                              _autoGenerateSlug();
+                                            });
+                                          },
+                                        ),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return l10n
+                                                .propertyFormSlugRequired;
+                                          }
+                                          if (!isValidSlug(value)) {
+                                            return l10n.propertyFormSlugInvalid;
+                                          }
+                                          return null;
+                                        },
+                                        onChanged: (value) {
+                                          if (value.isNotEmpty) {
+                                            setState(
+                                              () => _isManualSlugEdit = true,
+                                            );
+                                          }
+                                        },
+                                      );
+
                                       if (isVerySmall) {
                                         // Column layout for small screens
                                         return Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.stretch,
                                           children: [
-                                            // Property Name
-                                            TextFormField(
-                                              controller: _nameController,
-                                              decoration:
-                                                  InputDecorationHelper.buildDecoration(
-                                                    labelText: l10n
-                                                        .propertyFormPropertyName,
-                                                    hintText: l10n
-                                                        .propertyFormPropertyNameHint,
-                                                    isMobile: isMobile,
-                                                    context: context,
-                                                  ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormPropertyNameRequired;
-                                                }
-                                                return null;
-                                              },
-                                              onChanged: (value) {
-                                                _autoGenerateSlug();
-                                                _autoGenerateSubdomain();
-                                              },
-                                            ),
+                                            nameField,
                                             const SizedBox(
                                               height: AppDimensions.spaceM,
                                             ),
-                                            // URL Slug
-                                            TextFormField(
-                                              controller: _slugController,
-                                              decoration: InputDecorationHelper.buildDecoration(
-                                                labelText:
-                                                    l10n.propertyFormUrlSlug,
-                                                hintText: l10n
-                                                    .propertyFormUrlSlugHint,
-                                                helperText: l10n
-                                                    .propertyFormUrlSlugHelper,
-                                                isMobile: isMobile,
-                                                suffixIcon: IconButton(
-                                                  icon: const Icon(
-                                                    Icons.refresh,
-                                                  ),
-                                                  tooltip: l10n
-                                                      .propertyFormRegenerateSlug,
-                                                  onPressed: () {
-                                                    setState(() {
-                                                      _isManualSlugEdit = false;
-                                                      _autoGenerateSlug();
-                                                    });
-                                                  },
-                                                ),
-                                                context: context,
-                                              ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormSlugRequired;
-                                                }
-                                                if (!isValidSlug(value)) {
-                                                  return l10n
-                                                      .propertyFormSlugInvalid;
-                                                }
-                                                return null;
-                                              },
-                                              onChanged: (value) {
-                                                if (value.isNotEmpty) {
-                                                  setState(
-                                                    () => _isManualSlugEdit =
-                                                        true,
-                                                  );
-                                                }
-                                              },
-                                            ),
+                                            slugField,
                                           ],
                                         );
                                       }
@@ -415,83 +408,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          // Property Name
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller: _nameController,
-                                              decoration:
-                                                  InputDecorationHelper.buildDecoration(
-                                                    labelText: l10n
-                                                        .propertyFormPropertyName,
-                                                    hintText: l10n
-                                                        .propertyFormPropertyNameHint,
-                                                    isMobile: isMobile,
-                                                    context: context,
-                                                  ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormPropertyNameRequired;
-                                                }
-                                                return null;
-                                              },
-                                              onChanged: (value) {
-                                                _autoGenerateSlug();
-                                                _autoGenerateSubdomain();
-                                              },
-                                            ),
-                                          ),
+                                          Expanded(child: nameField),
                                           const SizedBox(width: 16),
-                                          // URL Slug
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller: _slugController,
-                                              decoration: InputDecorationHelper.buildDecoration(
-                                                labelText:
-                                                    l10n.propertyFormUrlSlug,
-                                                hintText: l10n
-                                                    .propertyFormUrlSlugHint,
-                                                helperText: l10n
-                                                    .propertyFormUrlSlugHelper,
-                                                isMobile: isMobile,
-                                                suffixIcon: IconButton(
-                                                  icon: const Icon(
-                                                    Icons.refresh,
-                                                  ),
-                                                  tooltip: l10n
-                                                      .propertyFormRegenerateSlug,
-                                                  onPressed: () {
-                                                    setState(() {
-                                                      _isManualSlugEdit = false;
-                                                      _autoGenerateSlug();
-                                                    });
-                                                  },
-                                                ),
-                                                context: context,
-                                              ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormSlugRequired;
-                                                }
-                                                if (!isValidSlug(value)) {
-                                                  return l10n
-                                                      .propertyFormSlugInvalid;
-                                                }
-                                                return null;
-                                              },
-                                              onChanged: (value) {
-                                                if (value.isNotEmpty) {
-                                                  setState(
-                                                    () => _isManualSlugEdit =
-                                                        true,
-                                                  );
-                                                }
-                                              },
-                                            ),
-                                          ),
+                                          Expanded(child: slugField),
                                         ],
                                       );
                                     },
@@ -501,25 +420,14 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                   _buildSubdomainField(isMobile),
                                   const SizedBox(height: AppDimensions.spaceM),
                                   // Property Type
-                                  DropdownButtonFormField<PropertyType>(
-                                    initialValue: _selectedType,
-                                    dropdownColor:
-                                        InputDecorationHelper.getDropdownColor(
-                                          context,
-                                        ),
-                                    borderRadius: InputDecorationHelper
-                                        .dropdownBorderRadius,
-                                    decoration:
-                                        InputDecorationHelper.buildDecoration(
-                                          labelText:
-                                              l10n.propertyFormPropertyType,
-                                          isMobile: isMobile,
-                                          context: context,
-                                        ),
+                                  BbDropdown<PropertyType>(
+                                    value: _selectedType,
+                                    label: l10n.propertyFormPropertyType,
+                                    size: BbInputSize.lg,
                                     items: PropertyType.values.map((type) {
-                                      return DropdownMenuItem(
+                                      return BbDropdownItem(
                                         value: type,
-                                        child: Text(type.displayNameHR),
+                                        label: type.displayNameHR,
                                       );
                                     }).toList(),
                                     onChanged: (value) {
@@ -530,17 +438,15 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                   ),
                                   const SizedBox(height: AppDimensions.spaceM),
                                   // Description
-                                  TextFormField(
+                                  BbInput(
+                                    key: const ValueKey(
+                                      'property_form_description',
+                                    ),
                                     controller: _descriptionController,
-                                    decoration:
-                                        InputDecorationHelper.buildDecoration(
-                                          labelText:
-                                              l10n.propertyFormDescription,
-                                          hintText:
-                                              l10n.propertyFormDescriptionHint,
-                                          isMobile: isMobile,
-                                          context: context,
-                                        ),
+                                    label: l10n.propertyFormDescription,
+                                    placeholder:
+                                        l10n.propertyFormDescriptionHint,
+                                    size: BbInputSize.lg,
                                     maxLines: 5,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
@@ -572,63 +478,53 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                       final isVerySmall =
                                           constraints.maxWidth < 500;
 
+                                      final addressField = BbInput(
+                                        key: const ValueKey(
+                                          'property_form_address',
+                                        ),
+                                        controller: _addressController,
+                                        label: l10n.propertyFormAddress,
+                                        placeholder:
+                                            l10n.propertyFormAddressHint,
+                                        iconLeft: 'home',
+                                        size: BbInputSize.lg,
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return l10n
+                                                .propertyFormAddressRequired;
+                                          }
+                                          return null;
+                                        },
+                                      );
+                                      final cityField = BbInput(
+                                        key: const ValueKey(
+                                          'property_form_city',
+                                        ),
+                                        controller: _cityController,
+                                        label: l10n.propertyFormCity,
+                                        placeholder: l10n.propertyFormCityHint,
+                                        iconLeft: 'location_city',
+                                        size: BbInputSize.lg,
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return l10n
+                                                .propertyFormCityRequired;
+                                          }
+                                          return null;
+                                        },
+                                      );
+
                                       if (isVerySmall) {
                                         // Column layout for small screens
                                         return Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.stretch,
                                           children: [
-                                            // Street and number (required)
-                                            TextFormField(
-                                              controller: _addressController,
-                                              decoration:
-                                                  InputDecorationHelper.buildDecoration(
-                                                    labelText: l10n
-                                                        .propertyFormAddress,
-                                                    hintText: l10n
-                                                        .propertyFormAddressHint,
-                                                    prefixIcon: const Icon(
-                                                      Icons.home,
-                                                    ),
-                                                    isMobile: isMobile,
-                                                    context: context,
-                                                  ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormAddressRequired;
-                                                }
-                                                return null;
-                                              },
-                                            ),
+                                            addressField,
                                             const SizedBox(
                                               height: AppDimensions.spaceM,
                                             ),
-                                            // City (required)
-                                            TextFormField(
-                                              controller: _cityController,
-                                              decoration:
-                                                  InputDecorationHelper.buildDecoration(
-                                                    labelText:
-                                                        l10n.propertyFormCity,
-                                                    hintText: l10n
-                                                        .propertyFormCityHint,
-                                                    prefixIcon: const Icon(
-                                                      Icons.location_city,
-                                                    ),
-                                                    isMobile: isMobile,
-                                                    context: context,
-                                                  ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormCityRequired;
-                                                }
-                                                return null;
-                                              },
-                                            ),
+                                            cityField,
                                           ],
                                         );
                                       }
@@ -638,59 +534,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          // Street and number (required)
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller: _addressController,
-                                              decoration:
-                                                  InputDecorationHelper.buildDecoration(
-                                                    labelText: l10n
-                                                        .propertyFormAddress,
-                                                    hintText: l10n
-                                                        .propertyFormAddressHint,
-                                                    prefixIcon: const Icon(
-                                                      Icons.home,
-                                                    ),
-                                                    isMobile: isMobile,
-                                                    context: context,
-                                                  ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormAddressRequired;
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                          ),
+                                          Expanded(child: addressField),
                                           const SizedBox(width: 16),
-                                          // City (required)
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller: _cityController,
-                                              decoration:
-                                                  InputDecorationHelper.buildDecoration(
-                                                    labelText:
-                                                        l10n.propertyFormCity,
-                                                    hintText: l10n
-                                                        .propertyFormCityHint,
-                                                    prefixIcon: const Icon(
-                                                      Icons.location_city,
-                                                    ),
-                                                    isMobile: isMobile,
-                                                    context: context,
-                                                  ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormCityRequired;
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                          ),
+                                          Expanded(child: cityField),
                                         ],
                                       );
                                     },
@@ -714,26 +560,14 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                 title: l10n.propertyFormSettings,
                                 icon: Icons.settings,
                                 children: [
-                                  ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: Text(l10n.propertyFormPublishNow),
-                                    subtitle: Text(
-                                      _isPublished
-                                          ? l10n.propertyFormPublishNowActive
-                                          : l10n.propertyFormPublishNowInactive,
-                                    ),
-                                    trailing: Switch(
-                                      value: _isPublished,
-                                      onChanged: (value) =>
-                                          setState(() => _isPublished = value),
-                                      activeThumbColor: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      activeTrackColor: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withValues(alpha: 0.5),
-                                    ),
+                                  BbSwitch(
+                                    value: _isPublished,
+                                    onChanged: (value) =>
+                                        setState(() => _isPublished = value),
+                                    label: l10n.propertyFormPublishNow,
+                                    subtitle: _isPublished
+                                        ? l10n.propertyFormPublishNowActive
+                                        : l10n.propertyFormPublishNowInactive,
                                   ),
                                 ],
                               ),
@@ -948,17 +782,15 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextFormField(
+        BbInput(
+          key: const ValueKey('property_form_subdomain'),
           controller: _subdomainController,
-          decoration: InputDecorationHelper.buildDecoration(
-            labelText: l10n.propertyFormSubdomainLabel,
-            hintText: l10n.propertyFormSubdomainHint,
-            helperText: helperText,
-            isMobile: isMobile,
-            suffixIcon: suffixIcon,
-            prefixIcon: const Icon(Icons.link),
-            context: context,
-          ),
+          label: l10n.propertyFormSubdomainLabel,
+          placeholder: l10n.propertyFormSubdomainHint,
+          helper: helperText,
+          iconLeft: 'link',
+          size: BbInputSize.lg,
+          trailingAction: suffixIcon,
           onChanged: _onSubdomainChanged,
         ),
         // Show error and suggestion if subdomain is not available
@@ -1031,14 +863,12 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                         ),
                       ),
                       const SizedBox(width: 8),
-                      TextButton.icon(
+                      BbButton(
+                        label: l10n.propertyFormUseSuggestion,
+                        iconLeft: 'check',
+                        variant: BbButtonVariant.tertiary,
+                        size: BbButtonSize.sm,
                         onPressed: _applySuggestion,
-                        icon: const Icon(Icons.check, size: 16),
-                        label: Text(l10n.propertyFormUseSuggestion),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          visualDensity: VisualDensity.compact,
-                        ),
                       ),
                     ],
                   ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/design/bb_redesign_tokens.dart';
 import '../../../core/design/tokens.dart';
@@ -48,6 +49,7 @@ class BbInput extends StatefulWidget {
     this.size = BbInputSize.md,
     this.maxLines = 1,
     this.keyboardType,
+    this.inputFormatters,
     this.onChanged,
     this.onSubmitted,
     this.onFieldSubmitted,
@@ -76,6 +78,10 @@ class BbInput extends StatefulWidget {
   /// its own `x/limit` counter).
   final int maxLines;
   final TextInputType? keyboardType;
+
+  /// Optional input formatters forwarded to the inner [TextField]
+  /// (e.g. `FilteringTextInputFormatter.digitsOnly` for numeric fields).
+  final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
 
@@ -245,6 +251,7 @@ class _BbInputState extends State<BbInput> {
                   keyboardType: widget.keyboardType,
                   maxLines: widget.maxLines,
                   maxLength: widget.charLimit,
+                  inputFormatters: widget.inputFormatters,
                   onChanged: onChangedInner,
                   onSubmitted: (String v) {
                     widget.onSubmitted?.call(v);

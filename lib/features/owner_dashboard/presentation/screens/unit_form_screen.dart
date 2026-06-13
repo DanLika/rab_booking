@@ -14,11 +14,12 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
-import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/widgets/redesign.dart';
+import '../../../../shared/widgets/app_filter_chip.dart';
 import '../widgets/embed_code_generator_dialog.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/owner_properties_provider.dart';
@@ -126,7 +127,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
         key: ValueKey('unit_form_$keyboardFixRebuildKey'),
         child: Scaffold(
           resizeToAvoidBottomInset: true,
-          backgroundColor: theme.colorScheme.surface,
           appBar: CommonAppBar(
             title: _isEditing ? l10n.unitFormTitleEdit : l10n.unitFormTitleAdd,
             leadingIcon: Icons.arrow_back,
@@ -138,442 +138,406 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
               }
             },
           ),
-          body: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Note: ListView handles keyboard spacing automatically when resizeToAvoidBottomInset is true
-                return Stack(
-                  children: [
-                    Form(
-                      key: _formKey,
-                      child: ListView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: EdgeInsets.fromLTRB(
-                          isMobile ? 16 : 24,
-                          isMobile ? 16 : 24,
-                          isMobile ? 16 : 24,
-                          24,
-                        ),
-                        children: [
-                          // Basic Info Section
-                          _buildSection(
-                            context,
-                            title: l10n.unitFormBasicInfo,
-                            icon: Icons.info_outline,
-                            children: [
-                              TextFormField(
-                                controller: _nameController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormUnitName,
-                                      hintText: l10n.unitFormUnitNameHint,
-                                      prefixIcon: const Icon(
-                                        Icons.meeting_room,
-                                      ),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormUnitNameRequired;
-                                  }
-                                  return null;
-                                },
-                                onChanged: (value) => _autoGenerateSlug(),
-                              ),
-                              const SizedBox(height: AppDimensions.spaceM),
-                              TextFormField(
-                                controller: _slugController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormUrlSlug,
-                                      hintText: l10n.unitFormUrlSlugHint,
-                                      helperText: l10n.unitFormUrlSlugHelper,
-                                      prefixIcon: const Icon(Icons.link),
-                                      suffixIcon: IconButton(
-                                        icon: const Icon(Icons.refresh),
-                                        tooltip: l10n.unitFormRegenerateSlug,
-                                        onPressed: () {
-                                          setState(() {
-                                            _isManualSlugEdit = false;
-                                            _autoGenerateSlug();
-                                          });
-                                        },
-                                      ),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormSlugRequired;
-                                  }
-                                  if (!isValidSlug(value)) {
-                                    return l10n.unitFormSlugInvalid;
-                                  }
-                                  return null;
-                                },
-                                onChanged: (value) {
-                                  if (value.isNotEmpty) {
-                                    setState(() => _isManualSlugEdit = true);
-                                  }
-                                },
-                              ),
-                              const SizedBox(height: AppDimensions.spaceM),
-                              TextFormField(
-                                controller: _descriptionController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormDescription,
-                                      hintText: l10n.unitFormDescriptionHint,
-                                      prefixIcon: const Icon(Icons.description),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                maxLines: 3,
-                              ),
-                            ],
+          body: Container(
+            // Page background gradient (TIP 1, matches PropertyFormScreen)
+            decoration: BoxDecoration(
+              gradient: context.gradients.pageBackground,
+            ),
+            child: SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Note: ListView handles keyboard spacing automatically when resizeToAvoidBottomInset is true
+                  return Stack(
+                    children: [
+                      Form(
+                        key: _formKey,
+                        child: ListView(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: EdgeInsets.fromLTRB(
+                            isMobile ? 16 : 24,
+                            isMobile ? 16 : 24,
+                            isMobile ? 16 : 24,
+                            24,
                           ),
-                          const SizedBox(height: AppDimensions.spaceM),
-
-                          // Capacity Section
-                          _buildSection(
-                            context,
-                            title: l10n.unitFormCapacity,
-                            icon: Icons.people_outline,
-                            children: [
-                              TextFormField(
-                                controller: _bedroomsController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormBedrooms,
-                                      prefixIcon: const Icon(Icons.bed),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormRequired;
-                                  }
-                                  final num = int.tryParse(value);
-                                  if (num == null || num < 0) {
-                                    return l10n.unitFormInvalidNumber;
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: AppDimensions.spaceS),
-                              TextFormField(
-                                controller: _bathroomsController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormBathrooms,
-                                      prefixIcon: const Icon(Icons.bathroom),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormRequired;
-                                  }
-                                  final num = int.tryParse(value);
-                                  if (num == null || num < 1) {
-                                    return l10n.unitFormMin1;
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: AppDimensions.spaceS),
-                              TextFormField(
-                                controller: _maxGuestsController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormMaxGuests,
-                                      prefixIcon: const Icon(Icons.person),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormRequired;
-                                  }
-                                  final num = int.tryParse(value);
-                                  if (num == null || num < 1 || num > 16) {
-                                    return l10n.unitFormRange1to16;
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: AppDimensions.spaceS),
-                              TextFormField(
-                                controller: _areaController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormArea,
-                                      prefixIcon: const Icon(
-                                        Icons.aspect_ratio,
-                                      ),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppDimensions.spaceM),
-
-                          // Pricing Section
-                          _buildSection(
-                            context,
-                            title: l10n.unitFormPricing,
-                            icon: Icons.euro,
-                            children: [
-                              TextFormField(
-                                controller: _priceController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormPricePerNight,
-                                      prefixIcon: const Icon(Icons.payments),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormRequired;
-                                  }
-                                  final num = double.tryParse(value);
-                                  if (num == null || num <= 0) {
-                                    return l10n.unitFormInvalidAmount;
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: AppDimensions.spaceS),
-                              TextFormField(
-                                controller: _minStayController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormMinNights,
-                                      prefixIcon: const Icon(Icons.nights_stay),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormRequired;
-                                  }
-                                  final num = int.tryParse(value);
-                                  if (num == null || num < 1) {
-                                    return l10n.unitFormMin1;
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppDimensions.spaceM),
-
-                          // Amenities Section
-                          _buildSection(
-                            context,
-                            title: l10n.unitFormAmenities,
-                            icon: Icons.star_outline,
-                            children: [_buildAmenitiesGrid()],
-                          ),
-                          const SizedBox(height: AppDimensions.spaceM),
-
-                          // Images Section
-                          _buildSection(
-                            context,
-                            title: l10n.unitFormPhotos,
-                            icon: Icons.photo_library_outlined,
-                            children: [_buildImagesSection()],
-                          ),
-                          const SizedBox(height: AppDimensions.spaceM),
-
-                          // Availability Section
-                          _buildSection(
-                            context,
-                            title: l10n.unitFormAvailability,
-                            icon: Icons.toggle_on_outlined,
-                            children: [
-                              ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(l10n.unitFormAvailableForBooking),
-                                subtitle: Text(
-                                  _isAvailable
-                                      ? l10n.unitFormAvailableDesc
-                                      : l10n.unitFormUnavailableDesc,
-                                ),
-                                trailing: Switch(
-                                  value: _isAvailable,
-                                  onChanged: (value) =>
-                                      setState(() => _isAvailable = value),
-                                  activeThumbColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primary,
-                                  activeTrackColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.5),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppDimensions.spaceM),
-
-                          // Primary save CTA on design-system `BbButton` —
-                          // replaces hand-rolled `GradientButton` with the
-                          // handoff `--bb-primary` + `--bb-shadow-purple-sm`
-                          // surface (matches Bank Account / Edit Profile / iCal).
-                          BbButton(
-                            label: _isEditing
-                                ? l10n.unitFormSaveChanges
-                                : l10n.unitFormAddUnit,
-                            iconLeft: _isEditing ? 'save' : 'add',
-                            size: BbButtonSize.lg,
-                            fullWidth: true,
-                            loading: _isLoading,
-                            onPressed: _isLoading ? null : _handleSave,
-                          ),
-
-                          // Widget Settings & Embed Code section (only when editing)
-                          if (_isEditing && widget.unit != null) ...[
-                            const SizedBox(height: AppDimensions.spaceM),
+                          children: [
+                            // Basic Info Section
                             _buildSection(
                               context,
-                              title: l10n.unitFormEmbedWidget,
-                              icon: Icons.widgets,
+                              title: l10n.unitFormBasicInfo,
+                              icon: Icons.info_outline,
                               children: [
-                                Text(
-                                  l10n.unitFormEmbedDesc,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withAlpha((0.7 * 255).toInt()),
-                                  ),
+                                BbInput(
+                                  key: const ValueKey('unit_form_name'),
+                                  controller: _nameController,
+                                  label: l10n.unitFormUnitName,
+                                  placeholder: l10n.unitFormUnitNameHint,
+                                  iconLeft: 'meeting_room',
+                                  size: BbInputSize.lg,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return l10n.unitFormUnitNameRequired;
+                                    }
+                                    return null;
+                                  },
+                                  onChanged: (value) => _autoGenerateSlug(),
                                 ),
                                 const SizedBox(height: AppDimensions.spaceM),
-                                BbButton(
-                                  label: l10n.unitFormWidgetSettings,
-                                  iconLeft: 'settings',
-                                  variant: BbButtonVariant.secondary,
-                                  size: BbButtonSize.lg,
-                                  fullWidth: true,
-                                  onPressed: () {
-                                    context.push(
-                                      OwnerRoutes.unitWidgetSettings.replaceAll(
-                                        ':id',
-                                        widget.unit!.id,
-                                      ),
-                                    );
+                                BbInput(
+                                  key: const ValueKey('unit_form_slug'),
+                                  controller: _slugController,
+                                  label: l10n.unitFormUrlSlug,
+                                  placeholder: l10n.unitFormUrlSlugHint,
+                                  helper: l10n.unitFormUrlSlugHelper,
+                                  iconLeft: 'link',
+                                  size: BbInputSize.lg,
+                                  trailingAction: IconButton(
+                                    icon: const Icon(Icons.refresh),
+                                    tooltip: l10n.unitFormRegenerateSlug,
+                                    onPressed: () {
+                                      setState(() {
+                                        _isManualSlugEdit = false;
+                                        _autoGenerateSlug();
+                                      });
+                                    },
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return l10n.unitFormSlugRequired;
+                                    }
+                                    if (!isValidSlug(value)) {
+                                      return l10n.unitFormSlugInvalid;
+                                    }
+                                    return null;
+                                  },
+                                  onChanged: (value) {
+                                    if (value.isNotEmpty) {
+                                      setState(() => _isManualSlugEdit = true);
+                                    }
+                                  },
+                                ),
+                                const SizedBox(height: AppDimensions.spaceM),
+                                BbInput(
+                                  key: const ValueKey('unit_form_description'),
+                                  controller: _descriptionController,
+                                  label: l10n.unitFormDescription,
+                                  placeholder: l10n.unitFormDescriptionHint,
+                                  size: BbInputSize.lg,
+                                  maxLines: 3,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppDimensions.spaceM),
+
+                            // Capacity Section
+                            _buildSection(
+                              context,
+                              title: l10n.unitFormCapacity,
+                              icon: Icons.people_outline,
+                              children: [
+                                BbInput(
+                                  key: const ValueKey('unit_form_bedrooms'),
+                                  controller: _bedroomsController,
+                                  label: l10n.unitFormBedrooms,
+                                  iconLeft: 'bed',
+                                  size: BbInputSize.lg,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return l10n.unitFormRequired;
+                                    }
+                                    final num = int.tryParse(value);
+                                    if (num == null || num < 0) {
+                                      return l10n.unitFormInvalidNumber;
+                                    }
+                                    return null;
                                   },
                                 ),
                                 const SizedBox(height: AppDimensions.spaceS),
-                                BbButton(
-                                  label: l10n.unitFormGenerateEmbed,
-                                  iconLeft: 'code',
-                                  variant: BbButtonVariant.secondary,
-                                  size: BbButtonSize.lg,
-                                  fullWidth: true,
-                                  onPressed: () async {
-                                    final property = await ref.read(
-                                      propertyByIdProvider(
-                                        widget.propertyId,
-                                      ).future,
-                                    );
-                                    if (!context.mounted) return;
-                                    await showDialog(
-                                      context: context,
-                                      builder: (context) =>
-                                          EmbedCodeGeneratorDialog(
-                                            unitId: widget.unit!.id,
-                                            propertyId: widget.propertyId,
-                                            unitName: widget.unit!.name,
-                                            propertySubdomain:
-                                                property?.subdomain,
-                                            unitSlug: widget.unit!.slug,
-                                          ),
-                                    );
+                                BbInput(
+                                  key: const ValueKey('unit_form_bathrooms'),
+                                  controller: _bathroomsController,
+                                  label: l10n.unitFormBathrooms,
+                                  iconLeft: 'bathroom',
+                                  size: BbInputSize.lg,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return l10n.unitFormRequired;
+                                    }
+                                    final num = int.tryParse(value);
+                                    if (num == null || num < 1) {
+                                      return l10n.unitFormMin1;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: AppDimensions.spaceS),
+                                BbInput(
+                                  key: const ValueKey('unit_form_max_guests'),
+                                  controller: _maxGuestsController,
+                                  label: l10n.unitFormMaxGuests,
+                                  iconLeft: 'person',
+                                  size: BbInputSize.lg,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return l10n.unitFormRequired;
+                                    }
+                                    final num = int.tryParse(value);
+                                    if (num == null || num < 1 || num > 16) {
+                                      return l10n.unitFormRange1to16;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: AppDimensions.spaceS),
+                                BbInput(
+                                  key: const ValueKey('unit_form_area'),
+                                  controller: _areaController,
+                                  label: l10n.unitFormArea,
+                                  iconLeft: 'aspect_ratio',
+                                  size: BbInputSize.lg,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppDimensions.spaceM),
+
+                            // Pricing Section
+                            _buildSection(
+                              context,
+                              title: l10n.unitFormPricing,
+                              icon: Icons.euro,
+                              children: [
+                                BbInput(
+                                  key: const ValueKey('unit_form_price'),
+                                  controller: _priceController,
+                                  label: l10n.unitFormPricePerNight,
+                                  iconLeft: 'payments',
+                                  size: BbInputSize.lg,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return l10n.unitFormRequired;
+                                    }
+                                    final num = double.tryParse(value);
+                                    if (num == null || num <= 0) {
+                                      return l10n.unitFormInvalidAmount;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: AppDimensions.spaceS),
+                                BbInput(
+                                  key: const ValueKey('unit_form_min_stay'),
+                                  controller: _minStayController,
+                                  label: l10n.unitFormMinNights,
+                                  iconLeft: 'nights_stay',
+                                  size: BbInputSize.lg,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return l10n.unitFormRequired;
+                                    }
+                                    final num = int.tryParse(value);
+                                    if (num == null || num < 1) {
+                                      return l10n.unitFormMin1;
+                                    }
+                                    return null;
                                   },
                                 ),
                               ],
                             ),
-                          ],
+                            const SizedBox(height: AppDimensions.spaceM),
 
-                          const SizedBox(height: AppDimensions.spaceXL),
-                        ],
-                      ),
-                    ),
-
-                    // Loading Overlay
-                    if (_isLoading)
-                      Container(
-                        color: Colors.black.withAlpha((0.5 * 255).toInt()),
-                        child: Center(
-                          child: Card(
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                            // Amenities Section
+                            _buildSection(
+                              context,
+                              title: l10n.unitFormAmenities,
+                              icon: Icons.star_outline,
+                              children: [_buildAmenitiesGrid()],
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(32),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
+                            const SizedBox(height: AppDimensions.spaceM),
+
+                            // Images Section
+                            _buildSection(
+                              context,
+                              title: l10n.unitFormPhotos,
+                              icon: Icons.photo_library_outlined,
+                              children: [_buildImagesSection()],
+                            ),
+                            const SizedBox(height: AppDimensions.spaceM),
+
+                            // Availability Section
+                            _buildSection(
+                              context,
+                              title: l10n.unitFormAvailability,
+                              icon: Icons.toggle_on_outlined,
+                              children: [
+                                BbSwitch(
+                                  value: _isAvailable,
+                                  onChanged: (value) =>
+                                      setState(() => _isAvailable = value),
+                                  label: l10n.unitFormAvailableForBooking,
+                                  subtitle: _isAvailable
+                                      ? l10n.unitFormAvailableDesc
+                                      : l10n.unitFormUnavailableDesc,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppDimensions.spaceM),
+
+                            // Primary save CTA on design-system `BbButton` —
+                            // replaces hand-rolled `GradientButton` with the
+                            // handoff `--bb-primary` + `--bb-shadow-purple-sm`
+                            // surface (matches Bank Account / Edit Profile / iCal).
+                            BbButton(
+                              label: _isEditing
+                                  ? l10n.unitFormSaveChanges
+                                  : l10n.unitFormAddUnit,
+                              iconLeft: _isEditing ? 'save' : 'add',
+                              size: BbButtonSize.lg,
+                              fullWidth: true,
+                              loading: _isLoading,
+                              onPressed: _isLoading ? null : _handleSave,
+                            ),
+
+                            // Widget Settings & Embed Code section (only when editing)
+                            if (_isEditing && widget.unit != null) ...[
+                              const SizedBox(height: AppDimensions.spaceM),
+                              _buildSection(
+                                context,
+                                title: l10n.unitFormEmbedWidget,
+                                icon: Icons.widgets,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 3,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Theme.of(context).colorScheme.onPrimary,
-                                      ),
+                                  Text(
+                                    l10n.unitFormEmbedDesc,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withAlpha((0.7 * 255).toInt()),
                                     ),
                                   ),
-                                  const SizedBox(height: 20),
-                                  Text(
-                                    l10n.unitFormSaving,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                  const SizedBox(height: AppDimensions.spaceM),
+                                  BbButton(
+                                    label: l10n.unitFormWidgetSettings,
+                                    iconLeft: 'settings',
+                                    variant: BbButtonVariant.secondary,
+                                    size: BbButtonSize.lg,
+                                    fullWidth: true,
+                                    onPressed: () {
+                                      context.push(
+                                        OwnerRoutes.unitWidgetSettings
+                                            .replaceAll(':id', widget.unit!.id),
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: AppDimensions.spaceS),
+                                  BbButton(
+                                    label: l10n.unitFormGenerateEmbed,
+                                    iconLeft: 'code',
+                                    variant: BbButtonVariant.secondary,
+                                    size: BbButtonSize.lg,
+                                    fullWidth: true,
+                                    onPressed: () async {
+                                      final property = await ref.read(
+                                        propertyByIdProvider(
+                                          widget.propertyId,
+                                        ).future,
+                                      );
+                                      if (!context.mounted) return;
+                                      await showDialog(
+                                        context: context,
+                                        builder: (context) =>
+                                            EmbedCodeGeneratorDialog(
+                                              unitId: widget.unit!.id,
+                                              propertyId: widget.propertyId,
+                                              unitName: widget.unit!.name,
+                                              propertySubdomain:
+                                                  property?.subdomain,
+                                              unitSlug: widget.unit!.slug,
+                                            ),
+                                      );
+                                    },
                                   ),
                                 ],
+                              ),
+                            ],
+
+                            const SizedBox(height: AppDimensions.spaceXL),
+                          ],
+                        ),
+                      ),
+
+                      // Loading Overlay
+                      if (_isLoading)
+                        Container(
+                          color: Colors.black.withAlpha((0.5 * 255).toInt()),
+                          child: Center(
+                            child: Card(
+                              elevation: 8,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(32),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 3,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimary,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      l10n.unitFormSaving,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -581,66 +545,87 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
     );
   }
 
-  /// Helper method to build consistent section cards
+  /// Helper method to build consistent section cards — TIP 1 diagonal
+  /// gradient recipe (cardBackground + sectionBorder + radius 24), matching
+  /// [PropertyFormScreen._buildSection] and the Widget Settings sections.
   Widget _buildSection(
     BuildContext context, {
     required String title,
     required IconData icon,
     required List<Widget> children,
   }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: Theme.of(
-            context,
-          ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
-        ),
+    final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.gradients.cardBackground,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(isMobile ? 16 : 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.7),
-                      ],
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: theme.colorScheme.primary,
+                        size: 18,
+                      ),
                     ),
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  ),
-                  child: Icon(icon, color: Colors.white, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                const SizedBox(height: 16),
+                ...children,
               ],
             ),
-            const SizedBox(height: 16),
-            ...children,
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildAmenitiesGrid() {
-    final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context).languageCode;
 
     // Show most common amenities for units
     final commonAmenities = [
@@ -659,40 +644,19 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
       runSpacing: 8,
       children: commonAmenities.map((amenity) {
         final isSelected = _selectedAmenities.contains(amenity);
-        return Theme(
-          data: theme.copyWith(
-            splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-            highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-          ),
-          child: FilterChip(
-            label: Text(
-              amenity.localizedName(
-                Localizations.localeOf(context).languageCode,
-              ),
-              style: TextStyle(
-                color: isSelected
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface,
-              ),
-            ),
-            selected: isSelected,
-            onSelected: (selected) {
-              setState(() {
-                if (selected) {
-                  _selectedAmenities.add(amenity);
-                } else {
-                  _selectedAmenities.remove(amenity);
-                }
-              });
-            },
-            avatar: Icon(
-              _getAmenityIcon(amenity.iconName),
-              size: 18,
-              color: isSelected
-                  ? theme.colorScheme.onPrimary
-                  : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
-            ),
-          ),
+        return AppFilterChip(
+          label: amenity.localizedName(locale),
+          selected: isSelected,
+          icon: _getAmenityIcon(amenity.iconName),
+          onSelected: () {
+            setState(() {
+              if (isSelected) {
+                _selectedAmenities.remove(amenity);
+              } else {
+                _selectedAmenities.add(amenity);
+              }
+            });
+          },
         );
       }).toList(),
     );
@@ -733,23 +697,13 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
         Builder(
           builder: (context) {
             final l10n = AppLocalizations.of(context);
-            return OutlinedButton.icon(
+            return BbButton(
+              label: totalImages == 0
+                  ? l10n.unitFormAddPhotos
+                  : l10n.unitFormAddMore,
+              iconLeft: 'add_photo_alternate',
+              variant: BbButtonVariant.secondary,
               onPressed: _pickImages,
-              icon: const Icon(Icons.add_photo_alternate),
-              label: Text(
-                totalImages == 0
-                    ? l10n.unitFormAddPhotos
-                    : l10n.unitFormAddMore,
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 24,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
             );
           },
         ),

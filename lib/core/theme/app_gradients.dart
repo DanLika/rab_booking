@@ -25,7 +25,7 @@ class AppGradients extends ThemeExtension<AppGradients> {
     required this.inputFillColor,
   });
 
-  /// Screen body gradient (left → right, horizontal)
+  /// Screen body gradient (TIP 1 diagonal, topLeft → bottomRight)
   /// Used for: main page backgrounds, scaffold bodies
   final LinearGradient pageBackground;
 
@@ -58,17 +58,18 @@ class AppGradients extends ThemeExtension<AppGradients> {
   // CENTRAL COLOR DEFINITIONS - CHANGE HERE = UPDATE EVERYWHERE!
   // ============================================================================
 
-  // Light theme: handoff `--bb-shell-bg = #F0F1F5` flat, mirroring
-  // `BbRedesignTokens.light.shellBg` (pregled-premium.jsx PV_SHELL_BG).
-  // Start/end identical so the `LinearGradient` infrastructure is preserved
-  // without a visible wash — design has no gradient on dashboard shells.
-  static const Color _lightStart = Color(0xFFF0F1F5);
-  static const Color _lightEnd = Color(0xFFF0F1F5);
+  // Page TIP 1 colors — user-mandated simple diagonal page-shell gradient:
+  // 2 colors @100% opacity, 2 stops, topLeft → bottomRight, fade ends at 30%
+  // (page direction mirrors the section's topRight → bottomLeft).
+  // Light: shell light-gray #ECEDF2 (the family paired with border #E0DCE8,
+  // replacing the old flat #F0F1F5 / the spec's #F8F9FA) → white.
+  static const Color _lightStart = Color(0xFFECEDF2);
+  static const Color _lightEnd = Color(0xFFFFFFFF);
 
-  // Dark theme: handoff `--bb-shell-bg = #000000` flat, mirroring
-  // `BbRedesignTokens.dark.shellBg`. OLED-friendly true black, no gradient.
-  static const Color _darkStart = Color(0xFF000000);
-  static const Color _darkEnd = Color(0xFF000000);
+  // Dark: veryDarkGray #1A1A1A → mediumDarkGray #2D2D2D (user spec; replaces
+  // the old flat OLED #000000).
+  static const Color _darkStart = Color(0xFF1A1A1A);
+  static const Color _darkEnd = Color(0xFF2D2D2D);
 
   // Brand purple (same for light & dark)
   static const Color _brandStart = Color(0xFF6B4CE6); // Purple
@@ -110,8 +111,12 @@ class AppGradients extends ThemeExtension<AppGradients> {
   /// Light theme gradients
   static const AppGradients light = AppGradients(
     pageBackground: LinearGradient(
+      // User TIP 1: simple diagonal, 2 opaque colors, fade ends at 30% of the
+      // screen. topLeft → bottomRight (mirror of the section direction).
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
       colors: [_lightStart, _lightEnd],
-      stops: [0.0, 0.6],
+      stops: [0.0, 0.3],
     ),
     sectionBackground: LinearGradient(
       // User TIP 1 (overrides handoff flat `--bb-panel-bg`): simple diagonal,
@@ -139,8 +144,12 @@ class AppGradients extends ThemeExtension<AppGradients> {
   /// Dark theme gradients
   static const AppGradients dark = AppGradients(
     pageBackground: LinearGradient(
+      // User TIP 1: simple diagonal, 2 opaque colors, fade ends at 30% of the
+      // screen. topLeft → bottomRight (mirror of the section direction).
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
       colors: [_darkStart, _darkEnd],
-      stops: [0.0, 0.6],
+      stops: [0.0, 0.3],
     ),
     sectionBackground: LinearGradient(
       // User TIP 1 (overrides handoff flat `--bb-panel-bg`): simple diagonal,

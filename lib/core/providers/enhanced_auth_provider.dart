@@ -834,32 +834,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       // PERFORMANCE: Run Cloud and Local checks in PARALLEL
 
-      // 1. Cloud Rate Limit Future (wrapped to handle errors internally)
-      final cloudRateLimitFuture = (() async {
-        try {
-          final functions = FirebaseFunctions.instanceFor(
-            region: 'europe-west1',
-          );
-          final callable = functions.httpsCallable(
-            'checkRegistrationRateLimit',
-          );
-          await callable.call({'email': email});
-        } on FirebaseFunctionsException catch (e) {
-          if (e.code == 'resource-exhausted') {
-            LoggingService.log(
-              'IP-based rate limit exceeded for registration',
-              tag: 'ENHANCED_AUTH',
-            );
-            throw e.message ??
-                'Too many registration attempts. Please wait before trying again.';
-          }
-          // Continue with registration if rate limit check fails (fail-open for availability)
-          LoggingService.log(
-            'IP rate limit check failed, continuing: ${e.message}',
-            tag: 'AUTH_WARNING',
-          );
-        }
-      })();
+      // 1. Cloud Rate Limit Future (wrapped to handle errors internally).
+      // Extracted to an overridable method so unit tests can bypass the
+      // FirebaseFunctions.instanceFor call (which needs a live Firebase app).
+      final cloudRateLimitFuture = checkCloudRegistrationRateLimit(email);
 
       // 2. Local Rate Limit Future
       final localRateLimitFuture = _rateLimit.checkRateLimit(email);
@@ -1138,6 +1116,40 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       // CRITICAL: Always reset isLoading to prevent infinite loading state
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message
+    }
+  }
+
+  /// IP-based registration rate-limit check via the `checkRegistrationRateLimit`
+  /// Cloud Function (europe-west1). Fails OPEN on transient/unknown errors so a
+  /// flaky rate-limiter never blocks signup; throws a user-facing message only
+  /// when the server explicitly reports `resource-exhausted`.
+  ///
+  /// Extracted from [registerWithEmail] as an overridable seam: it touches
+  /// `FirebaseFunctions.instanceFor`, which needs an initialized Firebase app
+  /// and is therefore unreachable under `flutter test`. Unit tests override
+  /// this to a no-op (mirroring the repo's Fake-bypass pattern for
+  /// FirebaseFunctions) so the rest of the registration flow can be exercised.
+  @visibleForTesting
+  @protected
+  Future<void> checkCloudRegistrationRateLimit(String email) async {
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+      final callable = functions.httpsCallable('checkRegistrationRateLimit');
+      await callable.call({'email': email});
+    } on FirebaseFunctionsException catch (e) {
+      if (e.code == 'resource-exhausted') {
+        LoggingService.log(
+          'IP-based rate limit exceeded for registration',
+          tag: 'ENHANCED_AUTH',
+        );
+        throw e.message ??
+            'Too many registration attempts. Please wait before trying again.';
+      }
+      // Continue with registration if rate limit check fails (fail-open for availability)
+      LoggingService.log(
+        'IP rate limit check failed, continuing: ${e.message}',
+        tag: 'AUTH_WARNING',
+      );
     }
   }
 

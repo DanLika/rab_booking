@@ -312,16 +312,46 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                       ),
                       child: ConstrainedBox(
                         constraints: BoxConstraints(minHeight: minHeight),
-                        child: Center(
-                          child: _buildGlassCard(
-                            context,
-                            rd,
-                            c,
-                            l10n,
-                            isCompact,
-                            isSmallHeight,
-                          ),
-                        ),
+                        // Handoff register.jsx desktop split (≥1200):
+                        // register-flavored brand pitch panel left, 560px
+                        // register card right. Narrower widths keep the
+                        // centered card (mirror of login PR #732 split).
+                        child: constraints.maxWidth >= 1200
+                            // No stretch: the scroll view gives unbounded
+                            // height, so the pitch panel pins its own viewport
+                            // height and the card centers on it.
+                            ? Row(
+                                children: [
+                                  Expanded(
+                                    child: _RegisterPitchPanel(
+                                      viewportHeight: minHeight,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 560,
+                                    child: Center(
+                                      child: _buildGlassCard(
+                                        context,
+                                        rd,
+                                        c,
+                                        l10n,
+                                        isCompact,
+                                        isSmallHeight,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Center(
+                                child: _buildGlassCard(
+                                  context,
+                                  rd,
+                                  c,
+                                  l10n,
+                                  isCompact,
+                                  isSmallHeight,
+                                ),
+                              ),
                       ),
                     );
                   },
@@ -702,6 +732,161 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         variant: BbButtonVariant.tertiary,
         onPressed: () => context.go(OwnerRoutes.login),
       ),
+    );
+  }
+}
+
+/// Desktop register brand/pitch panel (handoff `register.jsx` RegBrandPanel —
+/// "Desktop left brand panel (mirror of login, register-flavored)"): logo +
+/// wordmark top, pitch block (eyebrow/headline/copy + trial checklist) middle,
+/// stats row bottom. Copy is handoff-spec HR onboarding marketing. Sibling of
+/// login's `_LoginPitchPanel`; the register variant trades login's in-block
+/// stats + legal footer for the onboarding checklist + a bottom stats row, per
+/// register.jsx.
+class _RegisterPitchPanel extends StatelessWidget {
+  final double viewportHeight;
+
+  const _RegisterPitchPanel({required this.viewportHeight});
+
+  static const _checklist = <String>[
+    '14 dana Pro besplatno',
+    'Bez kartice pri registraciji',
+    'Otkažite bilo kada',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+
+    // The surrounding scroll view has unbounded height — pin the panel to the
+    // viewport so spaceBetween can park logo top / stats bottom.
+    return SizedBox(
+      height: viewportHeight > 0 ? viewportHeight : null,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(80, 64, 80, 64),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const BbLogo(size: 40),
+                const SizedBox(width: 12),
+                Text(
+                  'BookBed',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.44,
+                    color: c.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'OWNER APLIKACIJA',
+                    style: BBType.eyebrow(context).copyWith(color: c.primary),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Počnite upravljati\nu nekoliko minuta.',
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1.44,
+                      height: 1.1,
+                      color: c.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Dodajte jedinice, povežite kanale i primajte rezervacije '
+                    'izravno na svoju stranicu — bez provizije po rezervaciji '
+                    'na Pro planu.',
+                    style: BBType.bodyLg(
+                      context,
+                    ).copyWith(color: c.textSecondary, height: 1.5),
+                  ),
+                  const SizedBox(height: 28),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < _checklist.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            BbIcon(name: 'check_circle', color: c.success),
+                            const SizedBox(width: 10),
+                            Flexible(
+                              child: Text(
+                                _checklist[i],
+                                style: BBType.body(
+                                  context,
+                                ).copyWith(color: c.textSecondary),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Wrap(
+              spacing: 24,
+              runSpacing: 16,
+              children: [
+                _PitchStat(value: '45+', label: 'aktivnih vlasnika'),
+                _PitchStat(value: '12k', label: 'rezervacija godišnje'),
+                _PitchStat(value: '99.9%', label: 'uptime'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Pitch stat (handoff PitchStat): tabular value in primary + caption label.
+/// Mirror of login's `_PitchStat` (file-private, so redeclared here).
+class _PitchStat extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _PitchStat({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.56,
+            color: c.primary,
+            fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: BBType.caption(context).copyWith(color: c.textSecondary),
+        ),
+      ],
     );
   }
 }

@@ -12,8 +12,11 @@ void main() {
     setUp(() {
       // Wider viewport so the glass-card desktop layout doesn't overflow the
       // default 800×600 test surface. Auth-family screens lay out at >=1024.
+      // Kept BELOW the 1200 desktop-split breakpoint so this card-focused
+      // smoke stays single-column (no pitch panel / its extra BbLogo) — the
+      // split is covered by register_desktop_split_test.dart.
       TestWidgetsFlutterBinding.instance.platformDispatcher.views.first
-        ..physicalSize = const Size(1920, 2400)
+        ..physicalSize = const Size(1100, 2400)
         ..devicePixelRatio = 1.0;
     });
 

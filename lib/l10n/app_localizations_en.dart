@@ -8644,4 +8644,151 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationRejectError => 'Failed to reject booking.';
+
+  @override
+  String get widgetSettingsHeaderTitle => 'Booking widget';
+
+  @override
+  String get widgetSettingsHeaderSubtitle =>
+      'Embed the booking calendar on your website';
+
+  @override
+  String get widgetSettingsStatusActive => 'Active';
+
+  @override
+  String get widgetSettingsEmbedCodeTitle => 'Embed code';
+
+  @override
+  String get widgetSettingsEmbedCodeSubtitle => 'Paste it on your website';
+
+  @override
+  String get widgetSettingsEmbedModeInline => 'Embedded';
+
+  @override
+  String get widgetSettingsEmbedModePopup => 'Popup button';
+
+  @override
+  String get widgetSettingsEmbedModeLink => 'Link';
+
+  @override
+  String get widgetSettingsEmbedCopy => 'Copy';
+
+  @override
+  String get widgetSettingsEmbedCopied => 'Code copied to clipboard';
+
+  @override
+  String get widgetSettingsEmbedHttps =>
+      'Loads over HTTPS · won\'t slow your page (async).';
+
+  @override
+  String get widgetSettingsInstallTitle => 'Setup instructions';
+
+  @override
+  String get widgetSettingsInstallHtml => 'HTML';
+
+  @override
+  String get widgetSettingsInstallWordpress => 'WordPress';
+
+  @override
+  String get widgetSettingsInstallWix => 'Wix';
+
+  @override
+  String get widgetSettingsInstallHtmlStep1 => 'Copy the code snippet above.';
+
+  @override
+  String get widgetSettingsInstallHtmlStep2 =>
+      'Paste it into your page\'s <body>, where you want the widget.';
+
+  @override
+  String get widgetSettingsInstallHtmlStep3 =>
+      'Save and publish — the widget loads automatically.';
+
+  @override
+  String get widgetSettingsInstallWordpressStep1 =>
+      'In the editor, add a “Custom HTML” block.';
+
+  @override
+  String get widgetSettingsInstallWordpressStep2 =>
+      'Paste the code snippet into the block.';
+
+  @override
+  String get widgetSettingsInstallWordpressStep3 =>
+      'Update the page (avoid “Visual” mode).';
+
+  @override
+  String get widgetSettingsInstallWixStep1 =>
+      'Add an Embed element → “Embed code”.';
+
+  @override
+  String get widgetSettingsInstallWixStep2 =>
+      'Paste the snippet and set the frame size.';
+
+  @override
+  String get widgetSettingsInstallWixStep3 => 'Publish the page.';
+
+  @override
+  String get widgetSettingsPreviewTitle => 'Live preview';
+
+  @override
+  String get widgetSettingsPreviewOpen => 'Open';
+
+  @override
+  String get widgetSettingsPreviewBook => 'Book';
+
+  @override
+  String get widgetSettingsPreviewNight => 'per night';
+
+  @override
+  String get widgetSettingsPreviewWeekdays => 'M,T,W,T,F,S,S';
+
+  @override
+  String get widgetSettingsPoweredBy => 'Powered by BookBed';
+
+  @override
+  String get widgetSettingsAppearanceTitle => 'Appearance';
+
+  @override
+  String get widgetSettingsAccentColor => 'Accent color';
+
+  @override
+  String get widgetSettingsLanguage => 'Language';
+
+  @override
+  String get widgetSettingsLanguageAuto => 'Guest\'s choice';
+
+  @override
+  String get widgetSettingsThemeLabel => 'Theme';
+
+  @override
+  String get widgetSettingsThemeLight => 'Light';
+
+  @override
+  String get widgetSettingsThemeDark => 'Dark';
+
+  @override
+  String get widgetSettingsThemeSystem => 'System';
+
+  @override
+  String get widgetSettingsBorderRadiusLabel => 'Corner roundness';
+
+  @override
+  String get widgetSettingsRadiusSharp => 'Sharp';
+
+  @override
+  String get widgetSettingsRadiusRounded => 'Rounded';
+
+  @override
+  String get widgetSettingsRadiusSoft => 'Very rounded';
+
+  @override
+  String get widgetSettingsShowPrices => 'Show prices in the calendar';
+
+  @override
+  String get widgetSettingsBranding => '“Powered by BookBed” badge';
+
+  @override
+  String get widgetSettingsBrandingPro => 'Remove with Pro';
+
+  @override
+  String get widgetSettingsProBadge => 'PRO';
 }

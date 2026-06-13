@@ -8718,4 +8718,152 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get notificationRejectError => 'Nije uspjelo odbijanje rezervacije.';
+
+  @override
+  String get widgetSettingsHeaderTitle => 'Widget za rezervacije';
+
+  @override
+  String get widgetSettingsHeaderSubtitle =>
+      'Ugradite kalendar rezervacija na svoju web stranicu';
+
+  @override
+  String get widgetSettingsStatusActive => 'Aktivan';
+
+  @override
+  String get widgetSettingsEmbedCodeTitle => 'Kôd za ugradnju';
+
+  @override
+  String get widgetSettingsEmbedCodeSubtitle =>
+      'Zalijepite na svoju web stranicu';
+
+  @override
+  String get widgetSettingsEmbedModeInline => 'Ugrađeno';
+
+  @override
+  String get widgetSettingsEmbedModePopup => 'Skočni gumb';
+
+  @override
+  String get widgetSettingsEmbedModeLink => 'Poveznica';
+
+  @override
+  String get widgetSettingsEmbedCopy => 'Kopiraj';
+
+  @override
+  String get widgetSettingsEmbedCopied => 'Kôd kopiran u međuspremnik';
+
+  @override
+  String get widgetSettingsEmbedHttps =>
+      'Učitava se preko HTTPS-a · ne usporava vašu stranicu (async).';
+
+  @override
+  String get widgetSettingsInstallTitle => 'Upute za postavljanje';
+
+  @override
+  String get widgetSettingsInstallHtml => 'HTML';
+
+  @override
+  String get widgetSettingsInstallWordpress => 'WordPress';
+
+  @override
+  String get widgetSettingsInstallWix => 'Wix';
+
+  @override
+  String get widgetSettingsInstallHtmlStep1 => 'Kopirajte isječak koda iznad.';
+
+  @override
+  String get widgetSettingsInstallHtmlStep2 =>
+      'Zalijepite ga u <body> stranice, ondje gdje želite widget.';
+
+  @override
+  String get widgetSettingsInstallHtmlStep3 =>
+      'Spremite i objavite — widget se učitava automatski.';
+
+  @override
+  String get widgetSettingsInstallWordpressStep1 =>
+      'U uređivaču dodajte blok „Prilagođeni HTML”.';
+
+  @override
+  String get widgetSettingsInstallWordpressStep2 =>
+      'Zalijepite isječak koda u blok.';
+
+  @override
+  String get widgetSettingsInstallWordpressStep3 =>
+      'Ažurirajte stranicu (izbjegavajte „Vizualni” način).';
+
+  @override
+  String get widgetSettingsInstallWixStep1 =>
+      'Dodajte element Embed → „Ugradi kôd”.';
+
+  @override
+  String get widgetSettingsInstallWixStep2 =>
+      'Zalijepite isječak i postavite veličinu okvira.';
+
+  @override
+  String get widgetSettingsInstallWixStep3 => 'Objavite stranicu.';
+
+  @override
+  String get widgetSettingsPreviewTitle => 'Pregled uživo';
+
+  @override
+  String get widgetSettingsPreviewOpen => 'Otvori';
+
+  @override
+  String get widgetSettingsPreviewBook => 'Rezerviraj';
+
+  @override
+  String get widgetSettingsPreviewNight => 'po noći';
+
+  @override
+  String get widgetSettingsPreviewWeekdays => 'P,U,S,Č,P,S,N';
+
+  @override
+  String get widgetSettingsPoweredBy => 'Powered by BookBed';
+
+  @override
+  String get widgetSettingsAppearanceTitle => 'Izgled';
+
+  @override
+  String get widgetSettingsAccentColor => 'Naglašena boja';
+
+  @override
+  String get widgetSettingsLanguage => 'Jezik';
+
+  @override
+  String get widgetSettingsLanguageAuto => 'Po izboru gosta';
+
+  @override
+  String get widgetSettingsThemeLabel => 'Tema';
+
+  @override
+  String get widgetSettingsThemeLight => 'Svijetla';
+
+  @override
+  String get widgetSettingsThemeDark => 'Tamna';
+
+  @override
+  String get widgetSettingsThemeSystem => 'Sustav';
+
+  @override
+  String get widgetSettingsBorderRadiusLabel => 'Zaobljenost rubova';
+
+  @override
+  String get widgetSettingsRadiusSharp => 'Oštro';
+
+  @override
+  String get widgetSettingsRadiusRounded => 'Zaobljeno';
+
+  @override
+  String get widgetSettingsRadiusSoft => 'Vrlo zaobljeno';
+
+  @override
+  String get widgetSettingsShowPrices => 'Prikaži cijene u kalendaru';
+
+  @override
+  String get widgetSettingsBranding => 'Oznaka „Powered by BookBed”';
+
+  @override
+  String get widgetSettingsBrandingPro => 'Uklonite uz Pro';
+
+  @override
+  String get widgetSettingsProBadge => 'PRO';
 }

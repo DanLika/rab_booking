@@ -15609,6 +15609,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to reject booking.'**
   String get notificationRejectError;
+
+  /// No description provided for @widgetSettingsHeaderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking widget'**
+  String get widgetSettingsHeaderTitle;
+
+  /// No description provided for @widgetSettingsHeaderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Embed the booking calendar on your website'**
+  String get widgetSettingsHeaderSubtitle;
+
+  /// No description provided for @widgetSettingsStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get widgetSettingsStatusActive;
+
+  /// No description provided for @widgetSettingsEmbedCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Embed code'**
+  String get widgetSettingsEmbedCodeTitle;
+
+  /// No description provided for @widgetSettingsEmbedCodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste it on your website'**
+  String get widgetSettingsEmbedCodeSubtitle;
+
+  /// No description provided for @widgetSettingsEmbedModeInline.
+  ///
+  /// In en, this message translates to:
+  /// **'Embedded'**
+  String get widgetSettingsEmbedModeInline;
+
+  /// No description provided for @widgetSettingsEmbedModePopup.
+  ///
+  /// In en, this message translates to:
+  /// **'Popup button'**
+  String get widgetSettingsEmbedModePopup;
+
+  /// No description provided for @widgetSettingsEmbedModeLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get widgetSettingsEmbedModeLink;
+
+  /// No description provided for @widgetSettingsEmbedCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get widgetSettingsEmbedCopy;
+
+  /// No description provided for @widgetSettingsEmbedCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied to clipboard'**
+  String get widgetSettingsEmbedCopied;
+
+  /// No description provided for @widgetSettingsEmbedHttps.
+  ///
+  /// In en, this message translates to:
+  /// **'Loads over HTTPS · won\'t slow your page (async).'**
+  String get widgetSettingsEmbedHttps;
+
+  /// No description provided for @widgetSettingsInstallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup instructions'**
+  String get widgetSettingsInstallTitle;
+
+  /// No description provided for @widgetSettingsInstallHtml.
+  ///
+  /// In en, this message translates to:
+  /// **'HTML'**
+  String get widgetSettingsInstallHtml;
+
+  /// No description provided for @widgetSettingsInstallWordpress.
+  ///
+  /// In en, this message translates to:
+  /// **'WordPress'**
+  String get widgetSettingsInstallWordpress;
+
+  /// No description provided for @widgetSettingsInstallWix.
+  ///
+  /// In en, this message translates to:
+  /// **'Wix'**
+  String get widgetSettingsInstallWix;
+
+  /// No description provided for @widgetSettingsInstallHtmlStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the code snippet above.'**
+  String get widgetSettingsInstallHtmlStep1;
+
+  /// No description provided for @widgetSettingsInstallHtmlStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste it into your page\'s <body>, where you want the widget.'**
+  String get widgetSettingsInstallHtmlStep2;
+
+  /// No description provided for @widgetSettingsInstallHtmlStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and publish — the widget loads automatically.'**
+  String get widgetSettingsInstallHtmlStep3;
+
+  /// No description provided for @widgetSettingsInstallWordpressStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'In the editor, add a “Custom HTML” block.'**
+  String get widgetSettingsInstallWordpressStep1;
+
+  /// No description provided for @widgetSettingsInstallWordpressStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the code snippet into the block.'**
+  String get widgetSettingsInstallWordpressStep2;
+
+  /// No description provided for @widgetSettingsInstallWordpressStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Update the page (avoid “Visual” mode).'**
+  String get widgetSettingsInstallWordpressStep3;
+
+  /// No description provided for @widgetSettingsInstallWixStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an Embed element → “Embed code”.'**
+  String get widgetSettingsInstallWixStep1;
+
+  /// No description provided for @widgetSettingsInstallWixStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the snippet and set the frame size.'**
+  String get widgetSettingsInstallWixStep2;
+
+  /// No description provided for @widgetSettingsInstallWixStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish the page.'**
+  String get widgetSettingsInstallWixStep3;
+
+  /// No description provided for @widgetSettingsPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live preview'**
+  String get widgetSettingsPreviewTitle;
+
+  /// No description provided for @widgetSettingsPreviewOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get widgetSettingsPreviewOpen;
+
+  /// No description provided for @widgetSettingsPreviewBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Book'**
+  String get widgetSettingsPreviewBook;
+
+  /// No description provided for @widgetSettingsPreviewNight.
+  ///
+  /// In en, this message translates to:
+  /// **'per night'**
+  String get widgetSettingsPreviewNight;
+
+  /// No description provided for @widgetSettingsPreviewWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'M,T,W,T,F,S,S'**
+  String get widgetSettingsPreviewWeekdays;
+
+  /// No description provided for @widgetSettingsPoweredBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Powered by BookBed'**
+  String get widgetSettingsPoweredBy;
+
+  /// No description provided for @widgetSettingsAppearanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get widgetSettingsAppearanceTitle;
+
+  /// No description provided for @widgetSettingsAccentColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent color'**
+  String get widgetSettingsAccentColor;
+
+  /// No description provided for @widgetSettingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get widgetSettingsLanguage;
+
+  /// No description provided for @widgetSettingsLanguageAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest\'s choice'**
+  String get widgetSettingsLanguageAuto;
+
+  /// No description provided for @widgetSettingsThemeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get widgetSettingsThemeLabel;
+
+  /// No description provided for @widgetSettingsThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get widgetSettingsThemeLight;
+
+  /// No description provided for @widgetSettingsThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get widgetSettingsThemeDark;
+
+  /// No description provided for @widgetSettingsThemeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get widgetSettingsThemeSystem;
+
+  /// No description provided for @widgetSettingsBorderRadiusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Corner roundness'**
+  String get widgetSettingsBorderRadiusLabel;
+
+  /// No description provided for @widgetSettingsRadiusSharp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharp'**
+  String get widgetSettingsRadiusSharp;
+
+  /// No description provided for @widgetSettingsRadiusRounded.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounded'**
+  String get widgetSettingsRadiusRounded;
+
+  /// No description provided for @widgetSettingsRadiusSoft.
+  ///
+  /// In en, this message translates to:
+  /// **'Very rounded'**
+  String get widgetSettingsRadiusSoft;
+
+  /// No description provided for @widgetSettingsShowPrices.
+  ///
+  /// In en, this message translates to:
+  /// **'Show prices in the calendar'**
+  String get widgetSettingsShowPrices;
+
+  /// No description provided for @widgetSettingsBranding.
+  ///
+  /// In en, this message translates to:
+  /// **'“Powered by BookBed” badge'**
+  String get widgetSettingsBranding;
+
+  /// No description provided for @widgetSettingsBrandingPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove with Pro'**
+  String get widgetSettingsBrandingPro;
+
+  /// No description provided for @widgetSettingsProBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'PRO'**
+  String get widgetSettingsProBadge;
 }
 
 class _AppLocalizationsDelegate

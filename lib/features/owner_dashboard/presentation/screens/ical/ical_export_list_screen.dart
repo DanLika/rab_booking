@@ -10,8 +10,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../../core/services/logging_service.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
@@ -19,14 +18,24 @@ import '../../../../../core/config/environment.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
+import '../../../../../shared/widgets/redesign.dart';
 import '../../widgets/ical/ical_export_premium_header.dart';
 import '../../widgets/owner_app_drawer.dart';
 import '../../providers/owner_properties_provider.dart';
 import '../../providers/ical_feeds_provider.dart';
 import '../../../domain/models/ical_feed.dart';
 
-/// Screen that lists all units for iCal export selection
-/// Redesigned: Premium feel with consistent theme support
+/// Screen that lists all units for iCal export selection.
+///
+/// Redesigned onto the Bb* premium foundation (`lib/shared/widgets/redesign/`):
+/// page background keeps `context.gradients.pageBackground` (TIP 1); section
+/// surfaces use the TIP 1 diagonal `sectionBackground` gradient + `sectionBorder`
+/// hairline + restored elevation shadow; interactive chrome is Bb* primitives
+/// (BbButton / BbDropdown / BbIcon / BBType / BBColor / BBSpace / BBRadius).
+///
+/// The `widget_secrets` write in [_showDynamicLinkDialog] (5-field `hasOnly`
+/// rule, firestore.rules) is FROZEN — only chrome was migrated, never the
+/// write payload.
 class IcalExportListScreen extends ConsumerStatefulWidget {
   const IcalExportListScreen({super.key});
 
@@ -44,6 +53,18 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
   void initState() {
     super.initState();
     _loadUnits();
+  }
+
+  /// TIP 1 section surface — simple diagonal `sectionBackground` gradient
+  /// (2 colors / 2 stops, topRight → bottomLeft, theme-aware) + hairline
+  /// `sectionBorder` + restored elevation shadow. User-mandated section look.
+  BoxDecoration _sectionDecoration(BuildContext context) {
+    return BoxDecoration(
+      gradient: context.gradients.sectionBackground,
+      borderRadius: BBRadius.lgAll,
+      border: Border.all(color: context.gradients.sectionBorder),
+      boxShadow: BBShadow.elevated(context),
+    );
   }
 
   Future<void> _generateAndDownloadIcal(dynamic unit, String propertyId) async {
@@ -147,7 +168,6 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
 
   Future<void> _showDynamicLinkDialog(dynamic unit, String propertyId) async {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
 
     LoggingService.log(
       'Generating dynamic iCal link for unit: ${unit.id}',
@@ -159,7 +179,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
+        builder: (context) => const Center(child: BbSpinner(size: 36)),
       ),
     );
 
@@ -261,479 +281,324 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
         }
       }
 
-      // Build dropdown options from feeds
+      // Build dropdown options from feeds. Each carries a Material Symbol icon
+      // *name* (string) for BbDropdownItem.
       final dropdownOptions =
-          <
-            ({String label, String? excludeValue, IconData icon, Color color})
-          >[];
+          <({String label, String? excludeValue, String iconName})>[];
       dropdownOptions.add((
         label: l10n.icalExportOtherCalendar,
         excludeValue: null,
-        icon: Icons.calendar_month,
-        color: theme.colorScheme.primary,
+        iconName: 'calendar_month',
       ));
       for (final feed in uniqueFeeds) {
         dropdownOptions.add((
           label: feed.platformDisplayName,
           excludeValue: _getExcludeValue(feed),
-          icon: _getPlatformIcon(feed.platform, feed.customPlatformName),
-          color: _getPlatformColor(feed.platform, feed.customPlatformName),
+          iconName: _getPlatformIconName(
+            feed.platform,
+            feed.customPlatformName,
+          ),
         ));
       }
       // Default to first platform-specific option if available
       var selectedIndex = uniqueFeeds.isNotEmpty ? 1 : 0;
 
-      final isDark = theme.brightness == Brightness.dark;
       final dialogWidth = ResponsiveDialogUtils.getDialogWidth(context);
       final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
-      final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
       final screenHeight = MediaQuery.of(context).size.height;
 
       // Show dialog with per-platform URL cards
       unawaited(
         showDialog(
           context: context,
-          builder: (dialogContext) => Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            clipBehavior: Clip.antiAlias,
-            insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
-            child: Container(
-              width: dialogWidth,
-              constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
-              decoration: BoxDecoration(
-                gradient: context.gradients.sectionBackground,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: context.gradients.sectionBorder.withValues(alpha: 0.5),
-                ),
-                boxShadow: isDark
-                    ? AppShadows.elevation4Dark
-                    : AppShadows.elevation4,
+          builder: (dialogContext) {
+            final c = BBColor.of(dialogContext);
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              clipBehavior: Clip.antiAlias,
+              insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(
+                dialogContext,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header
-                  Container(
-                    height: ResponsiveDialogUtils.kHeaderHeight,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: headerPadding + 4,
+              shape: const RoundedRectangleBorder(borderRadius: BBRadius.lgAll),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: dialogWidth,
+                  maxHeight: screenHeight * 0.85,
+                ),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: dialogContext.gradients.sectionBackground,
+                    borderRadius: BBRadius.lgAll,
+                    border: Border.all(
+                      color: dialogContext.gradients.sectionBorder,
                     ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(11),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.link,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            l10n.icalExportLinkTitle,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          onPressed: () => Navigator.pop(dialogContext),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
-                          ),
-                        ),
-                      ],
-                    ),
+                    boxShadow: BBShadow.modal(dialogContext),
                   ),
-
-                  // Content
-                  Flexible(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.all(contentPadding),
-                      child: StatefulBuilder(
-                        builder: (ctx, setDialogState) {
-                          final selected = dropdownOptions[selectedIndex];
-                          final currentUrl = selected.excludeValue != null
-                              ? '$icalUrl?exclude=${selected.excludeValue}'
-                              : icalUrl;
-
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.icalExportPlatformUrlDesc,
-                                style: theme.textTheme.bodySmall,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Header — brand bar
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: BBSpace.sm,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(color: c.primary),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(BBSpace.xs),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BBRadius.xsAll,
                               ),
-                              const SizedBox(height: 16),
-
-                              // Platform dropdown
-                              Text(
-                                l10n.icalExportSelectPlatform,
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              child: const BbIcon(
+                                name: 'link',
+                                color: Colors.white,
                               ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? theme.colorScheme.onSurface.withValues(
-                                          alpha: 0.08,
-                                        )
-                                      : theme.colorScheme.onSurface.withValues(
-                                          alpha: 0.04,
-                                        ),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.15),
-                                  ),
-                                ),
-                                child: DropdownButton<int>(
-                                  value: selectedIndex,
-                                  isExpanded: true,
-                                  underline: const SizedBox.shrink(),
-                                  icon: Icon(
-                                    Icons.keyboard_arrow_down_rounded,
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.6),
-                                  ),
-                                  dropdownColor: isDark
-                                      ? const Color(0xFF2D2D2D)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                  items: dropdownOptions
-                                      .asMap()
-                                      .entries
-                                      .map(
-                                        (e) => DropdownMenuItem<int>(
-                                          value: e.key,
-                                          child: Row(
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.all(
-                                                  5,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: e.value.color
-                                                      .withValues(
-                                                        alpha: isDark
-                                                            ? 0.2
-                                                            : 0.1,
-                                                      ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(6),
-                                                ),
-                                                child: Icon(
-                                                  e.value.icon,
-                                                  size: 16,
-                                                  color: e.value.color,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Flexible(
-                                                child: Text(
-                                                  e.value.label,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      )
-                                      .toList(),
-                                  onChanged: (val) {
-                                    setDialogState(() {
-                                      selectedIndex = val ?? 0;
-                                    });
-                                  },
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                l10n.icalExportLinkTitle,
+                                style: BBType.h3(dialogContext).copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
+                            ),
+                            BbButton(
+                              asIcon: true,
+                              size: BbButtonSize.sm,
+                              variant: BbButtonVariant.onGradient,
+                              iconLeft: 'close',
+                              semanticLabel: l10n.close,
+                              onPressed: () => Navigator.pop(dialogContext),
+                            ),
+                          ],
+                        ),
+                      ),
 
-                              const SizedBox(height: 16),
+                      // Content
+                      Flexible(
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.all(contentPadding),
+                          child: StatefulBuilder(
+                            builder: (ctx, setDialogState) {
+                              final selected = dropdownOptions[selectedIndex];
+                              final currentUrl = selected.excludeValue != null
+                                  ? '$icalUrl?exclude=${selected.excludeValue}'
+                                  : icalUrl;
 
-                              // URL display with copy button
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? theme.colorScheme.onSurface.withValues(
-                                          alpha: 0.06,
-                                        )
-                                      : theme.colorScheme.onSurface.withValues(
-                                          alpha: 0.03,
-                                        ),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: theme.colorScheme.primary.withValues(
-                                      alpha: 0.25,
-                                    ),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: SelectableText(
-                                        currentUrl,
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              fontFamily: 'monospace',
-                                              fontSize: 11,
-                                              color: theme.colorScheme.onSurface
-                                                  .withValues(alpha: 0.8),
-                                            ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    IconButton(
-                                      icon: const Icon(Icons.copy, size: 20),
-                                      tooltip: l10n.icalExportCopyLink,
-                                      style: IconButton.styleFrom(
-                                        backgroundColor: theme
-                                            .colorScheme
-                                            .primary
-                                            .withValues(alpha: 0.1),
-                                        foregroundColor:
-                                            theme.colorScheme.primary,
-                                      ),
-                                      onPressed: () async {
-                                        try {
-                                          await Clipboard.setData(
-                                            ClipboardData(text: currentUrl),
-                                          );
-                                          if (ctx.mounted) {
-                                            ErrorDisplayUtils.showSuccessSnackBar(
-                                              ctx,
-                                              l10n.icalExportLinkCopied,
-                                            );
-                                          }
-                                        } catch (e) {
-                                          if (ctx.mounted) {
-                                            ErrorDisplayUtils.showErrorSnackBar(
-                                              ctx,
-                                              e,
-                                            );
-                                          }
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              // Description based on selection
-                              Row(
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(
-                                    selected.excludeValue != null
-                                        ? Icons.filter_alt_outlined
-                                        : Icons.warning_amber_rounded,
-                                    size: 14,
-                                    color: selected.excludeValue != null
-                                        ? theme.colorScheme.primary
-                                        : theme.colorScheme.error,
+                                  Text(
+                                    l10n.icalExportPlatformUrlDesc,
+                                    style: BBType.body(
+                                      ctx,
+                                    ).copyWith(color: c.textSecondary),
                                   ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      selected.excludeValue != null
-                                          ? '${l10n.icalExportExcludesFrom} ${selected.label}'
-                                          : l10n.icalExportGenericUrlWarning,
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: selected.excludeValue != null
-                                                ? theme.colorScheme.onSurface
-                                                      .withValues(alpha: 0.7)
-                                                : theme.colorScheme.error
-                                                      .withValues(alpha: 0.9),
-                                            fontSize: 12,
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                  const SizedBox(height: BBSpace.sm),
 
-                              if (uniqueFeeds.isNotEmpty) ...[
-                                const SizedBox(height: 14),
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withValues(
-                                      alpha: isDark ? 0.1 : 0.05,
+                                  // Platform dropdown
+                                  BbDropdown<int>(
+                                    label: l10n.icalExportSelectPlatform,
+                                    value: selectedIndex,
+                                    items: [
+                                      for (
+                                        var i = 0;
+                                        i < dropdownOptions.length;
+                                        i++
+                                      )
+                                        BbDropdownItem<int>(
+                                          value: i,
+                                          label: dropdownOptions[i].label,
+                                          icon: dropdownOptions[i].iconName,
+                                        ),
+                                    ],
+                                    onChanged: (val) {
+                                      setDialogState(() {
+                                        selectedIndex = val ?? 0;
+                                      });
+                                    },
+                                  ),
+
+                                  const SizedBox(height: BBSpace.sm),
+
+                                  // URL display with copy button
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: c.surface,
+                                      borderRadius: BBRadius.smAll,
+                                      border: Border.all(
+                                        color: c.primary.withValues(
+                                          alpha: 0.25,
+                                        ),
+                                      ),
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: theme.colorScheme.primary
-                                          .withValues(
-                                            alpha: isDark ? 0.25 : 0.15,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: SelectableText(
+                                            currentUrl,
+                                            style: BBType.mono(ctx).copyWith(
+                                              fontSize: 11,
+                                              color: c.textSecondary,
+                                            ),
                                           ),
+                                        ),
+                                        const SizedBox(width: BBSpace.xs),
+                                        BbButton(
+                                          asIcon: true,
+                                          size: BbButtonSize.sm,
+                                          variant: BbButtonVariant.secondary,
+                                          iconLeft: 'content_copy',
+                                          semanticLabel:
+                                              l10n.icalExportCopyLink,
+                                          onPressed: () async {
+                                            try {
+                                              await Clipboard.setData(
+                                                ClipboardData(text: currentUrl),
+                                              );
+                                              if (ctx.mounted) {
+                                                ErrorDisplayUtils.showSuccessSnackBar(
+                                                  ctx,
+                                                  l10n.icalExportLinkCopied,
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (ctx.mounted) {
+                                                ErrorDisplayUtils.showErrorSnackBar(
+                                                  ctx,
+                                                  e,
+                                                );
+                                              }
+                                            }
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  child: Row(
+
+                                  const SizedBox(height: 10),
+
+                                  // Description based on selection
+                                  Row(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Icon(
-                                        Icons.info_outline_rounded,
-                                        size: 16,
-                                        color: theme.colorScheme.primary
-                                            .withValues(alpha: 0.8),
+                                      BbIcon(
+                                        name: selected.excludeValue != null
+                                            ? 'filter_alt'
+                                            : 'warning',
+                                        size: 14,
+                                        color: selected.excludeValue != null
+                                            ? c.primary
+                                            : c.error,
                                       ),
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: 6),
                                       Expanded(
                                         child: Text(
-                                          l10n.icalExportHubSpokeNote,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withValues(alpha: 0.7),
-                                                fontSize: 11,
-                                              ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-
-                              if (uniqueFeeds.isEmpty) ...[
-                                const SizedBox(height: 14),
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(
-                                          alpha: isDark ? 0.06 : 0.03,
-                                        ),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.lightbulb_outline,
-                                        size: 16,
-                                        color: theme.colorScheme.onSurface
-                                            .withValues(alpha: 0.5),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          l10n.icalExportNoPlatformFeeds,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withValues(alpha: 0.6),
-                                                fontSize: 11,
-                                              ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-
-                              const SizedBox(height: 14),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.lock_outline,
-                                    size: 13,
-                                    color: theme.colorScheme.error.withValues(
-                                      alpha: 0.7,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      l10n.icalExportTokenWarning,
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: theme.colorScheme.error
-                                                .withValues(alpha: 0.7),
-                                            fontStyle: FontStyle.italic,
-                                            fontSize: 11,
+                                          selected.excludeValue != null
+                                              ? '${l10n.icalExportExcludesFrom} ${selected.label}'
+                                              : l10n.icalExportGenericUrlWarning,
+                                          style: BBType.caption(ctx).copyWith(
+                                            color: selected.excludeValue != null
+                                                ? c.textSecondary
+                                                : c.error,
                                           ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  if (uniqueFeeds.isNotEmpty) ...[
+                                    const SizedBox(height: 14),
+                                    _InfoNote(
+                                      icon: 'info',
+                                      text: l10n.icalExportHubSpokeNote,
+                                      tone: c.primary,
+                                      background: c.primary.withValues(
+                                        alpha: 0.08,
+                                      ),
                                     ),
+                                  ],
+
+                                  if (uniqueFeeds.isEmpty) ...[
+                                    const SizedBox(height: 14),
+                                    _InfoNote(
+                                      icon: 'lightbulb',
+                                      text: l10n.icalExportNoPlatformFeeds,
+                                      tone: c.textTertiary,
+                                      background: c.surfaceVariant,
+                                    ),
+                                  ],
+
+                                  const SizedBox(height: 14),
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      BbIcon(
+                                        name: 'lock',
+                                        size: 13,
+                                        color: c.error.withValues(alpha: 0.7),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          l10n.icalExportTokenWarning,
+                                          style: BBType.caption(ctx).copyWith(
+                                            color: c.error.withValues(
+                                              alpha: 0.7,
+                                            ),
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
-                              ),
-                            ],
-                          );
-                        },
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
 
-                  // Footer
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.dialogFooterDark
-                          : AppColors.dialogFooterLight,
-                      border: Border(
-                        top: BorderSide(
-                          color: isDark
-                              ? AppColors.sectionDividerDark
-                              : AppColors.sectionDividerLight,
+                      // Footer
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: BBSpace.sm,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            top: BorderSide(
+                              color: dialogContext.gradients.sectionBorder,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            BbButton(
+                              label: l10n.close,
+                              variant: BbButtonVariant.tertiary,
+                              size: BbButtonSize.sm,
+                              onPressed: () => Navigator.pop(dialogContext),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(dialogContext),
-                          child: Text(l10n.close),
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       );
     } catch (e, stack) {
@@ -751,7 +616,6 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
@@ -766,18 +630,14 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: _isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                  color: theme.colorScheme.primary,
-                ),
-              )
+            ? const Center(child: BbSpinner(size: 36))
             : LayoutBuilder(
                 builder: (context, constraints) {
                   final isDesktop = constraints.maxWidth > 900;
                   final isTablet = constraints.maxWidth > 600;
                   final horizontalPadding = isDesktop
-                      ? 48.0
-                      : (isTablet ? 32.0 : 16.0);
+                      ? BBSpace.xl
+                      : (isTablet ? BBSpace.lg : BBSpace.sm);
 
                   return SingleChildScrollView(
                     physics: PlatformScrollPhysics.adaptive,
@@ -804,7 +664,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                               ),
                               child: _buildHeroCard(context),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: BBSpace.md),
 
                             // Desktop: Benefits + HowItWorks side by side, Units below
                             if (isDesktop) ...[
@@ -814,26 +674,26 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                                   Expanded(
                                     child: _buildBenefitsSection(context),
                                   ),
-                                  const SizedBox(width: 24),
+                                  const SizedBox(width: BBSpace.md),
                                   Expanded(
                                     child: _buildHowItWorksSection(context),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: BBSpace.md),
                               if (_allUnits.isNotEmpty)
                                 _buildUnitsSection(context),
                             ] else ...[
                               // Mobile/Tablet: Stack vertically
                               _buildBenefitsSection(context),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: BBSpace.md),
                               if (_allUnits.isNotEmpty) ...[
                                 _buildUnitsSection(context),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: BBSpace.md),
                               ],
                               _buildHowItWorksSection(context),
                             ],
-                            const SizedBox(height: 32),
+                            const SizedBox(height: BBSpace.lg),
                           ],
                         ),
                       ),
@@ -845,228 +705,154 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     );
   }
 
+  /// Circle-icon + title row shared by the section cards.
+  Widget _sectionTitle(
+    BuildContext context,
+    String iconName,
+    String title, {
+    Widget? trailing,
+  }) {
+    final c = BBColor.of(context);
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: c.primary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: BbIcon(name: iconName, color: c.primary, size: 24),
+        ),
+        const SizedBox(width: BBSpace.sm),
+        Expanded(
+          child: Text(
+            title,
+            style: BBType.h3(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5),
+          ),
+        ),
+        if (trailing != null) trailing,
+      ],
+    );
+  }
+
   Widget _buildHeroCard(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
 
     final hasUnits = _allUnits.isNotEmpty;
 
-    const successGreen = Color(0xFF4CAF50);
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
-      ),
-      child: Stack(
-        children: [
-          // Pattern overlay
-          Positioned(
-            right: -10,
-            top: -10,
-            child: Icon(
-              Icons.sync_rounded,
-              size: 100,
-              color: theme.colorScheme.primary.withValues(alpha: 0.06),
+    return DecoratedBox(
+      decoration: _sectionDecoration(context),
+      child: ClipRRect(
+        borderRadius: BBRadius.lgAll,
+        child: Stack(
+          children: [
+            // Pattern overlay
+            Positioned(
+              right: -10,
+              top: -10,
+              child: BbIcon(
+                name: 'sync',
+                size: 100,
+                color: c.primary.withValues(alpha: 0.06),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(
-                          alpha: 0.10,
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: c.primary.withValues(alpha: 0.10),
+                          borderRadius: BBRadius.smAll,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        child: BbIcon(
+                          name: 'calendar_today',
+                          size: 24,
+                          color: c.primary,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.calendar_today_rounded,
-                        size: 24,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.icalExportListTitle,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: theme.colorScheme.onSurface,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: hasUnits
-                                  ? successGreen.withValues(alpha: 0.12)
-                                  : theme.colorScheme.surfaceContainerHighest
-                                        .withValues(alpha: 0.6),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: hasUnits
-                                    ? successGreen.withValues(alpha: 0.4)
-                                    : theme.dividerColor.withValues(alpha: 0.4),
+                      const SizedBox(width: BBSpace.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.icalExportListTitle,
+                              style: BBType.h2(context).copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
                               ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  hasUnits
-                                      ? Icons.check_circle_rounded
-                                      : Icons.info_outline_rounded,
-                                  size: 14,
-                                  color: hasUnits
-                                      ? successGreen
-                                      : theme.colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  hasUnits
-                                      ? l10n.icalExportReady
-                                      : l10n.icalExportListNoUnits,
-                                  style: TextStyle(
-                                    color: hasUnits
-                                        ? successGreen
-                                        : theme.colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                            const SizedBox(height: BBSpace.xxs),
+                            _StatusPill(hasUnits: hasUnits),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: BBSpace.sm),
+                  Text(
+                    hasUnits
+                        ? l10n.icalExportHeroDesc
+                        : l10n.icalExportListNoUnitsDesc,
+                    style: BBType.body(
+                      context,
+                    ).copyWith(color: c.textSecondary),
+                  ),
+                  if (!hasUnits) ...[
+                    const SizedBox(height: BBSpace.md),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: BbButton(
+                        label: l10n.icalExportListAddProperty,
+                        iconLeft: 'add',
+                        size: BbButtonSize.lg,
+                        onPressed: () => context.push(OwnerRoutes.propertyNew),
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  hasUnits
-                      ? l10n.icalExportHeroDesc
-                      : l10n.icalExportListNoUnitsDesc,
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
-                ),
-                if (!hasUnits) ...[
-                  const SizedBox(height: 24),
-                  FilledButton.icon(
-                    onPressed: () => context.push(OwnerRoutes.propertyNew),
-                    icon: const Icon(Icons.add_rounded, size: 20),
-                    label: Text(
-                      l10n.icalExportListAddProperty,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                  ),
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildBenefitsSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
     final benefits = [
       (
-        Icons.calendar_month_rounded,
+        'calendar_month',
         l10n.icalExportBenefit1Title,
         l10n.icalExportBenefit1Desc,
       ),
+      ('sync', l10n.icalExportBenefit2Title, l10n.icalExportBenefit2Desc),
+      ('devices', l10n.icalExportBenefit3Title, l10n.icalExportBenefit3Desc),
       (
-        Icons.sync_rounded,
-        l10n.icalExportBenefit2Title,
-        l10n.icalExportBenefit2Desc,
-      ),
-      (
-        Icons.devices_rounded,
-        l10n.icalExportBenefit3Title,
-        l10n.icalExportBenefit3Desc,
-      ),
-      (
-        Icons.notifications_active_rounded,
+        'notifications_active',
         l10n.icalExportBenefit4Title,
         l10n.icalExportBenefit4Desc,
       ),
     ];
 
     return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: AppShadows.getElevation(2, isDark: isDark),
-      ),
-      padding: const EdgeInsets.all(24),
+      decoration: _sectionDecoration(context),
+      padding: const EdgeInsets.all(BBSpace.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.star_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  l10n.icalExportWhyExport,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
+          _sectionTitle(context, 'star', l10n.icalExportWhyExport),
+          const SizedBox(height: BBSpace.md),
           ...benefits.map((b) => _buildBenefitItem(context, b.$1, b.$2, b.$3)),
         ],
       ),
@@ -1075,11 +861,11 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
 
   Widget _buildBenefitItem(
     BuildContext context,
-    IconData icon,
+    String iconName,
     String title,
     String description,
   ) {
-    final theme = Theme.of(context);
+    final c = BBColor.of(context);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -1087,12 +873,12 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(BBSpace.xs),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: c.primary.withValues(alpha: 0.1),
+              borderRadius: BBRadius.xsAll,
             ),
-            child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+            child: BbIcon(name: iconName, color: c.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1101,16 +887,16 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: BBType.body(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w600, color: c.textPrimary),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textSecondary),
                 ),
               ],
             ),
@@ -1121,201 +907,158 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
   }
 
   Widget _buildUnitsSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
 
     return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: AppShadows.getElevation(2, isDark: isDark),
-      ),
+      decoration: _sectionDecoration(context),
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.apartment_rounded,
-                    color: theme.colorScheme.primary,
-                    size: 24,
-                  ),
+            padding: const EdgeInsets.all(BBSpace.md),
+            child: _sectionTitle(
+              context,
+              'apartment',
+              l10n.icalExportSelectUnit,
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: BBSpace.xxs,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    l10n.icalExportSelectUnit,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
+                decoration: BoxDecoration(
+                  color: c.primary.withValues(alpha: 0.1),
+                  borderRadius: BBRadius.smAll,
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${_allUnits.length}',
-                    style: TextStyle(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                child: Text(
+                  '${_allUnits.length}',
+                  style: BBType.bodyNum(
+                    context,
+                  ).copyWith(color: c.primary, fontWeight: FontWeight.bold),
                 ),
-              ],
+              ),
             ),
           ),
           if (_allUnits.isEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              padding: const EdgeInsets.fromLTRB(
+                BBSpace.md,
+                0,
+                BBSpace.md,
+                BBSpace.md,
+              ),
               child: Container(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(BBSpace.lg),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(16),
+                  color: c.surfaceVariant,
+                  borderRadius: BBRadius.mdAll,
                 ),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.apartment_outlined,
-                      size: 48,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                    ),
-                    const SizedBox(height: 16),
+                    BbIcon(name: 'apartment', size: 48, color: c.textTertiary),
+                    const SizedBox(height: BBSpace.sm),
                     Text(
                       l10n.icalExportListNoUnits,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: BBType.body(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: BBSpace.xxs),
                     Text(
                       l10n.icalExportListNoUnitsDesc,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.5,
-                        ),
-                        fontSize: 13,
-                      ),
+                      style: BBType.caption(
+                        context,
+                      ).copyWith(color: c.textTertiary),
                       textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
             )
-          else ...[
+          else
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              padding: const EdgeInsets.fromLTRB(
+                BBSpace.md,
+                0,
+                BBSpace.md,
+                BBSpace.md,
+              ),
               child: Column(
                 children: _allUnits
                     .map((item) => _buildUnitItem(context, item))
                     .toList(),
               ),
             ),
-          ],
         ],
       ),
     );
   }
 
   Widget _buildUnitItem(BuildContext context, Map<String, dynamic> item) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
     final unit = item['unit'];
     final property = item['property'];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
-            : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-        ),
+        color: c.surfaceVariant,
+        borderRadius: BBRadius.mdAll,
+        border: Border.all(color: c.border),
       ),
-      child: Material(
-        color: Colors.transparent,
-        // InkWell without onTap disables card tap to prevent accidental actions
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        unit.name ?? l10n.icalExportListUnknownUnit,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        property.name ?? l10n.icalExportListUnknownProperty,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                Text(
+                  unit.name ?? l10n.icalExportListUnknownUnit,
+                  style: BBType.body(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.bold),
                 ),
-                // Copy Link Button
-                IconButton(
-                  onPressed: () => _showDynamicLinkDialog(unit, property.id),
-                  icon: const Icon(Icons.link, size: 22),
-                  tooltip: l10n.icalExportCopyLink,
-                  style: IconButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    foregroundColor: theme.colorScheme.onPrimaryContainer,
-                  ),
+                const SizedBox(height: 2),
+                Text(
+                  property.name ?? l10n.icalExportListUnknownProperty,
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textSecondary),
                 ),
-                const SizedBox(width: 8),
-                // Download Button
-                if (_generatingUnitId == unit.id)
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  IconButton(
-                    onPressed: () =>
-                        _generateAndDownloadIcal(unit, property.id),
-                    icon: const Icon(Icons.download_rounded, size: 22),
-                    tooltip: 'Download',
-                    style: IconButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primaryContainer,
-                      foregroundColor: theme.colorScheme.onPrimaryContainer,
-                    ),
-                  ),
               ],
             ),
           ),
-        ),
+          // Copy Link Button
+          Tooltip(
+            message: l10n.icalExportCopyLink,
+            child: BbButton(
+              asIcon: true,
+              variant: BbButtonVariant.secondary,
+              iconLeft: 'link',
+              semanticLabel: l10n.icalExportCopyLink,
+              onPressed: () => _showDynamicLinkDialog(unit, property.id),
+            ),
+          ),
+          const SizedBox(width: BBSpace.xs),
+          // Download Button
+          if (_generatingUnitId == unit.id)
+            const SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(child: BbSpinner(size: 22)),
+            )
+          else
+            Tooltip(
+              message: 'Download',
+              child: BbButton(
+                asIcon: true,
+                iconLeft: 'download',
+                semanticLabel: 'Download',
+                onPressed: () => _generateAndDownloadIcal(unit, property.id),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -1343,41 +1086,25 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     return feed.platform.toFirestoreValue();
   }
 
-  IconData _getPlatformIcon(IcalPlatform platform, String? customName) {
+  /// Material Symbol icon *name* for a feed's platform (BbDropdownItem.icon).
+  String _getPlatformIconName(IcalPlatform platform, String? customName) {
     return switch (platform) {
-      IcalPlatform.bookingCom => Icons.business,
-      IcalPlatform.airbnb => Icons.apartment,
-      IcalPlatform.other => _getOtherPlatformIcon(customName),
+      IcalPlatform.bookingCom => 'business',
+      IcalPlatform.airbnb => 'apartment',
+      IcalPlatform.other => _getOtherPlatformIconName(customName),
     };
   }
 
-  IconData _getOtherPlatformIcon(String? name) {
+  String _getOtherPlatformIconName(String? name) {
     final lower = name?.toLowerCase() ?? '';
-    if (lower.contains('adriagate')) return Icons.beach_access;
-    if (lower.contains('holiday')) return Icons.home;
-    if (lower.contains('atraveo')) return Icons.villa;
-    return Icons.link;
-  }
-
-  Color _getPlatformColor(IcalPlatform platform, String? customName) {
-    return switch (platform) {
-      IcalPlatform.bookingCom => const Color(0xFF003580),
-      IcalPlatform.airbnb => const Color(0xFFFF5A5F),
-      IcalPlatform.other => _getOtherPlatformColor(customName),
-    };
-  }
-
-  Color _getOtherPlatformColor(String? name) {
-    final lower = name?.toLowerCase() ?? '';
-    if (lower.contains('adriagate')) return const Color(0xFF0088CC);
-    if (lower.contains('holiday')) return const Color(0xFF4CAF50);
-    if (lower.contains('atraveo')) return const Color(0xFF9C27B0);
-    return const Color(0xFF607D8B);
+    if (lower.contains('adriagate')) return 'beach_access';
+    if (lower.contains('holiday')) return 'home';
+    if (lower.contains('atraveo')) return 'villa';
+    return 'link';
   }
 
   Widget _buildHowItWorksSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
 
     final steps = [
@@ -1388,44 +1115,13 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     ];
 
     return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: AppShadows.getElevation(2, isDark: isDark),
-      ),
-      padding: const EdgeInsets.all(24),
+      decoration: _sectionDecoration(context),
+      padding: const EdgeInsets.all(BBSpace.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.help_outline_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  l10n.icalExportHowItWorks,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
+          _sectionTitle(context, 'help', l10n.icalExportHowItWorks),
+          const SizedBox(height: BBSpace.md),
           ...steps.asMap().entries.map(
             (e) => Padding(
               padding: const EdgeInsets.only(bottom: 20),
@@ -1436,34 +1132,113 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
+                      color: c.primary,
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       '${e.key + 1}',
-                      style: TextStyle(
-                        color: theme.colorScheme.onPrimary,
-                        fontSize: 13,
+                      style: BBType.caption(context).copyWith(
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: BBSpace.sm),
                   Expanded(
                     child: Text(
                       e.value,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.8,
-                        ),
-                        height: 1.5,
-                      ),
+                      style: BBType.body(
+                        context,
+                      ).copyWith(color: c.textSecondary),
                     ),
                   ),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Status chip on the hero card — green "ready" when the owner has units,
+/// neutral "no units" otherwise.
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.hasUnits});
+
+  final bool hasUnits;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final l10n = AppLocalizations.of(context);
+    final Color tone = hasUnits ? c.success : c.textTertiary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: BBSpace.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.12),
+        borderRadius: BBRadius.smAll,
+        border: Border.all(color: tone.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BbIcon(
+            name: hasUnits ? 'check_circle' : 'info',
+            size: 14,
+            color: tone,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            hasUnits ? l10n.icalExportReady : l10n.icalExportListNoUnits,
+            style: BBType.caption(
+              context,
+            ).copyWith(color: tone, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tinted info/hint note used inside the link dialog (icon + body text).
+class _InfoNote extends StatelessWidget {
+  const _InfoNote({
+    required this.icon,
+    required this.text,
+    required this.tone,
+    required this.background,
+  });
+
+  final String icon;
+  final String text;
+  final Color tone;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BBRadius.smAll,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          BbIcon(name: icon, size: 16, color: tone),
+          const SizedBox(width: BBSpace.xs),
+          Expanded(
+            child: Text(
+              text,
+              style: BBType.caption(context).copyWith(color: c.textSecondary),
             ),
           ),
         ],

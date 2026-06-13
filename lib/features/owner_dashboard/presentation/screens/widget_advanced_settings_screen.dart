@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
@@ -155,13 +157,23 @@ class _WidgetAdvancedSettingsScreenState
     }
   }
 
+  /// Page-shell wash (`context.gradients.pageBackground`, TIP 1 diagonal,
+  /// fade ends at 30%). Applied to the standalone Scaffold body only — when
+  /// embedded in the unit hub (showAppBar == false) the hub paints the page
+  /// gradient itself, so we don't double-wash there.
+  Widget _withPageBackground(Widget child) {
+    return Container(
+      decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+      child: child,
+    );
+  }
+
   void _showDisclaimerPreview() {
     final l10n = AppLocalizations.of(context);
     final text = _useDefaultText
         ? const TaxLegalConfig().disclaimerText
         : _customDisclaimerController.text.trim();
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final c = BBColor.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = screenWidth < 600;
@@ -169,117 +181,85 @@ class _WidgetAdvancedSettingsScreenState
     showDialog(
       context: context,
       builder: (dialogContext) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        clipBehavior: Clip.antiAlias,
+        backgroundColor: Colors.transparent,
         insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
-        child: Container(
-          width: isMobile ? screenWidth * 0.90 : 600,
+        child: ConstrainedBox(
           constraints: BoxConstraints(
+            maxWidth: isMobile ? screenWidth * 0.90 : 600,
             maxHeight:
                 screenHeight *
                 ResponsiveSpacingHelper.getDialogMaxHeightPercent(
                   dialogContext,
                 ),
           ),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header with darker gradient
-              Container(
-                padding: EdgeInsets.all(isMobile ? 16 : 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isDark
-                        ? [const Color(0xFF6B46C1), const Color(0xFF553C9A)]
-                        : [const Color(0xFF7C3AED), const Color(0xFF6D28D9)],
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
+          child: Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              // Theme-aware shell tone + hairline divider. Retired the
+              // hardcoded purple gradient header slab per audit/120 chrome
+              // retirement; matches `BbDialog`'s surface treatment.
+              color: c.surface,
+              borderRadius: BBRadius.lgAll,
+              boxShadow: BBShadow.modal(context),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header — primary-tinted icon tile (mirrors the section
+                // headers on this screen) instead of the brand gradient bar.
+                Padding(
+                  padding: const EdgeInsets.all(BBSpace.sm),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: c.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.preview, color: c.primary, size: 20),
                       ),
-                      child: const Icon(
-                        Icons.preview,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l10n.advancedSettingsDisclaimerPreview,
-                        style: TextStyle(
-                          fontSize: isMobile ? 16 : 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          l10n.advancedSettingsDisclaimerPreview,
+                          style: BBType.h3(context),
                         ),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      tooltip: l10n.close,
-                    ),
-                  ],
-                ),
-              ),
-              // Content
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.all(isMobile ? 16 : 20),
-                  child: Text(
-                    text.isEmpty ? l10n.advancedSettingsNoDisclaimer : text,
-                    style: TextStyle(
-                      fontSize: 14,
-                      height: 1.6,
-                      color: isDark ? Colors.grey[300] : Colors.grey[800],
-                    ),
-                  ),
-                ),
-              ),
-              // Footer with divider
-              Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[50],
-                  border: Border(
-                    top: BorderSide(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : Colors.black.withValues(alpha: 0.1),
-                    ),
-                  ),
-                ),
-                padding: EdgeInsets.all(isMobile ? 12 : 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: isDark
-                          ? const Color(0xFF6B46C1)
-                          : const Color(0xFF7C3AED),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                      IconButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        icon: Icon(Icons.close, color: c.textSecondary),
+                        tooltip: l10n.close,
                       ),
-                    ),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, thickness: 1, color: c.border),
+                // Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(BBSpace.sm),
                     child: Text(
-                      l10n.close,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      text.isEmpty ? l10n.advancedSettingsNoDisclaimer : text,
+                      style: BBType.body(
+                        context,
+                      ).copyWith(height: 1.6, color: c.textSecondary),
                     ),
                   ),
                 ),
-              ),
-            ],
+                Divider(height: 1, thickness: 1, color: c.border),
+                // Footer
+                Padding(
+                  padding: const EdgeInsets.all(BBSpace.sm),
+                  child: BbButton(
+                    label: l10n.close,
+                    size: BbButtonSize.lg,
+                    fullWidth: true,
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -304,7 +284,7 @@ class _WidgetAdvancedSettingsScreenState
           return Scaffold(
             resizeToAvoidBottomInset: true,
             appBar: AppBar(title: Text(l10n.advancedSettingsTitle)),
-            body: errorContent,
+            body: _withPageBackground(errorContent),
           );
         }
 
@@ -430,12 +410,14 @@ class _WidgetAdvancedSettingsScreenState
                     ),
                 ],
               ),
-              body: SafeArea(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Note: ListView handles keyboard spacing automatically when resizeToAvoidBottomInset is true
-                    return bodyContent;
-                  },
+              body: _withPageBackground(
+                SafeArea(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Note: ListView handles keyboard spacing automatically when resizeToAvoidBottomInset is true
+                      return bodyContent;
+                    },
+                  ),
                 ),
               ),
             ),
@@ -449,7 +431,7 @@ class _WidgetAdvancedSettingsScreenState
         return Scaffold(
           resizeToAvoidBottomInset: true,
           appBar: AppBar(title: Text(l10n.advancedSettingsTitle)),
-          body: loadingContent,
+          body: _withPageBackground(loadingContent),
         );
       },
       error: (error, stack) {
@@ -469,7 +451,7 @@ class _WidgetAdvancedSettingsScreenState
         return Scaffold(
           resizeToAvoidBottomInset: true,
           appBar: AppBar(title: Text(l10n.advancedSettingsTitle)),
-          body: errorContent,
+          body: _withPageBackground(errorContent),
         );
       },
     );

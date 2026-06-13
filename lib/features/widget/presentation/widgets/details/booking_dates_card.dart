@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import 'widget_card_decoration.dart';
 import '../../../../../core/design/tokens.dart';
 import '../../../../../core/utils/date_time_parser.dart';
 import '../common/detail_row_widget.dart';
@@ -91,20 +92,11 @@ class BookingDatesCard extends ConsumerWidget {
     final locale = Localizations.localeOf(context);
     final formatter = DateFormat('EEEE, MMM dd, yyyy', locale.toString());
 
-    // Dark mode: pure black background matching parent, with visible border
-    final cardBackground = isDarkMode
-        ? Colors.black
-        : colors.backgroundSecondary;
-    final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
-
     return Container(
       padding: const EdgeInsets.all(BBSpace.sm),
-      decoration: BoxDecoration(
-        color: cardBackground,
-        borderRadius: const BorderRadius.all(
-          Radius.circular(BBRadiusBridges.medium),
-        ),
-        border: Border.all(color: cardBorder, width: isDarkMode ? 1.5 : 1.0),
+      decoration: premiumWidgetCardDecoration(
+        colors: colors,
+        isDark: isDarkMode,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

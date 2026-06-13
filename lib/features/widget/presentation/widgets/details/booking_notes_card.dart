@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import 'widget_card_decoration.dart';
 import '../../../../../core/design/tokens.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -38,19 +39,9 @@ class BookingNotesCard extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    // Dark mode: pure black background matching parent, with visible border
-    final cardBackground = isDark ? Colors.black : colors.backgroundSecondary;
-    final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
-
     return Container(
       padding: const EdgeInsets.all(BBSpace.sm),
-      decoration: BoxDecoration(
-        color: cardBackground,
-        borderRadius: const BorderRadius.all(
-          Radius.circular(BBRadiusBridges.medium),
-        ),
-        border: Border.all(color: cardBorder, width: isDark ? 1.5 : 1.0),
-      ),
+      decoration: premiumWidgetCardDecoration(colors: colors, isDark: isDark),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

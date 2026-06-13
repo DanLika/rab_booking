@@ -30,9 +30,7 @@ class BookingStatusBanner extends ConsumerWidget {
       padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: const BorderRadius.all(
-          Radius.circular(BBRadiusBridges.medium),
-        ),
+        borderRadius: BBRadius.mdAll,
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(

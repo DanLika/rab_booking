@@ -20,6 +20,7 @@ import '../widgets/details/payment_info_card.dart';
 import '../widgets/details/contact_owner_card.dart';
 import '../widgets/details/cancellation_policy_card.dart';
 import '../widgets/details/booking_notes_card.dart';
+import '../widgets/common/widget_powered_by.dart';
 import '../widgets/details/cancel_confirmation_dialog.dart';
 import '../widgets/details/bank_transfer_details_card.dart';
 import '../l10n/widget_translations.dart';
@@ -336,6 +337,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                                     );
                                   },
                                 ),
+
+                                const SizedBox(height: BBSpace.md),
+                                const WidgetPoweredBy(),
 
                                 // Extra bottom padding for safe area
                                 const SizedBox(height: BBSpace.lg),

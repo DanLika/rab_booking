@@ -7,12 +7,14 @@ import '../providers/theme_provider.dart';
 import '../providers/booking_lookup_provider.dart';
 import '../providers/subdomain_provider.dart';
 import '../../../../../core/config/environment.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../shared/providers/widget_repository_providers.dart';
 import '../../domain/services/subdomain_service.dart' show SubdomainContext;
 import '../l10n/widget_translations.dart';
 import 'subdomain_not_found_screen.dart';
 import 'booking_details_screen.dart';
+import '../widgets/common/widget_powered_by.dart';
 import '../../../../../core/services/logging_service.dart';
 
 /// Safely convert error to string, handling null and edge cases
@@ -292,88 +294,170 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
 
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,
-      appBar: AppBar(
-        title: Text(
-          tr.viewBooking,
-          style: GoogleFonts.inter(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w600,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            BBSpace.md,
+            BBSpace.md,
+            BBSpace.md,
+            BBSpace.lg,
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: _isLoading
+                      ? _buildLoadingState(colors, tr)
+                      : _errorMessage != null
+                      ? _buildErrorState(colors, isDarkMode, tr)
+                      : const SizedBox.shrink(),
+                ),
+              ),
+              const WidgetPoweredBy(),
+            ],
           ),
         ),
-        backgroundColor: colors.backgroundPrimary,
-        elevation: 0,
-        iconTheme: IconThemeData(color: colors.textPrimary),
       ),
-      body: Center(
-        child: _isLoading
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    tr.loadingYourBooking,
-                    style: GoogleFonts.inter(
-                      color: colors.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              )
-            : _errorMessage != null
-            ? Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 64, color: colors.error),
-                    const SizedBox(height: 16),
-                    Text(
-                      tr.unableToLoadBooking,
-                      style: GoogleFonts.inter(
-                        color: colors.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        color: colors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        // Defensive check: ensure GoRouter is available before navigation
-                        try {
-                          context.go('/');
-                        } catch (e) {
-                          unawaited(
-                            LoggingService.logError('Navigation failed', e),
-                          );
-                          // If navigation fails, try Navigator.pop as fallback
-                          if (Navigator.of(context).canPop()) {
-                            Navigator.of(context).pop();
-                          }
-                        }
-                      },
-                      icon: const Icon(Icons.home),
-                      label: Text(tr.goToHome),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colors.primary,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
+    );
+  }
+
+  /// Centered loading indicator shown while the booking is resolved.
+  Widget _buildLoadingState(WidgetColorScheme colors, WidgetTranslations tr) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+        ),
+        const SizedBox(height: BBSpace.sm),
+        Text(
+          tr.loadingYourBooking,
+          style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 14),
+        ),
+      ],
+    );
+  }
+
+  /// Premium error state — concentric status mark + headline + ink CTA,
+  /// mirroring the widget design handoff (`widget-error`).
+  Widget _buildErrorState(
+    WidgetColorScheme colors,
+    bool isDarkMode,
+    WidgetTranslations tr,
+  ) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 460),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildStateMark(colors.error, colors.backgroundPrimary),
+          const SizedBox(height: BBSpace.md),
+          Text(
+            tr.unableToLoadBooking,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              color: colors.textPrimary,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+              height: 1.15,
+            ),
+          ),
+          const SizedBox(height: BBSpace.xs),
+          Text(
+            _errorMessage!,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              color: colors.textSecondary,
+              fontSize: 15,
+              height: 1.55,
+            ),
+          ),
+          const SizedBox(height: BBSpace.lg),
+          SizedBox(
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                // Defensive check: ensure GoRouter is available before navigation
+                try {
+                  context.go('/');
+                } catch (e) {
+                  unawaited(LoggingService.logError('Navigation failed', e));
+                  // If navigation fails, try Navigator.pop as fallback
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                }
+              },
+              icon: const Icon(Icons.home_outlined, size: 18),
+              label: Text(
+                tr.goToHome,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                 ),
-              )
-            : const SizedBox.shrink(),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.buttonPrimary,
+                foregroundColor: colors.buttonPrimaryText,
+                elevation: isDarkMode ? 0 : 6,
+                shadowColor: const Color(0x591B2330),
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Layered tone-colored disc used by the error state — three concentric
+  /// circles (soft halo rings + bordered core disc) carrying a tone-colored
+  /// icon. Mirror of the handoff success/error "mark".
+  Widget _buildStateMark(Color tone, Color discColor) {
+    return SizedBox(
+      width: 96,
+      height: 96,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: tone.withValues(alpha: 0.10),
+            ),
+          ),
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: tone.withValues(alpha: 0.14),
+            ),
+          ),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: discColor,
+              border: Border.all(color: tone, width: 2),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A141E32),
+                  offset: Offset(0, 8),
+                  blurRadius: 20,
+                ),
+              ],
+            ),
+            child: Icon(Icons.error_outline, color: tone, size: 30),
+          ),
+        ],
       ),
     );
   }

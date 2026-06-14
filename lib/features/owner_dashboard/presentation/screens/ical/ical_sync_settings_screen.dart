@@ -122,8 +122,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                       ),
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: isDesktop ? 1200.0 : double.infinity,
+                          constraints: const BoxConstraints(
+                            maxWidth:
+                                1000, // page clamp — center tablet+desktop
                           ),
                           child: statsAsync.when(
                             data: (stats) {

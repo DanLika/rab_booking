@@ -12,6 +12,7 @@ import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/responsive.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -143,122 +144,128 @@ class ProfileScreen extends ConsumerWidget {
 
                 return Container(
                   color: rd.shellBg,
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
-                      Padding(
-                        padding: gutterPadding,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: rd.panelBg,
-                            borderRadius: BorderRadius.circular(
-                              isMobile ? BBRadius.lg : 28,
+                  // Content clamp — center + cap width on tablet/desktop web.
+                  child: BBContentMaxWidth(
+                    maxWidth: 1100,
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: [
+                        Padding(
+                          padding: gutterPadding,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: rd.panelBg,
+                              borderRadius: BorderRadius.circular(
+                                isMobile ? BBRadius.lg : 28,
+                              ),
+                              border: Border.all(color: rd.panelBorder),
+                              boxShadow: rd.panelShadow,
                             ),
-                            border: Border.all(color: rd.panelBorder),
-                            boxShadow: rd.panelShadow,
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              isMobile ? 16 : (isDesktop ? 28 : 22),
-                              isMobile ? 16 : 22,
-                              isMobile ? 16 : (isDesktop ? 28 : 22),
-                              isMobile ? 20 : 28,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Eyebrow + headline (handoff §394 PFPEyebrow + h1)
-                                _ProfilHeader(
-                                  l10n: l10n,
-                                  isMobile: isMobile,
-                                  isAnonymous: isAnonymous,
-                                ),
-                                SizedBox(height: isMobile ? 14 : 18),
-
-                                // Identity command card
-                                _ProfilIdentityCard(
-                                  displayName: displayName,
-                                  email: email,
-                                  city: city,
-                                  country: country,
-                                  avatarUrl: avatarUrl,
-                                  memberSinceYear:
-                                      user.metadata.creationTime?.year,
-                                  emailVerified: user.emailVerified,
-                                  phoneFilled: phoneFilled,
-                                  isAnonymous: isAnonymous,
-                                  completionPercentage: completionPercentage,
-                                  isMobile: isMobile,
-                                ),
-                                SizedBox(height: isMobile ? 14 : 18),
-
-                                // Host-trust KPI strip — profile-premium.jsx
-                                // §405 PFP_STATS row (rating / response rate /
-                                // response time / completed bookings). Behind a
-                                // kDebug + env-flag gate because 3 of 4 metrics
-                                // (rating, response rate, response time) have
-                                // no backend source yet. Whole strip is gated
-                                // together so production never renders a
-                                // partial 1-tile row that looks broken.
-                                if (!isAnonymous) ...[
-                                  const _ProfilStatStrip(),
-                                  SizedBox(height: isMobile ? 14 : 18),
-                                ],
-
-                                // Subscription banner — trial-only (unchanged condition)
-                                if (authState.userModel?.hideSubscription !=
-                                        true &&
-                                    isTrial) ...[
-                                  _ProfilProCard(
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                isMobile ? 16 : (isDesktop ? 28 : 22),
+                                isMobile ? 16 : 22,
+                                isMobile ? 16 : (isDesktop ? 28 : 22),
+                                isMobile ? 20 : 28,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // Eyebrow + headline (handoff §394 PFPEyebrow + h1)
+                                  _ProfilHeader(
                                     l10n: l10n,
+                                    isMobile: isMobile,
+                                    isAnonymous: isAnonymous,
+                                  ),
+                                  SizedBox(height: isMobile ? 14 : 18),
+
+                                  // Identity command card
+                                  _ProfilIdentityCard(
+                                    displayName: displayName,
+                                    email: email,
+                                    city: city,
+                                    country: country,
+                                    avatarUrl: avatarUrl,
+                                    memberSinceYear:
+                                        user.metadata.creationTime?.year,
+                                    emailVerified: user.emailVerified,
+                                    phoneFilled: phoneFilled,
+                                    isAnonymous: isAnonymous,
+                                    completionPercentage: completionPercentage,
                                     isMobile: isMobile,
                                   ),
                                   SizedBox(height: isMobile ? 14 : 18),
-                                ],
 
-                                // Settings groups — desktop = 2-col, mobile/tablet = single column.
-                                _ProfilSettingsLayout(
-                                  isMobile: isMobile,
-                                  isDesktop: isDesktop,
-                                  account: _buildAccountGroup(
-                                    context: context,
-                                    ref: ref,
-                                    l10n: l10n,
-                                    theme: theme,
-                                    isAnonymous: isAnonymous,
-                                    isSocialSignIn: isSocialSignIn,
-                                    hideSubscription:
-                                        authState.userModel?.hideSubscription ==
-                                        true,
-                                    isTrial: isTrial,
-                                    languageName: languageName,
-                                    themeName: themeName,
-                                    primary: c.primary,
+                                  // Host-trust KPI strip — profile-premium.jsx
+                                  // §405 PFP_STATS row (rating / response rate /
+                                  // response time / completed bookings). Behind a
+                                  // kDebug + env-flag gate because 3 of 4 metrics
+                                  // (rating, response rate, response time) have
+                                  // no backend source yet. Whole strip is gated
+                                  // together so production never renders a
+                                  // partial 1-tile row that looks broken.
+                                  if (!isAnonymous) ...[
+                                    const _ProfilStatStrip(),
+                                    SizedBox(height: isMobile ? 14 : 18),
+                                  ],
+
+                                  // Subscription banner — trial-only (unchanged condition)
+                                  if (authState.userModel?.hideSubscription !=
+                                          true &&
+                                      isTrial) ...[
+                                    _ProfilProCard(
+                                      l10n: l10n,
+                                      isMobile: isMobile,
+                                    ),
+                                    SizedBox(height: isMobile ? 14 : 18),
+                                  ],
+
+                                  // Settings groups — desktop = 2-col, mobile/tablet = single column.
+                                  _ProfilSettingsLayout(
+                                    isMobile: isMobile,
+                                    isDesktop: isDesktop,
+                                    account: _buildAccountGroup(
+                                      context: context,
+                                      ref: ref,
+                                      l10n: l10n,
+                                      theme: theme,
+                                      isAnonymous: isAnonymous,
+                                      isSocialSignIn: isSocialSignIn,
+                                      hideSubscription:
+                                          authState
+                                              .userModel
+                                              ?.hideSubscription ==
+                                          true,
+                                      isTrial: isTrial,
+                                      languageName: languageName,
+                                      themeName: themeName,
+                                      primary: c.primary,
+                                    ),
+                                    app: _buildAppGroup(
+                                      context: context,
+                                      l10n: l10n,
+                                      theme: theme,
+                                    ),
+                                    legal: _buildLegalGroup(
+                                      context: context,
+                                      l10n: l10n,
+                                      theme: theme,
+                                    ),
+                                    danger: _buildDangerGroup(
+                                      context: context,
+                                      ref: ref,
+                                      l10n: l10n,
+                                      theme: theme,
+                                    ),
                                   ),
-                                  app: _buildAppGroup(
-                                    context: context,
-                                    l10n: l10n,
-                                    theme: theme,
-                                  ),
-                                  legal: _buildLegalGroup(
-                                    context: context,
-                                    l10n: l10n,
-                                    theme: theme,
-                                  ),
-                                  danger: _buildDangerGroup(
-                                    context: context,
-                                    ref: ref,
-                                    l10n: l10n,
-                                    theme: theme,
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
+                        const SizedBox(height: 8),
+                      ],
+                    ),
                   ),
                 );
               },

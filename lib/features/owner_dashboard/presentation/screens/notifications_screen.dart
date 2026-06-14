@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/router_owner.dart';
+import '../../../../core/design/responsive.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -195,44 +196,48 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   return _buildEmptyState(context);
                 }
 
-                return RefreshIndicator(
-                  color: c.primary,
-                  onRefresh: () async {
-                    ref.invalidate(notificationsStreamProvider);
-                  },
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(BBSpace.sm),
-                    itemCount: groupedNotifications.length,
-                    itemBuilder: (context, index) {
-                      final dateKey = groupedNotifications.keys.elementAt(
-                        index,
-                      );
-                      final dayNotifications = groupedNotifications[dateKey]!;
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              top: BBSpace.sm,
-                              bottom: BBSpace.xs,
-                            ),
-                            child: BbSectionHeader(
-                              title: dateKey,
-                              count: dayNotifications.length,
-                              level: BbSectionHeaderLevel.h3,
-                            ),
-                          ),
-                          ...dayNotifications.map(
-                            (notification) => _buildNotificationCard(
-                              context,
-                              notification,
-                              actions,
-                            ),
-                          ),
-                        ],
-                      );
+                // Content clamp — center + cap width on tablet/desktop web.
+                return BBContentMaxWidth(
+                  maxWidth: 1100,
+                  child: RefreshIndicator(
+                    color: c.primary,
+                    onRefresh: () async {
+                      ref.invalidate(notificationsStreamProvider);
                     },
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(BBSpace.sm),
+                      itemCount: groupedNotifications.length,
+                      itemBuilder: (context, index) {
+                        final dateKey = groupedNotifications.keys.elementAt(
+                          index,
+                        );
+                        final dayNotifications = groupedNotifications[dateKey]!;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: BBSpace.sm,
+                                bottom: BBSpace.xs,
+                              ),
+                              child: BbSectionHeader(
+                                title: dateKey,
+                                count: dayNotifications.length,
+                                level: BbSectionHeaderLevel.h3,
+                              ),
+                            ),
+                            ...dayNotifications.map(
+                              (notification) => _buildNotificationCard(
+                                context,
+                                notification,
+                                actions,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 );
               },

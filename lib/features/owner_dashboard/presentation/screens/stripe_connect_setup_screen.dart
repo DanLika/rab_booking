@@ -300,7 +300,10 @@ class _StripeConnectSetupScreenState
                       child: Center(
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            maxWidth: isDesktop ? 1200.0 : double.infinity,
+                            // Page content clamp — center on tablet+desktop
+                            // web (was isDesktop ? 1200 : infinity → tablet
+                            // stretched edge-to-edge).
+                            maxWidth: 1000,
                             minHeight: constraints.maxHeight - 40,
                           ),
                           child: Column(

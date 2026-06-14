@@ -647,8 +647,8 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                     ),
                     child: Center(
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: isDesktop ? 1200.0 : double.infinity,
+                        constraints: const BoxConstraints(
+                          maxWidth: 1000, // page clamp — center tablet+desktop
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,

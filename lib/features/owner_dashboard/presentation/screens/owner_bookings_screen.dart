@@ -22,6 +22,7 @@ import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../utils/scroll_direction_tracker.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../shared/widgets/redesign.dart';
+import '../../../../core/design/responsive.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -586,233 +587,240 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     .refresh();
               },
               color: theme.colorScheme.primary,
-              child: CustomScrollView(
-                controller: _scrollController,
-                // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
-                physics: PlatformScrollPhysics.adaptive,
-                slivers: [
-                  // Premium header (audit/117 §B2) — KPI strip + AI nudge +
-                  // pending priority queue. Hidden when any filter is active
-                  // so filtered views aren't double-rendered.
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        context.horizontalPadding,
-                        isMobile ? 16 : 20,
-                        context.horizontalPadding,
-                        0,
+              // Content clamp — center + cap width on tablet/desktop web so
+              // the list/header don't stretch edge-to-edge.
+              child: BBContentMaxWidth(
+                maxWidth: 1100,
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
+                  physics: PlatformScrollPhysics.adaptive,
+                  slivers: [
+                    // Premium header (audit/117 §B2) — KPI strip + AI nudge +
+                    // pending priority queue. Hidden when any filter is active
+                    // so filtered views aren't double-rendered.
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          context.horizontalPadding,
+                          isMobile ? 16 : 20,
+                          context.horizontalPadding,
+                          0,
+                        ),
+                        child: BookingsPremiumHeader(
+                          hasActiveFilter:
+                              filters.hasActiveFilters ||
+                              filters.showImportedOnly,
+                          padding: EdgeInsets.zero,
+                        ),
                       ),
-                      child: BookingsPremiumHeader(
+                    ),
+                    // Premium ledger section header (audit/117 §B2-Δb) —
+                    // eyebrow + count above the tabs/list. Bridges the
+                    // premium hero to the existing list/table.
+                    SliverToBoxAdapter(
+                      child: BookingsPremiumLedgerHeader(
                         hasActiveFilter:
                             filters.hasActiveFilters ||
                             filters.showImportedOnly,
-                        padding: EdgeInsets.zero,
+                        padding: EdgeInsets.fromLTRB(
+                          context.horizontalPadding,
+                          isMobile ? 12 : 16,
+                          context.horizontalPadding,
+                          0,
+                        ),
                       ),
                     ),
-                  ),
-                  // Premium ledger section header (audit/117 §B2-Δb) —
-                  // eyebrow + count above the tabs/list. Bridges the
-                  // premium hero to the existing list/table.
-                  SliverToBoxAdapter(
-                    child: BookingsPremiumLedgerHeader(
-                      hasActiveFilter:
-                          filters.hasActiveFilters || filters.showImportedOnly,
-                      padding: EdgeInsets.fromLTRB(
-                        context.horizontalPadding,
-                        isMobile ? 12 : 16,
-                        context.horizontalPadding,
-                        0,
-                      ),
-                    ),
-                  ),
-                  // Filters section
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        context.horizontalPadding,
-                        isMobile ? 16 : 20,
-                        context.horizontalPadding,
-                        isMobile ? 8 : 12,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildFiltersSection(
-                            filters,
-                            isMobile,
-                            theme,
-                            viewMode,
-                          ),
-                          const SizedBox(height: 16),
-                          const BookingsTabBar(),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Bookings content - using state-based approach
-                  // Show imported reservations when "Imported" tab is selected
-                  if (filters.showImportedOnly)
-                    const ImportedReservationsList()
-                  // For "All" (no status filter) - use unified list that merges regular + imported
-                  else if (filters.status == null)
-                    _buildUnifiedBookingsList(
-                      ref,
-                      viewMode,
-                      isMobile,
-                      theme,
-                      l10n,
-                    )
-                  // Show loading skeleton during initial load (status filter active)
-                  else if (windowedState.isInitialLoad && bookings.isEmpty)
-                    viewMode == BookingsViewMode.table
-                        ? SliverToBoxAdapter(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: context.horizontalPadding,
-                              ),
-                              child: SkeletonLoader.bookingsTable(),
+                    // Filters section
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          context.horizontalPadding,
+                          isMobile ? 16 : 20,
+                          context.horizontalPadding,
+                          isMobile ? 8 : 12,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildFiltersSection(
+                              filters,
+                              isMobile,
+                              theme,
+                              viewMode,
                             ),
-                          )
-                        : SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) => Padding(
-                                padding: EdgeInsets.fromLTRB(
-                                  context.horizontalPadding,
-                                  0,
-                                  context.horizontalPadding,
-                                  16,
-                                ),
-                                child: const BookingCardSkeleton(),
-                              ),
-                              childCount: 5,
-                            ),
-                          )
-                  // Show error state (status filter active)
-                  else if (windowedState.error != null && bookings.isEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(context.horizontalPadding),
-                        child: BbEmptyState(
-                          icon: 'error',
-                          title: l10n.ownerBookingsErrorLoading,
-                          body: windowedState.error,
-                          compact: true,
+                            const SizedBox(height: 16),
+                            const BookingsTabBar(),
+                          ],
                         ),
-                      ),
-                    )
-                  // Show empty state (status filter active)
-                  else if (windowedState.isEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: context.horizontalPadding,
-                        ),
-                        child: const RevenueGuideEmptyState(),
-                      ),
-                    )
-                  // Show bookings list (status filter active - regular bookings only)
-                  else if (viewMode == BookingsViewMode.card)
-                    _buildBookingsSliverList(bookings, isMobile)
-                  else
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: context.horizontalPadding,
-                        ),
-                        child: BookingsTableView(bookings: bookings),
                       ),
                     ),
 
-                  // Load more indicators (top and bottom)
-                  SliverToBoxAdapter(
-                    child: Builder(
-                      builder: (context) {
-                        final localTheme = Theme.of(context);
-                        final localL10n = AppLocalizations.of(context);
-
-                        // No more items to load
-                        if (!windowedState.hasMoreBottom || bookings.isEmpty) {
-                          return const SizedBox(height: 24);
-                        }
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Center(
-                            child: windowedState.isLoadingBottom
-                                ? Column(
-                                    children: [
-                                      const PremiumLoadingIndicator(),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        localL10n.ownerBookingsLoadingMore,
-                                        style: localTheme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: localTheme
-                                                  .colorScheme
-                                                  .onSurfaceVariant,
-                                            ),
-                                      ),
-                                    ],
-                                  )
-                                : Text(
-                                    localL10n.ownerBookingsScrollToLoadMore,
-                                    style: localTheme.textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: localTheme
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                  ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  // Premium ledger footer (audit/117 §B2-Δb) — pagination
-                  // hint after the list/table, before sync section.
-                  SliverToBoxAdapter(
-                    child: BookingsPremiumLedgerFooter(
-                      padding: EdgeInsets.fromLTRB(
-                        context.horizontalPadding,
-                        4,
-                        context.horizontalPadding,
-                        12,
-                      ),
-                    ),
-                  ),
-                  // Sinkronizacija section
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        context.horizontalPadding,
-                        16,
-                        context.horizontalPadding,
-                        16,
-                      ),
-                      child: _buildSynchronizationSection(
-                        context,
-                        theme,
+                    // Bookings content - using state-based approach
+                    // Show imported reservations when "Imported" tab is selected
+                    if (filters.showImportedOnly)
+                      const ImportedReservationsList()
+                    // For "All" (no status filter) - use unified list that merges regular + imported
+                    else if (filters.status == null)
+                      _buildUnifiedBookingsList(
+                        ref,
+                        viewMode,
                         isMobile,
+                        theme,
                         l10n,
+                      )
+                    // Show loading skeleton during initial load (status filter active)
+                    else if (windowedState.isInitialLoad && bookings.isEmpty)
+                      viewMode == BookingsViewMode.table
+                          ? SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: context.horizontalPadding,
+                                ),
+                                child: SkeletonLoader.bookingsTable(),
+                              ),
+                            )
+                          : SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) => Padding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    context.horizontalPadding,
+                                    0,
+                                    context.horizontalPadding,
+                                    16,
+                                  ),
+                                  child: const BookingCardSkeleton(),
+                                ),
+                                childCount: 5,
+                              ),
+                            )
+                    // Show error state (status filter active)
+                    else if (windowedState.error != null && bookings.isEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.all(context.horizontalPadding),
+                          child: BbEmptyState(
+                            icon: 'error',
+                            title: l10n.ownerBookingsErrorLoading,
+                            body: windowedState.error,
+                            compact: true,
+                          ),
+                        ),
+                      )
+                    // Show empty state (status filter active)
+                    else if (windowedState.isEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: context.horizontalPadding,
+                          ),
+                          child: const RevenueGuideEmptyState(),
+                        ),
+                      )
+                    // Show bookings list (status filter active - regular bookings only)
+                    else if (viewMode == BookingsViewMode.card)
+                      _buildBookingsSliverList(bookings, isMobile)
+                    else
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: context.horizontalPadding,
+                          ),
+                          child: BookingsTableView(bookings: bookings),
+                        ),
                       ),
-                    ),
-                  ),
 
-                  // Česta pitanja (FAQ) section
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        context.horizontalPadding,
-                        0,
-                        context.horizontalPadding,
-                        24,
+                    // Load more indicators (top and bottom)
+                    SliverToBoxAdapter(
+                      child: Builder(
+                        builder: (context) {
+                          final localTheme = Theme.of(context);
+                          final localL10n = AppLocalizations.of(context);
+
+                          // No more items to load
+                          if (!windowedState.hasMoreBottom ||
+                              bookings.isEmpty) {
+                            return const SizedBox(height: 24);
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
+                              child: windowedState.isLoadingBottom
+                                  ? Column(
+                                      children: [
+                                        const PremiumLoadingIndicator(),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          localL10n.ownerBookingsLoadingMore,
+                                          style: localTheme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: localTheme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                        ),
+                                      ],
+                                    )
+                                  : Text(
+                                      localL10n.ownerBookingsScrollToLoadMore,
+                                      style: localTheme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: localTheme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                            ),
+                          );
+                        },
                       ),
-                      child: _buildFaqSection(context, theme, isMobile, l10n),
                     ),
-                  ),
-                ],
+
+                    // Premium ledger footer (audit/117 §B2-Δb) — pagination
+                    // hint after the list/table, before sync section.
+                    SliverToBoxAdapter(
+                      child: BookingsPremiumLedgerFooter(
+                        padding: EdgeInsets.fromLTRB(
+                          context.horizontalPadding,
+                          4,
+                          context.horizontalPadding,
+                          12,
+                        ),
+                      ),
+                    ),
+                    // Sinkronizacija section
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          context.horizontalPadding,
+                          16,
+                          context.horizontalPadding,
+                          16,
+                        ),
+                        child: _buildSynchronizationSection(
+                          context,
+                          theme,
+                          isMobile,
+                          l10n,
+                        ),
+                      ),
+                    ),
+
+                    // Česta pitanja (FAQ) section
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          context.horizontalPadding,
+                          0,
+                          context.horizontalPadding,
+                          24,
+                        ),
+                        child: _buildFaqSection(context, theme, isMobile, l10n),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

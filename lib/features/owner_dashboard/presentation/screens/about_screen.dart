@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/responsive.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -39,49 +40,54 @@ class AboutScreen extends StatelessWidget {
 
           return Container(
             color: rd.shellBg,
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                Padding(
-                  padding: gutterPadding,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: rd.panelBg,
-                      borderRadius: BorderRadius.circular(
-                        isMobile ? BBRadius.lg : 28,
+            // Content clamp — center + cap width so the floating panel doesn't
+            // stretch edge-to-edge on tablet/desktop web. See BBContentMaxWidth.
+            child: BBContentMaxWidth(
+              maxWidth: 1100,
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  Padding(
+                    padding: gutterPadding,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: rd.panelBg,
+                        borderRadius: BorderRadius.circular(
+                          isMobile ? BBRadius.lg : 28,
+                        ),
+                        border: Border.all(color: rd.panelBorder),
+                        boxShadow: rd.panelShadow,
                       ),
-                      border: Border.all(color: rd.panelBorder),
-                      boxShadow: rd.panelShadow,
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        isMobile ? 16 : (isDesktop ? 28 : 22),
-                        isMobile ? 16 : 22,
-                        isMobile ? 16 : (isDesktop ? 28 : 22),
-                        isMobile ? 20 : 28,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _AboutHeader(l10n: l10n, isMobile: isMobile),
-                          SizedBox(height: isMobile ? 14 : 18),
-                          _AboutIdentityCard(l10n: l10n, isMobile: isMobile),
-                          SizedBox(height: isMobile ? 14 : 18),
-                          _AboutLayout(
-                            isDesktop: isDesktop,
-                            description: _AboutDescriptionCard(l10n: l10n),
-                            features: _AboutFeaturesCard(l10n: l10n),
-                            contact: _AboutContactCard(l10n: l10n),
-                          ),
-                          SizedBox(height: isMobile ? 18 : 24),
-                          _AboutFooter(l10n: l10n),
-                        ],
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          isMobile ? 16 : (isDesktop ? 28 : 22),
+                          isMobile ? 16 : 22,
+                          isMobile ? 16 : (isDesktop ? 28 : 22),
+                          isMobile ? 20 : 28,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _AboutHeader(l10n: l10n, isMobile: isMobile),
+                            SizedBox(height: isMobile ? 14 : 18),
+                            _AboutIdentityCard(l10n: l10n, isMobile: isMobile),
+                            SizedBox(height: isMobile ? 14 : 18),
+                            _AboutLayout(
+                              isDesktop: isDesktop,
+                              description: _AboutDescriptionCard(l10n: l10n),
+                              features: _AboutFeaturesCard(l10n: l10n),
+                              contact: _AboutContactCard(l10n: l10n),
+                            ),
+                            SizedBox(height: isMobile ? 18 : 24),
+                            _AboutFooter(l10n: l10n),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-              ],
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
           );
         },

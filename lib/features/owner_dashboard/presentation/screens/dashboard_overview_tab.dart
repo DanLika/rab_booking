@@ -9,6 +9,7 @@ import 'package:graphic/graphic.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/responsive.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -57,98 +58,102 @@ class DashboardOverviewTab extends ConsumerWidget {
       drawer: const OwnerAppDrawer(currentRoute: 'overview'),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: Builder(
-          builder: (context) {
-            // Show skeleton immediately while loading properties
-            if (propertiesAsync.isLoading) {
+        // Content clamp — center + cap width on tablet/desktop web.
+        child: BBContentMaxWidth(
+          maxWidth: 1100,
+          child: Builder(
+            builder: (context) {
+              // Show skeleton immediately while loading properties
+              if (propertiesAsync.isLoading) {
+                return _buildDashboardContent(
+                  context,
+                  ref,
+                  l10n,
+                  theme,
+                  isMobile,
+                  const AsyncValue.loading(),
+                  dateRange,
+                );
+              }
+
+              // Handle network/Firestore errors gracefully
+              if (propertiesAsync.hasError) {
+                final error = propertiesAsync.error;
+                final isNetworkError =
+                    error.toString().contains('UNAVAILABLE') ||
+                    error.toString().contains('Unable to resolve host');
+
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isNetworkError
+                              ? Icons.wifi_off_rounded
+                              : Icons.error_outline_rounded,
+                          size: 64,
+                          color: theme.colorScheme.error.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          isNetworkError
+                              ? l10n.errorNetworkFailed
+                              : l10n.errorLoadingData,
+                          style: theme.textTheme.titleLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          isNetworkError
+                              ? l10n.pleaseCheckConnection
+                              : l10n.tryAgainLater,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.7,
+                            ),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: () {
+                            ref.invalidate(ownerPropertiesProvider);
+                          },
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: Text(l10n.retry),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final properties = propertiesAsync.value ?? [];
+
+              // If no properties, show welcome screen for new users
+              if (properties.isEmpty && !propertiesAsync.hasError) {
+                return _buildWelcomeScreen(
+                  context,
+                  l10n,
+                  theme,
+                  isMobile,
+                  userName,
+                );
+              }
+
               return _buildDashboardContent(
                 context,
                 ref,
                 l10n,
                 theme,
                 isMobile,
-                const AsyncValue.loading(),
+                dashboardAsync,
                 dateRange,
               );
-            }
-
-            // Handle network/Firestore errors gracefully
-            if (propertiesAsync.hasError) {
-              final error = propertiesAsync.error;
-              final isNetworkError =
-                  error.toString().contains('UNAVAILABLE') ||
-                  error.toString().contains('Unable to resolve host');
-
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isNetworkError
-                            ? Icons.wifi_off_rounded
-                            : Icons.error_outline_rounded,
-                        size: 64,
-                        color: theme.colorScheme.error.withValues(alpha: 0.7),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        isNetworkError
-                            ? l10n.errorNetworkFailed
-                            : l10n.errorLoadingData,
-                        style: theme.textTheme.titleLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        isNetworkError
-                            ? l10n.pleaseCheckConnection
-                            : l10n.tryAgainLater,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.7,
-                          ),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      FilledButton.icon(
-                        onPressed: () {
-                          ref.invalidate(ownerPropertiesProvider);
-                        },
-                        icon: const Icon(Icons.refresh_rounded),
-                        label: Text(l10n.retry),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            final properties = propertiesAsync.value ?? [];
-
-            // If no properties, show welcome screen for new users
-            if (properties.isEmpty && !propertiesAsync.hasError) {
-              return _buildWelcomeScreen(
-                context,
-                l10n,
-                theme,
-                isMobile,
-                userName,
-              );
-            }
-
-            return _buildDashboardContent(
-              context,
-              ref,
-              l10n,
-              theme,
-              isMobile,
-              dashboardAsync,
-              dateRange,
-            );
-          },
+            },
+          ),
         ),
       ),
     );

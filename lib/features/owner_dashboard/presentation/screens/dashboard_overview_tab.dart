@@ -12,11 +12,9 @@ import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/design/responsive.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/platform_scroll_physics.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
-import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/redesign.dart';
 import '../providers/owner_properties_provider.dart';
@@ -85,7 +83,7 @@ class DashboardOverviewTab extends ConsumerWidget {
 
                 return Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(BBSpace.md),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -96,7 +94,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                           size: 64,
                           color: theme.colorScheme.error.withValues(alpha: 0.7),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: BBSpace.sm),
                         Text(
                           isNetworkError
                               ? l10n.errorNetworkFailed
@@ -104,7 +102,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                           style: theme.textTheme.titleLarge,
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: BBSpace.xs),
                         Text(
                           isNetworkError
                               ? l10n.pleaseCheckConnection
@@ -116,7 +114,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: BBSpace.md),
                         FilledButton.icon(
                           onPressed: () {
                             ref.invalidate(ownerPropertiesProvider);
@@ -179,7 +177,7 @@ class DashboardOverviewTab extends ConsumerWidget {
         children: [
           // 1. Welcome Header with personalized greeting
           _WelcomeHeader(userName: userName, l10n: l10n, theme: theme),
-          SizedBox(height: isMobile ? 32 : 48),
+          SizedBox(height: isMobile ? BBSpace.lg : BBSpace.xl),
 
           // 2. Quick Start Action Cards
           Text(
@@ -188,7 +186,7 @@ class DashboardOverviewTab extends ConsumerWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: BBSpace.sm),
           LayoutBuilder(
             builder: (context, constraints) {
               // On desktop, show in a row. On mobile, stack.
@@ -205,7 +203,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                         isPrimary: true,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: BBSpace.sm),
                     Expanded(
                       child: _ActionStepCard(
                         title: l10n.ownerDrawerImportBookings,
@@ -214,7 +212,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                         onTap: () => context.push(OwnerRoutes.icalImport),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: BBSpace.sm),
                     Expanded(
                       child: _ActionStepCard(
                         title: l10n.ownerDrawerStripePayments,
@@ -238,14 +236,14 @@ class DashboardOverviewTab extends ConsumerWidget {
                     onTap: () => context.push(OwnerRoutes.propertyNew),
                     isPrimary: true,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: _kGap12),
                   _ActionStepCard(
                     title: l10n.ownerDrawerImportBookings,
                     subtitle: l10n.dashboardActionImportSubtitle,
                     icon: Icons.sync_rounded,
                     onTap: () => context.push(OwnerRoutes.icalImport),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: _kGap12),
                   _ActionStepCard(
                     title: l10n.ownerDrawerStripePayments,
                     subtitle: l10n.dashboardActionPaymentsSubtitle,
@@ -257,7 +255,7 @@ class DashboardOverviewTab extends ConsumerWidget {
             },
           ),
 
-          SizedBox(height: isMobile ? 40 : 60),
+          SizedBox(height: isMobile ? _kGap40 : _kGap60),
 
           // 3. Mock Dashboard Preview
           _buildDashboardPreview(context, l10n, theme),
@@ -277,10 +275,13 @@ class DashboardOverviewTab extends ConsumerWidget {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: BBSpace.sm,
+            vertical: BBSpace.xs,
+          ),
           decoration: BoxDecoration(
             color: theme.colorScheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(100),
+            borderRadius: BorderRadius.circular(BBRadius.full),
             border: Border.all(
               color: theme.colorScheme.primary.withValues(alpha: 0.2),
             ),
@@ -293,7 +294,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                 size: 16,
                 color: theme.colorScheme.primary,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: BBSpace.xs),
               Text(
                 l10n.dashboardFuturePreview.toUpperCase(),
                 style: theme.textTheme.labelLarge?.copyWith(
@@ -305,7 +306,7 @@ class DashboardOverviewTab extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: BBSpace.lg),
         Stack(
           children: [
             // The blurred dashboard content
@@ -315,10 +316,10 @@ class DashboardOverviewTab extends ConsumerWidget {
                 child: Column(
                   children: [
                     _buildStatsCards(context: context, data: mockData),
-                    const SizedBox(height: 24),
-                    SizedBox(
+                    const SizedBox(height: BBSpace.md),
+                    _RevenueAreaChart(
+                      data: mockData.revenueHistory,
                       height: 300,
-                      child: _RevenueChart(data: mockData.revenueHistory),
                     ),
                   ],
                 ),
@@ -397,8 +398,18 @@ class DashboardOverviewTab extends ConsumerWidget {
     // Outer padding: shell-bg gutter around the floating panel (handoff inset).
     // Mobile keeps edge-to-edge; tablet+desktop add gutter for the panel.
     final EdgeInsets gutterPadding = isMobile
-        ? const EdgeInsets.fromLTRB(8, 4, 8, 16)
-        : EdgeInsets.fromLTRB(16, 4, isDesktop ? 28 : 18, 24);
+        ? const EdgeInsets.fromLTRB(
+            BBSpace.xs,
+            BBSpace.xxs,
+            BBSpace.xs,
+            BBSpace.sm,
+          )
+        : EdgeInsets.fromLTRB(
+            BBSpace.sm,
+            BBSpace.xxs,
+            isDesktop ? _kGap28 : _kGap18,
+            _kGap28,
+          );
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -425,183 +436,239 @@ class DashboardOverviewTab extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: rd.panelBg,
                 borderRadius: BorderRadius.circular(
-                  isMobile ? BBRadius.lg : 28,
+                  isMobile ? BBRadius.lg : _kPanelRadius,
                 ),
                 border: Border.all(color: rd.panelBorder),
                 boxShadow: rd.panelShadow,
               ),
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
-                  isMobile ? 16 : (isDesktop ? 32 : 24),
-                  isMobile ? 16 : 22,
-                  isMobile ? 16 : (isDesktop ? 32 : 24),
-                  isMobile ? 20 : 28,
+                  isMobile ? BBSpace.sm : (isDesktop ? BBSpace.lg : BBSpace.md),
+                  isMobile ? BBSpace.sm : (isDesktop ? _kGap28 : _kGap22),
+                  isMobile ? BBSpace.sm : (isDesktop ? BBSpace.lg : BBSpace.md),
+                  isMobile ? _kGap20 : (isDesktop ? _kGap36 : _kGap28),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header (handoff PVHeader): greeting left, period pill +
-                    // "Nova rezervacija" CTA right on ≥600px; stacked with a
-                    // centered selector on mobile (handoff mobile spec).
-                    if (isMobile) ...[
-                      _PregledGreetingHeader(
-                        userName: userName,
-                        isMobile: isMobile,
-                      ),
-                      const SizedBox(height: 14),
-                      Center(child: _DateRangeSelector(dateRange: dateRange)),
-                      const SizedBox(height: 12),
-                    ] else ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _PregledGreetingHeader(
-                              userName: userName,
-                              isMobile: isMobile,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          _DateRangeSelector(dateRange: dateRange),
-                          const SizedBox(width: 12),
-                          const _NewBookingCta(),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                    ],
-
-                    // Hero revenue command + occupancy radial + AI insight
-                    // (handoff `pregled-premium.jsx` PVRevenueCommand / PVOccupancy
-                    // / PVAIInsight — audit/114 P1 Pregled mobile). Always
-                    // renders — at €0 / 0% the surfaces become a calm empty
-                    // baseline rather than disappearing, matching handoff which
-                    // has no empty-state branch.
-                    dashboardAsync.when(
-                      data: (data) {
-                        final hero = _PregledHeroCommand(
-                          data: data,
-                          dateRange: dateRange,
-                          isMobile: isMobile,
-                        );
-                        final radial = _PregledOccupancyRadial(
-                          data: data,
-                          isMobile: isMobile,
-                        );
-                        final deposits = _PregledDepositsCard(
-                          data: data,
-                          isMobile: isMobile,
-                        );
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _PregledAiInsight(isMobile: isMobile),
-                              SizedBox(height: isMobile ? 12 : 16),
-                              // Handoff desktop grid: revenue command 2fr left,
-                              // radial + deposits rail 1fr right; stacked on
-                              // mobile/tablet.
-                              if (isDesktop)
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(flex: 3, child: hero),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [
-                                          radial,
-                                          const SizedBox(height: 16),
-                                          deposits,
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              else ...[
-                                hero,
-                                SizedBox(height: isMobile ? 12 : 16),
-                                radial,
-                                SizedBox(height: isMobile ? 12 : 16),
-                                deposits,
-                              ],
-                            ],
-                          ),
-                        );
-                      },
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, _) => const SizedBox.shrink(),
-                    ),
-
-                    // KPI cards section
-                    const BbSectionHeader(
-                      // HR-only owner surface — handoff eyebrow copy.
-                      title: 'Ključni pokazatelji',
-                      level: BbSectionHeaderLevel.h3,
-                    ),
-                    dashboardAsync.when(
-                      data: (data) =>
-                          _buildStatsCards(context: context, data: data),
-                      loading: SkeletonLoader.analyticsMetricCards,
-                      error: (e, s) =>
-                          _buildErrorState(context, l10n, theme, e),
-                    ),
-
-                    // Lower half (handoff DETALJI): "Nadolazeći dolasci" left
-                    // + "Zarada po kanalu" right on desktop; stacked otherwise.
-                    // Channel mix hides itself while the period has no priced
-                    // revenue; arrivals always renders (calm empty baseline).
-                    dashboardAsync.when(
-                      data: (data) {
-                        final arrivals = _PregledArrivalsCard(
-                          arrivals: data.upcomingArrivals,
-                          isMobile: isMobile,
-                        );
-                        final channels = _PregledChannelMix(
-                          data: data,
-                          isMobile: isMobile,
-                        );
-                        final showChannels =
-                            data.revenueBySource.values.fold<double>(
-                              0,
-                              (a, b) => a + b,
-                            ) >
-                            0;
-                        return Padding(
-                          padding: EdgeInsets.only(top: isMobile ? 16 : 20),
-                          child: isDesktop && showChannels
-                              ? Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(flex: 3, child: arrivals),
-                                    const SizedBox(width: 16),
-                                    Expanded(flex: 2, child: channels),
-                                  ],
-                                )
-                              : Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    arrivals,
-                                    if (showChannels) ...[
-                                      SizedBox(height: isMobile ? 16 : 20),
-                                      channels,
-                                    ],
-                                  ],
-                                ),
-                        );
-                      },
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, _) => const SizedBox.shrink(),
-                    ),
-                  ],
+                  children: _pregledPanelChildren(
+                    context,
+                    l10n,
+                    theme,
+                    isMobile,
+                    isDesktop,
+                    dashboardAsync,
+                    dateRange,
+                    userName,
+                  ),
                 ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Panel body sections (header + hero + KPI + lower), shared by the live
+  /// dashboard and [buildPanelForTest]; takes already-resolved [dashboardAsync].
+  List<Widget> _pregledPanelChildren(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+    bool isMobile,
+    bool isDesktop,
+    AsyncValue<UnifiedDashboardData> dashboardAsync,
+    DateRangeFilter dateRange,
+    String? userName,
+  ) {
+    return [
+      // Header (handoff PVHeader): greeting left, period pill +
+      // "Nova rezervacija" CTA right on ≥600px; stacked with a
+      // centered selector on mobile (handoff mobile spec).
+      if (isMobile) ...[
+        _PregledGreetingHeader(userName: userName, isMobile: isMobile),
+        const SizedBox(height: _kGap14),
+        Center(child: _DateRangeSelector(dateRange: dateRange)),
+        const SizedBox(height: _kGap12),
+      ] else ...[
+        Row(
+          children: [
+            Expanded(
+              child: _PregledGreetingHeader(
+                userName: userName,
+                isMobile: isMobile,
+              ),
+            ),
+            const SizedBox(width: BBSpace.sm),
+            _DateRangeSelector(dateRange: dateRange),
+            const SizedBox(width: _kGap12),
+            const _NewBookingCta(),
+          ],
+        ),
+        const SizedBox(height: _kGap20),
+      ],
+
+      // Hero revenue command + occupancy radial + AI insight
+      // (handoff `pregled-premium.jsx` PVRevenueCommand / PVOccupancy
+      // / PVAIInsight — audit/114 P1 Pregled mobile). Always
+      // renders — at €0 / 0% the surfaces become a calm empty
+      // baseline rather than disappearing, matching handoff which
+      // has no empty-state branch.
+      dashboardAsync.when(
+        data: (data) {
+          final hero = _PregledHeroCommand(
+            data: data,
+            dateRange: dateRange,
+            isMobile: isMobile,
+          );
+          final radial = _PregledOccupancyRadial(
+            data: data,
+            isMobile: isMobile,
+          );
+          final deposits = _PregledDepositsCard(data: data, isMobile: isMobile);
+          return Padding(
+            padding: EdgeInsets.only(bottom: isMobile ? _kGap12 : _kGap20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _PregledAiInsight(isMobile: isMobile),
+                SizedBox(height: isMobile ? _kGap12 : _kGap20),
+                // Handoff desktop grid: revenue command 2fr left,
+                // radial + deposits rail 1fr right; stacked on
+                // mobile/tablet.
+                if (isDesktop)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Handoff hero grid ratio 1.85fr : 1fr.
+                      Expanded(flex: 37, child: hero),
+                      const SizedBox(width: _kGap20),
+                      Expanded(
+                        flex: 20,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            radial,
+                            const SizedBox(height: _kGap20),
+                            deposits,
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                else ...[
+                  hero,
+                  SizedBox(height: isMobile ? _kGap12 : BBSpace.sm),
+                  radial,
+                  SizedBox(height: isMobile ? _kGap12 : BBSpace.sm),
+                  deposits,
+                ],
+              ],
+            ),
+          );
+        },
+        loading: () => const SizedBox.shrink(),
+        error: (_, _) => const SizedBox.shrink(),
+      ),
+
+      // KPI cards section
+      const BbSectionHeader(
+        // HR-only owner surface — handoff eyebrow copy.
+        title: 'Ključni pokazatelji',
+        level: BbSectionHeaderLevel.h3,
+      ),
+      dashboardAsync.when(
+        data: (data) => _buildStatsCards(context: context, data: data),
+        loading: SkeletonLoader.analyticsMetricCards,
+        error: (e, s) => _buildErrorState(context, l10n, theme, e),
+      ),
+
+      // Lower half (handoff DETALJI): "Nadolazeći dolasci" left
+      // + "Zarada po kanalu" right on desktop; stacked otherwise.
+      // Channel mix hides itself while the period has no priced
+      // revenue; arrivals always renders (calm empty baseline).
+      dashboardAsync.when(
+        data: (data) {
+          final arrivals = _PregledArrivalsCard(
+            arrivals: data.upcomingArrivals,
+            isMobile: isMobile,
+          );
+          final channels = _PregledChannelMix(data: data, isMobile: isMobile);
+          final showChannels =
+              data.revenueBySource.values.fold<double>(0, (a, b) => a + b) > 0;
+          return Padding(
+            padding: EdgeInsets.only(top: isMobile ? BBSpace.sm : _kGap20),
+            child: isDesktop && showChannels
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Handoff DETALJI grid ratio 1.4fr : 1fr.
+                      Expanded(flex: 7, child: arrivals),
+                      const SizedBox(width: _kGap20),
+                      Expanded(flex: 5, child: channels),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      arrivals,
+                      if (showChannels) ...[
+                        SizedBox(height: isMobile ? BBSpace.sm : _kGap20),
+                        channels,
+                      ],
+                    ],
+                  ),
+          );
+        },
+        loading: () => const SizedBox.shrink(),
+        error: (_, _) => const SizedBox.shrink(),
+      ),
+    ];
+  }
+
+  /// Renders the populated dashboard panel for widget tests — the live
+  /// sections (no Scaffold/drawer/providers) so the headless render matches the
+  /// on-screen dashboard. Pass resolved [data]/[dateRange]; [isMobile] gates the
+  /// same layout switches as the live screen.
+  @visibleForTesting
+  Widget buildPanelForTest(
+    BuildContext context, {
+    required UnifiedDashboardData data,
+    required DateRangeFilter dateRange,
+    required bool isMobile,
+    String? userName,
+  }) {
+    final rd = BbRedesignTokens.of(context);
+    final isDesktop = MediaQuery.sizeOf(context).width > 900;
+    return Container(
+      decoration: BoxDecoration(
+        color: rd.panelBg,
+        borderRadius: BorderRadius.circular(
+          isMobile ? BBRadius.lg : _kPanelRadius,
+        ),
+        border: Border.all(color: rd.panelBorder),
+        boxShadow: rd.panelShadow,
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          isMobile ? BBSpace.sm : (isDesktop ? BBSpace.lg : BBSpace.md),
+          isMobile ? BBSpace.sm : (isDesktop ? _kGap28 : _kGap22),
+          isMobile ? BBSpace.sm : (isDesktop ? BBSpace.lg : BBSpace.md),
+          isMobile ? _kGap20 : (isDesktop ? _kGap36 : _kGap28),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: _pregledPanelChildren(
+            context,
+            AppLocalizations.of(context),
+            Theme.of(context),
+            isMobile,
+            isDesktop,
+            AsyncValue.data(data),
+            dateRange,
+            userName,
+          ),
+        ),
       ),
     );
   }
@@ -614,7 +681,7 @@ class DashboardOverviewTab extends ConsumerWidget {
   ) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(BBSpace.md),
         child: Column(
           children: [
             Container(
@@ -637,14 +704,14 @@ class DashboardOverviewTab extends ConsumerWidget {
                 color: theme.colorScheme.error,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: BBSpace.sm),
             Text(
               l10n.ownerErrorLoadingData,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: BBSpace.xs),
             Text(
               LoggingService.safeErrorToString(e),
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -736,18 +803,18 @@ class DashboardOverviewTab extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(child: bookingsCard),
-                const SizedBox(width: 10),
+                const SizedBox(width: _kGap10),
                 Expanded(child: avgPriceCard),
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: _kGap10),
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(child: newGuestsCard),
-                const SizedBox(width: 10),
+                const SizedBox(width: _kGap10),
                 Expanded(child: avgRatingCard),
               ],
             ),
@@ -761,7 +828,7 @@ class DashboardOverviewTab extends ConsumerWidget {
         // Always 4 columns on >900px; 2 columns on tablet 600-900.
         final isWide = cs.maxWidth >= 900;
         final cols = isWide ? 4 : 2;
-        final spacing = 12.0;
+        final spacing = BBSpace.sm;
         final w = (cs.maxWidth - (cols - 1) * spacing) / cols;
         final children = [
           bookingsCard,
@@ -800,10 +867,10 @@ class _DateRangeSelector extends ConsumerWidget {
     final c = BBColor.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(BBSpace.xxs),
       decoration: BoxDecoration(
         color: c.surfaceVariant,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(BBRadius.full),
         border: Border.all(color: c.border),
       ),
       child: Row(
@@ -846,23 +913,26 @@ class _PeriodSegment extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(BBRadius.full),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: _kGap14,
+              vertical: BBSpace.xs,
+            ),
             decoration: BoxDecoration(
               // Handoff PVPeriod active state: surface chip + shadow-sm on
               // the surface-variant track (not a primary fill).
               color: selected ? c.surface : Colors.transparent,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(BBRadius.full),
               boxShadow: selected ? BBShadow.sm : null,
             ),
             child: Text(
               label,
               style: TextStyle(
                 color: selected ? c.textPrimary : c.textSecondary,
-                fontSize: 13,
+                fontSize: _kFont13,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                 letterSpacing: -0.1,
                 height: 1.2,
@@ -888,26 +958,29 @@ class _NewBookingCta extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: BBGradient.hero,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(_kRad10),
           boxShadow: BBShadow.purpleGlow(context),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: () => context.go(OwnerRoutes.bookings),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(_kRad10),
             child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              padding: EdgeInsets.symmetric(
+                horizontal: _kGap14,
+                vertical: BBSpace.xs,
+              ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.add_rounded, size: 18, color: Colors.white),
-                  SizedBox(width: 6),
+                  SizedBox(width: _kGap6),
                   Text(
                     'Nova rezervacija',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 13,
+                      fontSize: _kFont13,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.1,
                       height: 1.2,
@@ -921,219 +994,6 @@ class _NewBookingCta extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Revenue Chart widget
-class _RevenueChart extends StatelessWidget {
-  final List<RevenueDataPoint> data;
-
-  const _RevenueChart({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isMobile = MediaQuery.of(context).size.width < 600;
-
-    if (data.isEmpty) {
-      return _buildEmptyState(
-        context,
-        l10n,
-        theme,
-        Icons.insert_chart_outlined_rounded,
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        final isLandscape =
-            MediaQuery.of(context).orientation == Orientation.landscape;
-
-        // RESPONSIVE: Adjust height for landscape mobile to avoid taking up full screen
-        final double chartHeight;
-        if (screenWidth > 900) {
-          chartHeight = 300.0;
-        } else if (screenWidth > 600) {
-          chartHeight = 260.0;
-        } else {
-          // Mobile - use smaller height in landscape
-          chartHeight = isLandscape ? 180.0 : 220.0;
-        }
-
-        return SizedBox(
-          height: chartHeight,
-          child: BbCard(
-            padding: EdgeInsets.all(isMobile ? 12 : 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildChartHeader(
-                  context,
-                  theme,
-                  Icons.show_chart,
-                  l10n.ownerAnalyticsRevenueTitle,
-                  l10n.ownerAnalyticsRevenueSubtitle,
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: Chart(
-                    data: data
-                        .asMap()
-                        .entries
-                        .map(
-                          (e) => {
-                            'index': e.key,
-                            'label': e.value.label,
-                            'amount': e.value.amount,
-                          },
-                        )
-                        .toList(),
-                    variables: {
-                      'index': Variable(
-                        accessor: (Map map) => map['index'] as num,
-                      ),
-                      'amount': Variable(
-                        accessor: (Map map) => map['amount'] as num,
-                        scale: LinearScale(min: 0),
-                      ),
-                      'label': Variable(
-                        accessor: (Map map) => map['label'] as String,
-                      ),
-                    },
-                    coord:
-                        RectCoord(), // Removed horizontalRangeUpdater to disable zoom
-                    marks: [
-                      AreaMark(
-                        shape: ShapeEncode(value: BasicAreaShape(smooth: true)),
-                        color: ColorEncode(
-                          value: theme.colorScheme.primary.withValues(
-                            alpha: 0.15,
-                          ),
-                        ),
-                        entrance: {MarkEntrance.y},
-                      ),
-                      LineMark(
-                        shape: ShapeEncode(value: BasicLineShape(smooth: true)),
-                        size: SizeEncode(value: 3),
-                        color: ColorEncode(value: theme.colorScheme.primary),
-                        entrance: {MarkEntrance.y},
-                      ),
-                      PointMark(
-                        shape: ShapeEncode(value: CircleShape()),
-                        size: SizeEncode(value: 8),
-                        color: ColorEncode(value: theme.colorScheme.primary),
-                        entrance: {MarkEntrance.opacity},
-                        label: LabelEncode(
-                          encoder: (tuple) {
-                            final amount = tuple['amount'] as num;
-                            return Label(
-                              '€${amount.toStringAsFixed(0)}',
-                              LabelStyle(
-                                textStyle: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.7,
-                                  ),
-                                ),
-                                offset: const Offset(0, -12),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                    axes: [Defaults.horizontalAxis, Defaults.verticalAxis],
-                    selections: {
-                      'touchMove': PointSelection(
-                        on: {GestureType.hover},
-                        devices: {
-                          PointerDeviceKind.touch,
-                          PointerDeviceKind.mouse,
-                        },
-                      ),
-                    },
-                    tooltip: TooltipGuide(
-                      backgroundColor: theme.colorScheme.surface,
-                      elevation: 8,
-                      textStyle: AppTypography.bodySmall.copyWith(
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    crosshair: CrosshairGuide(followPointer: [false, true]),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// Helper for chart header
-Widget _buildChartHeader(
-  BuildContext context,
-  ThemeData theme,
-  IconData icon,
-  String title,
-  String subtitle,
-) {
-  return Row(
-    children: [
-      Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(icon, color: theme.colorScheme.primary, size: 16),
-      ),
-      const SizedBox(width: 10),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              subtitle,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ],
-  );
-}
-
-/// Helper for empty chart state with animation
-Widget _buildEmptyState(
-  BuildContext context,
-  AppLocalizations l10n,
-  ThemeData theme,
-  IconData icon,
-) {
-  return SizedBox(
-    height: 200,
-    child: Center(
-      child: AnimatedEmptyState(
-        icon: icon,
-        title: l10n.ownerAnalyticsNoData,
-        iconSize: 40,
-        iconColor: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-      ),
-    ),
-  );
 }
 
 /// Welcome header with personalized greeting
@@ -1156,7 +1016,7 @@ class _WelcomeHeader extends StatelessWidget {
         Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(_kGap12),
               decoration: BoxDecoration(
                 gradient: theme.brightness == Brightness.dark
                     ? LinearGradient(
@@ -1190,7 +1050,7 @@ class _WelcomeHeader extends StatelessWidget {
                 size: 24,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: BBSpace.sm),
             Flexible(
               child: Text(
                 userName != null
@@ -1205,7 +1065,7 @@ class _WelcomeHeader extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: BBSpace.sm),
         Text(
           l10n.ownerWelcomeSubtitle,
           style: theme.textTheme.bodyLarge?.copyWith(
@@ -1248,7 +1108,7 @@ class _ActionStepCard extends StatelessWidget {
                 ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.5)
                 : theme.colorScheme.surfaceContainerLow),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(BBRadius.md),
         side: BorderSide(
           color: isPrimary
               ? theme.colorScheme.primary.withValues(alpha: 0.35)
@@ -1261,28 +1121,28 @@ class _ActionStepCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(BBSpace.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(_kGap12),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(_kRad14),
                 ),
                 child: Icon(icon, color: theme.colorScheme.primary, size: 26),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: _kGap20),
               Text(
                 title,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurface,
-                  fontSize: 20,
+                  fontSize: _kFont20,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: _kGap6),
               Text(
                 subtitle,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -1290,18 +1150,18 @@ class _ActionStepCard extends StatelessWidget {
                   height: 1.4,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: _kGap20),
               Row(
                 children: [
                   Text(
                     l10n.dashboardGetStarted,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                      fontSize: _kFont15,
                       color: theme.colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: _kGap6),
                   Icon(
                     Icons.arrow_forward_rounded,
                     size: 18,
@@ -1365,7 +1225,7 @@ class _PregledGreetingHeader extends StatelessWidget {
           eyebrow,
           style: BBType.eyebrow(context).copyWith(color: c.primary),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: _kGap6),
         Text(
           headline,
           style: (isMobile ? BBType.h1(context) : BBType.display(context))
@@ -1406,28 +1266,66 @@ class _PregledKpiCard extends StatelessWidget {
           fontWeight: FontWeight.w800,
           letterSpacing: -0.4,
           color: c.textPrimary,
-          fontSize: isMobile ? 24 : 28,
+          fontSize: isMobile ? _kKpiValueMobile : _kKpiValueDesktop,
           height: 1.0,
         );
 
+    // Delta chip derived from the sparkline series (first → last). Real derived
+    // data — no fabrication (handoff PVKpiCard delta). Hidden when the series is
+    // too short or starts at zero (e.g. the avg-rating tile has no series yet).
+    final hasTrend = sparkData.length >= 2 && sparkData.first > 0;
+    final trendPct = hasTrend
+        ? (sparkData.last - sparkData.first) / sparkData.first * 100
+        : 0.0;
+    final trendUp = trendPct >= 0;
+    final trendColor = trendUp ? c.success : c.error;
+
     return BbCard(
-      padding: EdgeInsets.all(isMobile ? 14 : 18),
+      padding: EdgeInsets.all(isMobile ? _kGap14 : _kGap20),
       hoverable: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: iconBoxSize,
-            height: iconBoxSize,
-            decoration: BoxDecoration(
-              color: tone.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            alignment: Alignment.center,
-            child: BbIcon(name: icon, size: iconSize, color: tone),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: iconBoxSize,
+                height: iconBoxSize,
+                decoration: BoxDecoration(
+                  color: tone.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(_kRad10),
+                ),
+                alignment: Alignment.center,
+                child: BbIcon(name: icon, size: iconSize, color: tone),
+              ),
+              const Spacer(),
+              if (hasTrend)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    BbIcon(
+                      name: trendUp ? 'trending_up' : 'trending_down',
+                      size: 14,
+                      color: trendColor,
+                    ),
+                    const SizedBox(width: BBSpace.xxs),
+                    Text(
+                      '${trendUp ? '+' : '−'}${trendPct.abs().toStringAsFixed(0)}%',
+                      style: BBType.caption(context).copyWith(
+                        color: trendColor,
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: const <FontFeature>[
+                          FontFeature.tabularFigures(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
           ),
-          SizedBox(height: isMobile ? 12 : 14),
+          SizedBox(height: isMobile ? _kGap12 : _kGap14),
           Text(
             label.toUpperCase(),
             style: BBType.caption(context).copyWith(
@@ -1438,7 +1336,7 @@ class _PregledKpiCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: BBSpace.xxs),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -1450,10 +1348,10 @@ class _PregledKpiCard extends StatelessWidget {
                 ),
               ),
               if (sparkData.length >= 2) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: BBSpace.xs),
                 BbSparkline(
                   data: sparkData,
-                  width: isMobile ? 56 : 84,
+                  width: isMobile ? 56 : 96,
                   height: isMobile ? 26 : 32,
                   color: tone,
                   fillColor: tone.withValues(alpha: 0.14),
@@ -1480,7 +1378,7 @@ class _PregledArrivalsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
-    final pad = isMobile ? 14.0 : 20.0;
+    final pad = isMobile ? _kGap14 : BBSpace.md;
 
     return BbCard(
       padded: false,
@@ -1488,7 +1386,12 @@ class _PregledArrivalsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(pad, pad, pad, isMobile ? 10 : 14),
+            padding: EdgeInsets.fromLTRB(
+              pad,
+              pad,
+              pad,
+              isMobile ? _kGap10 : _kGap14,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1504,7 +1407,7 @@ class _PregledArrivalsCard extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: _kGap2),
                       Text(
                         'Sljedećih 14 dana',
                         style: BBType.caption(
@@ -1519,8 +1422,8 @@ class _PregledArrivalsCard extends StatelessWidget {
                   style: TextButton.styleFrom(
                     foregroundColor: c.primary,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
+                      horizontal: _kGap10,
+                      vertical: _kGap6,
                     ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1537,7 +1440,7 @@ class _PregledArrivalsCard extends StatelessWidget {
           ),
           if (arrivals.isEmpty)
             Padding(
-              padding: EdgeInsets.fromLTRB(pad, 4, pad, pad),
+              padding: EdgeInsets.fromLTRB(pad, BBSpace.xxs, pad, pad),
               child: Text(
                 'Nema dolazaka u sljedećih 14 dana.',
                 style: BBType.caption(context).copyWith(color: c.textTertiary),
@@ -1598,8 +1501,8 @@ class _PregledArrivalsRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: isMobile ? 14 : 20,
-          vertical: 12,
+          horizontal: isMobile ? _kGap14 : BBSpace.md,
+          vertical: _kGap12,
         ),
         decoration: BoxDecoration(
           border: Border(top: BorderSide(color: c.border)),
@@ -1610,13 +1513,13 @@ class _PregledArrivalsRow extends StatelessWidget {
             // First row gets gradient-hero + purple shadow + white text;
             // others get surface-variant + tertiary text.
             _ArrivalsDateChip(date: arrival.checkIn, highlighted: isFirst),
-            SizedBox(width: isMobile ? 10 : 14),
+            SizedBox(width: isMobile ? _kGap10 : _kGap14),
             BbAvatar(
               name: arrival.guestName,
               size: BbAvatarSize.sm,
               tone: _isPending ? BbAvatarTone.tertiary : BbAvatarTone.success,
             ),
-            SizedBox(width: isMobile ? 10 : 14),
+            SizedBox(width: isMobile ? _kGap10 : _kGap14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1631,7 +1534,7 @@ class _PregledArrivalsRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: _kGap2),
                   Text(
                     stay,
                     style: BBType.caption(
@@ -1643,7 +1546,7 @@ class _PregledArrivalsRow extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: BBSpace.xs),
             BbStatusBadge(
               status: _isPending
                   ? BbBookingStatus.pending
@@ -1689,11 +1592,11 @@ class _ArrivalsDateChip extends StatelessWidget {
     final Color numColor = highlighted ? Colors.white : c.textPrimary;
     return Container(
       width: 48,
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: BBSpace.xxs),
       decoration: BoxDecoration(
         gradient: highlighted ? BBGradient.hero : null,
         color: highlighted ? null : c.surfaceVariant,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(_kRad10),
         boxShadow: highlighted ? BBShadow.purpleGlow(context) : null,
       ),
       child: Column(
@@ -1704,7 +1607,7 @@ class _ArrivalsDateChip extends StatelessWidget {
             style: BBType.caption(context).copyWith(
               color: labelColor,
               fontWeight: FontWeight.w600,
-              fontSize: 10,
+              fontSize: _kChipDayFont,
               letterSpacing: 0.5,
             ),
           ),
@@ -1713,11 +1616,126 @@ class _ArrivalsDateChip extends StatelessWidget {
             style: BBType.bodyNum(context).copyWith(
               color: numColor,
               fontWeight: FontWeight.w700,
-              fontSize: 14,
+              fontSize: _kChipDateFont,
               height: 1.2,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Pregled hand-tuned sizing (audit/124). Off the 8px BBSpace grid, named here
+// so no raw spacing literals remain while the exact premium rhythm is preserved. ──
+const double _kGap1 = 1;
+const double _kGap2 = 2;
+const double _kGap6 = 6;
+const double _kGap10 = 10;
+const double _kGap12 = 12;
+const double _kGap14 = 14;
+const double _kGap18 = 18;
+const double _kGap20 = 20;
+const double _kGap22 = 22;
+const double _kGap28 = 28;
+const double _kGap36 = 36;
+const double _kGap40 = 40;
+const double _kGap60 = 60;
+const double _kRad3 = 3;
+const double _kRad4 = 4;
+const double _kRad8 = 8;
+const double _kRad10 = 10;
+const double _kRad14 = 14;
+const double _kPanelRadius = 28;
+const double _kKpiValueMobile = 24;
+const double _kKpiValueDesktop = 30;
+const double _kOccValueMobile = 30;
+const double _kOccValueDesktop = 34;
+const double _kDepositValue = 28;
+const double _kChipDayFont = 10;
+const double _kChipDateFont = 14;
+const double _kFont13 = 13;
+const double _kFont15 = 15;
+const double _kFont20 = 20;
+const double _kHeroPadMobile = 20;
+const double _kHeroPadDesktop = 28;
+const double _kHeroNumMobile = 40;
+const double _kHeroNumDesktop = 56;
+const double _kHeroChartMobile = 150;
+const double _kHeroChartDesktop = 190;
+
+/// Single-series labeled revenue chart for the hero (handoff PVRevenueCommand
+/// chart slot). Replaces the prior sparkline with a real €-axis + date x-axis.
+/// The x dimension is a [LinearScale] over the point index with a `formatter`
+/// that maps each tick back to the grouped date label plus a small `tickCount`,
+/// so the dates read cleanly (~5 labels) instead of the raw 0,1,2 the old chart
+/// rendered. Previous-period ghost line + legend are intentionally deferred
+/// (no prior-period series in [UnifiedDashboardData] yet).
+class _RevenueAreaChart extends StatelessWidget {
+  final List<RevenueDataPoint> data;
+  final double height;
+
+  const _RevenueAreaChart({required this.data, required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final n = data.length;
+    final rows = data
+        .asMap()
+        .entries
+        .map((e) => {'index': e.key, 'amount': e.value.amount})
+        .toList(growable: false);
+    String fmtX(num v) {
+      final i = v.round();
+      return (i >= 0 && i < n) ? data[i].label : '';
+    }
+
+    return SizedBox(
+      height: height,
+      child: Chart(
+        data: rows,
+        variables: {
+          'index': Variable(
+            accessor: (Map map) => map['index'] as num,
+            scale: LinearScale(
+              min: 0,
+              max: (n - 1).toDouble(),
+              tickCount: n <= 6 ? n : 5,
+              formatter: fmtX,
+            ),
+          ),
+          'amount': Variable(
+            accessor: (Map map) => map['amount'] as num,
+            scale: LinearScale(min: 0),
+          ),
+        },
+        marks: [
+          AreaMark(
+            shape: ShapeEncode(value: BasicAreaShape(smooth: true)),
+            color: ColorEncode(value: c.primary.withValues(alpha: 0.15)),
+            entrance: {MarkEntrance.y},
+          ),
+          LineMark(
+            shape: ShapeEncode(value: BasicLineShape(smooth: true)),
+            size: SizeEncode(value: 3),
+            color: ColorEncode(value: c.primary),
+            entrance: {MarkEntrance.y},
+          ),
+        ],
+        axes: [Defaults.horizontalAxis, Defaults.verticalAxis],
+        selections: {
+          'touch': PointSelection(
+            on: {GestureType.hover},
+            devices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+          ),
+        },
+        tooltip: TooltipGuide(
+          backgroundColor: c.surface,
+          elevation: 8,
+          textStyle: BBType.caption(context).copyWith(color: c.textPrimary),
+        ),
+        crosshair: CrosshairGuide(followPointer: const [false, true]),
       ),
     );
   }
@@ -1776,10 +1794,7 @@ class _PregledHeroCommand extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
-    final spark = data.revenueHistory
-        .map((p) => p.amount)
-        .toList(growable: false);
-    final hasSpark = spark.length >= 2;
+    final hasHistory = data.revenueHistory.length >= 2;
     final d = _deltaVsPrior();
     final hasDelta = d.prevSum > 0;
     final positive = d.pct >= 0;
@@ -1815,7 +1830,9 @@ class _PregledHeroCommand extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(isMobile ? 18 : 24),
+              padding: EdgeInsets.all(
+                isMobile ? _kHeroPadMobile : _kHeroPadDesktop,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1830,7 +1847,7 @@ class _PregledHeroCommand extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: isMobile ? 10 : 12),
+                  SizedBox(height: isMobile ? _kGap10 : _kGap12),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -1842,24 +1859,26 @@ class _PregledHeroCommand extends StatelessWidget {
                             '€${data.revenue.toStringAsFixed(0)}',
                             style: BBType.displayNum(context).copyWith(
                               fontWeight: FontWeight.w800,
-                              letterSpacing: -1.2,
+                              letterSpacing: -2.0,
                               height: 1.0,
                               color: c.textPrimary,
-                              fontSize: isMobile ? 38 : 52,
+                              fontSize: isMobile
+                                  ? _kHeroNumMobile
+                                  : _kHeroNumDesktop,
                             ),
                           ),
                         ),
                       ),
                       if (hasDelta) ...[
-                        const SizedBox(width: 10),
+                        const SizedBox(width: _kGap10),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
+                            horizontal: BBSpace.xs,
+                            vertical: BBSpace.xxs,
                           ),
                           decoration: BoxDecoration(
                             color: deltaColor.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(BBRadius.full),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1869,7 +1888,7 @@ class _PregledHeroCommand extends StatelessWidget {
                                 size: 14,
                                 color: deltaColor,
                               ),
-                              const SizedBox(width: 3),
+                              const SizedBox(width: BBSpace.xxs),
                               Text(
                                 deltaLabel,
                                 style: BBType.caption(context).copyWith(
@@ -1887,7 +1906,7 @@ class _PregledHeroCommand extends StatelessWidget {
                     ],
                   ),
                   if (hasDelta) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: _kGap6),
                     Text(
                       // Handoff comparison caption: previous half-period sum
                       // and the absolute delta against it.
@@ -1900,17 +1919,11 @@ class _PregledHeroCommand extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                  if (hasSpark) ...[
-                    SizedBox(height: isMobile ? 14 : 18),
-                    LayoutBuilder(
-                      builder: (ctx, cs) => BbSparkline(
-                        data: spark,
-                        width: cs.maxWidth,
-                        height: isMobile ? 80 : 108,
-                        color: c.primary,
-                        fillColor: c.primary.withValues(alpha: 0.16),
-                        strokeWidth: 2.5,
-                      ),
+                  if (hasHistory) ...[
+                    SizedBox(height: isMobile ? _kGap14 : _kGap18),
+                    _RevenueAreaChart(
+                      data: data.revenueHistory,
+                      height: isMobile ? _kHeroChartMobile : _kHeroChartDesktop,
                     ),
                   ],
                 ],
@@ -1940,101 +1953,104 @@ class _PregledOccupancyRadial extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final occupancy = data.occupancyRate.clamp(0.0, 100.0);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final size = isMobile ? 120.0 : 144.0;
+    // Handoff PVRadial size 168 / stroke 16 (painter stroke = 0.10·size ≈ 16).
+    final size = isMobile ? 140.0 : 168.0;
 
     return BbCard(
-      padding: EdgeInsets.all(isMobile ? 18 : 22),
-      child: Row(
+      padding: EdgeInsets.all(isMobile ? _kGap18 : BBSpace.md),
+      // Handoff PVOccupancy: eyebrow top-left, gauge + status centered beneath.
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            width: size,
-            height: size,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0, end: occupancy),
-              duration: reduceMotion
-                  ? Duration.zero
-                  : const Duration(milliseconds: 1200),
-              curve: Curves.easeOutCubic,
-              builder: (ctx, animated, _) => CustomPaint(
-                painter: _OccupancyRadialPainter(
-                  value: animated,
-                  trackColor: c.bg,
-                  gradientStart: c.primary,
-                  gradientEnd: c.primaryLight,
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${animated.toStringAsFixed(0)}%',
-                        style: BBType.h1Num(context).copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.8,
-                          height: 1.0,
-                          color: c.textPrimary,
-                          fontSize: isMobile ? 26 : 30,
+          Text(
+            l10n.ownerOccupancyRate.toUpperCase(),
+            style: BBType.eyebrow(context).copyWith(color: c.textTertiary),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(height: isMobile ? _kGap14 : _kGap18),
+          Center(
+            child: SizedBox(
+              width: size,
+              height: size,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0, end: occupancy),
+                duration: reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 1200),
+                curve: Curves.easeOutCubic,
+                builder: (ctx, animated, _) => CustomPaint(
+                  painter: _OccupancyRadialPainter(
+                    value: animated,
+                    trackColor: c.bg,
+                    gradientStart: c.primary,
+                    gradientEnd: c.primaryLight,
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${animated.toStringAsFixed(0)}%',
+                          style: BBType.h1Num(context).copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.8,
+                            height: 1.0,
+                            color: c.textPrimary,
+                            fontSize: isMobile
+                                ? _kOccValueMobile
+                                : _kOccValueDesktop,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: BBSpace.xxs),
+                        Text(
+                          // HR-only owner surface; handoff radial sublabel slot.
+                          '${data.bookings} rezervacija',
+                          style: BBType.caption(
+                            context,
+                          ).copyWith(color: c.textTertiary),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-          SizedBox(width: isMobile ? 16 : 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.ownerOccupancyRate.toUpperCase(),
-                  style: BBType.eyebrow(
-                    context,
-                  ).copyWith(color: c.textTertiary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  // HR-only owner surface; mirrors handoff caption.
-                  'Razdoblje · ${data.bookings} rezervacija',
-                  style: BBType.caption(
-                    context,
-                  ).copyWith(color: c.textSecondary),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: isMobile ? 10 : 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+          SizedBox(height: isMobile ? _kGap14 : _kGap18),
+          // Real upcoming check-ins replaces the handoff "+8 pp vs prošli
+          // mjesec" delta, which is deferred (no prior-period occupancy yet).
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: BBSpace.xs,
+                vertical: BBSpace.xxs,
+              ),
+              decoration: BoxDecoration(
+                color: c.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(BBRadius.full),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  BbIcon(name: 'donut_small', size: 14, color: c.primary),
+                  const SizedBox(width: BBSpace.xxs),
+                  Text(
+                    // HR-only owner surface.
+                    '${data.upcomingCheckIns} dolazaka uskoro',
+                    style: BBType.caption(context).copyWith(
+                      color: c.primary,
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const <FontFeature>[
+                        FontFeature.tabularFigures(),
+                      ],
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: c.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      BbIcon(name: 'donut_small', size: 14, color: c.primary),
-                      const SizedBox(width: 4),
-                      Text(
-                        // HR-only owner surface.
-                        '${data.upcomingCheckIns} dolazaka uskoro',
-                        style: BBType.caption(context).copyWith(
-                          color: c.primary,
-                          fontWeight: FontWeight.w600,
-                          fontFeatures: const <FontFeature>[
-                            FontFeature.tabularFigures(),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -2114,10 +2130,11 @@ class _PregledAiInsight extends StatelessWidget {
     if (!_enabled && !kDebugMode) return const SizedBox.shrink();
 
     final c = BBColor.of(context);
+    final rd = BbRedesignTokens.of(context);
     final tileSize = isMobile ? 42.0 : 46.0;
 
     return Container(
-      padding: EdgeInsets.all(isMobile ? 14 : 18),
+      padding: EdgeInsets.all(isMobile ? _kGap14 : _kGap18),
       decoration: BoxDecoration(
         // Premium tri-stop banner gradient (handoff `tokens.css` line 217):
         // purple → light purple → mint. 105° axis ≈ topLeft→bottomRight.
@@ -2127,7 +2144,7 @@ class _PregledAiInsight extends StatelessWidget {
           colors: [
             c.primary.withValues(alpha: 0.10),
             c.primaryLight.withValues(alpha: 0.05),
-            const Color(0xFF3DD9B0).withValues(alpha: 0.07),
+            rd.mintWidget.withValues(alpha: 0.07),
           ],
           stops: const <double>[0.0, 0.45, 1.0],
         ),
@@ -2147,7 +2164,7 @@ class _PregledAiInsight extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [c.primary, c.primaryLight],
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(BBRadius.sm),
               boxShadow: [
                 BoxShadow(
                   color: c.primary.withValues(alpha: 0.30),
@@ -2163,7 +2180,7 @@ class _PregledAiInsight extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          SizedBox(width: isMobile ? 12 : 16),
+          SizedBox(width: isMobile ? _kGap12 : BBSpace.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2173,12 +2190,12 @@ class _PregledAiInsight extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
+                        horizontal: BBSpace.xs,
+                        vertical: _kGap2,
                       ),
                       decoration: BoxDecoration(
                         color: c.primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(BBRadius.xs),
                       ),
                       child: Text(
                         // Brand label, kept untranslated per handoff.
@@ -2190,7 +2207,7 @@ class _PregledAiInsight extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: BBSpace.xs),
                     Text(
                       // HR-only owner surface.
                       'Uvid tjedna',
@@ -2200,7 +2217,7 @@ class _PregledAiInsight extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: _kGap6),
                 Text(
                   // HR-only owner surface; placeholder copy mirroring handoff
                   // until a BookBed AI provider lands.
@@ -2211,7 +2228,7 @@ class _PregledAiInsight extends StatelessWidget {
                     height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: _kGap12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -2220,8 +2237,8 @@ class _PregledAiInsight extends StatelessWidget {
                       style: TextButton.styleFrom(
                         foregroundColor: c.textSecondary,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: _kGap12,
+                          vertical: _kGap6,
                         ),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -2234,20 +2251,20 @@ class _PregledAiInsight extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: BBSpace.xs),
                     FilledButton(
                       onPressed: () {},
                       style: FilledButton.styleFrom(
                         backgroundColor: c.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
+                          horizontal: _kGap14,
+                          vertical: BBSpace.xs,
                         ),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(_kRad8),
                         ),
                       ),
                       child: Text(
@@ -2315,23 +2332,15 @@ class _PregledChannelMix extends StatelessWidget {
     if (entries.isEmpty) return const SizedBox.shrink();
 
     return BbCard(
-      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      padding: EdgeInsets.all(isMobile ? BBSpace.sm : BBSpace.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header: title left, plain donut icon right (handoff PVChannels —
+          // no tinted icon box).
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: isMobile ? 30 : 34,
-                height: isMobile ? 30 : 34,
-                decoration: BoxDecoration(
-                  color: c.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: BbIcon(name: 'donut_small', size: 18, color: c.primary),
-              ),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2344,7 +2353,7 @@ class _PregledChannelMix extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: _kGap2),
                     Text(
                       // HR-only owner surface.
                       'Udio izvora rezervacija',
@@ -2355,32 +2364,38 @@ class _PregledChannelMix extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: BBSpace.xs),
+              BbIcon(name: 'donut_small', color: c.textTertiary),
             ],
           ),
-          SizedBox(height: isMobile ? 14 : 18),
+          SizedBox(height: isMobile ? _kGap14 : _kGap18),
+          // Stacked share bar — 2px gaps + rounded segment ends (handoff).
           ClipRRect(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(BBRadius.full),
             child: SizedBox(
-              height: 12,
+              height: _kGap12,
               child: Row(
                 children: [
                   for (final e in entries)
                     Expanded(
                       flex: e.pct,
                       child: Container(
-                        color: e.color,
-                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        margin: const EdgeInsets.symmetric(horizontal: _kGap1),
+                        decoration: BoxDecoration(
+                          color: e.color,
+                          borderRadius: BorderRadius.circular(_kRad4),
+                        ),
                       ),
                     ),
                 ],
               ),
             ),
           ),
-          SizedBox(height: isMobile ? 14 : 18),
+          SizedBox(height: isMobile ? _kGap14 : _kGap18),
           Column(
             children: [
               for (int i = 0; i < entries.length; i++) ...[
-                if (i > 0) const SizedBox(height: 12),
+                if (i > 0) const SizedBox(height: BBSpace.sm),
                 Row(
                   children: [
                     Container(
@@ -2388,10 +2403,10 @@ class _PregledChannelMix extends StatelessWidget {
                       height: 10,
                       decoration: BoxDecoration(
                         color: entries[i].color,
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(_kRad3),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: _kGap10),
                     Expanded(
                       child: Text(
                         entries[i].label,
@@ -2408,7 +2423,7 @@ class _PregledChannelMix extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: BBSpace.xs),
                     SizedBox(
                       width: 36,
                       child: Text(
@@ -2426,11 +2441,11 @@ class _PregledChannelMix extends StatelessWidget {
                 ),
                 // Per-channel breakdown bar (handoff PVChannels rows):
                 // surface-variant track + channel-color fill.
-                const SizedBox(height: 6),
+                const SizedBox(height: _kGap6),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(BBRadius.full),
                   child: SizedBox(
-                    height: 4,
+                    height: _kGap6,
                     child: Stack(
                       children: [
                         Positioned.fill(
@@ -2475,54 +2490,57 @@ class _PregledDepositsCard extends StatelessWidget {
     final share = expected > 0 ? (collected / expected).clamp(0.0, 1.0) : 0.0;
 
     return BbCard(
-      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      padding: EdgeInsets.all(isMobile ? BBSpace.sm : BBSpace.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Handoff PVDeposit: plain eyebrow, no icon box.
+          Text(
+            // HR-only owner surface — handoff eyebrow copy.
+            'NAPLAĆENI DEPOZITI',
+            style: BBType.caption(context).copyWith(
+              color: c.textTertiary,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          SizedBox(height: isMobile ? _kGap10 : _kGap12),
+          // Collected figure + inline "/ €expected očekivano" (handoff).
           Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
             children: [
-              Container(
-                width: isMobile ? 30 : 34,
-                height: isMobile ? 30 : 34,
-                decoration: BoxDecoration(
-                  color: c.success.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: BbIcon(
-                  name: 'account_balance_wallet',
-                  size: 18,
-                  color: c.success,
+              Flexible(
+                child: Text(
+                  '€${collected.toStringAsFixed(0)}',
+                  style: BBType.h1Num(context).copyWith(
+                    color: c.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
+                    fontSize: _kDepositValue,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
+              const SizedBox(width: BBSpace.xs),
+              Flexible(
                 child: Text(
-                  // HR-only owner surface — handoff eyebrow copy.
-                  'NAPLAĆENI DEPOZITI',
-                  style: BBType.caption(context).copyWith(
-                    color: c.textTertiary,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
+                  '/ €${expected.toStringAsFixed(0)} očekivano',
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textTertiary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          SizedBox(height: isMobile ? 12 : 14),
-          Text(
-            '€${collected.toStringAsFixed(0)}',
-            style: BBType.h1Num(context).copyWith(
-              color: c.textPrimary,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.4,
-            ),
-          ),
-          SizedBox(height: isMobile ? 10 : 12),
+          SizedBox(height: isMobile ? _kGap12 : _kGap14),
           ClipRRect(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(BBRadius.full),
             child: SizedBox(
-              height: 8,
+              height: BBSpace.xs,
               child: Stack(
                 children: [
                   // Handoff: surface-variant track + success gradient fill
@@ -2545,12 +2563,13 @@ class _PregledDepositsCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: BBSpace.xs),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  // HR-only owner surface.
+                  // HR-only owner surface (accurate "collected" wording kept
+                  // over the handoff's "Polog"; layout matches).
                   'Naplaćeno (${(share * 100).round()}%)',
                   style: BBType.caption(
                     context,

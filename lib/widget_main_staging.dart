@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +16,6 @@ import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options_staging.dart'; // Import STAGING options
-import 'core/init/app_check_init.dart';
 
 /// WIDGET STAGING ENTRY POINT
 ///
@@ -35,6 +35,14 @@ Future<void> _initializeFirebaseSafelyStaging() async {
     if (needsInit) {
       await Firebase.initializeApp(
         options: StagingFirebaseOptions.currentPlatform,
+      );
+
+      // Embed-reliability hardening — mirrors lib/widget_main.dart. Forces
+      // Firestore web long-polling (robust across third-party iframes /
+      // proxies). Must be set before any Firestore use.
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: false,
+        webExperimentalForceLongPolling: true,
       );
     }
   } catch (e) {
@@ -67,7 +75,13 @@ void main() async {
 
   await _initializeFirebaseSafelyStaging();
 
-  await AppCheckInit.activate(isProd: false);
+  // App Check intentionally NOT activated for the public booking widget — same
+  // fix as lib/widget_main.dart. ReCaptchaV3Provider loads CSP-blocked
+  // www.google.com/recaptcha/api.js -> token never mints -> Firebase SDK gates
+  // BOTH Firestore listens AND callables on the token -> 0 requests -> 10s
+  // timeout -> offline -> eternal shimmer. App Check is enforced NOWHERE the
+  // widget hits. Re-enable only via Option B (real reCAPTCHA key +
+  // www.google.com in widget CSP + enforcement, together).
 
   SharedPreferences? prefs;
   try {

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,6 @@ import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options.dart';
 import 'core/config/environment.dart';
-import 'core/init/app_check_init.dart';
 
 /// Widget-only entry point for embeddable booking widget
 ///
@@ -56,6 +56,21 @@ Future<void> _initializeFirebaseSafely() async {
     if (needsInit) {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      // Embed-reliability hardening (NOT the eternal-shimmer fix — that was
+      // App Check; see the block below where activation is intentionally
+      // skipped). The widget runs inside third-party iframes on arbitrary
+      // networks where the default WebChannel streaming transport can fail
+      // ("Could not reach Cloud Firestore backend within 10s"); forcing
+      // long-polling (plain XHR, each response closed immediately) is robust
+      // across proxies / firewalls / restrictive networks. Must be set before
+      // any Firestore use; not combinable with
+      // webExperimentalAutoDetectLongPolling. persistenceEnabled:false — the
+      // widget keeps no offline cache.
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: false,
+        webExperimentalForceLongPolling: true,
       );
 
       // Safety: crash early in debug if our init landed on the wrong project.
@@ -119,7 +134,21 @@ void main() async {
     initializeDateFormatting(),
   ]);
 
-  await AppCheckInit.activate(isProd: true);
+  // App Check is intentionally NOT activated for the public booking widget.
+  // ROOT CAUSE of the "eternal shimmer" P0 (2026-06-14, console-proven):
+  // AppCheckInit.activate -> ReCaptchaV3Provider loads
+  // https://www.google.com/recaptcha/api.js, which is CSP-blocked on the widget
+  // surface (no www.google.com in script-src) -> the App Check token never
+  // mints -> the Firebase SDK gates BOTH Firestore AND callable requests on
+  // that token -> 0 requests -> 10s timeout -> offline -> infinite skeleton.
+  // App Check is enforced NOWHERE the widget touches (every widget callable is
+  // enforceAppCheck:false; Firestore/Storage App Check off), so activating it
+  // here was pure liability on this public, no-auth, public-read surface.
+  // To re-enable later (Option B): register a REAL reCAPTCHA v3 key, pass it via
+  // --dart-define=APP_CHECK_RECAPTCHA_KEY=<key>, add https://www.google.com to
+  // the widget script-src in firebase.json, THEN flip enforcement. Until all
+  // three land together, leave this OFF.
+  // (Owner/admin entries still call AppCheckInit.activate — unaffected.)
 
   // Override SharedPreferences provider if initialization succeeded
   final overrides = prefs != null

@@ -130,7 +130,7 @@ Učitavaju se SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-06-15 | **Version**: 7.17
+**Last Updated**: 2026-06-15 | **Version**: 7.18
 
 # context-mode — MANDATORY routing rules
 

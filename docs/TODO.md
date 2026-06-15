@@ -31,11 +31,29 @@ Uz to, stariji PROD gapovi koji se voze istim talasom:
 
 `enforceAppCheck: false` i danas na `getUnitAvailability` + `createStripeCheckoutSession`. Za enforcement:
 - [ ] Provision `RECAPTCHA_SITE_KEY` (dev + prod)
-- [ ] Web client init (`web/index.html` + widget entry) — `FirebaseAppCheck.activate` nigdje u lib/ (verified 2026-05-29)
+- [ ] Web client init — owner/admin entries (`main.dart`/`admin_main.dart`) već zovu `AppCheckInit.activate` (CSP ima www.google.com). **Widget entry App Check UKLONJEN 2026-06-15** (eternal-shimmer P0, CHANGELOG 7.17) → re-enable widget tek kao **Option B**: real `APP_CHECK_RECAPTCHA_KEY` (--dart-define) + `www.google.com` u widget `script-src` (`firebase.json`) + `enforceAppCheck:true`, sve ZAJEDNO. Vidi `.claude/rules/widget.md`.
 - [ ] Native init (DeviceCheck / Play Integrity)
 - [ ] CSP pre-flight: dodaj recaptcha domene PRIJE flipa (vidi `availability.ts:126` komentar + memorija csp-recaptcha-gsi)
 - [ ] 1 sedmica telemetrije ≥99% pa flip `enforceAppCheck: true` + proširi na ostale anon callable-e
 - Operator-only (audit/123): App Check enforcement toggle za Firebase AI Logic API.
+
+## 📋 Widget P0 follow-ups (2026-06-15 — App Check shimmer fix SHIPPED, vidi CHANGELOG 7.17)
+
+App Check eternal-shimmer fix shipped PROD (`2ee8d838`+`9cd2d2de`; widget App Check uklonjen). Otvoreno:
+- **Sentry observability (HIGH)** — `widget_main.dart:180-187` blanket-dropuje `offline`/`cloud_firestore unavailable` iz Sentry-ja ("expected in iframe… retry handles recovery") → zato je ovaj P0 bio telemetrijski NEVIDLJIV danima. Surface persistentni failure (capture kad svi retry-evi padnu); zadrži drop samo za tranzijentne.
+- **admin Sentry-blind (LOW)** — `admin_main.dart` nema `SentryFlutter.init` (widget+owner wired). Interni panel → low prio.
+- **app.bookbed.io desktop smoke (nedovršeno)** — #747 clamp (Pregled/Rezervacije centrirani, ne edge-to-edge) + TIP-1 gradient (unit pricing sekcije diagonalni 2-stop, ne flat) eyeball + Sentry test-error (validira novi PROD `SENTRY_DSN` end-to-end).
+- **FCM stale-token prune (#2)** — `fcmService.ts:195` "all tokens failed" grana: prune `UNREGISTERED`/invalid tokena (inače per-push prod-error spam za taj uid). Zaseban CF deploy.
+- Minor: gsi/client CSP-block (bezopasno ako widget nema Google-SignIn) + SW-cache test gotcha (incognito/unregister obavezno pri verifikaciji widget deploya).
+
+## 🎨 Pregled (Dashboard) fidelity — deferred (2026-06-15, CHANGELOG 7.18, `07a9caf7`)
+
+Premium fidelity SHIPPED + live-verified (web CanvasKit + iOS/Android Impeller + dark, seedani podaci). Recipe: memorija `pregled-live-fidelity-verification-recipe`. Otvoreno (treba provider/feature rad, ne blokira):
+- **Hero dual-series** — prev-period ghost linija + "Ovaj/Prošli period" legenda (handoff PVDualChart); treba prior-period serija u `unified_dashboard_provider.dart` (sad single-series labeled chart).
+- **Occupancy delta** — "+8 pp vs prošli mjesec" (handoff); treba prior-month occupancy (sad "N dolazaka uskoro" badge umjesto delte).
+- **Header "Izvezi" export** — handoff PVHeader dugme; treba export feature (CSV/PDF dashboard).
+- **Avg-rating realna vrijednost** — KPI tile sad honest "—" (nema reviews providera, product gap audit/120).
+- **Minor l10n (van Pregleda, spazeno live):** TrialBanner "Your trial ends in 5 days" + login validacija "Please enter your password" renderuju engleski — zaseban l10n fix.
 
 ## 🧰 Deploy-hygiene automatizacija (S/M)
 

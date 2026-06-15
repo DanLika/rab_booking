@@ -2,7 +2,24 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-15 | **Version**: 7.17
+**Last Updated**: 2026-06-15 | **Version**: 7.18
+
+---
+
+**Changelog 7.18** (2026-06-15):
+
+### Owner — Pregled (Dashboard) premium fidelity + hero chart + responsive harden (`07a9caf7`)
+- Pregled je već bio na premium design sistemu (audit/124); ovaj rad ga dovodi na **handoff fidelity** + dodaje labeled chart, uz potpunu token-higijenu. Single atomic commit (`dashboard_overview_tab.dart` + novi responsive test).
+- **Hero chart:** sparkline → labeled revenue chart — date/week x-osa (LinearScale `formatter` + `tickCount`) + €-osa; popravlja staru index-only osu (0,1,2 → datumi/sedmice). Single-series; prev-period ghost linija + legenda **deferred** (treba provider serija).
+- **Fidelity vs handoff:** occupancy row→**centrirana kolona**; KPI **delta chipovi** (spark-derived) + 4-across/2×2; deposits inline "/ €expected", bez icon-boxa; channels plain donut header (bez tint-boxa); hero **1.85fr** / arrivals **1.4fr** grid; panel padding + uniform gap ritam.
+- **Token higijena:** 0 hardcoded boja (mint → `rd.mintWidget`); **0 raw spacing/font/radius literala** (BB* tokeni + named in-file `_k*` consts; izbjegnut deprecated `BBSpace.xs2`/`BBRadius.xs2`).
+- **Preview chart dedup:** obrisan `_RevenueChart` + mrtvi helperi/importi → preview osa popravljena uzgred.
+- **Test harness:** `buildPanelForTest` `@visibleForTesting` seam dijeli živu section-listu (`_pregledPanelChildren`, bez drift-a); overflow matrica mobile→4K × light/dark (8/8). Live seed: `scripts/seed-pregled-premium-dev.js`.
+- **Verifikacija:** `flutter analyze` 0 · full `flutter test` **1421 pass** · `build web` clean · grep proofs (0 hex / 0 raw literala) · **live: web (CanvasKit) + iOS/Android (Impeller) + dark** — prave Material Symbols ikone, sane brojevi, occupancy/chart ok na mobilu, iOS safe-area, nula overflowa. FROZEN netaknut.
+- **Deferred (sljedeći PR-ovi):** hero prev-period ghost+legenda; occupancy "+8 pp vs prošli mjesec"; header "Izvezi" export; avg-rating realna vrijednost (reviews provider). Van scope-a spazeno live: TrialBanner + login validacija renderuju engleski string (l10n gap).
+
+### Deploy — `scripts/deploy_prod.sh` hardening committed (bilo "pending" u 7.17)
+- Finalizovan deploy-hygiene rad iz 7.17: source `.env.production` + **fail-close prazan `SENTRY_DSN`**; build sva 3 surfacea uklj. **admin** (prije izostao); `--no-tree-shake-icons` (bb_icon dynamic IconData); `bookbed-overlay.js` re-copy+verify poslije widget builda; deploy **hosting-only** (bez functions → izbjegava CF IAM-strip). `STRIPE_*` nikad u `--dart-define`.
 
 ---
 

@@ -31,6 +31,7 @@
 | Navigator.push za confirmation | NE vraćaj state-based navigaciju |
 | Timeline Calendar fixed dimensions (`timeline_dimensions.dart`) | FIXED 50/42/100/60px za SVE uređaje — NE vraćaj responsive breakpoints |
 | `bookings` read rule — `unit_id+status` clause 1 | ✅ T11c CLOSED 2026-05-22 (commit `ab6bdb3d`). All 3 rule surfaces tightened. Widget calendar + booking-submit route through `getUnitAvailability` callable (eu-west1). Realtime → 30s polling. Privacy-driven: pending/confirmed visual distinction sacrificed. Vidi SF-019 (audit/06 obrisan — git history). |
+| App Check na widget entry-ima (`widget_main*.dart`) | OFF NAMJERNO (eternal-shimmer P0, 2026-06-15, main `9cd2d2de`). `AppCheckInit.activate` → `ReCaptchaV3Provider` učitava CSP-blokiran `www.google.com/recaptcha/api.js` → token nikad ne iskuje → Firestore listeni + callables stalluju 10s → offline → vječni skeleton. App Check `enforceAppCheck:false` svuda gdje widget zalazi. NE re-enable bez Option B (`www.google.com` u `script-src` sva 3 surfacea + pravi `APP_CHECK_RECAPTCHA_KEY` + enforcement, ZAJEDNO). Detalji: `.claude/rules/widget.md`. |
 
 ---
 
@@ -129,7 +130,7 @@ Učitavaju se SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-06-11 | **Version**: 7.15
+**Last Updated**: 2026-06-15 | **Version**: 7.17
 
 # context-mode — MANDATORY routing rules
 

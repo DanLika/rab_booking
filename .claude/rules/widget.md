@@ -7,6 +7,21 @@ paths:
 
 # Booking Widget System
 
+## ⚠ App Check — NAMJERNO ISKLJUČEN na widgetu (NE re-enable bez Option B)
+
+`widget_main.dart` / `widget_main_dev.dart` / `widget_main_staging.dart` **NE pozivaju `AppCheckInit.activate`** — App Check je namjerno OFF na widgetu.
+
+**Zašto (eternal-shimmer P0, 2026-06-14/15):** `AppCheckInit.activate` → `ReCaptchaV3Provider` učitava `https://www.google.com/recaptcha/api.js`, koji je **CSP-blokiran** na widget surfaceu (`firebase.json` nema `www.google.com` u `script-src`). Token se nikad ne iskuje → Firebase SDK drži SVE Firestore listene I callable pozive čekajući token → **0 requestova → 10s timeout → offline → vječni skeleton**. App Check je `enforceAppCheck:false` svuda gdje widget zalazi (+ Firestore/Storage App Check off u konzoli), pa je na javnom no-auth widgetu bio čista šteta.
+
+**Dokaz:** kontrolisani A/B (čist modular SDK, isti browser): bez App Check `onSnapshot` 459ms/1 doc; s App Check (placeholder reCAPTCHA, CSP-blok) 10s offline/0 doc. PROD-verifikovano na jaskovim unitima (render + `Listen` 200 + `getUnitAvailability` 200, console 0).
+
+**NE re-enable App Check na widgetu bez SVE TRI stavke ZAJEDNO (Option B):**
+1. `https://www.google.com` u widget (i owner/admin) `script-src` u `firebase.json`,
+2. pravi `--dart-define=APP_CHECK_RECAPTCHA_KEY=<key>` (trenutno `placeholder-debug-only` = nula zaštite),
+3. `enforceAppCheck:true` na widget callable-ima.
+
+Inače se vraća shimmer. `forceLongPolling` Settings linija u istim entry-jima je **embed-reliability hardening, NIJE App Check fix** — ne brkati. Puni detalji: `memory/frozen-calendar-optimized-stream-permission-denied.md`.
+
 ## Subdomain & URL Slug System
 
 **URL formati** (widget na `view.bookbed.io`):

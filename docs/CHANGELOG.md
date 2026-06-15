@@ -2,7 +2,21 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-12 | **Version**: 7.16
+**Last Updated**: 2026-06-15 | **Version**: 7.17
+
+---
+
+**Changelog 7.17** (2026-06-15):
+
+### Widget — App Check "eternal shimmer" P0 (SHIPPED PROD: `2ee8d838` widget + `9cd2d2de` staging-parity)
+- **Root cause** (console-proven + in-browser A/B): `widget_main.dart` `AppCheckInit.activate` → `ReCaptchaV3Provider('placeholder-debug-only')` učitava `www.google.com/recaptcha/api.js` → **CSP-blocked** (nema `www.google.com` u widget `script-src`) → App Check token se nikad ne izda → Firebase SDK gejtuje **I** Firestore listene **I** callable pozive na tom tokenu → **0 firestore + 0 cloudfunctions** → 10s timeout → offline → vječni calendar skeleton. A/B: bez App Check `onSnapshot` 459ms/1 doc; sa App Check 10s/0 doc.
+- **Fix:** uklonjen `AppCheckInit.activate` iz sva 3 widget entry-ja (`widget_main.dart` + `_dev` + `_staging`); submit/booking kod netaknut. App Check `enforceAppCheck:false` svuda gdje widget zalazi → bio čista liability na public no-auth surfaceu. `forceLongPolling` zadržan kao embed hardening (NIJE fix — bio no-op za ovaj bug).
+- **owner/admin entries (`main.dart`/`admin_main.dart`) ZADRŽAVAJU `AppCheckInit.activate`** (njihov CSP ima `www.google.com`). NE uklanjati.
+- **Deploy:** PROD widget na `view.bookbed.io` (`hosting:widget` only); jasko live smoke (fresh isolated): kalendar + €50 cijene + availability render, console **0 errors**, `Listen/channel` → 200, `getUnitAvailability` (eu-west1) → 200. Booking E2E dokazan na dev-u (bank_transfer createBookingAtomic→booking→availability→cleanup).
+- **Re-enable App Check kasnije = Option B bundle** (sve zajedno): realni `APP_CHECK_RECAPTCHA_KEY` (`--dart-define`) + `https://www.google.com` u widget CSP (`firebase.json`) + flip enforcement. Guard: CLAUDE.md NIKADA tabela + `.claude/rules/widget.md` + memorija `frozen-calendar-optimized-stream-permission-denied`.
+
+### Deploy hygiene — `scripts/deploy_prod.sh` hardening (working-tree, pending commit)
+- Source `.env.production` + **fail-close na prazan `SENTRY_DSN`** (ranije nijedan script nije sourceao DSN → Sentry-blind PROD build); build sva 3 surfacea (owner=`main_prod`, widget, **admin** — admin build je prije FALIO/izostao → admin servirao stale bytes); `--no-tree-shake-icons` (bb_icon dynamic IconData); **`bookbed-overlay.js` cp + verify** poslije widget builda (`-o` prebriše dir → bez ovog iframe scroll regresira); deploy **hosting-only** `:owner,:widget,:admin` (bez functions → izbjegava CF Cloud-Run IAM-strip); restore dev alias na kraju. `STRIPE_SECRET_KEY` nikad u `--dart-define` (server-only).
 
 ---
 

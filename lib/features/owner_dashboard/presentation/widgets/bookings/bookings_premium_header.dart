@@ -181,61 +181,6 @@ class BookingsPremiumLedgerHeader extends ConsumerWidget {
   }
 }
 
-/// Premium ledger footer — "Prikazano X od Y rezervacija" pagination hint
-/// (audit/117 §B2-Δb). Renders below the existing list/table so the bottom
-/// of the ledger matches the handoff RZPLedger footer surface.
-class BookingsPremiumLedgerFooter extends ConsumerWidget {
-  final EdgeInsetsGeometry padding;
-
-  const BookingsPremiumLedgerFooter({
-    super.key,
-    this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 20),
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final c = BBColor.of(context);
-    final WindowedBookingsState s = ref.watch(windowedBookingsNotifierProvider);
-    final int visible = s.visibleBookings.length;
-    if (visible == 0) return const SizedBox.shrink();
-
-    final String label = s.hasMoreBottom
-        ? 'Prikazano $visible · listanjem se učitavaju nove'
-        : 'Prikazano svih $visible rezervacija';
-
-    return Padding(
-      padding: padding,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: c.surfaceVariant.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(BBRadius.sm),
-          border: Border.all(color: c.border.withValues(alpha: 0.4)),
-        ),
-        child: Row(
-          children: <Widget>[
-            Icon(Icons.list_alt, size: 14, color: c.textTertiary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: BBType.caption(context).copyWith(
-                  color: c.textSecondary,
-                  fontWeight: FontWeight.w500,
-                  fontFeatures: const <FontFeature>[
-                    FontFeature.tabularFigures(),
-                  ],
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _PremiumHeaderRow extends StatelessWidget {
   final bool isMobile;
 

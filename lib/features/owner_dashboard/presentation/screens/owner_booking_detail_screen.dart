@@ -10,7 +10,10 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/redesign.dart';
+import '../../../../shared/models/booking_model.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
+import '../widgets/booking_actions/booking_cancel_dialog.dart';
+import '../widgets/booking_actions/booking_complete_dialog.dart';
 import '../widgets/edit_booking_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/send_email_dialog.dart';
@@ -638,6 +641,22 @@ class _BDNotesCard extends StatelessWidget {
 // badge + relative time + primary Odobri/Odbij when pending; secondary
 // Poruka / Uredi / Više on all statuses.
 // ─────────────────────────────────────────────────────────────────────────
+/// Pure gating for the detail action panel — single source of truth for which
+/// actions render, consumed by [_BDStatusActionsState.build] and asserted by
+/// `owner_booking_detail_actions_test.dart`. Guarantees no confirmed booking is
+/// ever action-stranded (past → complete, upcoming → cancel, always msg/edit).
+@visibleForTesting
+({bool approveReject, bool complete, bool cancel, bool edit})
+detailActionVisibility(BookingModel b) {
+  final bool isPending = b.status == BookingStatus.pending;
+  return (
+    approveReject: isPending,
+    complete: b.status == BookingStatus.confirmed && b.isPast,
+    cancel: !isPending && b.canBeCancelled,
+    edit: b.status != BookingStatus.cancelled,
+  );
+}
+
 class _BDStatusActions extends ConsumerStatefulWidget {
   final OwnerBooking ownerBooking;
   final bool sidebar;
@@ -694,6 +713,73 @@ class _BDStatusActionsState extends ConsumerState<_BDStatusActions> {
     }
   }
 
+  /// Mark a confirmed-past booking as completed. Mirrors the (now-removed)
+  /// inline ledger action: reuses [BookingCompleteDialog] + repo.completeBooking.
+  Future<void> _complete() async {
+    if (_busy) return;
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => const BookingCompleteDialog(),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      await ref
+          .read(ownerBookingsRepositoryProvider)
+          .completeBooking(widget.ownerBooking.booking.id);
+      if (!mounted) return;
+      ErrorDisplayUtils.showSuccessSnackBar(
+        context,
+        'Rezervacija označena kao završena',
+      );
+      ref.invalidate(ownerBookingByIdProvider(widget.ownerBooking.booking.id));
+    } catch (e) {
+      if (!mounted) return;
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        e,
+        userMessage: 'Označavanje nije uspjelo',
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Cancel a cancellable booking. Mirrors the (now-removed) inline ledger
+  /// action: reuses [BookingCancelDialog] (returns {reason, sendEmail}) +
+  /// repo.cancelBooking.
+  Future<void> _cancel() async {
+    if (_busy) return;
+    final Map<String, dynamic>? result =
+        await showDialog<Map<String, dynamic>?>(
+          context: context,
+          builder: (BuildContext context) => const BookingCancelDialog(),
+        );
+    if (result == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      await ref
+          .read(ownerBookingsRepositoryProvider)
+          .cancelBooking(
+            widget.ownerBooking.booking.id,
+            result['reason'] as String,
+            sendEmail: result['sendEmail'] as bool,
+          );
+      if (!mounted) return;
+      ErrorDisplayUtils.showWarningSnackBar(context, 'Rezervacija otkazana');
+      ref.invalidate(ownerBookingByIdProvider(widget.ownerBooking.booking.id));
+    } catch (e) {
+      if (!mounted) return;
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        e,
+        userMessage: 'Otkazivanje nije uspjelo',
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   void _openEdit() {
     showEditBookingDialog(context, ref, widget.ownerBooking.booking);
   }
@@ -706,8 +792,7 @@ class _BDStatusActionsState extends ConsumerState<_BDStatusActions> {
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
     final booking = widget.ownerBooking.booking;
-    final isPending = booking.status == BookingStatus.pending;
-    final isCancelled = booking.status == BookingStatus.cancelled;
+    final vis = detailActionVisibility(booking);
     final relativeAgo = _relativeAgo(booking.createdAt);
 
     return BbCard(
@@ -726,7 +811,7 @@ class _BDStatusActionsState extends ConsumerState<_BDStatusActions> {
             ],
           ),
           const SizedBox(height: BBSpace.sm),
-          if (isPending) ...[
+          if (vis.approveReject) ...[
             BbButton(
               label: 'Odobri rezervaciju',
               iconLeft: 'check',
@@ -758,7 +843,7 @@ class _BDStatusActionsState extends ConsumerState<_BDStatusActions> {
                   onPressed: _openEmail,
                 ),
               ),
-              if (!isCancelled) ...[
+              if (vis.edit) ...[
                 const SizedBox(width: 8),
                 Expanded(
                   child: BbButton(
@@ -772,6 +857,31 @@ class _BDStatusActionsState extends ConsumerState<_BDStatusActions> {
               ],
             ],
           ),
+          // Complete / cancel — moved here from the (now-lean) ledger rows so
+          // the confirmed-booking actions are not stranded. Status-gated to
+          // match the old inline affordances.
+          if (vis.complete) ...[
+            const SizedBox(height: BBSpace.sm),
+            BbButton(
+              label: 'Označi kao završenu',
+              iconLeft: 'done_all',
+              variant: BbButtonVariant.success,
+              fullWidth: true,
+              loading: _busy,
+              onPressed: _busy ? null : _complete,
+            ),
+          ],
+          if (vis.cancel) ...[
+            const SizedBox(height: BBSpace.xs),
+            BbButton(
+              label: 'Otkaži rezervaciju',
+              iconLeft: 'close',
+              variant: BbButtonVariant.destructive,
+              fullWidth: true,
+              loading: _busy,
+              onPressed: _busy ? null : _cancel,
+            ),
+          ],
         ],
       ),
     );

@@ -89,7 +89,7 @@ dependencies:
   collection: ^1.18.0  # Collection utilities (firstWhereOrNull, etc.)
 
   # AI Chat (Gemini via Firebase)
-  firebase_ai: ^3.12.1
+  firebase_ai: ^3.12.2
   firebase_app_check: ^0.4.4+1
 
   # Markdown rendering (for AI chat responses)

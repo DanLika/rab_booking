@@ -84,7 +84,7 @@ dependencies:
   flutter_secure_storage: ^9.0.0  # Secure credential storage
   uuid: ^4.5.1
   crypto: ^3.0.3
-  connectivity_plus: ^7.0.0
+  connectivity_plus: ^7.1.1
   web: ^1.0.0
   collection: ^1.18.0  # Collection utilities (firstWhereOrNull, etc.)
 

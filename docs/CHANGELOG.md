@@ -2,7 +2,21 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-15 | **Version**: 7.18
+**Last Updated**: 2026-06-15 | **Version**: 7.19
+
+---
+
+**Changelog 7.19** (2026-06-15):
+
+### Owner — Rezervacije premium fidelity: lean ledger (handoff RZPLedger) + gate-fix (`420b48ed`)
+- Feature-rich card-list + card/table toggle zamijenjen **lean read-only ledgerom** (handoff `rezervacije-premium.jsx` RZPLedger): desktop 7-kolonska grid tabela (Gost/Objekt/Termin/Plaćanje/Iznos/Status/chevron) + tablet/mobile compact redovi (RZPMobileRow), inline payment-progress, status badgevi, count footer. Redovi read-only → tap u detalj. **−2451 net linija** (16 fajlova).
+- **Akcije premještene (namjerna workflow promjena):** approve/reject ostaju u pending-queue (gore, netaknut); **complete/cancel rehoman u detalj** (`owner_booking_detail_screen.dart`) da lean redovi ne strand-uju akciju. Gating izdvojen u `detailActionVisibility` (`@visibleForTesting`, konzumiran u `build()`): confirmed-past→Završi, confirmed-upcoming→Otkaži, in-progress→nijedno (samo Poruka/Uredi), pending→approve/reject. Nijedan confirmed nije bez akcije.
+- **Novi `bookings_ledger.dart`** (pure + testabilan): `BookingsLedger` + `BookingsLedgerEntry` (normalizuje `OwnerBooking` + iCal evente; imported = read-only `—` cijena/iznos, bez detail rute). Overbooking banner očuvan; Filteri → postojeći dialog; **Sortiraj deferovan/skriven** (windowed sort zavaravajuć — server-sort follow-up). Sync/FAQ token-hygiene (keep layout).
+- **Mrtvi kod:** 10 orphan widgeta obrisano (table view, imported list, 7 booking-card dijelova, imported card) + dead `BookingsPremiumLedgerFooter` — repo-wide grep zero importera.
+- **Token higijena:** 0 hardcoded boja; 0 raw spacing/radius/fontSize literala u ledger + screen (BB* tokeni + named `_k*` consts). `build web` **mora `--no-tree-shake-icons`** (bb_icon dynamic IconData; CI/deploy parity).
+- **Testovi:** `bookings_ledger_responsive_test` (overflow 8 breakpointa × light/dark + empty) + `owner_booking_detail_actions_test` (gate-fix gating, 4 stanja). `flutter analyze` 0 net-new · full `flutter test` **1443 pass** · `build web --no-tree-shake-icons` clean · scope = samo Rezervacije + detail + 2 testa (bez shared/FROZEN).
+- **Dev smoke (Android Impeller, Marionette/adb, ref-verified):** gate-fix **4/4 PASS** — Ivan `#BB-SMOKE-02` upcoming→Otkaži · Luka `#BB-SMOKE-03` past→Završi · Marko `#BB-SMOKE-04` in-progress→nijedno · Petra `#BB-SMOKE-01` pending→approve→Potvrđeno end-to-end. Seed `scripts/seed-rezervacije-smoke-dev.js` (20 bookinga + 2 iCal state-matrix; `--delete` wipe). Napomena: dev test-account ima 3 seed generacije s kolidirajućim imenima → tap po unique iznosu + verify detail `#ref`.
+- **Deferred:** owner PROD deploy (batchan s Pregled `07a9caf7`, čeka GO); booking detail screen = vlastiti fidelity pass (mješovita higijena — gate-fix dodaci token-clean, ostatak pre-existing literali); live web/iOS phone eyeball.
 
 ---
 

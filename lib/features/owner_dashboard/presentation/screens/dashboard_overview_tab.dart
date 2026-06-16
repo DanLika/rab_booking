@@ -2131,24 +2131,15 @@ class _PregledAiInsight extends StatelessWidget {
     if (!_enabled && !kDebugMode) return const SizedBox.shrink();
 
     final c = BBColor.of(context);
-    final rd = BbRedesignTokens.of(context);
     final tileSize = isMobile ? 42.0 : 46.0;
 
     return Container(
       padding: EdgeInsets.all(isMobile ? _kGap14 : _kGap18),
       decoration: BoxDecoration(
-        // Premium tri-stop banner gradient (handoff `tokens.css` line 217):
-        // purple → light purple → mint. 105° axis ≈ topLeft→bottomRight.
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            c.primary.withValues(alpha: 0.10),
-            c.primaryLight.withValues(alpha: 0.05),
-            rd.mintWidget.withValues(alpha: 0.07),
-          ],
-          stops: const <double>[0.0, 0.45, 1.0],
-        ),
+        // FLAT surface (wash retired 2026-06-16): the purple→mint banner
+        // gradient is gone; the AI identity now lives only in the purple icon
+        // tile + label. Neutral surface-variant fill; border + shadow define it.
+        color: c.surfaceVariant,
         borderRadius: BorderRadius.circular(BBRadius.md),
         border: Border.all(color: c.primary.withValues(alpha: 0.18)),
         boxShadow: BBShadow.cardElevated,

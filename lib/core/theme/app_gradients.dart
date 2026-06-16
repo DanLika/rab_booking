@@ -25,11 +25,11 @@ class AppGradients extends ThemeExtension<AppGradients> {
     required this.inputFillColor,
   });
 
-  /// Screen body gradient (TIP 1 diagonal, topLeft → bottomRight)
+  /// Screen body fill — FLAT shell tone (gradient retired 2026-06-16).
   /// Used for: main page backgrounds, scaffold bodies
   final LinearGradient pageBackground;
 
-  /// Section/Card gradient (right → left, horizontal)
+  /// Section/card fill — FLAT raised tone (gradient retired 2026-06-16).
   /// Used for: sidebar panels, elevated sections
   final LinearGradient sectionBackground;
 
@@ -58,18 +58,18 @@ class AppGradients extends ThemeExtension<AppGradients> {
   // CENTRAL COLOR DEFINITIONS - CHANGE HERE = UPDATE EVERYWHERE!
   // ============================================================================
 
-  // Page TIP 1 colors — user-mandated simple diagonal page-shell gradient:
-  // 2 colors @100% opacity, 2 stops, topLeft → bottomRight, fade ends at 30%
-  // (page direction mirrors the section's topRight → bottomLeft).
-  // Light: shell light-gray #ECEDF2 (the family paired with border #E0DCE8,
-  // replacing the old flat #F0F1F5 / the spec's #F8F9FA) → white.
+  // Page shell colors — FLAT (TIP-1 gradient retired per user 2026-06-16: the
+  // two opposite-direction gray gradients are gone). Both stops = one shell
+  // tone so `pageBackground` renders as a solid fill.
+  // Light shell: curated light-gray #ECEDF2 (pairs with border #E0DCE8;
+  // replaces #F0F1F5 / spec #F8F9FA). Raised surfaces (section/card) go white.
   static const Color _lightStart = Color(0xFFECEDF2);
-  static const Color _lightEnd = Color(0xFFFFFFFF);
+  static const Color _lightEnd = Color(0xFFECEDF2);
 
-  // Dark: veryDarkGray #1A1A1A → mediumDarkGray #2D2D2D (user spec; replaces
-  // the old flat OLED #000000).
+  // Dark shell: FLAT veryDarkGray #1A1A1A (user spec; NOT OLED #000). Raised
+  // surfaces (section/card) step up to #2D2D2D so cards sit above the shell.
   static const Color _darkStart = Color(0xFF1A1A1A);
-  static const Color _darkEnd = Color(0xFF2D2D2D);
+  static const Color _darkEnd = Color(0xFF1A1A1A);
 
   // Brand purple (same for light & dark)
   static const Color _brandStart = Color(0xFF6B4CE6); // Purple
@@ -85,23 +85,23 @@ class AppGradients extends ThemeExtension<AppGradients> {
   static const Color _darkBorder = Color(0xFF35323D);
 
   // Card background colors (flat, no gradient).
-  // Light = `panelBg` `#FBFBFD`; dark = `panelBg` `#0B0B0D` per handoff
-  // (`BbRedesignTokens.panelBg`).
+  // Light = near-white `#FBFBFD` (raised over the #ECEDF2 shell). Dark raised
+  // to `#2D2D2D` so cards sit ABOVE the #1A1A1A shell — the old `#0B0B0D` sank
+  // BELOW it and dissolved (see handoff-token-alignment note).
   static const Color _lightCard = Color(0xFFFBFBFD);
-  static const Color _darkCard = Color(0xFF0B0B0D);
+  static const Color _darkCard = Color(0xFF2D2D2D);
 
   // Input fill colors — handoff `--bb-surface-variant` (subtle off-shell).
   // Light: shellBg lifted toward white; dark: panelBg lifted toward purple.
   static const Color _lightInputFill = Color(0xFFF5F6FA);
   static const Color _darkInputFill = Color(0xFF15151A);
 
-  // Section TIP 1 colors — user-mandated simple diagonal section gradient:
-  // 2 colors @100% opacity, 2 stops, topRight → bottomLeft, fade ends at 30%.
-  // Light start is a cool light gray (user: replace #F8F9FA with a gray that
-  // pairs with shell #F0F1F5 / border #E0DCE8). Dark pair is per user spec.
-  static const Color _lightSectionStart = Color(0xFFECEDF2);
+  // Section colors — FLAT (TIP-1 gradient retired 2026-06-16). Raised-surface
+  // tone, one step above the page shell so sections/cards read as elevated
+  // without a gradient: white on light, #2D2D2D on dark.
+  static const Color _lightSectionStart = Color(0xFFFFFFFF);
   static const Color _lightSectionEnd = Color(0xFFFFFFFF);
-  static const Color _darkSectionStart = Color(0xFF1A1A1A);
+  static const Color _darkSectionStart = Color(0xFF2D2D2D);
   static const Color _darkSectionEnd = Color(0xFF2D2D2D);
 
   // ============================================================================
@@ -111,16 +111,16 @@ class AppGradients extends ThemeExtension<AppGradients> {
   /// Light theme gradients
   static const AppGradients light = AppGradients(
     pageBackground: LinearGradient(
-      // User TIP 1: simple diagonal, 2 opaque colors, fade ends at 30% of the
-      // screen. topLeft → bottomRight (mirror of the section direction).
+      // FLAT shell — gradient retired 2026-06-16. Both stops resolve to one
+      // shell tone, so this paints a solid fill (begin/end/stops inert).
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [_lightStart, _lightEnd],
       stops: [0.0, 0.3],
     ),
     sectionBackground: LinearGradient(
-      // User TIP 1 (overrides handoff flat `--bb-panel-bg`): simple diagonal,
-      // 2 opaque colors, fade ends at 30% of the surface.
+      // FLAT raised surface — gradient retired 2026-06-16. Solid fill (both
+      // stops equal; begin/end/stops inert).
       begin: Alignment.topRight,
       end: Alignment.bottomLeft,
       colors: [_lightSectionStart, _lightSectionEnd],
@@ -144,16 +144,16 @@ class AppGradients extends ThemeExtension<AppGradients> {
   /// Dark theme gradients
   static const AppGradients dark = AppGradients(
     pageBackground: LinearGradient(
-      // User TIP 1: simple diagonal, 2 opaque colors, fade ends at 30% of the
-      // screen. topLeft → bottomRight (mirror of the section direction).
+      // FLAT shell — gradient retired 2026-06-16. Both stops resolve to one
+      // shell tone, so this paints a solid fill (begin/end/stops inert).
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [_darkStart, _darkEnd],
       stops: [0.0, 0.3],
     ),
     sectionBackground: LinearGradient(
-      // User TIP 1 (overrides handoff flat `--bb-panel-bg`): simple diagonal,
-      // 2 opaque colors, fade ends at 30% of the surface.
+      // FLAT raised surface — gradient retired 2026-06-16. Solid fill (both
+      // stops equal; begin/end/stops inert).
       begin: Alignment.topRight,
       end: Alignment.bottomLeft,
       colors: [_darkSectionStart, _darkSectionEnd],

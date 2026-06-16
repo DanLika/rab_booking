@@ -74,12 +74,8 @@ class _ExpiringBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            warning.withValues(alpha: isDark ? 0.22 : 0.18),
-            warning.withValues(alpha: isDark ? 0.12 : 0.10),
-          ],
-        ),
+        // FLAT (gradient retired 2026-06-16): single warning tint, no fade.
+        color: warning.withValues(alpha: isDark ? 0.16 : 0.12),
         border: Border(
           bottom: BorderSide(color: warning.withValues(alpha: 0.4)),
         ),
@@ -93,8 +89,8 @@ class _ExpiringBanner extends StatelessWidget {
             Expanded(
               child: Text(
                 daysRemaining == 1
-                    ? 'Your trial ends tomorrow!'
-                    : 'Your trial ends in $daysRemaining days',
+                    ? 'Probno razdoblje istječe sutra!'
+                    : 'Probno razdoblje istječe za $daysRemaining dana',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: fg,
                   fontWeight: FontWeight.w500,
@@ -114,7 +110,7 @@ class _ExpiringBanner extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text('Upgrade'),
+              child: const Text('Nadogradi'),
             ),
           ],
         ),
@@ -141,12 +137,8 @@ class _ExpiredBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            error.withValues(alpha: isDark ? 0.22 : 0.14),
-            error.withValues(alpha: isDark ? 0.12 : 0.08),
-          ],
-        ),
+        // FLAT (gradient retired 2026-06-16): single error tint, no fade.
+        color: error.withValues(alpha: isDark ? 0.16 : 0.11),
         border: Border(bottom: BorderSide(color: error.withValues(alpha: 0.4))),
       ),
       child: SafeArea(
@@ -157,7 +149,7 @@ class _ExpiredBanner extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Your trial has expired. Upgrade to continue.',
+                'Probno razdoblje je isteklo. Nadogradite za nastavak.',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: fg,
                   fontWeight: FontWeight.w500,
@@ -177,7 +169,7 @@ class _ExpiredBanner extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text('Upgrade Now'),
+              child: const Text('Nadogradi sada'),
             ),
           ],
         ),

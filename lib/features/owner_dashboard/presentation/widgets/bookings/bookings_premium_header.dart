@@ -474,16 +474,10 @@ class _RezAINudge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(isMobile ? 14 : 18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[
-            c.tertiary.withValues(alpha: 0.12),
-            c.primary.withValues(alpha: 0.06),
-            const Color(0xFF3DD9B0).withValues(alpha: 0.07),
-          ],
-          stops: const <double>[0.0, 0.55, 1.0],
-        ),
+        // FLAT surface (wash retired 2026-06-16): the tertiary→primary→mint
+        // banner gradient is gone; neutral surface-variant fill, border +
+        // shadow + the purple icon tile carry the premium read.
+        color: c.surfaceVariant,
         borderRadius: BorderRadius.circular(BBRadius.md),
         border: Border.all(color: c.tertiary.withValues(alpha: 0.30)),
         boxShadow: BBShadow.cardElevated,
@@ -977,6 +971,15 @@ class _RezPendingCardState extends ConsumerState<_RezPendingCard> {
   }
 }
 
+/// Test seam for the priority-card fact chip ([_Fact]). Lets the responsive
+/// overflow test pump the real chip across constrained widths without the
+/// provider-bound [BookingsPremiumHeader].
+@visibleForTesting
+Widget buildBookingFactForTest({
+  required IconData icon,
+  required String text,
+}) => _Fact(icon: icon, text: text);
+
 class _Fact extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -991,11 +994,17 @@ class _Fact extends StatelessWidget {
       children: <Widget>[
         Icon(icon, size: 16, color: c.textTertiary),
         const SizedBox(width: 6),
-        Text(
-          text,
-          style: BBType.body(
-            context,
-          ).copyWith(color: c.textSecondary, fontWeight: FontWeight.w500),
+        // Flexible + ellipsis so a long fact (e.g. property·unit name) shrinks
+        // instead of overflowing the Wrap row (fixes RenderFlex +114px @≈1352).
+        Flexible(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: BBType.body(
+              context,
+            ).copyWith(color: c.textSecondary, fontWeight: FontWeight.w500),
+          ),
         ),
       ],
     );

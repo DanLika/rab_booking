@@ -2,7 +2,20 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-16 | **Version**: 7.22
+**Last Updated**: 2026-06-16 | **Version**: 7.23
+
+---
+
+**Changelog 7.23** (2026-06-16):
+
+### Owner — Chrome FLATTEN: retire TIP-1 gray gradients + premium hero washes → flat (operator reversal; audit/126 §flatten)
+- **Operator reversed the TIP-1 gradient preference** → flat clean colors. Killed the two opposite-direction gray shell gradients (page `topLeft→bottomRight`, section `topRight→bottomLeft`) — the exact thing flagged. `flat = handoff` (`--bb-bg` was always flat).
+- **Central token (`app_gradients.dart`, 5 values):** `pageBackground`/`sectionBackground` now render flat (both stops equal) → all ~56 consumers flip, **zero call-site churn**. Split base/raised 2-tone: light shell `#ECEDF2` / raised `#FFFFFF` + card `#FBFBFD`; dark shell `#1A1A1A` / raised + card `#2D2D2D`. **Dark dissolve-trap fixed:** card `#0B0B0D` (darker than shell → cards sank) → `#2D2D2D` (one step above shell). 0 new hex (all values user-curated/pre-existing). `gradient_extensions.dart` doc retoned.
+- **Hero washes flattened (Fork 2, operator-ruled from live render):** `_PregledAiInsight` (Pregled) + Rezervacije priority header (`bookings_premium_header`) purple/tertiary→mint low-alpha washes → flat `c.surfaceVariant` (border + shadow define; **purple icon tiles kept** = only brand accent). Sweep proof: mint-wash signature now **0** in owner chrome. **Kept** (different class, not the flagged murk): chart/progress data-viz fills, 4px amber priority rail, drag/drop, status/error chips, dialog headers, fade scrims.
+- **Trial banner:** cream/amber + red gradients → flat tint; **EN→HR** strings ("Your trial ends in N days" → "Probno razdoblje istječe za N dana", "tomorrow!" → "sutra!", expired copy + "Upgrade" → "Nadogradi"). ⚠ banner bypasses l10n (hardcoded) → proper keys flagged for an l10n sweep.
+- **RenderFlex overflow fixed (live-found):** Rezervacije `_Fact` chip Row had an unflexible `Text` → a long property·unit name overflowed the Wrap inside the *constrained* priority card (`+114px @≈1352`, ErrorBoundary "Oops"). Fix = `Flexible` + ellipsis; pre-existing (the ledger responsive test missed it — it pumps the *ledger*, not this header). New `@visibleForTesting buildBookingFactForTest` seam + `bookings_premium_header_fact_overflow_test` (8 constrained widths × light/dark = 16 cells).
+- **Verifikacija:** `flutter analyze` 0 net-new (5 files clean) · `dart format` · full `flutter test` **1495 pass** (+16 overflow cells) · `build web --no-tree-shake-icons` clean · grep 0 mint-wash remain · scope = 5 lib + 1 test, **0 FROZEN**. **Live web (bookbed-dev) light:** Pregled (AI card flat + purple icon, trial banner flat + HR, flat shell) + Rezervacije (renders clean, long fact ellipsizes, header flat); **dark = golden harness** (AI card flat on `#1A1A1A`, cards distinct).
+- **Deferred:** broader flatten of remaining accent gradients (status/dialog/property-card chips — out of scope, several carry meaning); l10n keys for the trial banner; owner PROD deploy (batch).
 
 ---
 

@@ -22,8 +22,8 @@ extension GradientExtension on BuildContext {
   /// returns the appropriate default based on brightness to prevent crashes.
   ///
   /// Available gradients:
-  /// - `pageBackground` - For screen body backgrounds (topLeft → bottomRight)
-  /// - `sectionBackground` - For cards/sections (topRight → bottomLeft)
+  /// - `pageBackground` - Screen body backgrounds (FLAT shell fill)
+  /// - `sectionBackground` - Cards/sections (FLAT raised fill)
   /// - `brandPrimary` - For AppBar, headers, primary buttons
   ///
   /// Example:

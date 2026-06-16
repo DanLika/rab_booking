@@ -41,6 +41,72 @@ class OwnerTimelineCalendarScreen extends ConsumerStatefulWidget {
   @override
   ConsumerState<OwnerTimelineCalendarScreen> createState() =>
       _OwnerTimelineCalendarScreenState();
+
+  /// Headless render of the premium chrome for the responsive overflow harness
+  /// (`test/.../calendar_chrome_responsive_test.dart`). Renders the real chrome
+  /// widgets — premium header, toolbar, legend card, FAB — with the frozen,
+  /// provider-bound grid swapped for a sized placeholder so the test needs no
+  /// Firebase. The KPI strip is provider-bound (shared widget, separately
+  /// covered) and is intentionally omitted here.
+  @visibleForTesting
+  Widget buildChromeForTest(
+    BuildContext context, {
+    required bool isMobile,
+    int unitCount = 4,
+    DateTime? month,
+  }) {
+    final range = DateRangeSelection.days(month ?? DateTime(2026, 6), 30);
+    final double pad = isMobile ? _kPagePadHMobile : _kPagePadH;
+    return Column(
+      children: [
+        _PremiumCalendarHeader(
+          isMobile: isMobile,
+          unitCount: unitCount,
+          month: range.startDate,
+        ),
+        CalendarTopToolbar(
+          dateRange: range,
+          isWeekView: false,
+          onPreviousPeriod: () {},
+          onNextPeriod: () {},
+          onToday: () {},
+          onDatePickerTap: () {},
+          onSearchTap: () {},
+          onRefresh: () {},
+          onFilterTap: () {},
+          notificationCount: 2,
+          onNotificationsTap: () {},
+          isCompact: isMobile,
+          showSummaryToggle: true,
+          showEmptyUnitsToggle: true,
+          showMultiSelectToggle: true,
+          overbookingConflictCount: 1,
+          activeFilterCount: 2,
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(pad, BBSpace.xxs, pad, _kPagePadBottom),
+          child: _CalendarGridCard(
+            child: Column(
+              children: [
+                const _TimelineStatusLegend(),
+                SizedBox(
+                  height: isMobile ? 360 : 480,
+                  child: const Center(child: Text('Grid')),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.all(pad),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: _AnimatedGradientFAB(onPressed: () {}),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _OwnerTimelineCalendarScreenState
@@ -224,6 +290,14 @@ class _OwnerTimelineCalendarScreenState
       error: (_, _) => false,
     );
 
+    // Premium header inputs: month/year eyebrow (from the visible range start)
+    // + unit count (filtered set, falling back to all units while filters load).
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
+    final int unitCount =
+        ref.watch(filteredUnitsProvider).valueOrNull?.length ??
+        unitsAsync.valueOrNull?.length ??
+        0;
+
     // Safely get localizations - use try-catch to prevent errors if context is not ready
     String calendarTitle;
     try {
@@ -271,6 +345,16 @@ class _OwnerTimelineCalendarScreenState
                   ),
                   child: Column(
                     children: [
+                      // Premium header — eyebrow (month · unit count) + "Kalendar"
+                      // title + Timeline/Mjesečni view switch. Matches handoff
+                      // `calendar-premium.jsx` CALPHeader. Chrome only — the
+                      // frozen grid below is untouched.
+                      if (hasUnits)
+                        _PremiumCalendarHeader(
+                          isMobile: isMobile,
+                          unitCount: unitCount,
+                          month: _currentRange.startDate,
+                        ),
                       // KPI strip — matches handoff `screens/03-owner.png` row
                       // above the timeline grid. Self-contained (watches the
                       // unified dashboard provider). Hidden when owner has no
@@ -382,52 +466,31 @@ class _OwnerTimelineCalendarScreenState
                           },
                         ),
 
-                      // Status legend row — handoff `screens/03-owner.png`
-                      // shows status chips between toolbar and timeline grid.
-                      if (hasUnits) const _TimelineStatusLegend(),
-
-                      // Timeline calendar widget (it fetches its own data via providers)
+                      // Timeline grid wrapped in the premium card (handoff
+                      // `calendar-premium.jsx` CALPGridCard): the status legend
+                      // becomes the card header, the frozen grid sits below in a
+                      // bordered, rounded, soft-shadow surface. The grid keeps
+                      // its bounded height via the inner Expanded — cell
+                      // geometry, scroll controllers, and z-index are untouched.
                       Expanded(
-                        child: Consumer(
-                          builder: (context, ref, child) {
-                            final showEmptyUnits = ref.watch(
-                              showEmptyUnitsProvider,
-                            );
-                            return TimelineCalendarWidget(
-                              // FIXED: Only use counter in key, NOT startDate
-                              // Including startDate caused infinite rebuild loop:
-                              // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
-                              key: timelineKey,
-                              initialScrollToDate: _currentRange
-                                  .startDate, // Scroll to selected date
-                              showSummary: _showSummary,
-                              showEmptyUnits: showEmptyUnits,
-                              // Problem #19 fix: Pass forceScrollKey to ensure Today button scrolls
-                              forceScrollKey: _forceScrollKey,
-                              // FIXED: Preserve vertical scroll position during toolbar navigation
-                              // When user clicks left/right arrows, widget rebuilds but we restore scroll position
-                              initialVerticalOffset: _verticalScrollOffset,
-                              onVerticalOffsetChanged: (offset) {
-                                // Track vertical scroll position (don't call setState to avoid rebuild)
-                                _verticalScrollOffset = offset;
-                              },
-                              onCellLongPress: (date, unit) =>
-                                  _showCreateBookingDialog(
-                                    initialCheckIn: date,
-                                    unitId: unit.id,
+                        child: hasUnits
+                            ? Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                  isMobile ? _kPagePadHMobile : _kPagePadH,
+                                  BBSpace.xxs,
+                                  isMobile ? _kPagePadHMobile : _kPagePadH,
+                                  _kPagePadBottom,
+                                ),
+                                child: _CalendarGridCard(
+                                  child: Column(
+                                    children: [
+                                      const _TimelineStatusLegend(),
+                                      Expanded(child: _buildTimelineCalendar()),
+                                    ],
                                   ),
-                              onUnitNameTap: _showUnitFutureBookings,
-                              onVisibleDateRangeChanged: (startDate) {
-                                setState(() {
-                                  _currentRange = DateRangeSelection.days(
-                                    startDate,
-                                    _visibleDays,
-                                  );
-                                });
-                              },
-                            );
-                          },
-                        ),
+                                ),
+                              )
+                            : _buildTimelineCalendar(),
                       ),
 
                       // Multi-select action bar (bottom)
@@ -460,6 +523,44 @@ class _OwnerTimelineCalendarScreenState
           ),
         ),
       ),
+    );
+  }
+
+  /// The frozen timeline grid. Extracted so it can be hosted either bare
+  /// (empty state) or inside the premium `_CalendarGridCard`. Cell geometry,
+  /// scroll controllers, and the data providers are unchanged.
+  Widget _buildTimelineCalendar() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final showEmptyUnits = ref.watch(showEmptyUnitsProvider);
+        return TimelineCalendarWidget(
+          // FIXED: Only use counter in key, NOT startDate
+          // Including startDate caused infinite rebuild loop:
+          // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
+          key: timelineKey,
+          initialScrollToDate:
+              _currentRange.startDate, // Scroll to selected date
+          showSummary: _showSummary,
+          showEmptyUnits: showEmptyUnits,
+          // Problem #19 fix: Pass forceScrollKey to ensure Today button scrolls
+          forceScrollKey: _forceScrollKey,
+          // FIXED: Preserve vertical scroll position during toolbar navigation
+          // When user clicks left/right arrows, widget rebuilds but we restore scroll position
+          initialVerticalOffset: _verticalScrollOffset,
+          onVerticalOffsetChanged: (offset) {
+            // Track vertical scroll position (don't call setState to avoid rebuild)
+            _verticalScrollOffset = offset;
+          },
+          onCellLongPress: (date, unit) =>
+              _showCreateBookingDialog(initialCheckIn: date, unitId: unit.id),
+          onUnitNameTap: _showUnitFutureBookings,
+          onVisibleDateRangeChanged: (startDate) {
+            setState(() {
+              _currentRange = DateRangeSelection.days(startDate, _visibleDays);
+            });
+          },
+        );
+      },
     );
   }
 
@@ -764,11 +865,14 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
             return ValueListenableBuilder<bool>(
               valueListenable: _isPressedNotifier,
               builder: (context, isPressed, _) {
+                // Handoff CALPFab: solid primary circle + purple glow. Color
+                // from the BB token so dark mode lifts to #8B6FFF.
+                final Color fabColor = BBColor.of(context).primary;
                 return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: BBMotion.base,
                   curve: Curves.easeOutCubic,
-                  width: 56,
-                  height: 56,
+                  width: _kFabSize,
+                  height: _kFabSize,
                   transform: Matrix4.diagonal3Values(
                     isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
                     isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
@@ -776,11 +880,11 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
                   ),
                   transformAlignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(16),
+                    color: fabColor,
+                    shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: theme.colorScheme.primary.withValues(
+                        color: fabColor.withValues(
                           alpha: isHovered ? 0.5 : 0.35,
                         ),
                         blurRadius: isHovered ? 20 : 12,
@@ -790,12 +894,12 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
                     ],
                   ),
                   child: AnimatedRotation(
-                    duration: const Duration(milliseconds: 200),
+                    duration: BBMotion.base,
                     turns: isHovered ? 0.125 : 0, // 45 degree rotation on hover
                     child: Icon(
                       Icons.add,
                       color: theme.colorScheme.onPrimary,
-                      size: 28,
+                      size: _kFabIcon,
                     ),
                   ),
                 );
@@ -818,62 +922,334 @@ class _TimelineStatusLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: _kCardPad,
+        vertical: _kLegendPadV,
+      ),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: c.border)),
+      ),
       child: Wrap(
-        spacing: 16,
-        runSpacing: 6,
+        spacing: BBSpace.xs,
+        runSpacing: BBSpace.xs,
         children: [
-          _legendItem(
-            theme,
+          _legendBadge(
+            context,
             BookingStatus.confirmed.colorOf(context),
             l10n.ownerStatusConfirmed,
           ),
-          _legendItem(
-            theme,
+          _legendBadge(
+            context,
             BookingStatus.pending.colorOf(context),
             l10n.ownerStatusPending,
           ),
-          _legendItem(
-            theme,
+          _legendBadge(
+            context,
             BookingStatus.completed.colorOf(context),
             l10n.ownerStatusCompleted,
           ),
-          _legendItem(
-            theme,
+          _legendBadge(
+            context,
             BookingStatus.cancelled.colorOf(context),
             l10n.ownerStatusCancelled,
           ),
-          _legendItem(
-            theme,
-            BBColor.of(context).statusImported,
-            l10n.bookingsTabImported,
-          ),
+          _legendBadge(context, c.statusImported, l10n.bookingsTabImported),
         ],
       ),
     );
   }
 
-  Widget _legendItem(ThemeData theme, Color color, String label) {
-    return Row(
+  /// Handoff status badge: status dot + label in a rounded-full chip with a
+  /// soft tint of the status colour.
+  Widget _legendBadge(BuildContext context, Color color, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: _kBadgePadH,
+        vertical: _kBadgePadV,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(BBRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: _kBadgeDot,
+            height: _kBadgeDot,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: BBSpace.xs),
+          Text(
+            label,
+            style: BBType.caption(
+              context,
+            ).copyWith(color: color, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Premium chrome constants (handoff `calendar-premium.jsx`) ──
+// Off-scale values kept exact via named consts per the BookBed token standard
+// (BB* tokens + named in-file consts; no bare literals in new chrome). On-scale
+// values (4/8/16/24 spacing, 20 radius) use BBSpace/BBRadius directly.
+const double _kPagePadH = 20.0; // desktop page edge — aligns with KPI strip
+const double _kPagePadHMobile =
+    12.0; // mobile page edge — aligns with KPI strip
+const double _kPagePadBottom = 16.0;
+const double _kCardPad = 16.0; // grid-card / legend horizontal padding
+const double _kLegendPadV = 12.0; // legend header vertical padding
+const double _kBadgePadH = 10.0; // status badge horizontal padding
+const double _kBadgePadV = 5.0; // status badge vertical padding
+const double _kBadgeDot = 7.0; // status badge dot diameter
+const double _kFabSize = 56.0; // FAB diameter (handoff CALPFab)
+const double _kFabIcon = 28.0; // FAB add-icon size
+const double _kSegPadH = 14.0; // view-switch segment horizontal padding
+const double _kSegFont = 13.0; // view-switch segment label size
+const double _kSegIcon = 16.0; // view-switch segment icon size
+const double _kTitleDesktop = 30.0; // "Kalendar" title (desktop)
+const double _kTitleMobile = 24.0; // "Kalendar" title (mobile)
+
+/// Premium calendar header — eyebrow (`<Mjesec> <god> · N jedinica`) + the
+/// "Kalendar" H1 title + the Timeline/Mjesečni view switch. Mirrors the
+/// Rezervacije/Pregled `_PremiumHeaderRow` composition. Pure (no provider
+/// watch) so the `buildChromeForTest` overflow harness can render it headless.
+class _PremiumCalendarHeader extends StatelessWidget {
+  final bool isMobile;
+  final int unitCount;
+  final DateTime month;
+
+  const _PremiumCalendarHeader({
+    required this.isMobile,
+    required this.unitCount,
+    required this.month,
+  });
+
+  // Nominative Croatian month names (handoff eyebrow shows "Lipanj 2026").
+  static const List<String> _hrMonths = <String>[
+    'Siječanj',
+    'Veljača',
+    'Ožujak',
+    'Travanj',
+    'Svibanj',
+    'Lipanj',
+    'Srpanj',
+    'Kolovoz',
+    'Rujan',
+    'Listopad',
+    'Studeni',
+    'Prosinac',
+  ];
+
+  /// Croatian count agreement for "jedinica" (1 → jedinica, 2-4 → jedinice,
+  /// else → jedinica; 11-14 exception handled).
+  static String _unitsWord(int n) {
+    final int mod10 = n % 10;
+    final int mod100 = n % 100;
+    if (mod10 == 1 && mod100 != 11) return 'jedinica';
+    if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) {
+      return 'jedinice';
+    }
+    return 'jedinica';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final l10n = AppLocalizations.of(context);
+    final String monthName = _hrMonths[(month.month - 1).clamp(0, 11)];
+    final String eyebrow =
+        '$monthName ${month.year} · $unitCount ${_unitsWord(unitCount)}';
+
+    final Widget titleBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
+      children: <Widget>[
         Text(
-          label,
-          style: TextStyle(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-            fontSize: 11,
+          eyebrow.toUpperCase(),
+          style: BBType.eyebrow(context).copyWith(color: c.primary),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: BBSpace.xxs),
+        Text(
+          l10n.ownerCalendar,
+          style: BBType.h1(context).copyWith(
+            fontSize: isMobile ? _kTitleMobile : _kTitleDesktop,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.6,
           ),
         ),
       ],
+    );
+
+    final EdgeInsets pad = EdgeInsets.fromLTRB(
+      isMobile ? _kPagePadHMobile : _kPagePadH,
+      isMobile ? _kPagePadHMobile : _kPagePadH,
+      isMobile ? _kPagePadHMobile : _kPagePadH,
+      BBSpace.xxs,
+    );
+
+    return Padding(
+      padding: pad,
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                titleBlock,
+                const SizedBox(height: BBSpace.xs),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: _CalendarViewSwitch(),
+                ),
+              ],
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Expanded(child: titleBlock),
+                const SizedBox(width: BBSpace.sm),
+                const _CalendarViewSwitch(),
+              ],
+            ),
+    );
+  }
+}
+
+/// Timeline / Mjesečni segmented control (handoff CALPViewSwitch). "Timeline"
+/// is the active no-op (we are on it); "Mjesečni" routes to the existing
+/// month-calendar screen. Pill track + surface chip on the active segment —
+/// mirrors the Pregled `_DateRangeSelector` / `_PeriodSegment` visual.
+class _CalendarViewSwitch extends StatelessWidget {
+  const _CalendarViewSwitch();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Container(
+      padding: const EdgeInsets.all(BBSpace.xxs),
+      decoration: BoxDecoration(
+        color: c.surfaceVariant,
+        borderRadius: BorderRadius.circular(BBRadius.full),
+        border: Border.all(color: c.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const _ViewSegment(
+            icon: Icons.view_timeline_outlined,
+            label: 'Timeline',
+            selected: true,
+            onTap: null,
+          ),
+          _ViewSegment(
+            icon: Icons.calendar_view_month_outlined,
+            label: 'Mjesečni',
+            selected: false,
+            onTap: () => context.go(OwnerRoutes.calendarMonth),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ViewSegment extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  const _ViewSegment({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(BBRadius.full),
+          child: AnimatedContainer(
+            duration: BBMotion.base,
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(
+              horizontal: _kSegPadH,
+              vertical: BBSpace.xs,
+            ),
+            decoration: BoxDecoration(
+              // Active state: surface chip + shadow-sm on the surface-variant
+              // track (handoff PVPeriod), not a primary fill.
+              color: selected ? c.surface : Colors.transparent,
+              borderRadius: BorderRadius.circular(BBRadius.full),
+              boxShadow: selected ? BBShadow.sm : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(
+                  icon,
+                  size: _kSegIcon,
+                  color: selected ? c.primary : c.textSecondary,
+                ),
+                const SizedBox(width: BBSpace.xxs),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: selected ? c.textPrimary : c.textSecondary,
+                    fontSize: _kSegFont,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                    letterSpacing: -0.1,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Premium grid card (handoff CALPGridCard). Wraps the legend header + frozen
+/// timeline grid in one bordered, rounded, soft-shadow surface. The shadow +
+/// border are painted by the outer [DecoratedBox] (a [ClipRRect] cannot paint a
+/// shadow, and the 1px border must survive the clip); the grid scrolls INSIDE
+/// the [ClipRRect]. Cell geometry, scroll controllers, and z-index are
+/// untouched — only a visual container is added around the grid.
+class _CalendarGridCard extends StatelessWidget {
+  final Widget child;
+
+  const _CalendarGridCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BBRadius.mdAll,
+        border: Border.all(color: c.border),
+        boxShadow: BBShadow.cardElevated,
+      ),
+      child: ClipRRect(borderRadius: BBRadius.mdAll, child: child),
     );
   }
 }

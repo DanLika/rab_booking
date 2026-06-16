@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../domain/models/date_range_selection.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../shared/widgets/smart_tooltip.dart';
 
@@ -75,6 +76,7 @@ class CalendarTopToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
     final textScale = MediaQuery.textScalerOf(context).scale(1.0);
     final responsiveHeight = (52 * textScale).clamp(52.0, 64.0);
@@ -222,9 +224,11 @@ class CalendarTopToolbar extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade100,
+                          color: c.error.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.shade300),
+                          border: Border.all(
+                            color: c.error.withValues(alpha: 0.4),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -232,7 +236,7 @@ class CalendarTopToolbar extends StatelessWidget {
                             Icon(
                               Icons.warning_amber_rounded,
                               size: 16,
-                              color: Colors.red.shade700,
+                              color: c.error,
                             ),
                             const SizedBox(width: 3),
                             Text(
@@ -240,7 +244,7 @@ class CalendarTopToolbar extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.red.shade700,
+                                color: c.error,
                               ),
                             ),
                           ],
@@ -258,9 +262,7 @@ class CalendarTopToolbar extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  color: theme.brightness == Brightness.dark
-                      ? const Color(0xFF252530)
-                      : Colors.white,
+                  color: c.surface,
                   elevation: 8,
                   onSelected: (value) {
                     switch (value) {
@@ -289,15 +291,13 @@ class CalendarTopToolbar extends StatelessWidget {
                   },
                   itemBuilder: (context) {
                     final l10n = AppLocalizations.of(context);
-                    final isDark =
-                        Theme.of(context).brightness == Brightness.dark;
                     return [
                       _buildStyledMenuItem(
                         value: 'today',
                         icon: Icons.today,
                         iconColor: AppColors.primary,
                         label: l10n.ownerCalendarToday,
-                        isDark: isDark,
+                        c: c,
                       ),
                       if (onNotificationsTap != null)
                         _buildStyledMenuItem(
@@ -305,7 +305,7 @@ class CalendarTopToolbar extends StatelessWidget {
                           icon: Icons.notifications_outlined,
                           iconColor: AppColors.warning,
                           label: l10n.ownerCalendarNotifications,
-                          isDark: isDark,
+                          c: c,
                           badge: notificationCount,
                         ),
                       if (onSearchTap != null)
@@ -314,7 +314,7 @@ class CalendarTopToolbar extends StatelessWidget {
                           icon: Icons.search,
                           iconColor: AppColors.info,
                           label: l10n.ownerCalendarSearch,
-                          isDark: isDark,
+                          c: c,
                         ),
                       if (onRefresh != null)
                         _buildStyledMenuItem(
@@ -322,7 +322,7 @@ class CalendarTopToolbar extends StatelessWidget {
                           icon: Icons.refresh,
                           iconColor: AppColors.success,
                           label: l10n.ownerCalendarRefresh,
-                          isDark: isDark,
+                          c: c,
                         ),
                       if (onFilterTap != null)
                         _buildStyledMenuItem(
@@ -330,7 +330,7 @@ class CalendarTopToolbar extends StatelessWidget {
                           icon: Icons.tune,
                           iconColor: AppColors.warning,
                           label: l10n.ownerCalendarFilters,
-                          isDark: isDark,
+                          c: c,
                         ),
                       if (showSummaryToggle && onSummaryToggleChanged != null)
                         _buildStyledMenuItem(
@@ -344,7 +344,7 @@ class CalendarTopToolbar extends StatelessWidget {
                           label: isSummaryVisible
                               ? l10n.ownerCalendarHideStats
                               : l10n.ownerCalendarShowStats,
-                          isDark: isDark,
+                          c: c,
                         ),
                       if (showEmptyUnitsToggle &&
                           onEmptyUnitsToggleChanged != null)
@@ -359,7 +359,7 @@ class CalendarTopToolbar extends StatelessWidget {
                           label: isEmptyUnitsVisible
                               ? l10n.ownerCalendarHideEmptyUnits
                               : l10n.ownerCalendarShowEmptyUnits,
-                          isDark: isDark,
+                          c: c,
                         ),
                     ];
                   },
@@ -374,12 +374,12 @@ class CalendarTopToolbar extends StatelessWidget {
               children: [
                 // 1. FILTERS SECTION (if active)
                 if (activeFilterCount != null && activeFilterCount! > 0)
-                  _buildActiveFilterGroup(theme, l10n),
+                  _buildActiveFilterGroup(theme, c, l10n),
 
                 // 2. CONFLICTS SECTION (if any)
                 if (overbookingConflictCount != null &&
                     overbookingConflictCount! > 0)
-                  _buildCompactConflictBadge(theme, l10n),
+                  _buildCompactConflictBadge(c, l10n),
 
                 // 3. ACTION BUTTONS
                 // Search button
@@ -389,7 +389,7 @@ class CalendarTopToolbar extends StatelessWidget {
                     color: AppColors.info,
                     onPressed: onSearchTap!,
                     tooltip: l10n.ownerCalendarSearchBookings,
-                    isDark: theme.brightness == Brightness.dark,
+                    c: c,
                   ),
 
                 // Refresh button
@@ -399,7 +399,7 @@ class CalendarTopToolbar extends StatelessWidget {
                     color: AppColors.success,
                     onPressed: onRefresh!,
                     tooltip: l10n.ownerCalendarRefresh,
-                    isDark: theme.brightness == Brightness.dark,
+                    c: c,
                   ),
 
                 // Filter button
@@ -410,16 +410,16 @@ class CalendarTopToolbar extends StatelessWidget {
                     color: AppColors.warning,
                     onPressed: onFilterTap!,
                     tooltip: l10n.ownerCalendarFilters,
-                    isDark: theme.brightness == Brightness.dark,
+                    c: c,
                   ),
 
                 // Today button
-                _buildStyledTodayButton(theme, l10n),
+                _buildStyledTodayButton(theme, c, l10n),
 
                 // Notifications button
                 if (onNotificationsTap != null)
                   _buildStyledNotificationsButton(
-                    theme,
+                    c,
                     l10n,
                     onNotificationsTap!,
                     notificationCount,
@@ -439,7 +439,7 @@ class CalendarTopToolbar extends StatelessWidget {
                     tooltip: isSummaryVisible
                         ? l10n.ownerCalendarHideStats
                         : l10n.ownerCalendarShowStats,
-                    isDark: theme.brightness == Brightness.dark,
+                    c: c,
                     isActive: isSummaryVisible,
                   ),
 
@@ -457,7 +457,7 @@ class CalendarTopToolbar extends StatelessWidget {
                     tooltip: isEmptyUnitsVisible
                         ? l10n.ownerCalendarHideEmptyUnits
                         : l10n.ownerCalendarShowEmptyUnits,
-                    isDark: theme.brightness == Brightness.dark,
+                    c: c,
                     isActive: isEmptyUnitsVisible,
                   ),
               ],
@@ -473,7 +473,7 @@ class CalendarTopToolbar extends StatelessWidget {
     required Color color,
     required VoidCallback onPressed,
     required String tooltip,
-    required bool isDark,
+    required BBColorSet c,
     bool isActive = false,
   }) {
     return Padding(
@@ -489,17 +489,11 @@ class CalendarTopToolbar extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: isActive
-                    ? color.withAlpha((0.2 * 255).toInt())
-                    : (isDark
-                          ? const Color(0xFF2D2D3A)
-                          : const Color(0xFFF5F5FA)),
+                    ? color.withValues(alpha: 0.2)
+                    : c.surfaceVariant,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isActive
-                      ? color.withAlpha((0.4 * 255).toInt())
-                      : (isDark
-                            ? const Color(0xFF3D3D4A)
-                            : const Color(0xFFE8E8F0)),
+                  color: isActive ? color.withValues(alpha: 0.4) : c.border,
                 ),
               ),
               child: Icon(icon, size: 20, color: color),
@@ -511,8 +505,11 @@ class CalendarTopToolbar extends StatelessWidget {
   }
 
   /// Build styled Today button with day badge
-  Widget _buildStyledTodayButton(ThemeData theme, AppLocalizations l10n) {
-    final isDark = theme.brightness == Brightness.dark;
+  Widget _buildStyledTodayButton(
+    ThemeData theme,
+    BBColorSet c,
+    AppLocalizations l10n,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: SmartTooltip(
@@ -525,15 +522,9 @@ class CalendarTopToolbar extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF2D2D3A)
-                    : const Color(0xFFF5F5FA),
+                color: c.surfaceVariant,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isDark
-                      ? const Color(0xFF3D3D4A)
-                      : const Color(0xFFE8E8F0),
-                ),
+                border: Border.all(color: c.border),
               ),
               child: Stack(
                 alignment: Alignment.center,
@@ -574,9 +565,12 @@ class CalendarTopToolbar extends StatelessWidget {
   }
 
   /// Build grouped active filter control (Badge + Clear button)
-  Widget _buildActiveFilterGroup(ThemeData theme, AppLocalizations l10n) {
+  Widget _buildActiveFilterGroup(
+    ThemeData theme,
+    BBColorSet c,
+    AppLocalizations l10n,
+  ) {
     final count = activeFilterCount ?? 0;
-    final isDark = theme.brightness == Brightness.dark;
     final borderColor = AppColors.warning.withAlpha((0.5 * 255).toInt());
     final backgroundColor = AppColors.warning.withAlpha((0.1 * 255).toInt());
 
@@ -641,11 +635,7 @@ class CalendarTopToolbar extends StatelessWidget {
                   width:
                       40, // Slightly narrower since it has no badge, but touch target adequate
                   alignment: Alignment.center,
-                  child: Icon(
-                    Icons.close,
-                    size: 18,
-                    color: isDark ? Colors.white70 : Colors.black54,
-                  ),
+                  child: Icon(Icons.close, size: 18, color: c.textSecondary),
                 ),
               ),
             ),
@@ -656,7 +646,7 @@ class CalendarTopToolbar extends StatelessWidget {
   }
 
   /// Build compact conflict badge (icon + number only, no text)
-  Widget _buildCompactConflictBadge(ThemeData theme, AppLocalizations l10n) {
+  Widget _buildCompactConflictBadge(BBColorSet c, AppLocalizations l10n) {
     final count = overbookingConflictCount ?? 0;
 
     return Padding(
@@ -671,16 +661,16 @@ class CalendarTopToolbar extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.red.shade100,
+                color: c.error.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.red.shade300),
+                border: Border.all(color: c.error.withValues(alpha: 0.4)),
               ),
               child: Badge(
                 label: Text('$count', style: const TextStyle(fontSize: 10)),
-                backgroundColor: Colors.red.shade700,
+                backgroundColor: c.error,
                 child: Icon(
                   Icons.warning_amber_rounded,
-                  color: Colors.red.shade700,
+                  color: c.error,
                   size: 20,
                 ),
               ),
@@ -692,12 +682,11 @@ class CalendarTopToolbar extends StatelessWidget {
   }
 
   Widget _buildStyledNotificationsButton(
-    ThemeData theme,
+    BBColorSet c,
     AppLocalizations l10n,
     VoidCallback onTap,
     int? count,
   ) {
-    final isDark = theme.brightness == Brightness.dark;
     final hasNotifications = (count ?? 0) > 0;
 
     return Padding(
@@ -713,17 +702,13 @@ class CalendarTopToolbar extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: hasNotifications
-                    ? AppColors.warning.withAlpha((0.15 * 255).toInt())
-                    : (isDark
-                          ? const Color(0xFF2D2D3A)
-                          : const Color(0xFFF5F5FA)),
+                    ? AppColors.warning.withValues(alpha: 0.15)
+                    : c.surfaceVariant,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: hasNotifications
-                      ? AppColors.warning.withAlpha((0.4 * 255).toInt())
-                      : (isDark
-                            ? const Color(0xFF3D3D4A)
-                            : const Color(0xFFE8E8F0)),
+                      ? AppColors.warning.withValues(alpha: 0.4)
+                      : c.border,
                 ),
               ),
               child: Stack(
@@ -750,12 +735,7 @@ class CalendarTopToolbar extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.error,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isDark
-                                ? const Color(0xFF2D2D3A)
-                                : Colors.white,
-                            width: 1.5,
-                          ),
+                          border: Border.all(color: c.surface, width: 1.5),
                         ),
                         constraints: const BoxConstraints(
                           minWidth: 16,
@@ -812,7 +792,7 @@ class CalendarTopToolbar extends StatelessWidget {
     required IconData icon,
     required Color iconColor,
     required String label,
-    required bool isDark,
+    required BBColorSet c,
     int? badge,
   }) {
     return PopupMenuItem<String>(
@@ -821,7 +801,7 @@ class CalendarTopToolbar extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF8F8FA),
+          color: c.surfaceVariant,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(

@@ -2,7 +2,21 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-15 | **Version**: 7.19
+**Last Updated**: 2026-06-16 | **Version**: 7.20
+
+---
+
+**Changelog 7.20** (2026-06-16):
+
+### Owner — Timeline/Kalendar premium chrome fidelity (`b9656008`)
+- Premium CHROME pass **OKO** zamrznutog grid-a (handoff `calendar-premium.jsx`); cell geometrija (`timeline_dimensions.dart` 50/42/100/60px) + `firebase_booking_calendar_repository` + grid-render widgeti + z-index **bajt-identični** — samo chrome okolo dirnut. (Za razliku od Rezervacija, FROZEN je ovdje realan → halt-za-review prije koda.)
+- **Dodano:** `_PremiumCalendarHeader` (eyebrow `<Mjesec> <god> · N jedinica` + "Kalendar" H1), `_CalendarViewSwitch` (Timeline∣Mjesečni segmented → `context.go(OwnerRoutes.calendarMonth)` — postojeći month screen, NIJE nova feature), `_CalendarGridCard` (legenda + grid u jednom bordered/rounded/soft-shadow surfaceu: `DecoratedBox` border+shadow **IZVAN** `ClipRRect`, grid u `Expanded` → bounded height + scroll/sticky/z-index netaknuti), status legenda → rounded-full **pill badgevi** sa status-tintovima, FAB → solid-primary **krug** + purple glow.
+- **`calendar_top_toolbar` token cleanup:** 16 hardcoded hex (`#252530`/`#2D2D3A`/`#F5F5FA`/`#3D3D4A`/`#E8E8F0`/`#F8F8FA`) + `Colors.red.shadeXXX` → `BBColor.of(context)` (surface/surfaceVariant/border/error); mrtvi `isDark` thread izbačen. **0 `Color(0x`** u oba chrome fajla (preostalo = `AppColors.*` named tokeni + `Colors.transparent`/on-accent `white`).
+- **Test seam:** `OwnerTimelineCalendarScreen.buildChromeForTest` (`@visibleForTesting` na **WIDGETU** ne State-u → pristupačan iz testa; grid → sized placeholder, provider-free) + `calendar_chrome_responsive_test` (overflow 8 ćelija: 390/768/1440/2560 × light/dark).
+- **Verifikacija:** `flutter analyze` 0 · full `flutter test` **~1451 pass** · `build web --no-tree-shake-icons` clean · grep 0-hex · scope = 2 chrome fajla + 1 test (FROZEN fajlovi NISU u diffu). **Live web light+dark** na bookbed-dev (real seed: header "4 JEDINICE", KPI 4%/1/4/29, conflict ⚠5 iz overlapping seeda, grid vizuelno identičan; dark title bright #E2E8F0).
+- **Phase 0 dev reset:** obrisan "iOS Test Vila" (`SEED_test_owner_property_01`) + reseed rez_smoke (vraća tap-by-name iz §lean-ledger napomene). ⚠ Gotcha: seed `--delete` briše property doc → async `onPropertyDeleted` cleanup **race-uje** reseed i pobriše units; reseeding **bez** brisanja property doc-a (idempotent merge) ostavlja units.
+- **Live-eyeball gotcha:** `flutter run -d chrome … &` + run_in_background = double-background → dev server umre mid-session → asset `ERR_CONNECTION_REFUSED` cascade (lažni "Oops"/ListTile collapse, **NIJE** regresija). Launch via run_in_background SAMO (bez inner `&`). MCP CanvasKit login: klik `flt-semantics-placeholder` → snapshot izloži textbox uid-ove → fill+click.
+- **Deferred:** owner PROD deploy (batch s Pregled+Rezervacije, čeka GO); **ListTile asset-fail robustness gap** = zaseban prod PR (assets nedostupni → AI-assistant/empty-state ListTile "leading consumes entire tile width" — prod-relevantno, NE bundlano u timeline); Mjesečni month-cal = vlastiti chrome pass.
 
 ---
 

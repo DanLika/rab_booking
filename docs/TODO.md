@@ -55,6 +55,13 @@ Premium fidelity SHIPPED + live-verified (web CanvasKit + iOS/Android Impeller +
 - **Avg-rating realna vrijednost** — KPI tile sad honest "—" (nema reviews providera, product gap audit/120).
 - **Minor l10n (van Pregleda, spazeno live):** TrialBanner "Your trial ends in 5 days" + login validacija "Please enter your password" renderuju engleski — zaseban l10n fix.
 
+## 🗓 Timeline/Kalendar fidelity — SHIPPED + follow-ups (2026-06-16, CHANGELOG 7.20, `b9656008`)
+
+Premium chrome SHIPPED + live-verified (web light+dark, seedani podaci); FROZEN grid bajt-identičan (samo wrap). Otvoreno:
+- **🐛 ListTile asset-fail robustness gap (prod-relevantno, ZASEBAN PR — operator: ne bundlaj u timeline)** — kad su assets nedostupni (offline / server-down / CDN-fail), AI-assistant/empty-state widget koji pari `assistant_illustration.png` + `ListTile` baca "Leading widget consumes the entire tile width" cascade (poslije image-load fail) → ErrorBoundary "Oops". Otkriveno kad je dev `flutter run` server umro mid-eyeball (asset `ERR_CONNECTION_REFUSED`); **NIJE** timeline regresija (fresh server renderuje čisto). Fix = bound `leading` (`SizedBox`/`minLeadingWidth`) ili custom Row. Repro: učitaj owner app s blokiranim assetima. Memorija: `listtile-asset-fail-robustness-gap`.
+- **Mjesečni month calendar** (`month_calendar_screen.dart`, Syncfusion) — vlastiti chrome pass (Timeline view switch sad rutira tamo `OwnerRoutes.calendarMonth`).
+- **owner PROD deploy** — sad 3 fidelity ekrana ahead (Pregled `07a9caf7` + Rezervacije `420b48ed` + Timeline `b9656008`), batchable, čeka operator GO.
+
 ## 🧰 Deploy-hygiene automatizacija (S/M)
 
 - **SF-052** Sentry lazy init — `sentryDsn.value()` iz module-load u `withSentry()` first-call; ubija deploy-time warning (memorija: sentry-cf-deploy-time-value-warning). XS, bundlaj uz sljedeći `sentry.ts` touch.

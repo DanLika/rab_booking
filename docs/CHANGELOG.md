@@ -2,7 +2,20 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-16 | **Version**: 7.20
+**Last Updated**: 2026-06-16 | **Version**: 7.21
+
+---
+
+**Changelog 7.21** (2026-06-16):
+
+### Owner — Global chrome fidelity: page-bg gradient migration + double-header kill + drawer tokenize (`696f004c`, audit/126)
+- Shared/global chrome pass (audit/126 decisions **1B + 2A + 3A**) — touches every owner screen, so verified with an **all-screen light+dark sweep**, not single-screen. Own worktree, dev-only, 0 FROZEN.
+- **1B — page bg:** 4 straggler screens (profile, about, owner_booking_detail, ical_sync) migrated off legacy flat `rd.shellBg` → `context.gradients.pageBackground` (the TIP-1 token already on 19 screens). `embed_widget_guide` **skipped** — recon found it already gradient (audit/126's "transparent outlier" was a misread of the help bottom-sheet modal). owner_booking_detail Scaffold → `Colors.transparent` + body gradient `Container`; 2 now-dead `rd` locals removed. Token consistency = goal (stop bypassing the token); inner shellBg content panel left → owner_booking_detail full premium pass.
+- **2A — double-header:** additive `bool showTitle = true` on `CommonAppBar` (title renders only when true → **~29 non-premium screens untouched**); `showTitle:false` on the 4 premium screens (Pregled/Rezervacije/Timeline/Mjesečni) → in-body premium header owns the title, AppBar keeps hamburger + actions (Mjesečni Today + view-toggle). Kills the literal "Month Calendar"+"KALENDAR" dup. Handoff-mobile keeps a bar title; operator chose full strip (reads clean = dissolve-chrome intent; breadcrumb **2B deferred**).
+- **3A — drawer tokenize:** `OwnerAppDrawer` `theme.colorScheme.onSurface`→`BBColor.textPrimary` (18×) + `colorScheme.primary`→`BBColor.primary` (1×) — **byte-identical** to the colorScheme slots (both wired to `AppColors.textPrimary*` / `primary*`), so cosmetic-neutral. Left `colorScheme.danger`, amber notif badge (Material named const), `lightPurple` named const, `rd.*`. One orphaned `theme` local removed.
+- **Tests:** new `common_app_bar_test` locks the contract (default shows title / `showTitle:false` hides it, leading+actions stay); `calendar_chrome_responsive_test` gains an assertion that the title renders in the in-body header (coverage **moved**, not dropped).
+- **Verifikacija:** `flutter analyze` 0 net-new (98 pre-existing `info` lints, all untouched files) · `dart format` · full `flutter test` **1461 pass** · `build web --no-tree-shake-icons` clean · scope = 10 lib + 2 test, **0 FROZEN**. **Live web light+dark** (bookbed-dev): non-premium title present (Obavještenja/Profil), premium title-less + no double-header (Pregled/Mjesečni), Mjesečni actions kept, migrated bg gradient, drawer unchanged + badges intact (red danger + amber).
+- **Deferred:** **2B** breadcrumb appbar (desktop breadcrumb + mobile title) · **3B** persistent desktop sidebar + tablet rail (VERY HIGH — every Scaffold → Row[rail, content]) · owner_booking_detail inner-panel toning (rides its full premium pass) · owner PROD deploy (batch s Pregled/Rezervacije/Timeline, čeka GO).
 
 ---
 

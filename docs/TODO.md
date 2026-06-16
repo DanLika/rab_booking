@@ -62,6 +62,14 @@ Premium chrome SHIPPED + live-verified (web light+dark, seedani podaci); FROZEN 
 - **Mjesečni month calendar** (`month_calendar_screen.dart`, Syncfusion) — vlastiti chrome pass (Timeline view switch sad rutira tamo `OwnerRoutes.calendarMonth`).
 - **owner PROD deploy** — sad 3 fidelity ekrana ahead (Pregled `07a9caf7` + Rezervacije `420b48ed` + Timeline `b9656008`), batchable, čeka operator GO.
 
+## 🧭 Global chrome fidelity — SHIPPED + follow-ups (2026-06-16, CHANGELOG 7.21, `696f004c`)
+
+Shared chrome (page bg / AppBar / drawer) pass — audit/126 **1B+2A+3A** — SHIPPED + live-verified (web light+dark, bookbed-dev). All-screen sweep clean. Otvoreno:
+- **2B breadcrumb appbar** — desktop breadcrumb (`Početna › Pregled`) + mobile title+hamburger, full handoff fidelity (touches shared `CommonAppBar` ~33 surfaces, additive). Deferred fidelity epic.
+- **3B persistent desktop sidebar + tablet rail** — handoff `BBSidebar` 260px (desktop) + `BBSidebarRail` 72px (tablet); live = slide-out `OwnerAppDrawer` on all breakpoints. **VERY HIGH** (every owner Scaffold → Row[rail, content] + responsive shell). Separate epic, NE bundlati.
+- **owner_booking_detail inner-panel toning** — page bg now gradient but inner `Expanded(Container(rd.shellBg))` content panel covers it; toning rides the **owner_booking_detail full premium pass** (već u backlogu, mixed-hygiene od Rezervacije gate-fixa).
+- **owner PROD deploy** — global chrome rides the same batch as Pregled `07a9caf7` + Rezervacije `420b48ed` + Timeline `b9656008`, čeka operator GO.
+
 ## 🧰 Deploy-hygiene automatizacija (S/M)
 
 - **SF-052** Sentry lazy init — `sentryDsn.value()` iz module-load u `withSentry()` first-call; ubija deploy-time warning (memorija: sentry-cf-deploy-time-value-warning). XS, bundlaj uz sljedeći `sentry.ts` touch.

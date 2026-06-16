@@ -131,3 +131,16 @@ Three single sources exist (good): `app_gradients`/`context.gradients`, `AppThem
 ## Verification of this audit
 - Doc-only; correctness = citation accuracy. Spot-check examples: month_calendar_screen.dart:176 (AppBar "Month Calendar") vs :1166 (in-body "KALENDAR"); app_gradients.dart light/dark stops; tokens.css:54/141 (`--bb-bg` flat).
 - No `.dart` touched → no build/test impact; `flutter analyze` unaffected.
+
+---
+
+## SHIPPED — 1B + 2A + 3A (2026-06-16, main `696f004c`; this audit doc `3c7240ae`)
+
+Operator approved the recommendation (1B+2A+3A); implemented in worktree `chore/global-chrome-fidelity`, dev-only, FF-merged to main + pushed (no force). No prod deploy.
+
+- **1B:** profile, about, owner_booking_detail, ical_sync → `context.gradients.pageBackground` (+ `gradient_extensions` import each). owner_booking_detail Scaffold→`Colors.transparent` + body gradient `Container`. **embed_widget_guide skipped** — execution corrected this doc: its `:64 Colors.transparent` is the help bottom-sheet modal; the real page Scaffold already uses the gradient. 2 orphaned `rd` locals removed.
+- **2A:** `CommonAppBar` gained `bool showTitle = true` (renders title only when true → ~29 non-premium call sites unchanged); `showTitle:false` on the 4 premium screens. Double-header (literal "Month Calendar"+"KALENDAR") gone; in-body header carries the title. **2B (breadcrumb) deferred.**
+- **3A:** drawer `colorScheme.onSurface`→`BBColor.textPrimary` (18×) + `colorScheme.primary`→`BBColor.primary` (1×) — proven byte-identical to the colorScheme slots (both `AppColors.textPrimary*`/`primary*`), cosmetic-neutral. `colorScheme.danger`, amber badge, `lightPurple`, `rd.*` left. 1 orphan `theme` removed. **3B (persistent desktop sidebar + tablet rail) deferred — VERY HIGH.**
+- **Tests:** new `common_app_bar_test` (showTitle contract); `calendar_chrome_responsive_test` asserts the in-body-header title (coverage moved, not dropped).
+- **Gate:** analyze 0 net-new · format · full test **1461 pass** · `build web --no-tree-shake-icons` clean · scope 10 lib + 2 test / 0 FROZEN.
+- **Live light+dark sweep (bookbed-dev):** non-premium title present (Obavještenja/Profil); premium title-less + no double-header (Pregled/Mjesečni); Mjesečni Today+toggle kept; migrated bg gradient (Profil); drawer unchanged + badges intact. Flag-2 call: title-less reads clean (dissolve-chrome) → 2A done. CHANGELOG 7.21 + audit/124 §global-chrome.

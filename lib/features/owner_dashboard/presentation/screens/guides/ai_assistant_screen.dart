@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,15 +7,46 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../core/design/tokens.dart';
-import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
+import '../../../../../shared/widgets/redesign/bb_dialog.dart';
 import '../../providers/ai_chat_provider.dart';
 import '../../widgets/guides/ai_assistant_premium_header.dart';
 import '../../widgets/owner_app_drawer.dart';
 import '../../../domain/models/ai_chat.dart';
+
+// ── AI chat metrics — off-8px-grid values sourced from
+// `design_handoff/source/ai-assistant.jsx`. Token-first (BBSpace/BBRadius/
+// BBType/BBColor/BBShadow); these named consts cover the handoff's off-scale
+// primitives so the file carries 0 raw colour/size literals.
+const double _kBubblePadH = 14; // handoff bubble padding 12×14
+const double _kBubblePadV = 12;
+const double _kMsgGap = 14; // gap between message rows
+const double _k12 = 12; // handoff 12px gap/pad (off the BBSpace 8px scale)
+const double _kAvatar = 32; // assistant bubble avatar (handoff 32)
+const double _kAvatarSm = 20; // chat-list-item mini avatar
+const double _kTile = 36; // consent/feature icon tile
+const double _kTileIcon = 20; // glyph inside a 36px tile
+const double _kBtnIcon = 18; // leading glyph on the New-Chat button
+const double _kChipIcon = 16; // auto_awesome glyph on suggestion chips
+const double _kConsentIcon = 96; // consent hero glyph
+const double _kEmptyIllustration = 200; // empty-state illustration
+const double _kTimeSize = 11; // timestamp font (handoff 11)
+const double _kSendBtn = 44; // composer send button (handoff md icon button)
+const double _kSendIcon = 20; // send glyph / streaming spinner
+const double _kNewChatBtnW = 200; // New-Chat CTA width
+const double _kUserMaxW = 0.78; // bubble max-width factor (mobile)
+const double _kUserMaxWDesktop = 0.70; // bubble max-width factor (desktop)
+const Color _kOnPrimary = Colors.white; // text/icon on primary fill
+const Color _kOnPrimaryMuted = Colors.white70; // muted on-primary (timestamps)
+
+String _formatBubbleTime(DateTime t) {
+  final String h = t.hour.toString().padLeft(2, '0');
+  final String m = t.minute.toString().padLeft(2, '0');
+  return '$h:$m';
+}
 
 class AiAssistantScreen extends ConsumerStatefulWidget {
   const AiAssistantScreen({super.key});
@@ -107,8 +139,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildConsentScreen(AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final BBColorSet c = BBColor.of(context);
 
     return PopScope(
       canPop: false,
@@ -126,44 +157,43 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
           decoration: BoxDecoration(gradient: context.gradients.pageBackground),
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(BBSpace.md),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
+                constraints: const BoxConstraints(
+                  maxWidth: BBConstraint.maxWidgetWidth,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/images/assistant_illustration.png',
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+                    const AiBrandAvatar(size: _kConsentIcon),
+                    const SizedBox(height: BBSpace.sm),
                     Text(
-                      l10n.aiAssistantTitle,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
+                      'BOOKBED AI',
+                      style: BBType.eyebrow(context).copyWith(color: c.primary),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: BBSpace.xxs),
+                    Text(
+                      l10n.aiAssistantTitle,
+                      style: BBType.h2(context),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: BBSpace.xs),
+                    Text(
+                      l10n.aiAssistantWelcomeSubtitle,
+                      style: BBType.body(
+                        context,
+                      ).copyWith(color: c.textSecondary),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: BBSpace.md),
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(BBSpace.sm),
                       decoration: BoxDecoration(
-                        color: BBColor.of(context).surfaceVariant,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+                        color: c.surface,
+                        borderRadius: BBRadius.smAll,
+                        border: Border.all(color: c.border),
+                        boxShadow: BBShadow.resting(context),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,53 +201,46 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                           _buildConsentItem(
                             Icons.psychology_outlined,
                             l10n.aiConsentProcessing,
-                            theme,
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: BBSpace.sm),
                           _buildConsentItem(
                             Icons.history,
                             l10n.aiConsentStorage,
-                            theme,
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: BBSpace.sm),
                           _buildConsentItem(
                             Icons.delete_outline,
                             l10n.aiConsentDeletion,
-                            theme,
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: BBSpace.sm),
                           _buildConsentItem(
                             Icons.shield_outlined,
                             l10n.aiConsentPrivacy,
-                            theme,
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: BBSpace.md),
                     SizedBox(
                       width: 220,
                       child: ElevatedButton(
                         onPressed: _acceptConsent,
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                          padding: const EdgeInsets.symmetric(vertical: _k12),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BBRadius.smAll,
                           ),
-                          foregroundColor: Colors.white,
+                          foregroundColor: _kOnPrimary,
                         ),
                         child: Text(l10n.aiConsentAccept),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: BBSpace.xs),
                     Text(
                       l10n.aiAssistantDisclaimer,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.4,
-                        ),
-                      ),
+                      style: BBType.caption(
+                        context,
+                      ).copyWith(color: c.textTertiary),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -230,20 +253,25 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     );
   }
 
-  Widget _buildConsentItem(IconData icon, String text, ThemeData theme) {
+  Widget _buildConsentItem(IconData icon, String text) {
+    final BBColorSet c = BBColor.of(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: theme.colorScheme.primary),
-        const SizedBox(width: 12),
+        Container(
+          width: _kTile,
+          height: _kTile,
+          decoration: BoxDecoration(
+            color: c.primary.withValues(alpha: 0.10),
+            borderRadius: BBRadius.smAll,
+          ),
+          child: Icon(icon, size: _kTileIcon, color: c.primary),
+        ),
+        const SizedBox(width: _k12),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.4,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-            ),
+            style: BBType.body(context).copyWith(color: c.textSecondary),
           ),
         ),
       ],
@@ -276,30 +304,32 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         drawer: const OwnerAppDrawer(currentRoute: 'ai-assistant'),
         appBar: CommonAppBar(
           title: l10n.aiAssistantTitle,
+          showTitle: false,
           leadingIcon: Icons.menu,
           onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
           actions: [
             Padding(
-              padding: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.only(right: BBSpace.sm),
               child: TextButton.icon(
                 onPressed: () {
                   ref.read(aiChatNotifierProvider.notifier).createNewChat();
                 },
-                icon: const Icon(Icons.add, size: 20),
+                icon: const Icon(Icons.add, size: _kTileIcon),
                 label: Text(
                   l10n.aiAssistantNewChat,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: BBType.label(context),
                 ),
                 style: TextButton.styleFrom(
-                  backgroundColor: Theme.of(
+                  foregroundColor: BBColor.of(context).primary,
+                  backgroundColor: BBColor.of(
                     context,
-                  ).colorScheme.primary.withValues(alpha: 0.10),
+                  ).primary.withValues(alpha: 0.10),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                    horizontal: BBSpace.sm,
+                    vertical: BBSpace.xs,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BBRadius.mdAll,
                   ),
                 ),
               ),
@@ -311,7 +341,12 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  BBSpace.md,
+                  BBSpace.sm,
+                  BBSpace.md,
+                  BBSpace.xs,
+                ),
                 child: AiAssistantPremiumHeader(title: l10n.aiAssistantTitle),
               ),
               Expanded(
@@ -360,6 +395,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         drawer: const OwnerAppDrawer(currentRoute: 'ai-assistant'),
         appBar: CommonAppBar(
           title: l10n.aiAssistantTitle,
+          showTitle: false,
           leadingIcon: Icons.menu,
           onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
         ),
@@ -379,25 +415,14 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   Widget _buildNewChatButton(AppLocalizations l10n) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        MediaQuery.paddingOf(context).bottom + 12,
+        BBSpace.sm,
+        _k12,
+        BBSpace.sm,
+        MediaQuery.paddingOf(context).bottom + _k12,
       ),
-      child: SizedBox(
-        width: 200,
-        child: ElevatedButton.icon(
-          onPressed: _onNewChatPressed,
-          icon: const Icon(Icons.chat_outlined, size: 18),
-          label: Text(l10n.aiAssistantNewChat),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            foregroundColor: Colors.white,
-          ),
-        ),
+      child: _NewChatButton(
+        label: l10n.aiAssistantNewChat,
+        onPressed: _onNewChatPressed,
       ),
     );
   }
@@ -411,7 +436,12 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: const EdgeInsets.fromLTRB(
+            BBSpace.sm,
+            BBSpace.sm,
+            BBSpace.sm,
+            BBSpace.xs,
+          ),
           child: AiAssistantPremiumHeader(title: l10n.aiAssistantTitle),
         ),
         // Chat list or empty state (empty state includes New Chat button)
@@ -422,7 +452,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                 return _buildEmptyState(l10n);
               }
               return ListView.builder(
-                padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
+                padding: const EdgeInsets.fromLTRB(_k12, BBSpace.sm, _k12, 0),
                 itemCount: chats.length,
                 itemBuilder: (context, index) =>
                     _buildChatListItem(chats[index], l10n),
@@ -439,51 +469,63 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   }
 
   Widget _buildEmptyState(AppLocalizations l10n) {
+    final BBColorSet c = BBColor.of(context);
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            'assets/images/assistant_illustration.png',
-            width: 200,
-            height: 200,
-          ),
-          const SizedBox(height: 24),
-          Text(
-            l10n.aiAssistantNoChats,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              l10n.aiAssistantWelcomeSubtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: 200,
-            child: ElevatedButton.icon(
-              onPressed: _onNewChatPressed,
-              icon: const Icon(Icons.chat_outlined, size: 18),
-              label: Text(l10n.aiAssistantNewChat),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(BBSpace.md),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Radial primary backdrop behind the illustration (handoff hero).
+            Container(
+              width: _kEmptyIllustration,
+              height: _kEmptyIllustration,
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  radius: 0.7,
+                  colors: [
+                    c.primary.withValues(alpha: 0.32),
+                    c.primary.withValues(alpha: 0.0),
+                  ],
                 ),
-                foregroundColor: Colors.white,
+              ),
+              child: Image.asset(
+                'assets/images/assistant_illustration.png',
+                fit: BoxFit.contain,
+                errorBuilder: (_, _, _) => Icon(
+                  Icons.auto_awesome,
+                  size: _kEmptyIllustration * 0.5,
+                  color: c.primary,
+                ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: BBSpace.md),
+            Text(
+              'BOOKBED AI',
+              style: BBType.eyebrow(context).copyWith(color: c.primary),
+            ),
+            const SizedBox(height: BBSpace.xxs),
+            Text(
+              l10n.aiAssistantWelcome,
+              style: BBType.h2(context),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: BBSpace.xs),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: BBSpace.lg),
+              child: Text(
+                l10n.aiAssistantWelcomeSubtitle,
+                textAlign: TextAlign.center,
+                style: BBType.body(context).copyWith(color: c.textSecondary),
+              ),
+            ),
+            const SizedBox(height: BBSpace.md),
+            _NewChatButton(
+              label: l10n.aiAssistantNewChat,
+              onPressed: _onNewChatPressed,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -504,7 +546,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                 return _buildEmptyState(l10n);
               }
               return ListView.builder(
-                padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
+                padding: const EdgeInsets.fromLTRB(_k12, BBSpace.sm, _k12, 0),
                 itemCount: chats.length,
                 itemBuilder: (context, index) =>
                     _buildChatListItem(chats[index], l10n),
@@ -517,23 +559,12 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         if (hasChats)
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: SizedBox(
-                width: 200,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    ref.read(aiChatNotifierProvider.notifier).createNewChat();
-                  },
-                  icon: const Icon(Icons.chat_outlined, size: 18),
-                  label: Text(l10n.aiAssistantNewChat),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    foregroundColor: Colors.white,
-                  ),
-                ),
+              padding: const EdgeInsets.all(_k12),
+              child: _NewChatButton(
+                label: l10n.aiAssistantNewChat,
+                onPressed: () {
+                  ref.read(aiChatNotifierProvider.notifier).createNewChat();
+                },
               ),
             ),
           ),
@@ -542,129 +573,81 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   }
 
   Widget _buildChatListItem(AiChat chat, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isSelected =
+    final BBColorSet c = BBColor.of(context);
+    final bool isSelected =
         ref.read(aiChatNotifierProvider).currentChat?.id == chat.id;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: BBSpace.xs),
       child: Dismissible(
         key: ValueKey(chat.id),
         direction: DismissDirection.endToStart,
         background: Container(
           alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.error,
-            borderRadius: BorderRadius.circular(12),
+          padding: const EdgeInsets.only(right: BBSpace.sm),
+          decoration: const BoxDecoration(
+            color: BBColor.error,
+            borderRadius: BBRadius.smAll,
           ),
-          child: const Icon(Icons.delete, color: Colors.white),
+          child: const Icon(Icons.delete, color: _kOnPrimary),
         ),
-        confirmDismiss: (_) async {
-          return await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text(l10n.aiAssistantDeleteChat),
-              content: Text(l10n.aiAssistantDeleteConfirm),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(l10n.cancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(l10n.delete),
-                ),
-              ],
-            ),
-          );
-        },
+        confirmDismiss: (_) async => await _showDeleteChatDialog(l10n) ?? false,
         onDismissed: (_) {
           ref.read(aiChatNotifierProvider.notifier).deleteChat(chat.id);
         },
         child: Material(
-          color: isSelected
-              ? theme.colorScheme.primary.withValues(alpha: 0.08)
-              : BBColor.of(context).surface,
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? c.primary.withValues(alpha: 0.08) : c.surface,
+          borderRadius: BBRadius.smAll,
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BBRadius.smAll,
             onTap: () {
               ref.read(aiChatNotifierProvider.notifier).loadChat(chat.id);
             },
             child: Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(_kBubblePadH),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BBRadius.smAll,
                 border: Border.all(
                   color: isSelected
-                      ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                      : (isDark
-                            ? Colors.white.withValues(alpha: 0.06)
-                            : Colors.black.withValues(alpha: 0.06)),
+                      ? c.primary.withValues(alpha: 0.3)
+                      : c.border,
                 ),
-                boxShadow: AppShadows.getElevation(1, isDark: isDark),
+                boxShadow: BBShadow.resting(context),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: BBColor.of(context).surface,
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.2,
-                            ),
-                          ),
-                        ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/images/assistant_illustration.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
+                      const AiBrandAvatar(size: _kAvatarSm),
+                      const SizedBox(width: BBSpace.xs),
                       Expanded(
                         child: Text(
                           chat.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface,
-                          ),
+                          style: BBType.body(
+                            context,
+                          ).copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
                       Text(
                         _formatDate(chat.updatedAt),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
+                        style: BBType.caption(
+                          context,
+                        ).copyWith(fontSize: _kTimeSize, color: c.textTertiary),
                       ),
                     ],
                   ),
                   if (chat.lastMessagePreview.isNotEmpty) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: BBSpace.xxs),
                     Text(
                       chat.lastMessagePreview,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
-                        ),
+                      style: BBType.label(context).copyWith(
+                        fontWeight: FontWeight.w400,
+                        color: c.textSecondary,
                       ),
                     ),
                   ],
@@ -713,6 +696,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         drawer: const OwnerAppDrawer(currentRoute: 'ai-assistant'),
         appBar: CommonAppBar(
           title: chatState.currentChat?.title ?? l10n.aiAssistantNewChat,
+          showTitle: false,
           leadingIcon: showBackButton ? Icons.arrow_back : Icons.menu,
           onLeadingIconTap: showBackButton
               ? (_) {
@@ -735,9 +719,28 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
 
   Widget _buildChatArea(AiChatState chatState, AppLocalizations l10n) {
     final messages = chatState.currentChat?.messages ?? [];
+    final bool showConversationHeader =
+        chatState.currentChat != null || chatState.isStreaming;
+    final bool canCopy = messages.any(
+      (m) => m.isAssistant && m.content.trim().isNotEmpty,
+    );
 
     return Column(
       children: [
+        // Per-conversation header (brand avatar + title + status + actions).
+        // CommonAppBar carries showTitle:false so this is the only title.
+        if (showConversationHeader)
+          AiConversationHeader(
+            title: chatState.currentChat?.title ?? l10n.aiAssistantNewChat,
+            copyTooltip: l10n.aiAssistantCopyLast,
+            deleteTooltip: l10n.aiAssistantDeleteChat,
+            onCopy: canCopy
+                ? () => _copyLastAssistantMessage(chatState, l10n)
+                : null,
+            onDelete: chatState.currentChat != null
+                ? () => _confirmDeleteCurrentChat(chatState, l10n)
+                : null,
+          ),
         // Messages
         Expanded(
           child: messages.isEmpty && !chatState.isStreaming
@@ -757,14 +760,20 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
 
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(
+        BBSpace.sm,
+        BBSpace.sm,
+        BBSpace.sm,
+        BBSpace.xs,
+      ),
       itemCount: messages.length + (chatState.isStreaming ? 1 : 0),
       itemBuilder: (context, index) {
         if (index < messages.length) {
-          return _buildMessageBubble(messages[index]);
+          return buildAiMessageBubble(context, messages[index]);
         }
         // Streaming message
-        return _buildMessageBubble(
+        return buildAiMessageBubble(
+          context,
           AiChatMessage(
             role: 'assistant',
             content: chatState.streamingText.isEmpty
@@ -778,189 +787,32 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     );
   }
 
-  Widget _buildMessageBubble(
-    AiChatMessage message, {
-    bool isStreaming = false,
-  }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isUser = message.isUser;
-
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (!isUser) ...[
-              Container(
-                margin: const EdgeInsets.only(right: 8, bottom: 4),
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: BBColor.of(context).surface,
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/assistant_illustration.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ],
-            Flexible(
-              child: Container(
-                constraints: BoxConstraints(
-                  maxWidth:
-                      MediaQuery.sizeOf(context).width * (isUser ? 0.8 : 0.72),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  gradient: isUser
-                      ? LinearGradient(
-                          colors: [
-                            theme.colorScheme.primary,
-                            theme.colorScheme.primary.withValues(alpha: 0.8),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : null,
-                  color: isUser ? null : BBColor.of(context).surface,
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(20),
-                    topRight: const Radius.circular(20),
-                    bottomLeft: Radius.circular(isUser ? 20 : 4),
-                    bottomRight: Radius.circular(isUser ? 4 : 20),
-                  ),
-                  border: !isUser
-                      ? Border.all(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : Colors.black.withValues(alpha: 0.05),
-                        )
-                      : null,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: isDark ? 0.2 : 0.05,
-                      ),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: isUser
-                    ? Text(
-                        message.content,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          height: 1.4,
-                        ),
-                      )
-                    : MarkdownBody(
-                        data: message.content,
-                        selectable: true,
-                        styleSheet: MarkdownStyleSheet(
-                          p: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 14,
-                            height: 1.5,
-                          ),
-                          strong: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          listBullet: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 14,
-                          ),
-                          code: TextStyle(
-                            backgroundColor: BBColor.of(context).surfaceVariant,
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 13,
-                          ),
-                          h1: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          h2: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          h3: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          blockSpacing: 8,
-                        ),
-                        onTapLink: (text, href, title) {
-                          // F-NEW-03: scheme allowlist. Gemini-streamed markdown
-                          // can contain arbitrary URLs (prompt injection, model
-                          // hallucination, RAG-poisoned KB). Only http(s) are
-                          // safe for `launchUrl(LaunchMode.externalApplication)`
-                          // — custom schemes (bookbed://, intent://, mailto:,
-                          // tel:, sms:, data:) hand the URI to OS app handlers
-                          // and become a deep-link injection surface for any
-                          // installed app.
-                          if (href == null) return;
-                          final Uri? uri = Uri.tryParse(href);
-                          if (uri == null) return;
-                          if (uri.scheme != 'http' && uri.scheme != 'https') {
-                            return;
-                          }
-                          launchUrl(uri, mode: LaunchMode.externalApplication);
-                        },
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ---------------------------------------------------------------------------
   // Quick reply chips + welcome
   // ---------------------------------------------------------------------------
 
   Widget _buildQuickReplies(AiChatState chatState, AppLocalizations l10n) {
-    final theme = Theme.of(context);
+    final BBColorSet c = BBColor.of(context);
 
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(BBSpace.md),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.lightbulb_outline,
-              size: 32,
-              color: theme.colorScheme.primary.withValues(alpha: 0.5),
+            const AiBrandAvatar(size: _kConsentIcon),
+            const SizedBox(height: BBSpace.sm),
+            Text(
+              l10n.aiAssistantWelcome,
+              style: BBType.h3(context),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: BBSpace.xs),
             Text(
               l10n.aiAssistantSuggestions,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
+              style: BBType.caption(context).copyWith(color: c.textTertiary),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: BBSpace.sm),
             _buildQuickChips(chatState, l10n),
           ],
         ),
@@ -969,7 +821,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   }
 
   Widget _buildQuickChips(AiChatState chatState, AppLocalizations l10n) {
-    final theme = Theme.of(context);
+    final BBColorSet c = BBColor.of(context);
 
     final chips = [
       l10n.aiAssistantChipAddUnit,
@@ -980,21 +832,17 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     ];
 
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: BBSpace.xs,
+      runSpacing: BBSpace.xs,
       alignment: WrapAlignment.center,
       children: chips.map((chip) {
         return ActionChip(
-          label: Text(
-            chip,
-            style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface),
-          ),
-          backgroundColor: BBColor.of(context).surfaceVariant,
+          avatar: Icon(Icons.auto_awesome, size: _kChipIcon, color: c.primary),
+          label: Text(chip, style: BBType.label(context)),
+          backgroundColor: c.surfaceVariant,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-            ),
+            borderRadius: BBRadius.mdAll,
+            side: BorderSide(color: c.primary.withValues(alpha: 0.2)),
           ),
           onPressed: chatState.isStreaming ? null : () => _sendQuickReply(chip),
         );
@@ -1007,7 +855,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildErrorBanner(AiChatState chatState, AppLocalizations l10n) {
-    final theme = Theme.of(context);
+    final BBColorSet c = BBColor.of(context);
     String message;
     if (chatState.error == 'daily_limit') {
       message = l10n.aiAssistantDailyLimit;
@@ -1022,11 +870,16 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: theme.colorScheme.error.withValues(alpha: 0.1),
+      padding: const EdgeInsets.symmetric(
+        horizontal: BBSpace.sm,
+        vertical: _k12,
+      ),
+      color: c.error.withValues(alpha: 0.1),
       child: Text(
         message,
-        style: TextStyle(fontSize: 13, color: theme.colorScheme.error),
+        style: BBType.label(
+          context,
+        ).copyWith(fontWeight: FontWeight.w400, color: c.error),
         textAlign: TextAlign.center,
       ),
     );
@@ -1037,136 +890,306 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildInputBar(AiChatState chatState, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final BBColorSet c = BBColor.of(context);
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        MediaQuery.paddingOf(context).bottom + 16,
+        BBSpace.sm,
+        _k12,
+        BBSpace.sm,
+        MediaQuery.paddingOf(context).bottom + BBSpace.sm,
       ),
       decoration: BoxDecoration(
-        color: BBColor.of(context).surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
+        color: c.surface,
+        border: Border(top: BorderSide(color: c.border)),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.02),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: TextField(
-                controller: _messageController,
-                focusNode: _focusNode,
-                enabled: !chatState.isStreaming,
-                maxLines: 5,
-                minLines: 1,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _sendMessage(),
-                decoration: InputDecoration(
-                  hintText: l10n.aiAssistantPlaceholder,
-                  hintStyle: TextStyle(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                    fontSize: 14,
-                  ),
-                  filled: true,
-                  fillColor: isDark
-                      ? BBColor.surfaceVarDark
-                      : BBColor.surfaceVarLight,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+          // Bordered composer pill: transparent field + send button.
+          Container(
+            padding: const EdgeInsets.fromLTRB(
+              BBSpace.sm,
+              BBSpace.xxs,
+              BBSpace.xxs,
+              BBSpace.xxs,
+            ),
+            decoration: BoxDecoration(
+              color: c.surface,
+              borderRadius: BBRadius.mdAll,
+              border: Border.all(color: c.border),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    focusNode: _focusNode,
+                    enabled: !chatState.isStreaming,
+                    maxLines: 5,
+                    minLines: 1,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendMessage(),
+                    style: BBType.body(context),
+                    decoration: InputDecoration(
+                      isCollapsed: true,
+                      hintText: l10n.aiAssistantPlaceholder,
+                      hintStyle: BBType.body(
+                        context,
+                      ).copyWith(color: c.textTertiary),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: _k12,
+                      ),
                     ),
                   ),
                 ),
-                style: TextStyle(
-                  fontSize: 14,
-                  color: theme.colorScheme.onSurface,
+                const SizedBox(width: BBSpace.xs),
+                _SendButton(
+                  streaming: chatState.isStreaming,
+                  onSend: _sendMessage,
                 ),
-              ),
+              ],
             ),
           ),
-          const SizedBox(width: 12),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 2),
-            child: Container(
-              height: 48,
-              width: 48,
-              decoration: BoxDecoration(
-                gradient: chatState.isStreaming
-                    ? null
-                    : LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withValues(alpha: 0.8),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                color: chatState.isStreaming
-                    ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                    : null,
-                shape: BoxShape.circle,
-                boxShadow: chatState.isStreaming
-                    ? null
-                    : [
-                        BoxShadow(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.3,
-                          ),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-              ),
-              child: IconButton(
-                onPressed: chatState.isStreaming ? null : _sendMessage,
-                icon: chatState.isStreaming
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                      )
-                    : const Icon(Icons.send_rounded, size: 22),
-                color: Colors.white,
-                splashRadius: 24,
-              ),
+          const SizedBox(height: BBSpace.xs),
+          // Orientation disclaimer (handoff composer footer).
+          Text(
+            l10n.aiAssistantDisclaimer,
+            textAlign: TextAlign.center,
+            style: BBType.caption(context).copyWith(color: c.textTertiary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Conversation actions (copy / delete)
+  // ---------------------------------------------------------------------------
+
+  Future<bool?> _showDeleteChatDialog(AppLocalizations l10n) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => BbDialog(
+        title: l10n.aiAssistantDeleteChat,
+        body: l10n.aiAssistantDeleteConfirm,
+        destructive: true,
+        secondary: BbDialogAction(
+          label: l10n.cancel,
+          onPressed: () => Navigator.pop(ctx, false),
+        ),
+        primary: BbDialogAction(
+          label: l10n.delete,
+          onPressed: () => Navigator.pop(ctx, true),
+        ),
+      ),
+    );
+  }
+
+  void _copyLastAssistantMessage(AiChatState chatState, AppLocalizations l10n) {
+    final messages = chatState.currentChat?.messages ?? const <AiChatMessage>[];
+    final assistantMessages = messages
+        .where((m) => m.isAssistant && m.content.trim().isNotEmpty)
+        .toList();
+    if (assistantMessages.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: assistantMessages.last.content));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.aiAssistantMessageCopied)));
+  }
+
+  Future<void> _confirmDeleteCurrentChat(
+    AiChatState chatState,
+    AppLocalizations l10n,
+  ) async {
+    final chat = chatState.currentChat;
+    if (chat == null) return;
+    final bool? confirmed = await _showDeleteChatDialog(l10n);
+    if (confirmed != true || !mounted) return;
+    final notifier = ref.read(aiChatNotifierProvider.notifier);
+    await notifier.deleteChat(chat.id);
+    if (!mounted) return;
+    // Return to the chat list (clears the active session / desktop right panel).
+    await notifier.createNewChat();
+    if (mounted) setState(() => _showNewChat = false);
+  }
+}
+
+/// Single chat bubble — user = solid `primary` (right), assistant = `surface`
+/// + border (left) with brand avatar. Mirrors `ai-assistant.jsx` bubbles
+/// (tail corner [BBRadius.xs], 32px avatar, 11px timestamp, max-width 70/78%).
+/// Top-level + [visibleForTesting] so the overflow golden can pump it without
+/// the full screen / providers.
+@visibleForTesting
+Widget buildAiMessageBubble(
+  BuildContext context,
+  AiChatMessage message, {
+  bool isStreaming = false,
+}) {
+  final BBColorSet c = BBColor.of(context);
+  final bool isUser = message.isUser;
+  final bool isMobileWidth = MediaQuery.sizeOf(context).width < 600;
+  final double maxW =
+      MediaQuery.sizeOf(context).width *
+      (isMobileWidth ? _kUserMaxW : _kUserMaxWDesktop);
+
+  final Widget content = isUser
+      ? Text(
+          message.content,
+          style: BBType.body(context).copyWith(color: _kOnPrimary),
+        )
+      : MarkdownBody(
+          data: message.content,
+          selectable: true,
+          styleSheet: MarkdownStyleSheet(
+            p: BBType.body(context),
+            strong: BBType.body(context).copyWith(fontWeight: FontWeight.w600),
+            listBullet: BBType.body(context),
+            code: BBType.mono(
+              context,
+            ).copyWith(backgroundColor: c.surfaceVariant),
+            h1: BBType.h3(context),
+            h2: BBType.bodyLg(context).copyWith(fontWeight: FontWeight.w600),
+            h3: BBType.body(context).copyWith(fontWeight: FontWeight.w600),
+            blockSpacing: BBSpace.xs,
+          ),
+          onTapLink: (text, href, title) {
+            // F-NEW-03: scheme allowlist. Gemini-streamed markdown can contain
+            // arbitrary URLs (prompt injection, model hallucination, RAG-
+            // poisoned KB). Only http(s) are safe for
+            // `launchUrl(LaunchMode.externalApplication)` — custom schemes
+            // (bookbed://, intent://, mailto:, tel:, sms:, data:) hand the URI
+            // to OS app handlers and become a deep-link injection surface for
+            // any installed app.
+            if (href == null) return;
+            final Uri? uri = Uri.tryParse(href);
+            if (uri == null) return;
+            if (uri.scheme != 'http' && uri.scheme != 'https') {
+              return;
+            }
+            launchUrl(uri, mode: LaunchMode.externalApplication);
+          },
+        );
+
+  final Widget bubble = Container(
+    constraints: BoxConstraints(maxWidth: maxW),
+    padding: const EdgeInsets.symmetric(
+      horizontal: _kBubblePadH,
+      vertical: _kBubblePadV,
+    ),
+    decoration: BoxDecoration(
+      color: isUser ? c.primary : c.surface,
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(isUser ? BBRadius.md : BBRadius.xs),
+        topRight: Radius.circular(isUser ? BBRadius.xs : BBRadius.md),
+        bottomLeft: const Radius.circular(BBRadius.md),
+        bottomRight: const Radius.circular(BBRadius.md),
+      ),
+      border: isUser ? null : Border.all(color: c.border),
+      boxShadow: BBShadow.resting(context),
+    ),
+    child: Column(
+      crossAxisAlignment: isUser
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        content,
+        if (!isStreaming) ...[
+          const SizedBox(height: BBSpace.xxs),
+          Text(
+            _formatBubbleTime(message.timestamp),
+            style: BBType.caption(context).copyWith(
+              fontSize: _kTimeSize,
+              color: isUser ? _kOnPrimaryMuted : c.textTertiary,
             ),
           ),
         ],
+      ],
+    ),
+  );
+
+  return Align(
+    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: _kMsgGap),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!isUser) ...[
+            const AiBrandAvatar(size: _kAvatar),
+            const SizedBox(width: BBSpace.xs),
+          ],
+          Flexible(child: bubble),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Solid-primary circular send button (handoff composer). Streaming → dimmed
+/// with a spinner.
+class _SendButton extends StatelessWidget {
+  const _SendButton({required this.streaming, required this.onSend});
+
+  final bool streaming;
+  final VoidCallback onSend;
+
+  @override
+  Widget build(BuildContext context) {
+    final BBColorSet c = BBColor.of(context);
+    return Container(
+      width: _kSendBtn,
+      height: _kSendBtn,
+      decoration: BoxDecoration(
+        color: streaming ? c.primary.withValues(alpha: 0.3) : c.primary,
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        onPressed: streaming ? null : onSend,
+        padding: EdgeInsets.zero,
+        color: _kOnPrimary,
+        iconSize: _kSendIcon,
+        icon: streaming
+            ? const SizedBox(
+                width: _kSendIcon,
+                height: _kSendIcon,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: _kOnPrimaryMuted,
+                ),
+              )
+            : const Icon(Icons.send_rounded),
+      ),
+    );
+  }
+}
+
+/// Shared New-Chat CTA (primary filled). Used by the empty state + chat-list
+/// footers.
+class _NewChatButton extends StatelessWidget {
+  const _NewChatButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _kNewChatBtnW,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.chat_outlined, size: _kBtnIcon),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: _k12),
+          shape: const RoundedRectangleBorder(borderRadius: BBRadius.smAll),
+          foregroundColor: _kOnPrimary,
+        ),
       ),
     );
   }

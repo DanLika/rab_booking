@@ -8606,6 +8606,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiAssistantChipEmbed => 'Embed widget';
 
   @override
+  String get aiAssistantCopyLast => 'Copy last reply';
+
+  @override
+  String get aiAssistantMessageCopied => 'Message copied';
+
+  @override
   String get aiConsentProcessing =>
       'Your messages are processed by AI (Google Gemini) to provide helpful responses.';
 

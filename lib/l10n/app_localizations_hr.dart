@@ -8679,6 +8679,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get aiAssistantChipEmbed => 'Ugradi widget';
 
   @override
+  String get aiAssistantCopyLast => 'Kopiraj zadnji odgovor';
+
+  @override
+  String get aiAssistantMessageCopied => 'Poruka kopirana';
+
+  @override
   String get aiConsentProcessing =>
       'Vaše poruke obrađuje AI (Google Gemini) kako bi pružio korisne odgovore.';
 

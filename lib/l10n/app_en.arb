@@ -3625,6 +3625,8 @@
   "aiAssistantChipStripe": "Connect Stripe",
   "aiAssistantChipIcal": "iCal sync",
   "aiAssistantChipEmbed": "Embed widget",
+  "aiAssistantCopyLast": "Copy last reply",
+  "aiAssistantMessageCopied": "Message copied",
   "aiConsentProcessing": "Your messages are processed by AI (Google Gemini) to provide helpful responses.",
   "aiConsentStorage": "Chat history is stored for 1 year and then automatically deleted.",
   "aiConsentDeletion": "You can delete any chat at any time by swiping left on it.",

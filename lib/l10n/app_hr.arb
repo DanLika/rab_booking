@@ -3633,6 +3633,8 @@
   "aiAssistantChipStripe": "Poveži Stripe",
   "aiAssistantChipIcal": "iCal sinkronizacija",
   "aiAssistantChipEmbed": "Ugradi widget",
+  "aiAssistantCopyLast": "Kopiraj zadnji odgovor",
+  "aiAssistantMessageCopied": "Poruka kopirana",
   "aiConsentProcessing": "Vaše poruke obrađuje AI (Google Gemini) kako bi pružio korisne odgovore.",
   "aiConsentStorage": "Povijest razgovora čuva se 1 godinu, a zatim se automatski briše.",
   "aiConsentDeletion": "Možete izbrisati bilo koji razgovor u bilo kojem trenutku povlačenjem ulijevo.",

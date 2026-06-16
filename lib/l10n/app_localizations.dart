@@ -15538,6 +15538,18 @@ abstract class AppLocalizations {
   /// **'Embed widget'**
   String get aiAssistantChipEmbed;
 
+  /// No description provided for @aiAssistantCopyLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy last reply'**
+  String get aiAssistantCopyLast;
+
+  /// No description provided for @aiAssistantMessageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Message copied'**
+  String get aiAssistantMessageCopied;
+
   /// No description provided for @aiConsentProcessing.
   ///
   /// In en, this message translates to:

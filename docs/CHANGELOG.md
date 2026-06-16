@@ -2,7 +2,23 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-16 | **Version**: 7.21
+**Last Updated**: 2026-06-16 | **Version**: 7.22
+
+---
+
+**Changelog 7.22** (2026-06-16):
+
+### Owner — AI Assistant premium fidelity (`ec78235b`, audit/124 §ai-assistant)
+- Premium fidelity pass na AI Assistant ekran (handoff `ai-assistant.jsx`) — chat shell stiliziran; AI je **LIVE Gemini** (`firebase_ai`) pa NIJE fabrikovan nikakav output; `_PregledAiInsight` (flagged placeholder) **netaknut** (data-honesty).
+- **Double-header ubijen:** `showTitle:false` na 3 brancha (desktop split, mobile chat-list, active-chat) — in-body header nosi naslov, AppBar zadržava hamburger + "Novi razgovor". Consent ekran zadržava AppBar naslov (nema in-body hero → nema dupliranja).
+- **Bubbles → handoff flat:** solid `primary` user / `surface`+border asistent, tail corner `BBRadius.xs` (TR user / TL asistent), 32px brand avatar, 11px timestampovi (real `message.timestamp`), 70/78% max-width (bio raw gradient + 28px).
+- **`AiConversationHeader` (novo):** brand avatar + chat naslov + "BookBed AI · trenutno aktivan" + copy/delete akcije. Copy = clipboard zadnjeg asistent-odgovora (+ SnackBar), delete → postojeći `deleteChat` kroz premium **`BbDialog`** (zamijenjen native `AlertDialog`).
+- **Composer → bordered pill** (radius md) + solid-primary send krug + disclaimer footer (`aiAssistantDisclaimer`). Attach-ikona IZOSTAVLJENA (nema upload feature = nema inert kontrole); user-avatar izostavljen (model je role-only).
+- **Empty/welcome:** radial primary hero iza ilustracije + brand avatar + 5 ✦ suggestion chipova (`aiAssistantChip*`) + Image `errorBuilder` (offline asset-fail hardening). **Consent restyle = VIZUALNO SAMO** (icon tiles + eyebrow/H1 + tokenizovana kartica); grant/deny logika (`PopScope`, `_acceptConsent`→`grantAiChatConsent`, provider gate) **0 linija mijenjana**.
+- **Token hygiene:** 0 `Color(0x`, 0 raw literala (named-const blok), `AppShadows`→`BBShadow`, `colorScheme`→`BBColor`; TIP-1 page-bg gradient potvrđen netaknut.
+- **Test seam:** `@visibleForTesting buildAiMessageBubble` (top-level, provider-free) + novi `ai_assistant_premium_test` (12 overflow ćelija 360/414/768 × light+dark + conversation-header chrome + `AiBrandAvatar` asset-fail fallback). 2 nova l10n ključa (`aiAssistantCopyLast`/`aiAssistantMessageCopied`).
+- **Verifikacija:** `flutter analyze` 0 net-new (3 AI fajla čista) · `dart format` · full `flutter test` **1475 pass** (+14) · `build web --no-tree-shake-icons` clean · grep 0-hex/0-literal · scope = 2 dart + 4 l10n + 1 test (0 shared/FROZEN; `CommonAppBar` widget NETAKNUT — samo `showTitle:false` call-sites). **Live web Marionette na bookbed-dev:** desktop light+dark (bubbles/header/composer/delete BbDialog/welcome+chips, nema double-header), consent gate restyled + **grant verifikovan end-to-end** (logout→login→consent→accept→chats), logout robustan (real-tap clean confirm, zero "Oops" — raniji ErrorBoundary bio Marionette `scroll_to`). Mobile/tablet = test-proven (12 ćelija).
+- **Deferred:** owner PROD deploy (batch s Pregled/Rezervacije/Timeline/Mjesečni/global-chrome — **6 changes, prezreo**); mobile live-resize pixel-potvrda (test-covered).
 
 ---
 

@@ -192,3 +192,24 @@ Text colors (`tokens.dart:160-173`), status colors (`tokens.dart:179-192`), Mate
 - **Flat-vs-gradient** = settled by CL 7.23 (flat). Untouched here.
 - **Spacing / layout / per-screen** = audit/124 passes.
 - **Admin console** = `BbAdminDarkTokens` (`#1E1A33`), deliberately decoupled — not this audit.
+
+---
+
+## §7 — Dark-depth widen (APPLIED — supersedes the dark VALUES in §1/§5)
+
+§1/§5 copy the handoff dark tones verbatim (`#000`/`#0B0B0D`/`#121212`, Δ≈11). **That assumes box-shadow** — the handoff lifts each surface with `--bb-shadow-*` / `--bb-panel-shadow`. **Owner chrome is FLAT (CL 7.23) → no shadow renders**, so on real dark the panel `#0B0B0D` died on the `#000` gutter (Δ11 invisible — verified live, `pregled-dark` non-widened). 
+
+**Principle: a flat / shadowless dark theme must replace the missing shadow with a WIDER lightness step.** Don't copy a shadow-based design's tight dark tones into a flat theme.
+
+**Applied dark ladder — operator-picked "A", live-confirmed (panel lifts in real Pregled):**
+| role | handoff (shadow-based) | APPLIED (flat, widened) | source const |
+|---|---|---|---|
+| page / shell | `#000000` | `#000000` (unchanged) | `_darkStart` · `shellBg` · scaffold |
+| panel | `#0B0B0D` | **`#141414`** (Δ20 off page) | `rd.panelBg` (`bb_redesign_tokens.dart`) |
+| card / surface | `#121212` | **`#1E1E1E`** | `surfaceDark` (`tokens.dart` + `app_colors.dart`) · `_darkCard`/`_darkSection` |
+| variant / input | `#1E1E1E` | **`#2A2A2A`** | `surfaceVariantDark`/`surfaceVarDark` · `_darkInputFill` |
+| elevated (dialogs) | `#1A1A1A` | **`#333333`** | `app_colors` elevation ladder `#1E1E1E`→`#242424`→`#2A2A2A`→`#2E2E2E`→`#333333` |
+| divider | — | `#2A2A2A` | `dividerDark` (was `#1E1E1E` → would vanish on the lifted card) |
+| popup / menu | — | `#1E1E1E` | `app_theme darkMenuBackground` (was `#0B0B0D` → would sink below cards) |
+
+Monotonic: `#000 < #141414 < #1E1E1E < #242424 < #2A2A2A < #2E2E2E < #333333`. **LIGHT unchanged** (the white step `#F0F1F5`→`#FFFFFF` separates without shadow). Scope = 5 files + `bb_card_test` literal re-pointed `#121212`→`#1E1E1E`. Verified: analyze 0 net-new, full suite green, live Pregled + Rezervacije dark (cards lift, panel floats). See [[flat-chrome-decision]].

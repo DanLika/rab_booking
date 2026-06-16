@@ -43,7 +43,7 @@ class AppGradients extends ThemeExtension<AppGradients> {
   final LinearGradient premium;
 
   /// Section border color (theme-aware)
-  /// Light: cool gray (#E0DCE8), Dark: dark cool gray (#35323D)
+  /// Light: cool gray (#E2E8F0), Dark: dark cool gray (#2D3748)
   final Color sectionBorder;
 
   /// Card background color (flat, no gradient)
@@ -51,25 +51,27 @@ class AppGradients extends ThemeExtension<AppGradients> {
   final Color cardBackground;
 
   /// Input fill color for text fields, dropdowns, and form inputs
-  /// Light: subtle lavender (#F5F3F9), Dark: darker purple-gray (#1E1C24)
+  /// Light: #F5F5F5, Dark: #1E1E1E (handoff surface-variant)
   final Color inputFillColor;
 
   // ============================================================================
   // CENTRAL COLOR DEFINITIONS - CHANGE HERE = UPDATE EVERYWHERE!
   // ============================================================================
 
-  // Page shell colors — FLAT (TIP-1 gradient retired per user 2026-06-16: the
-  // two opposite-direction gray gradients are gone). Both stops = one shell
-  // tone so `pageBackground` renders as a solid fill.
-  // Light shell: curated light-gray #ECEDF2 (pairs with border #E0DCE8;
-  // replaces #F0F1F5 / spec #F8F9FA). Raised surfaces (section/card) go white.
-  static const Color _lightStart = Color(0xFFECEDF2);
-  static const Color _lightEnd = Color(0xFFECEDF2);
+  // Page shell colors — FLAT (no gradient). Both stops = one shell tone so
+  // `pageBackground` renders as a solid fill. Handoff ladder (audit/127):
+  // light shell = `--bb-shell-bg` #F0F1F5 — the convergence value (Material
+  // scaffold + rd.shellBg already use it). Raised surfaces (section/card) go
+  // white #FFFFFF.
+  static const Color _lightStart = Color(0xFFF0F1F5);
+  static const Color _lightEnd = Color(0xFFF0F1F5);
 
-  // Dark shell: FLAT veryDarkGray #1A1A1A (user spec; NOT OLED #000). Raised
-  // surfaces (section/card) step up to #2D2D2D so cards sit above the shell.
-  static const Color _darkStart = Color(0xFF1A1A1A);
-  static const Color _darkEnd = Color(0xFF1A1A1A);
+  // Dark shell: FLAT OLED #000 (handoff `--bb-shell-bg`/`--bb-bg`, audit/127).
+  // Page is the DARKEST layer → raised surfaces (panel #141414, card #1E1E1E)
+  // sit ABOVE it. WIDENED (audit/127 dark-depth): flat dark has no box-shadow,
+  // so lightness steps must carry the elevation the handoff shadow would.
+  static const Color _darkStart = Color(0xFF000000);
+  static const Color _darkEnd = Color(0xFF000000);
 
   // Brand purple (same for light & dark)
   static const Color _brandStart = Color(0xFF6B4CE6); // Purple
@@ -79,30 +81,30 @@ class AppGradients extends ThemeExtension<AppGradients> {
   static const Color _premiumStart = Color(0xFF5233CC); // Deep purple
   static const Color _premiumEnd = Color(0xFF8B66F7); // Lavender purple
 
-  // Section border colors — handoff hairline (`--bb-panel-border`).
-  // Light: rgba(20,24,45,.05) over panel; dark: rgba(255,255,255,.06).
-  static const Color _lightBorder = Color(0xFFE0DCE8);
-  static const Color _darkBorder = Color(0xFF35323D);
+  // Section border colors — handoff `--bb-border`, cool low-chroma (audit/127;
+  // replaces the warm #E0DCE8/#35323D drift).
+  static const Color _lightBorder = Color(0xFFE2E8F0);
+  static const Color _darkBorder = Color(0xFF2D3748);
 
-  // Card background colors (flat, no gradient).
-  // Light = near-white `#FBFBFD` (raised over the #ECEDF2 shell). Dark raised
-  // to `#2D2D2D` so cards sit ABOVE the #1A1A1A shell — the old `#0B0B0D` sank
-  // BELOW it and dissolved (see handoff-token-alignment note).
-  static const Color _lightCard = Color(0xFFFBFBFD);
-  static const Color _darkCard = Color(0xFF2D2D2D);
+  // Card background colors (flat, no gradient) — handoff `--bb-surface`.
+  // Light #FFFFFF. Dark WIDENED to #1E1E1E (audit/127 dark-depth): the
+  // lightness step is the ONLY thing lifting cards above the panel (#141414)
+  // / OLED shell (#000) when there is no shadow.
+  static const Color _lightCard = Color(0xFFFFFFFF);
+  static const Color _darkCard = Color(0xFF1E1E1E);
 
-  // Input fill colors — handoff `--bb-surface-variant` (subtle off-shell).
-  // Light: shellBg lifted toward white; dark: panelBg lifted toward purple.
-  static const Color _lightInputFill = Color(0xFFF5F6FA);
-  static const Color _darkInputFill = Color(0xFF15151A);
+  // Input fill colors — handoff `--bb-surface-variant`:
+  // light #F5F5F5, dark WIDENED to #2A2A2A (audit/127 dark-depth).
+  static const Color _lightInputFill = Color(0xFFF5F5F5);
+  static const Color _darkInputFill = Color(0xFF2A2A2A);
 
-  // Section colors — FLAT (TIP-1 gradient retired 2026-06-16). Raised-surface
-  // tone, one step above the page shell so sections/cards read as elevated
-  // without a gradient: white on light, #2D2D2D on dark.
+  // Section colors — FLAT raised-surface tone = handoff `--bb-surface`,
+  // one step above the page shell: white #FFFFFF on light, #1E1E1E on dark
+  // (matches card; widened audit/127 dark-depth so it lifts above #000).
   static const Color _lightSectionStart = Color(0xFFFFFFFF);
   static const Color _lightSectionEnd = Color(0xFFFFFFFF);
-  static const Color _darkSectionStart = Color(0xFF2D2D2D);
-  static const Color _darkSectionEnd = Color(0xFF2D2D2D);
+  static const Color _darkSectionStart = Color(0xFF1E1E1E);
+  static const Color _darkSectionEnd = Color(0xFF1E1E1E);
 
   // ============================================================================
   // PREDEFINED THEME INSTANCES

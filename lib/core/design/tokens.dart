@@ -150,10 +150,11 @@ class BBColor {
   // -------------------------------------------------------------------------
 
   static const Color bgDark = Color(0xFF000000);
-  // `--bb-surface` dark `#121212` — cards must lift ABOVE the `#0B0B0D`
-  // panel (shell #000 → panel #0B0B0D → cards #121212, tokens.css L3 note).
-  static const Color surfaceDark = Color(0xFF121212);
-  static const Color surfaceVarDark = Color(0xFF1E1E1E);
+  // `--bb-surface` dark — WIDENED to #1E1E1E (audit/127 dark-depth): flat dark
+  // has no shadow, so cards lift by lightness alone
+  // (shell #000 → panel #141414 → card #1E1E1E → variant #2A2A2A).
+  static const Color surfaceDark = Color(0xFF1E1E1E);
+  static const Color surfaceVarDark = Color(0xFF2A2A2A);
   static const Color borderDark = Color(0xFF2D3748);
 
   // -------------------------------------------------------------------------

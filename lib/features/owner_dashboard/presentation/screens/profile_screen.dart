@@ -12,6 +12,7 @@ import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/design/responsive.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -143,7 +144,9 @@ class ProfileScreen extends ConsumerWidget {
                     : EdgeInsets.fromLTRB(16, 4, isDesktop ? 28 : 18, 24);
 
                 return Container(
-                  color: rd.shellBg,
+                  decoration: BoxDecoration(
+                    gradient: context.gradients.pageBackground,
+                  ),
                   // Content clamp — center + cap width on tablet/desktop web.
                   child: BBContentMaxWidth(
                     maxWidth: 1100,

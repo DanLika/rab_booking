@@ -52,6 +52,7 @@ class DashboardOverviewTab extends ConsumerWidget {
         title: l10n.ownerOverview,
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+        showTitle: false, // in-body header carries title (audit/126 §2A)
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'overview'),
       body: Container(

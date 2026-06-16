@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/design/tokens.dart';
 import '../../../../../core/services/logging_service.dart';
 import '../../../../../core/utils/async_utils.dart';
@@ -70,7 +71,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     final feedsAsync = ref.watch(icalFeedsStreamProvider);
     final statsAsync = ref.watch(icalStatisticsProvider);
     final l10n = AppLocalizations.of(context);
-    final rd = BbRedesignTokens.of(context);
     final c = BBColor.of(context);
 
     return PopScope(
@@ -96,7 +96,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             currentRoute: 'integrations/ical/import',
           ),
           body: Container(
-            color: rd.shellBg,
+            decoration: BoxDecoration(
+              gradient: context.gradients.pageBackground,
+            ),
             child: SafeArea(
               child: RefreshIndicator(
                 onRefresh: () async {

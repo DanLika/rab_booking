@@ -560,6 +560,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         title: l10n.ownerBookingsTitle,
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+        showTitle: false, // in-body header carries title (audit/126 §2A)
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'bookings'),
       body: Stack(

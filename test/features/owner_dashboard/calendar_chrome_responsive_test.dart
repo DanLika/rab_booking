@@ -140,6 +140,12 @@ void main() {
         // PRIMARY assertion — no RenderFlex / layout overflow at this size.
         expect(tester.takeException(), isNull);
 
+        // audit/126 §2A — the calendar title now lives in THIS in-body premium
+        // header (the AppBar no longer renders it). Lock that coverage here so
+        // the strip can't silently drop the title.
+        final l10n = AppLocalizations.of(tester.element(find.byType(Scaffold)));
+        expect(find.text(l10n.ownerCalendar), findsWidgets);
+
         // Bonus — dump a PNG for the handoff side-by-side (never fails the test).
         await tester.runAsync(() async {
           try {
@@ -219,6 +225,12 @@ void main() {
 
         // PRIMARY assertion — no RenderFlex / layout overflow at this size.
         expect(tester.takeException(), isNull);
+
+        // audit/126 §2A — the calendar title now lives in THIS in-body premium
+        // header (the AppBar no longer renders it). Lock that coverage here so
+        // the strip can't silently drop the title.
+        final l10n = AppLocalizations.of(tester.element(find.byType(Scaffold)));
+        expect(find.text(l10n.ownerCalendar), findsWidgets);
 
         // Bonus — dump a PNG for the handoff side-by-side (never fails the test).
         await tester.runAsync(() async {

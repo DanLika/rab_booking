@@ -373,7 +373,7 @@ class _DrawerItemState extends State<_DrawerItem> {
               decoration: BoxDecoration(
                 color: widget.isSelected
                     ? selectedTextColor.withValues(alpha: 0.12)
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                    : BBColor.of(context).textPrimary.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
               child: widget.imagePath != null
@@ -389,7 +389,9 @@ class _DrawerItemState extends State<_DrawerItem> {
                       widget.icon,
                       color: widget.isSelected
                           ? selectedTextColor
-                          : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                          : BBColor.of(
+                              context,
+                            ).textPrimary.withValues(alpha: 0.75),
                       size: 20,
                     ),
             ),
@@ -402,7 +404,7 @@ class _DrawerItemState extends State<_DrawerItem> {
                     : FontWeight.w500,
                 color: widget.isSelected
                     ? selectedTextColor
-                    : theme.colorScheme.onSurface,
+                    : BBColor.of(context).textPrimary,
               ),
             ),
             onTap: widget.onTap,
@@ -478,14 +480,14 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
               decoration: BoxDecoration(
                 color: widget.isSelected
                     ? selectedTextColor.withValues(alpha: 0.12)
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                    : BBColor.of(context).textPrimary.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 widget.icon,
                 color: widget.isSelected
                     ? selectedTextColor
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                    : BBColor.of(context).textPrimary.withValues(alpha: 0.75),
                 size: 20,
               ),
             ),
@@ -501,7 +503,7 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
                           : FontWeight.w500,
                       color: widget.isSelected
                           ? selectedTextColor
-                          : theme.colorScheme.onSurface,
+                          : BBColor.of(context).textPrimary,
                     ),
                   ),
                 ),
@@ -608,14 +610,14 @@ class _DrawerItemWithNotificationBadgeState
               decoration: BoxDecoration(
                 color: widget.isSelected
                     ? selectedTextColor.withValues(alpha: 0.12)
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                    : BBColor.of(context).textPrimary.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 widget.icon,
                 color: widget.isSelected
                     ? selectedTextColor
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                    : BBColor.of(context).textPrimary.withValues(alpha: 0.75),
                 size: 20,
               ),
             ),
@@ -631,7 +633,7 @@ class _DrawerItemWithNotificationBadgeState
                           : FontWeight.w500,
                       color: widget.isSelected
                           ? selectedTextColor
-                          : theme.colorScheme.onSurface,
+                          : BBColor.of(context).textPrimary,
                     ),
                   ),
                 ),
@@ -680,8 +682,6 @@ class _DrawerSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Padding(
       padding: const EdgeInsets.only(left: 40, right: 12, top: 8, bottom: 4),
       child: Row(
@@ -690,7 +690,7 @@ class _DrawerSectionHeader extends StatelessWidget {
             width: 3,
             height: 12,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.6),
+              color: BBColor.of(context).primary.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -700,7 +700,7 @@ class _DrawerSectionHeader extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              color: BBColor.of(context).textPrimary.withValues(alpha: 0.6),
               letterSpacing: 0.3,
             ),
           ),
@@ -767,7 +767,9 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     decoration: BoxDecoration(
                       color: widget.isSelected
                           ? selectedTextColor.withValues(alpha: 0.12)
-                          : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                          : BBColor.of(
+                              context,
+                            ).textPrimary.withValues(alpha: 0.05),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -775,7 +777,9 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                       size: 16,
                       color: widget.isSelected
                           ? selectedTextColor
-                          : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                          : BBColor.of(
+                              context,
+                            ).textPrimary.withValues(alpha: 0.5),
                     ),
                   )
                 : const SizedBox(width: 32),
@@ -788,7 +792,7 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     : FontWeight.w500,
                 color: widget.isSelected
                     ? selectedTextColor
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                    : BBColor.of(context).textPrimary.withValues(alpha: 0.85),
               ),
             ),
             subtitle: widget.subtitle != null
@@ -796,7 +800,9 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     widget.subtitle!,
                     style: TextStyle(
                       fontSize: 11,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: BBColor.of(
+                        context,
+                      ).textPrimary.withValues(alpha: 0.5),
                     ),
                   )
                 : null,
@@ -836,10 +842,10 @@ class _PremiumExpansionTile extends StatelessWidget {
     final selectedTextColor = isDark
         ? lightPurple
         : BBColor.of(context).primary;
-    final normalTextColor = theme.colorScheme.onSurface;
+    final normalTextColor = BBColor.of(context).textPrimary;
     final iconColor = isExpanded
         ? (isDark ? lightPurple : BBColor.of(context).primary)
-        : theme.colorScheme.onSurface.withValues(alpha: 0.75);
+        : BBColor.of(context).textPrimary.withValues(alpha: 0.75);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -855,7 +861,7 @@ class _PremiumExpansionTile extends StatelessWidget {
             decoration: BoxDecoration(
               color: isExpanded
                   ? selectedTextColor.withValues(alpha: 0.12)
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                  : BBColor.of(context).textPrimary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -863,7 +869,7 @@ class _PremiumExpansionTile extends StatelessWidget {
               size: 20,
               color: isExpanded
                   ? selectedTextColor
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                  : BBColor.of(context).textPrimary.withValues(alpha: 0.75),
             ),
           ),
           iconColor: iconColor,

@@ -337,6 +337,8 @@ class _OwnerTimelineCalendarScreenState
                   leadingIcon: Icons.menu,
                   onLeadingIconTap: (context) =>
                       Scaffold.of(context).openDrawer(),
+                  // in-body header carries title (audit/126 §2A)
+                  showTitle: false,
                 ),
                 drawer: const OwnerAppDrawer(currentRoute: 'calendar/timeline'),
                 body: Container(

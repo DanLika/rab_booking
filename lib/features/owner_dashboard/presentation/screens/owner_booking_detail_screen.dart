@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/enums.dart';
 import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -40,26 +41,28 @@ class OwnerBookingDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final rd = BbRedesignTokens.of(context);
     final c = BBColor.of(context);
     final async = ref.watch(ownerBookingByIdProvider(bookingId));
 
     return Scaffold(
       drawer: const OwnerAppDrawer(currentRoute: 'bookings'),
-      backgroundColor: rd.shellBg,
-      body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _ErrorState(error: e, l10n: l10n, c: c),
-        data: (ob) {
-          if (ob == null) {
-            return _ErrorState(
-              error: l10n.ownerBookingsNotFound,
-              l10n: l10n,
-              c: c,
-            );
-          }
-          return _BookingDetailBody(ownerBooking: ob);
-        },
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: async.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => _ErrorState(error: e, l10n: l10n, c: c),
+          data: (ob) {
+            if (ob == null) {
+              return _ErrorState(
+                error: l10n.ownerBookingsNotFound,
+                l10n: l10n,
+                c: c,
+              );
+            }
+            return _BookingDetailBody(ownerBooking: ob);
+          },
+        ),
       ),
     );
   }

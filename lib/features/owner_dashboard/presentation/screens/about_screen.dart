@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/design/responsive.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -39,7 +40,9 @@ class AboutScreen extends StatelessWidget {
               : EdgeInsets.fromLTRB(16, 4, isDesktop ? 28 : 18, 24);
 
           return Container(
-            color: rd.shellBg,
+            decoration: BoxDecoration(
+              gradient: context.gradients.pageBackground,
+            ),
             // Content clamp — center + cap width so the floating panel doesn't
             // stretch edge-to-edge on tablet/desktop web. See BBContentMaxWidth.
             child: BBContentMaxWidth(

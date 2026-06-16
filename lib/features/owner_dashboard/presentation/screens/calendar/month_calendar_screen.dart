@@ -176,6 +176,7 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
         title: l10n.monthCalendarTitle,
         leadingIcon: Icons.menu,
         onLeadingIconTap: (ctx) => Scaffold.of(ctx).openDrawer(),
+        showTitle: false, // in-body header carries title (audit/126 §2A)
         actions: [
           // Today button
           IconButton(

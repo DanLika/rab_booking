@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/enums.dart';
 import '../../../../core/design/bb_redesign_tokens.dart';
@@ -18,6 +19,27 @@ import '../widgets/booking_actions/booking_complete_dialog.dart';
 import '../widgets/edit_booking_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/send_email_dialog.dart';
+
+// ─────────────────────────────────────────────────────────────────────────
+// Layout constants — handoff booking-detail.jsx geometry, named so the magic
+// numbers are greppable. `_kTabletGap` + cover heights sit off the BBSpace
+// scale where the handoff itself is off-grid.
+// ─────────────────────────────────────────────────────────────────────────
+const double _kContentMaxWidth = 1100; // desktop centered column cap
+const double _kSidebarWidth = 320; // handoff right rail (grid 1fr 320px)
+const double _kKvLabelWidth = 124; // KeyValueRow label column
+const double _kCoverHeightDesktop = 200;
+const double _kCoverHeightTablet = 170;
+const double _kCoverHeightMobile = 140;
+const double _kTabletGap = 14; // handoff tablet gap (off BBSpace scale)
+const double _kMobileGap = 12; // single-column (mobile) gap
+// Tablet 2-col needs ≥~350px columns; below this the tablet range falls to the
+// wide single column (the handoff's tablet artboard is 768).
+const double _kTabletGridMinWidth = 720;
+// Cover photo scrim (bottom-up legibility) + property·unit separator dot.
+const Color _kCoverScrimStrong = Color(0x9E10121C); // ~62% at photo bottom
+const Color _kCoverScrimClear = Color(0x0010121C); // fades to 0 toward top
+const Color _kCoverDotColor = Color(0x8CFFFFFF); // 55% white separator dot
 
 /// Full-route booking detail screen — premium composition per
 /// `design_handoff/source/booking-detail.jsx` §201 BookingDetailDesktop /
@@ -104,10 +126,10 @@ class _BookingDetailBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final rd = BbRedesignTokens.of(context);
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 600;
     final isDesktop = width >= 1024;
+    final useTabletGrid = !isDesktop && width >= _kTabletGridMinWidth;
     final booking = ownerBooking.booking;
     final isPending = booking.status == BookingStatus.pending;
     final headerRef = booking.bookingReference ?? booking.id;
@@ -116,25 +138,27 @@ class _BookingDetailBody extends ConsumerWidget {
       children: [
         _DetailAppBar(reference: headerRef, isMobile: isMobile, l10n: l10n),
         Expanded(
-          child: Container(
-            color: rd.shellBg,
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                isMobile ? 12 : (isDesktop ? 32 : 24),
-                isMobile ? 12 : 20,
-                isMobile ? 12 : (isDesktop ? 32 : 24),
-                isMobile ? 16 : 28,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1100),
-                  child: isDesktop
-                      ? _DesktopGrid(ownerBooking: ownerBooking)
-                      : _SingleColumn(
-                          ownerBooking: ownerBooking,
-                          isMobile: isMobile,
-                        ),
-                ),
+          // No surface fill here: the Scaffold paints
+          // `context.gradients.pageBackground` (flat #F0F1F5 light / OLED #000
+          // dark post-audit/127). A shellBg Container used to cover it.
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              isMobile ? 12 : (isDesktop ? 32 : 24),
+              isMobile ? 12 : 20,
+              isMobile ? 12 : (isDesktop ? 32 : 24),
+              isMobile ? 16 : 28,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: _kContentMaxWidth),
+                child: isDesktop
+                    ? _DesktopGrid(ownerBooking: ownerBooking)
+                    : useTabletGrid
+                    ? _TabletGrid(ownerBooking: ownerBooking)
+                    : _SingleColumn(
+                        ownerBooking: ownerBooking,
+                        isMobile: isMobile,
+                      ),
               ),
             ),
           ),
@@ -144,6 +168,27 @@ class _BookingDetailBody extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// Test seam — returns the responsive content widget (desktop grid / tablet
+/// 2-col / mobile single column) for a given [width], mirroring the branch in
+/// [_BookingDetailBody.build]. Lets `owner_booking_detail_layout_test` pump the
+/// real layouts at every breakpoint and assert no overflow without standing up
+/// Firebase (the action panel reads its repo only on tap, so a bare
+/// ProviderScope suffices at pump time).
+@visibleForTesting
+Widget buildBookingDetailContentForTest(
+  OwnerBooking ownerBooking,
+  double width,
+) {
+  final isMobile = width < 600;
+  final isDesktop = width >= 1024;
+  final useTabletGrid = !isDesktop && width >= _kTabletGridMinWidth;
+  return isDesktop
+      ? _DesktopGrid(ownerBooking: ownerBooking)
+      : useTabletGrid
+      ? _TabletGrid(ownerBooking: ownerBooking)
+      : _SingleColumn(ownerBooking: ownerBooking, isMobile: isMobile);
 }
 
 class _DetailAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -236,7 +281,10 @@ class _DesktopGrid extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _BDCover(ownerBooking: ownerBooking, height: 200),
+              _BDCover(
+                ownerBooking: ownerBooking,
+                height: _kCoverHeightDesktop,
+              ),
               const SizedBox(height: 16),
               if (isPending) ...[
                 const _BDPendingAlert(),
@@ -252,9 +300,9 @@ class _DesktopGrid extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 24),
+        const SizedBox(width: BBSpace.md),
         SizedBox(
-          width: 320,
+          width: _kSidebarWidth,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -284,28 +332,95 @@ class _SingleColumn extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _BDCover(ownerBooking: ownerBooking, height: isMobile ? 140 : 170),
-        const SizedBox(height: 14),
-        if (isPending) ...[const _BDPendingAlert(), const SizedBox(height: 14)],
+        _BDCover(
+          ownerBooking: ownerBooking,
+          height: isMobile ? _kCoverHeightMobile : _kCoverHeightTablet,
+        ),
+        const SizedBox(height: _kMobileGap),
+        if (isPending) ...[
+          const _BDPendingAlert(),
+          const SizedBox(height: _kMobileGap),
+        ],
         _BDGuestCard(ownerBooking: ownerBooking, compact: isMobile),
-        const SizedBox(height: 14),
+        const SizedBox(height: _kMobileGap),
         // On non-pending statuses the actions panel is still useful for
         // Poruka / Uredi affordances — surface it on mobile via the card.
         if (!isPending || !isMobile) ...[
           _BDStatusActions(ownerBooking: ownerBooking, sidebar: false),
-          const SizedBox(height: 14),
+          const SizedBox(height: _kMobileGap),
         ],
         _BDStayCard(ownerBooking: ownerBooking),
-        const SizedBox(height: 14),
+        const SizedBox(height: _kMobileGap),
         _BDPriceCard(booking: ownerBooking.booking),
         if ((ownerBooking.booking.notes ?? '').isNotEmpty) ...[
-          const SizedBox(height: 14),
+          const SizedBox(height: _kMobileGap),
           _BDNotesCard(notes: ownerBooking.booking.notes!),
         ],
-        const SizedBox(height: 14),
+        const SizedBox(height: _kMobileGap),
         _BDActivityCard(booking: ownerBooking.booking),
-        const SizedBox(height: 14),
+        const SizedBox(height: _kMobileGap),
         _BDMetaCard(ownerBooking: ownerBooking),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Tablet grid (600–1023) — handoff BookingDetailTablet (booking-detail.jsx
+// §222): full-width cover/pending/guest, then a 2-col grid. The handoff mock
+// trims notes/activity/meta; we keep them (data over mock fidelity).
+// ─────────────────────────────────────────────────────────────────────────
+class _TabletGrid extends StatelessWidget {
+  final OwnerBooking ownerBooking;
+  const _TabletGrid({required this.ownerBooking});
+
+  @override
+  Widget build(BuildContext context) {
+    final isPending = ownerBooking.booking.status == BookingStatus.pending;
+    final notes = ownerBooking.booking.notes ?? '';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _BDCover(ownerBooking: ownerBooking, height: _kCoverHeightTablet),
+        const SizedBox(height: _kTabletGap),
+        if (isPending) ...[
+          const _BDPendingAlert(),
+          const SizedBox(height: _kTabletGap),
+        ],
+        _BDGuestCard(ownerBooking: ownerBooking, compact: true),
+        const SizedBox(height: _kTabletGap),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _BDStayCard(ownerBooking: ownerBooking),
+                  if (notes.isNotEmpty) ...[
+                    const SizedBox(height: _kTabletGap),
+                    _BDNotesCard(notes: notes),
+                  ],
+                  const SizedBox(height: _kTabletGap),
+                  _BDActivityCard(booking: ownerBooking.booking),
+                ],
+              ),
+            ),
+            const SizedBox(width: _kTabletGap),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _BDStatusActions(ownerBooking: ownerBooking, sidebar: false),
+                  const SizedBox(height: _kTabletGap),
+                  _BDPriceCard(booking: ownerBooking.booking),
+                  const SizedBox(height: _kTabletGap),
+                  _BDMetaCard(ownerBooking: ownerBooking),
+                ],
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -327,81 +442,94 @@ class _BDCover extends StatelessWidget {
     final property = ownerBooking.property;
     final image = unit.primaryImage;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(BBRadius.md),
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          border: Border.all(color: c.border.withValues(alpha: 0.6)),
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (image != null && image.isNotEmpty)
-              CachedNetworkImage(
-                imageUrl: image,
-                fit: BoxFit.cover,
-                placeholder: (_, _) => Container(color: c.surfaceVariant),
-                errorWidget: (_, _, _) => Container(color: c.surfaceVariant),
-              )
-            else
-              Container(
-                color: c.surfaceVariant,
-                alignment: Alignment.center,
-                child: BbIcon(name: 'image', size: 40, color: c.textTertiary),
-              ),
-            // Gradient overlay carrying property/unit identity.
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: IgnorePointer(
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(16, 28, 16, 12),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [Color(0x9E10121C), Color(0x0010121C)],
+    return DecoratedBox(
+      // Shadow lives OUTSIDE the ClipRRect (handoff BDCover `shadow-sm`) — a
+      // shadow on the clipped child would be clipped away.
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(BBRadius.md),
+        boxShadow: BBShadow.resting(context),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(BBRadius.md),
+        child: Container(
+          height: height,
+          decoration: BoxDecoration(
+            border: Border.all(color: c.border.withValues(alpha: 0.6)),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (image != null && image.isNotEmpty)
+                CachedNetworkImage(
+                  imageUrl: image,
+                  fit: BoxFit.cover,
+                  placeholder: (_, _) => Container(color: c.surfaceVariant),
+                  errorWidget: (_, _, _) => Container(color: c.surfaceVariant),
+                )
+              else
+                Container(
+                  color: c.surfaceVariant,
+                  alignment: Alignment.center,
+                  child: BbIcon(name: 'image', size: 40, color: c.textTertiary),
+                ),
+              // Gradient overlay carrying property/unit identity.
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: IgnorePointer(
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(16, 28, 16, 12),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [_kCoverScrimStrong, _kCoverScrimClear],
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        property.name.toUpperCase(),
-                        style: BBType.eyebrow(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.82),
-                          fontSize: 11,
-                          letterSpacing: 0.6,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 3,
-                        height: 3,
-                        decoration: const BoxDecoration(
-                          color: Color(0x8CFFFFFF),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          unit.name,
-                          style: BBType.label(context).copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            property.name.toUpperCase(),
+                            style: BBType.eyebrow(context).copyWith(
+                              color: Colors.white.withValues(alpha: 0.82),
+                              fontSize: 11,
+                              letterSpacing: 0.6,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            softWrap: false,
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 3,
+                          height: 3,
+                          decoration: const BoxDecoration(
+                            color: _kCoverDotColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            unit.name,
+                            style: BBType.label(context).copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -447,17 +575,18 @@ class _BDPendingAlert extends StatelessWidget {
 // Guest card — booking-detail.jsx §47 BDGuestCard. Avatar + name +
 // email · phone + secondary action icons for mail / call.
 // ─────────────────────────────────────────────────────────────────────────
-class _BDGuestCard extends StatelessWidget {
+class _BDGuestCard extends ConsumerWidget {
   final OwnerBooking ownerBooking;
   final bool compact;
   const _BDGuestCard({required this.ownerBooking, required this.compact});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = BBColor.of(context);
     final guest = ownerBooking.guestName;
     final email = ownerBooking.guestEmail;
     final phone = ownerBooking.guestPhone;
+    final hasPhone = phone != null && phone.isNotEmpty;
 
     return BbCard(
       child: Row(
@@ -482,7 +611,7 @@ class _BDGuestCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  phone != null && phone.isNotEmpty ? '$email · $phone' : email,
+                  hasPhone ? '$email · $phone' : email,
                   style: BBType.caption(
                     context,
                   ).copyWith(color: c.textTertiary),
@@ -493,20 +622,49 @@ class _BDGuestCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: BBSpace.xs),
-          const _RoundIconButton(
+          // mail → existing in-app email composer (consistent with "Poruka").
+          _RoundIconButton(
             icon: 'mail',
             tooltip: 'Email',
-            onPressed: null,
+            onPressed: () =>
+                showSendEmailDialog(context, ref, ownerBooking.booking),
           ),
           const SizedBox(width: 6),
-          const _RoundIconButton(
+          // call → platform dialer via url_launcher; disabled when no phone.
+          _RoundIconButton(
             icon: 'call',
             tooltip: 'Nazovi',
-            onPressed: null,
+            onPressed: hasPhone ? () => _launchTel(context, phone) : null,
           ),
         ],
       ),
     );
+  }
+}
+
+/// Launches the platform dialer for [phone] (digits + leading `+` only).
+Future<void> _launchTel(BuildContext context, String phone) async {
+  final uri = Uri(
+    scheme: 'tel',
+    path: phone.replaceAll(RegExp(r'[^0-9+]'), ''),
+  );
+  try {
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && context.mounted) {
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        'tel: launch returned false',
+        userMessage: 'Pozivanje nije uspjelo',
+      );
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        e,
+        userMessage: 'Pozivanje nije uspjelo',
+      );
+    }
   }
 }
 
@@ -826,7 +984,7 @@ class _BDStatusActionsState extends ConsumerState<_BDStatusActions> {
             BbButton(
               label: 'Odbij',
               iconLeft: 'close',
-              variant: BbButtonVariant.destructive,
+              variant: BbButtonVariant.destructiveSoft,
               fullWidth: true,
               loading: _busy,
               onPressed: _busy ? null : _reject,
@@ -879,7 +1037,7 @@ class _BDStatusActionsState extends ConsumerState<_BDStatusActions> {
             BbButton(
               label: 'Otkaži rezervaciju',
               iconLeft: 'close',
-              variant: BbButtonVariant.destructive,
+              variant: BbButtonVariant.destructiveSoft,
               fullWidth: true,
               loading: _busy,
               onPressed: _busy ? null : _cancel,
@@ -996,7 +1154,7 @@ class _MobileStickyActionsState extends ConsumerState<_MobileStickyActions> {
             child: BbButton(
               label: 'Odbij',
               iconLeft: 'close',
-              variant: BbButtonVariant.destructive,
+              variant: BbButtonVariant.destructiveSoft,
               loading: _busy,
               onPressed: _busy ? null : _reject,
             ),
@@ -1022,16 +1180,16 @@ class _MobileStickyActionsState extends ConsumerState<_MobileStickyActions> {
 // 2-tile paid/remaining splash.
 // ─────────────────────────────────────────────────────────────────────────
 class _BDPriceCard extends StatelessWidget {
-  final dynamic booking; // BookingModel — kept dynamic to avoid extra import
+  final BookingModel booking;
   const _BDPriceCard({required this.booking});
 
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
     final rd = BbRedesignTokens.of(context);
-    final nights = booking.numberOfNights as int;
-    final total = booking.totalPrice as double;
-    final paid = booking.paidAmount as double;
+    final nights = booking.numberOfNights;
+    final total = booking.totalPrice;
+    final paid = booking.paidAmount;
     final remaining = (total - paid).clamp(0.0, double.infinity);
 
     return BbCard(
@@ -1182,7 +1340,7 @@ class _MoneyRow extends StatelessWidget {
 // available.
 // ─────────────────────────────────────────────────────────────────────────
 class _BDActivityCard extends StatelessWidget {
-  final dynamic booking;
+  final BookingModel booking;
   const _BDActivityCard({required this.booking});
 
   @override
@@ -1212,10 +1370,10 @@ class _BDActivityCard extends StatelessWidget {
         icon: 'event_available',
         tone: _ActivityTone.pending,
         title: 'Rezervacija primljena',
-        at: booking.createdAt as DateTime,
+        at: booking.createdAt,
       ),
     ];
-    final paid = booking.paidAmount as double;
+    final paid = booking.paidAmount;
     if (paid > 0) {
       list.add(
         _ActivityEntry(
@@ -1223,13 +1381,11 @@ class _BDActivityCard extends StatelessWidget {
           tone: _ActivityTone.success,
           title:
               'Polog €${paid.toStringAsFixed(2).replaceAll('.', ',')} naplaćen',
-          at:
-              (booking.updatedAt as DateTime?) ??
-              (booking.createdAt as DateTime),
+          at: booking.updatedAt ?? booking.createdAt,
         ),
       );
     }
-    final cancelledAt = booking.cancelledAt as DateTime?;
+    final cancelledAt = booking.cancelledAt;
     if (cancelledAt != null) {
       list.add(
         _ActivityEntry(
@@ -1296,26 +1452,33 @@ class _TimelineRow extends StatelessWidget {
             ],
           ),
           const SizedBox(width: 12),
-          Padding(
-            padding: EdgeInsets.only(top: 4, bottom: last ? 0 : 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  entry.title,
-                  style: BBType.label(
-                    context,
-                  ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  _formatTime(entry.at),
-                  style: BBType.caption(
-                    context,
-                  ).copyWith(color: c.textTertiary),
-                ),
-              ],
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(top: 4, bottom: last ? 0 : 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    entry.title,
+                    style: BBType.label(context).copyWith(
+                      color: c.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    _formatTime(entry.at),
+                    style: BBType.caption(
+                      context,
+                    ).copyWith(color: c.textTertiary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -1419,7 +1582,7 @@ class _KvRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                width: 124,
+                width: _kKvLabelWidth,
                 child: Text(
                   label.toUpperCase(),
                   style: BBType.eyebrow(context).copyWith(

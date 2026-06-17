@@ -101,16 +101,16 @@ class AppColors {
   static const Color backgroundDark = Color(0xFF000000); // TRUE BLACK (OLED)
 
   /// Surface color - mockup --bb-panel-bg dark
-  /// 0xFF121212 → 0xFF0B0B0D (audit/119: aligns with design_handoff/source/tokens.css
-  /// `.theme-dark { --bb-panel-bg: #0B0B0D }`). Cards now read closer to OLED shell.
-  /// Used for: Cards, elevated containers
-  // mockup `--bb-surface` dark — cards lift above the #0B0B0D panel
-  static const Color surfaceDark = Color(0xFF121212);
+  /// Card surface — handoff `--bb-surface`, WIDENED to #1E1E1E (audit/127
+  /// dark-depth): flat dark has no shadow, so cards lift above the panel
+  /// (#141414) / OLED page (#000) by lightness alone.
+  /// Used for: Cards (BbCard via BBColor.surface), Material cardColor.
+  static const Color surfaceDark = Color(0xFF1E1E1E);
 
   /// Surface variant - Elevated surface
-  /// UPGRADED: Was 0xFF4A5568 → Now 0xFF1E1E1E (higher elevation)
+  /// WIDENED to #2A2A2A (audit/127 dark-depth) — one step above card #1E1E1E.
   /// Used for: App bars, navigation, elevated elements
-  static const Color surfaceVariantDark = Color(0xFF1E1E1E); // Elevated Surface
+  static const Color surfaceVariantDark = Color(0xFF2A2A2A); // Elevated Surface
 
   /// Text primary - Light Gray
   static const Color textPrimaryDark = Color(0xFFE2E8F0); // Light Gray
@@ -130,8 +130,9 @@ class AppColors {
   static const Color borderWarmDark = Color(0xFF3D3733); // Warm Gray
 
   /// Divider color (optimized for true black background)
-  /// UPGRADED: Was 0xFF2D3748 → Now 0xFF1E1E1E (subtle, not harsh)
-  static const Color dividerDark = Color(0xFF1E1E1E); // Divider
+  /// WIDENED to #2A2A2A (audit/127 dark-depth) — a #1E1E1E divider would now
+  /// vanish on the lifted #1E1E1E card; #2A2A2A keeps a visible hairline.
+  static const Color dividerDark = Color(0xFF2A2A2A); // Divider
 
   /// Section divider color - Visible divider for dialog sections
   static const Color sectionDividerDark = Color(0xFF2D2D3A); // Cool Dark Gray
@@ -485,20 +486,17 @@ class AppColors {
   /// Surface elevation levels for dark theme (brighter on elevation - Material Design 3)
   /// UPGRADED: All levels recalculated for true black base (0xFF000000)
   /// Uses white overlay technique: elevation = base + white opacity
+  // WIDENED audit/127 dark-depth: base is now #1E1E1E, so overlays lift above it.
   static const Color elevation0Dark =
-      surfaceDark; // Base surface (0dp) = 0xFF121212
-  static const Color elevation1Dark = Color(
-    0xFF1E1E1E,
-  ); // +1dp (cards) - 5% white overlay
+      surfaceDark; // Base surface (0dp) = 0xFF1E1E1E
+  static const Color elevation1Dark = Color(0xFF242424); // +1dp (cards)
   static const Color elevation2Dark = Color(
-    0xFF232323,
-  ); // +2dp (floating buttons) - 8% white overlay
-  static const Color elevation3Dark = Color(
-    0xFF282828,
-  ); // +4dp (modals) - 11% white overlay
+    0xFF2A2A2A,
+  ); // +2dp (floating buttons)
+  static const Color elevation3Dark = Color(0xFF2E2E2E); // +4dp (modals)
   static const Color elevation4Dark = Color(
-    0xFF2C2C2C,
-  ); // +8dp (dialogs) - 14% white overlay
+    0xFF333333,
+  ); // +8dp (dialogs) — "elevated" top of the dark ladder
 
   // ============================================================================
   // SCRIM & BACKDROP COLORS

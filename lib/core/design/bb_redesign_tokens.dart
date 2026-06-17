@@ -120,7 +120,9 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
 
   static const BbRedesignTokens dark = BbRedesignTokens(
     shellBg: Color(0xFF000000),
-    panelBg: Color(0xFF0B0B0D),
+    // audit/127 dark-depth: #0B0B0D→#141414. Δ from #000 shell was only 11
+    // (panel dead on the gutter with no shadow); #141414 = Δ20, panel lifts.
+    panelBg: Color(0xFF141414),
     panelBorder: Color(0x0FFFFFFF), // rgba(255,255,255,.06)
     panelShadow: AppShadows.panelDark,
     mintWidget: Color(0xFF3DD9B0),

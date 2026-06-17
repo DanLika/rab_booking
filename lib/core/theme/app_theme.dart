@@ -16,10 +16,11 @@ class AppTheme {
   // SHARED CONSTANTS (reduce hardcoded color duplication)
   // ============================================================================
 
-  /// Dark mode menu/dropdown background — handoff `panelBg` (BbRedesignTokens
-  /// dark) so popup surfaces sit on the same tone as cards.
+  /// Dark mode menu/dropdown background — card tone so popups never sink below
+  /// the content they overlay. WIDENED to #1E1E1E (audit/127 dark-depth; was
+  /// #0B0B0D = old panel, now darker than the lifted #1E1E1E cards).
   /// Used in: popupMenuTheme, dropdownMenuTheme, menuTheme.
-  static const Color darkMenuBackground = Color(0xFF0B0B0D);
+  static const Color darkMenuBackground = Color(0xFF1E1E1E);
 
   /// Dark mode input fill color — same panelBg family as `_darkInputFill`
   /// in `app_gradients.dart`.

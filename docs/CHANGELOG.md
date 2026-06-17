@@ -2,7 +2,20 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-16 | **Version**: 7.23
+**Last Updated**: 2026-06-16 | **Version**: 7.24
+
+---
+
+**Changelog 7.24** (2026-06-16):
+
+### Owner — Handoff surface ladder adoption + dark-depth widen for flat chrome (audit/127, branch `design/127-handoff-palette-apply`)
+- **audit/127 (READ-ONLY audit → APPLY):** first pass to systematize the owner color/surface/background **SYSTEM** (light+dark) vs handoff. Found the **3-system Frankenstein** — `app_gradients` painted off-palette (`#ECEDF2`/`#1A1A1A`/`#2D2D2D`) while `app_theme` + `rd.*` already matched handoff → page bg, cards, borders disagreed; dark had **inverted elevation** (page `#1A1A1A` lighter than the `#0B0B0D`/`#121212` panels/cards on it; the `#2D2D2D` "cards dissolved" hack was the tell). Doc + 6 handoff renders (Pregled/Rezervacije/Kalendar light+dark) bundled on the branch.
+- **Part 1 — handoff ladder (VALUES only, FLAT kept):** light page/shell `#ECEDF2`→**`#F0F1F5`** (convergence value — Material scaffold + `rd.shellBg` already use it), card `#FBFBFD`→`#FFFFFF`, border warm `#E0DCE8`/`#35323D`→cool `#E2E8F0`/`#2D3748`, input→surface-variant; dark page `#1A1A1A`→**`#000`** (OLED). **Un-inverts elevation** (page now darkest).
+- **Part 2 — dark-depth widen (the catch):** flat chrome renders **NO box-shadow**, so the handoff's tight dark steps (`#000`/`#0B0B0D`/`#121212`, Δ≈11) left the **panel dead on the gutter** (live-confirmed). Lightness replaces the missing shadow → **widened dark ladder:** page `#000` → panel **`#141414`** (`rd.panelBg`) → card **`#1E1E1E`** (`surfaceDark`) → variant **`#2A2A2A`** → elevated **`#333333`** (dialogs). Rippled: divider `#1E1E1E`→`#2A2A2A` (else vanishes on the lifted card), popup/menu `#0B0B0D`→`#1E1E1E` (else sinks below cards), `app_colors` elevation0-4 overlay ladder lifted above the new base. **LIGHT unchanged** (the white step separates without shadow). Operator-picked "A" depth from a 3-way flat swatch, live-confirmed (panel floats in real Pregled).
+- **Principle (saved):** flat/shadowless dark themes need WIDER lightness steps than shadow-based designs — don't copy a shadow-based design's tight dark tones verbatim into a flat theme.
+- **Scope:** 5 files (`bb_redesign_tokens`/`tokens`/`app_colors`/`app_gradients`/`app_theme`) + `bb_card_test` literal re-pointed `#121212`→`#1E1E1E` (coverage moved, **not deleted**). 0 FROZEN. audit/127 doc carries §7 dark-depth addendum.
+- **Verifikacija:** `flutter analyze` **0 net-new** · `dart format` · full `flutter test` **green** (1 pinned-hex re-point) · `build web --no-tree-shake-icons` clean · grep panel `#0B0B0D` retired, monotonic `#000<#141414<#1E1E1E<#242424<#2A2A2A<#2E2E2E<#333333`. **Live owner dev (bookbed-dev) light+dark sweep:** Pregled/Rezervacije/Timeline/drawer/Cjenovnik — cards lift, panel floats, un-inverted; Cjenovnik grid border `#2D3748` on `#1E1E1E` reads (source+live verified). Pre-merge: origin/main no drift, no theme-file overlap.
+- **Deferred:** owner PROD deploy (batch — Pregled+Rezervacije+Timeline+Mjesečni+global-chrome+AI+**palette+dark-depth**, all dev-only, **0 in PROD**).
 
 ---
 

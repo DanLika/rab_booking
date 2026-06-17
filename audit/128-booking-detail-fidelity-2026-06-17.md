@@ -120,3 +120,18 @@ Base: audit/127 merged to main (`29f44b3b`; non-FF — identical add/add audit-1
 **Test:** `@visibleForTesting buildBookingDetailContentForTest(ownerBooking, width)` seam + `owner_booking_detail_layout_test.dart` — 8 breakpoints × light/dark × {normal, long-string} + 4 status variants = **44 cells**, `tester.takeException` overflow gate. `detailActionVisibility` + its 5-case test untouched (preserve). Navigator.push FROZEN (widget tree) untouched.
 
 **Verification:** `flutter analyze` 0 · `dart format` · gate **5/5** · overflow **44/44** · live Flutter light render desktop+tablet (`audit-shots/bd-flutter-*.png`, uncommitted) — F1 soft-pink + F6 2-col + layout fidelity confirmed. Dark = the 127 token ladder (operator-verified on 127 branch; scratch-harness dark unreliable, not a screen bug). **Deferred:** owner PROD deploy batch (still 0 in PROD); F3 notif bell; l10n debt (~40 hardcoded HR strings).
+
+---
+
+## §9 — Re-compare pass (operator-requested "what did I miss")
+
+Re-read `booking-detail.jsx` vs the applied screen. Applied (analyze 0, overflow 44/44, gate 5/5 still green):
+- **F7 cover shadow** — handoff `BDCover` has `shadow-sm`; the app cover had border only. Added `BBShadow.resting(context)` via a `DecoratedBox` **outside** the `ClipRRect` (a shadow on the clipped child clips away — same pattern as the Timeline grid card).
+- **Cover scrim hex → consts** — `_kCoverScrimStrong`/`_kCoverScrimClear`/`_kCoverDotColor` (the 3 raw `Color(0x…)` over-photo scrim values; legit "kept" scrim, now named).
+
+**Flagged, NOT applied (needs a product call):**
+- **Dead guest mail/call buttons** — `_RoundIconButton(icon: 'mail'/'call', onPressed: null)` render but do nothing. `url_launcher ^6.3.1` is available → could wire call→`tel:`, mail→`mailto:` (or the existing `showSendEmailDialog`). The handoff shows them but is a static mock, so the wiring target is a UX decision, not handoff-mandated. Awaiting operator.
+
+**Re-confirmed deliberate keeps:** F3 notif bell (odd on a back-button detail route), print/share parked (`onPressed: null`, honest — no PDF/share generator), F2 `…` overflow replaced by explicit complete/cancel, F5 data-honest timeline.
+
+**Render matrix** (operator-requested): `audit-shots/bd-{light,dark}-{desktop,tablet,mobile}.png` (6 frames; dark via explicit `theme: AppTheme.darkTheme` — `themeMode` didn't propagate brightness through the seam context). Native sim smoke: **Android blocked** (no AVD), **iOS iPhone-only** (no iPad sim → can't test F6 tablet natively); web `:8091` covers all breakpoints live.

@@ -35,6 +35,10 @@ const double _kMobileGap = 12; // single-column (mobile) gap
 // Tablet 2-col needs ≥~350px columns; below this the tablet range falls to the
 // wide single column (the handoff's tablet artboard is 768).
 const double _kTabletGridMinWidth = 720;
+// Cover photo scrim (bottom-up legibility) + property·unit separator dot.
+const Color _kCoverScrimStrong = Color(0x9E10121C); // ~62% at photo bottom
+const Color _kCoverScrimClear = Color(0x0010121C); // fades to 0 toward top
+const Color _kCoverDotColor = Color(0x8CFFFFFF); // 55% white separator dot
 
 /// Full-route booking detail screen — premium composition per
 /// `design_handoff/source/booking-detail.jsx` §201 BookingDetailDesktop /
@@ -437,86 +441,94 @@ class _BDCover extends StatelessWidget {
     final property = ownerBooking.property;
     final image = unit.primaryImage;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(BBRadius.md),
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          border: Border.all(color: c.border.withValues(alpha: 0.6)),
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (image != null && image.isNotEmpty)
-              CachedNetworkImage(
-                imageUrl: image,
-                fit: BoxFit.cover,
-                placeholder: (_, _) => Container(color: c.surfaceVariant),
-                errorWidget: (_, _, _) => Container(color: c.surfaceVariant),
-              )
-            else
-              Container(
-                color: c.surfaceVariant,
-                alignment: Alignment.center,
-                child: BbIcon(name: 'image', size: 40, color: c.textTertiary),
-              ),
-            // Gradient overlay carrying property/unit identity.
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: IgnorePointer(
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(16, 28, 16, 12),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [Color(0x9E10121C), Color(0x0010121C)],
+    return DecoratedBox(
+      // Shadow lives OUTSIDE the ClipRRect (handoff BDCover `shadow-sm`) — a
+      // shadow on the clipped child would be clipped away.
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(BBRadius.md),
+        boxShadow: BBShadow.resting(context),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(BBRadius.md),
+        child: Container(
+          height: height,
+          decoration: BoxDecoration(
+            border: Border.all(color: c.border.withValues(alpha: 0.6)),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (image != null && image.isNotEmpty)
+                CachedNetworkImage(
+                  imageUrl: image,
+                  fit: BoxFit.cover,
+                  placeholder: (_, _) => Container(color: c.surfaceVariant),
+                  errorWidget: (_, _, _) => Container(color: c.surfaceVariant),
+                )
+              else
+                Container(
+                  color: c.surfaceVariant,
+                  alignment: Alignment.center,
+                  child: BbIcon(name: 'image', size: 40, color: c.textTertiary),
+                ),
+              // Gradient overlay carrying property/unit identity.
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: IgnorePointer(
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(16, 28, 16, 12),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [_kCoverScrimStrong, _kCoverScrimClear],
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          property.name.toUpperCase(),
-                          style: BBType.eyebrow(context).copyWith(
-                            color: Colors.white.withValues(alpha: 0.82),
-                            fontSize: 11,
-                            letterSpacing: 0.6,
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            property.name.toUpperCase(),
+                            style: BBType.eyebrow(context).copyWith(
+                              color: Colors.white.withValues(alpha: 0.82),
+                              fontSize: 11,
+                              letterSpacing: 0.6,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            softWrap: false,
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          softWrap: false,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 3,
-                        height: 3,
-                        decoration: const BoxDecoration(
-                          color: Color(0x8CFFFFFF),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          unit.name,
-                          style: BBType.label(context).copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 3,
+                          height: 3,
+                          decoration: const BoxDecoration(
+                            color: _kCoverDotColor,
+                            shape: BoxShape.circle,
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            unit.name,
+                            style: BBType.label(context).copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

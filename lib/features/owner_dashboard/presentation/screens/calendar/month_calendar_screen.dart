@@ -58,7 +58,7 @@ class MonthCalendarScreen extends ConsumerStatefulWidget {
           child: _CalendarGridCard(
             child: Column(
               children: <Widget>[
-                const _MonthStatusLegend(),
+                _MonthStatusLegend(bookingCount: 6, unitCount: unitCount),
                 SizedBox(
                   height: isMobile ? 360 : 480,
                   child: const Center(child: Text('Grid')),
@@ -83,6 +83,9 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
   final CalendarController _calendarController = CalendarController();
   CalendarView _currentView = CalendarView.month;
   String? _selectedUnitId;
+  // G2: selected day for the mobile day-agenda list below the month grid
+  // (defaults to today in the agenda builder).
+  DateTime? _selectedDay;
 
   // Premium-header eyebrow source. Tracks the month the SfCalendar currently
   // displays. Updated from the controller's `displayDate` property-changed
@@ -285,7 +288,10 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
                       child: _CalendarGridCard(
                         child: Column(
                           children: [
-                            const _MonthStatusLegend(),
+                            _MonthStatusLegend(
+                              bookingCount: filteredBookings.length,
+                              unitCount: units.length,
+                            ),
                             SizedBox(
                               height: math.max(
                                 600,
@@ -308,6 +314,12 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
                       ),
                     ),
                   ),
+                  // G2: mobile day-agenda list (handoff calendar-month.jsx) —
+                  // bookings covering the selected day. Mobile only.
+                  if (isMobile)
+                    SliverToBoxAdapter(
+                      child: _buildDayAgenda(filteredBookings, unitNameMap),
+                    ),
                 ],
               ),
             );
@@ -472,7 +484,8 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
           ),
           // Month view settings
           monthViewSettings: MonthViewSettings(
-            showAgenda: true,
+            showAgenda:
+                !isMobile, // G2: mobile uses the custom day-agenda below
             agendaViewHeight: agendaHeight,
             agendaItemHeight: isMobile ? 54 : 56,
             appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
@@ -514,7 +527,8 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
           ),
           // Month cell builder for custom cell content
           monthCellBuilder: _currentView == CalendarView.month
-              ? (context, details) => _buildMonthCell(details, isDark, theme)
+              ? (context, details) =>
+                    _buildMonthCell(details, isDark, theme, isMobile)
               : null,
           // Schedule view settings
           scheduleViewSettings: ScheduleViewSettings(
@@ -599,6 +613,7 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
     MonthCellDetails details,
     bool isDark,
     ThemeData theme,
+    bool isMobile,
   ) {
     final date = details.date;
     final appointments = details.appointments;
@@ -614,6 +629,18 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
         ? theme.colorScheme.onSurface
         : theme.colorScheme.onSurface.withValues(alpha: 0.4);
 
+    // G4 weekend emphasis (handoff calendar-month.jsx): tint SUB/NED cells +
+    // amber (tertiary "Golden Sand") weekend date. In-month only — out-of-month
+    // dim wins.
+    final bool isWeekend =
+        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    final Color weekendAccent = isDark
+        ? BBColor.tertiaryDarkMode
+        : BBColor.tertiary;
+    final Color dateColor = (isWeekend && isCurrentMonth)
+        ? weekendAccent
+        : textColor;
+
     // Collect unique statuses present on this day
     final statusColors = <Color>{};
     for (final apt in appointments) {
@@ -624,6 +651,9 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
 
     return Container(
       decoration: BoxDecoration(
+        color: (isWeekend && isCurrentMonth)
+            ? weekendAccent.withValues(alpha: 0.05)
+            : null,
         border: Border.all(
           color: isDark
               ? Colors.white.withValues(alpha: 0.05)
@@ -652,35 +682,16 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
                 : Text(
                     '${date.day}',
                     style: TextStyle(
-                      color: textColor,
+                      color: dateColor,
                       fontSize: 12,
                       fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
           ),
-          // Booking count badge (top-right)
-          if (appointments.isNotEmpty)
-            Positioned(
-              right: 4,
-              top: 2,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${appointments.length}',
-                  style: TextStyle(
-                    color: theme.colorScheme.primary,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          // Status dots (bottom-center)
-          if (statusColors.isNotEmpty)
+          // G1 (desktop/tablet): de-cluttered cell — count-badge dropped so the
+          // spanning bars read clean (handoff). Status dots are kept on MOBILE
+          // only, where G2 suppresses the bars and the dots ARE the indicator.
+          if (isMobile && statusColors.isNotEmpty)
             Positioned(
               bottom: 2,
               left: 0,
@@ -761,6 +772,19 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
     List<BookingModel> allBookings,
     Map<String, String> unitNameMap,
   ) {
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
+
+    // G2 mobile: tapping a day selects it (native ring) and drives the
+    // day-agenda list below the grid — not a dialog. Agenda items + the FAB own
+    // edit/create.
+    if (isMobile && _currentView == CalendarView.month) {
+      if (details.date != null) {
+        final DateTime d = details.date!;
+        setState(() => _selectedDay = DateTime(d.year, d.month, d.day));
+      }
+      return;
+    }
+
     // Tap on appointment → open booking details
     if (details.appointments != null && details.appointments!.isNotEmpty) {
       final appointment = details.appointments!.first;
@@ -789,6 +813,220 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
     );
   }
 
+  // ── G2 mobile day-agenda (handoff calendar-month.jsx) ────────────────────
+  // HR weekday + genitive-month names for the agenda header ("Pon, 22. lipnja").
+  // Inlined — l10n keys live outside this 2-file scope; the screen's existing
+  // l10n debt is tracked in audit/130. Genitive ≠ the header's nominative list.
+  static const List<String> _hrWeekdayShort = <String>[
+    'Pon',
+    'Uto',
+    'Sri',
+    'Čet',
+    'Pet',
+    'Sub',
+    'Ned',
+  ];
+  static const List<String> _hrMonthGenitive = <String>[
+    'siječnja',
+    'veljače',
+    'ožujka',
+    'travnja',
+    'svibnja',
+    'lipnja',
+    'srpnja',
+    'kolovoza',
+    'rujna',
+    'listopada',
+    'studenoga',
+    'prosinca',
+  ];
+
+  /// Day-agenda list for the selected day (default today). Bookings whose stay
+  /// covers the day, each with a kind icon (Dolazak/Odlazak/Boravak), guest +
+  /// unit, and a status badge. Tapping an item opens the edit dialog.
+  Widget _buildDayAgenda(
+    List<BookingModel> bookings,
+    Map<String, String> unitNameMap,
+  ) {
+    final c = BBColor.of(context);
+    final DateTime raw = _selectedDay ?? DateTime.now();
+    final DateTime day = DateTime(raw.year, raw.month, raw.day);
+
+    bool covers(BookingModel b) {
+      final DateTime ci = DateTime(
+        b.checkIn.year,
+        b.checkIn.month,
+        b.checkIn.day,
+      );
+      final DateTime co = DateTime(
+        b.checkOut.year,
+        b.checkOut.month,
+        b.checkOut.day,
+      );
+      return !day.isBefore(ci) && !day.isAfter(co); // [checkIn, checkOut]
+    }
+
+    final List<BookingModel> dayBookings = bookings.where(covers).toList()
+      ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
+
+    final String header =
+        '${_hrWeekdayShort[day.weekday - 1]}, '
+        '${day.day}. ${_hrMonthGenitive[day.month - 1]}';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        _kPagePadHMobile,
+        BBSpace.xs,
+        _kPagePadHMobile,
+        _kPagePadBottom,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: BBSpace.xs),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    header,
+                    style: BBType.h3(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                Text(
+                  '${dayBookings.length} '
+                  '${_MonthStatusLegend._rezWord(dayBookings.length)}',
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textTertiary),
+                ),
+              ],
+            ),
+          ),
+          if (dayBookings.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: BBSpace.md),
+              child: Text(
+                'Nema rezervacija za odabrani dan.',
+                style: BBType.body(context).copyWith(color: c.textSecondary),
+              ),
+            )
+          else
+            ...dayBookings.map((b) => _agendaItem(b, unitNameMap, day, c)),
+        ],
+      ),
+    );
+  }
+
+  /// One agenda row — kind icon + guest/unit + status badge.
+  Widget _agendaItem(
+    BookingModel b,
+    Map<String, String> unitNameMap,
+    DateTime day,
+    BBColorSet c,
+  ) {
+    final DateTime ci = DateTime(
+      b.checkIn.year,
+      b.checkIn.month,
+      b.checkIn.day,
+    );
+    final DateTime co = DateTime(
+      b.checkOut.year,
+      b.checkOut.month,
+      b.checkOut.day,
+    );
+    final bool isArrival = ci == day;
+    final bool isDeparture = co == day;
+    final IconData kindIcon = isArrival
+        ? Icons.login
+        : (isDeparture ? Icons.logout : Icons.hotel);
+    final String kindLabel = isArrival
+        ? 'Dolazak'
+        : (isDeparture ? 'Odlazak' : 'Boravak');
+    final Color statusColor = b.status.colorOf(context);
+    final String unitName = unitNameMap[b.unitId] ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: BBSpace.xs),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BBRadius.mdAll,
+        border: Border(left: BorderSide(color: statusColor, width: 3)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BBRadius.mdAll,
+          onTap: () => showDialog(
+            context: context,
+            builder: (_) => BookingInlineEditDialog(booking: b),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(BBSpace.sm),
+            child: Row(
+              children: <Widget>[
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(kindIcon, size: 18, color: statusColor),
+                ),
+                const SizedBox(width: BBSpace.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        b.guestName ?? unitName,
+                        style: BBType.body(
+                          context,
+                        ).copyWith(fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '$unitName · $kindLabel',
+                        style: BBType.caption(
+                          context,
+                        ).copyWith(color: c.textSecondary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: BBSpace.xs),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _kBadgePadH,
+                    vertical: _kBadgePadV,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(BBRadius.full),
+                  ),
+                  child: Text(
+                    _getStatusLabel(b.status),
+                    style: BBType.caption(
+                      context,
+                    ).copyWith(color: statusColor, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Build custom appointment widget with conflict indicator and platform icon
   Widget _buildAppointmentWidget(
     BuildContext context,
@@ -810,6 +1048,12 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = screenWidth < 600 || screenHeight < 500;
 
+    // G2: on mobile the month grid is dots-only — bars suppressed; the
+    // day-agenda below carries the detail. Schedule view still renders bars.
+    if (isMobile && _currentView == CalendarView.month) {
+      return const SizedBox.shrink();
+    }
+
     // Differentiate between small cell bars and large agenda/schedule items
     // Syncfusion returns larger bounds for agenda items
     final isDetailedView =
@@ -828,7 +1072,11 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
         borderRadius: BorderRadius.circular(
           math.min(4, details.bounds.height / 2),
         ),
-        border: hasConflict ? Border.all(color: BBColor.error, width: 2) : null,
+        // G1 inset highlight (handoff `inset 0 0 0 1px rgba(255,255,255,.18)`),
+        // or the conflict ring when overbooked.
+        border: hasConflict
+            ? Border.all(color: BBColor.error, width: 2)
+            : Border.all(color: Colors.white.withValues(alpha: 0.18)),
       ),
       padding: EdgeInsets.symmetric(
         horizontal: isDetailedView ? 12 : (isMobile ? 2 : 4),
@@ -876,6 +1124,19 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        // G1: trailing night-count (handoff "Xn") when the bar is wide enough
+        // to avoid crowding the name.
+        if (width >= 80) ...[
+          const SizedBox(width: 4),
+          Text(
+            '${booking.numberOfNights}n',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.85),
+              fontSize: isMobile ? 9 : 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -1341,14 +1602,69 @@ class _CalendarGridCard extends StatelessWidget {
 /// Dot colours come from `BookingStatus.colorOf`, which resolves to the SAME
 /// `BBColor.status*` tokens as `_getBookingColor`, so the legend matches the
 /// grid in both themes. ("Uvezene" is intentionally omitted — the month grid
-/// renders no imported tone.)
+/// renders no imported tone; a legend chip for an un-rendered status would
+/// mislead.) Desktop/tablet add a trailing `N rezervacija · M jedinice` stat
+/// (handoff calendar-month.jsx); dropped on mobile to keep badges on one row.
 class _MonthStatusLegend extends StatelessWidget {
-  const _MonthStatusLegend();
+  final int bookingCount;
+  final int unitCount;
+
+  const _MonthStatusLegend({
+    required this.bookingCount,
+    required this.unitCount,
+  });
+
+  // Croatian count agreement for "rezervacija" (1 → rezervacija, 2-4 →
+  // rezervacije, else → rezervacija; 11-14 exception).
+  static String _rezWord(int n) {
+    final int mod10 = n % 10;
+    final int mod100 = n % 100;
+    if (mod10 == 1 && mod100 != 11) return 'rezervacija';
+    if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) {
+      return 'rezervacije';
+    }
+    return 'rezervacija';
+  }
 
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
+
+    final Widget badges = Wrap(
+      spacing: BBSpace.xs,
+      runSpacing: BBSpace.xs,
+      children: <Widget>[
+        _legendBadge(
+          context,
+          BookingStatus.confirmed.colorOf(context),
+          l10n.ownerStatusConfirmed,
+        ),
+        _legendBadge(
+          context,
+          BookingStatus.pending.colorOf(context),
+          l10n.ownerStatusPending,
+        ),
+        _legendBadge(
+          context,
+          BookingStatus.completed.colorOf(context),
+          l10n.ownerStatusCompleted,
+        ),
+        _legendBadge(
+          context,
+          BookingStatus.cancelled.colorOf(context),
+          l10n.ownerStatusCancelled,
+        ),
+      ],
+    );
+
+    // Handoff trailing stat: "N rezervacija · M jedinice" (right-aligned).
+    // Reuses the header's unit-word agreement. Desktop/tablet only.
+    final String stat =
+        '$bookingCount ${_rezWord(bookingCount)} · '
+        '$unitCount ${_PremiumCalendarHeader._unitsWord(unitCount)}';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
@@ -1358,32 +1674,23 @@ class _MonthStatusLegend extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: c.border)),
       ),
-      child: Wrap(
-        spacing: BBSpace.xs,
-        runSpacing: BBSpace.xs,
-        children: <Widget>[
-          _legendBadge(
-            context,
-            BookingStatus.confirmed.colorOf(context),
-            l10n.ownerStatusConfirmed,
-          ),
-          _legendBadge(
-            context,
-            BookingStatus.pending.colorOf(context),
-            l10n.ownerStatusPending,
-          ),
-          _legendBadge(
-            context,
-            BookingStatus.completed.colorOf(context),
-            l10n.ownerStatusCompleted,
-          ),
-          _legendBadge(
-            context,
-            BookingStatus.cancelled.colorOf(context),
-            l10n.ownerStatusCancelled,
-          ),
-        ],
-      ),
+      child: isMobile
+          ? badges
+          : Row(
+              children: <Widget>[
+                Expanded(child: badges),
+                const SizedBox(width: BBSpace.sm),
+                Text(
+                  stat,
+                  style: BBType.caption(context).copyWith(
+                    color: c.textTertiary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
     );
   }
 

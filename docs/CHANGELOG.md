@@ -2,7 +2,17 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-17 | **Version**: 7.25
+**Last Updated**: 2026-06-17 | **Version**: 7.26
+
+---
+
+**Changelog 7.26** (2026-06-17):
+
+### Owner — Settings cluster recon + bank_account flat-bg hygiene (audit/129, S2)
+- **Recon (audit/129):** "owner Settings" is a **CLUSTER of 9 screens** (no single file), reached from the `profile_screen` hub — and **all already Bb*-migrated** (hex=0, mostly `context.gradients`). Not a migration job. Handoffs exist: `settings.jsx` (Uredi profil / Promijeni lozinku / Postavke obavijesti) + `profile-premium.jsx` (hub).
+- **S2 (applied):** `bank_account_screen` body `Container(color: rd.shellBg)` → `context.gradients.pageBackground` (canonical flat-palette source, audit/126 pattern). **Visually neutral** — `rd.shellBg` (light `#F0F1F5` / dark OLED `#000`) is byte-identical to `pageBackground`, so the bg was always correct; this is **untokenized-but-correct hygiene, NOT a wrong-bg bug**. `rd` preserved (used 3× elsewhere).
+- **S1 DROPPED — recon false positive:** `widget_advanced_settings` was flagged "legacy (hand-rolled `Container(gradient)+Material+InkWell+Icons.check`)" — but precise **non-comment** grep = **0 hits**. The flagged chrome is documented-as-already-replaced in COMMENTS (hand-rolled gradient → `BbButton`; purple header slab → `c.surface` per audit/120). The screen is already flat + Bb-tokenized. Recon misread comments as current code; caught at apply.
+- **Verifikacija:** `flutter analyze` 0 · `dart format` · **full test suite green** · `flutter build web --no-tree-shake-icons` clean. Render bank_account light+dark + live `:8091` dark eyeball.
 
 ---
 

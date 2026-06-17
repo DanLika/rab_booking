@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/design/tokens.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/profile_validators.dart';
@@ -474,7 +475,9 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
             onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
           ),
           body: Container(
-            color: rd.shellBg,
+            decoration: BoxDecoration(
+              gradient: context.gradients.pageBackground,
+            ),
             child: companyDetailsAsync.when(
               data: (companyDetails) {
                 // Create default company if null

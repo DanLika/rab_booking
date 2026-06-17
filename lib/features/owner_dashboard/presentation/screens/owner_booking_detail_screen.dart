@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/enums.dart';
 import '../../../../core/design/bb_redesign_tokens.dart';
@@ -574,17 +575,18 @@ class _BDPendingAlert extends StatelessWidget {
 // Guest card — booking-detail.jsx §47 BDGuestCard. Avatar + name +
 // email · phone + secondary action icons for mail / call.
 // ─────────────────────────────────────────────────────────────────────────
-class _BDGuestCard extends StatelessWidget {
+class _BDGuestCard extends ConsumerWidget {
   final OwnerBooking ownerBooking;
   final bool compact;
   const _BDGuestCard({required this.ownerBooking, required this.compact});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = BBColor.of(context);
     final guest = ownerBooking.guestName;
     final email = ownerBooking.guestEmail;
     final phone = ownerBooking.guestPhone;
+    final hasPhone = phone != null && phone.isNotEmpty;
 
     return BbCard(
       child: Row(
@@ -609,7 +611,7 @@ class _BDGuestCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  phone != null && phone.isNotEmpty ? '$email · $phone' : email,
+                  hasPhone ? '$email · $phone' : email,
                   style: BBType.caption(
                     context,
                   ).copyWith(color: c.textTertiary),
@@ -620,20 +622,49 @@ class _BDGuestCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: BBSpace.xs),
-          const _RoundIconButton(
+          // mail → existing in-app email composer (consistent with "Poruka").
+          _RoundIconButton(
             icon: 'mail',
             tooltip: 'Email',
-            onPressed: null,
+            onPressed: () =>
+                showSendEmailDialog(context, ref, ownerBooking.booking),
           ),
           const SizedBox(width: 6),
-          const _RoundIconButton(
+          // call → platform dialer via url_launcher; disabled when no phone.
+          _RoundIconButton(
             icon: 'call',
             tooltip: 'Nazovi',
-            onPressed: null,
+            onPressed: hasPhone ? () => _launchTel(context, phone) : null,
           ),
         ],
       ),
     );
+  }
+}
+
+/// Launches the platform dialer for [phone] (digits + leading `+` only).
+Future<void> _launchTel(BuildContext context, String phone) async {
+  final uri = Uri(
+    scheme: 'tel',
+    path: phone.replaceAll(RegExp(r'[^0-9+]'), ''),
+  );
+  try {
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && context.mounted) {
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        'tel: launch returned false',
+        userMessage: 'Pozivanje nije uspjelo',
+      );
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        e,
+        userMessage: 'Pozivanje nije uspjelo',
+      );
+    }
   }
 }
 

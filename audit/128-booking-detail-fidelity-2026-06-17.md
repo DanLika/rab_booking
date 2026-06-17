@@ -129,8 +129,7 @@ Re-read `booking-detail.jsx` vs the applied screen. Applied (analyze 0, overflow
 - **F7 cover shadow** — handoff `BDCover` has `shadow-sm`; the app cover had border only. Added `BBShadow.resting(context)` via a `DecoratedBox` **outside** the `ClipRRect` (a shadow on the clipped child clips away — same pattern as the Timeline grid card).
 - **Cover scrim hex → consts** — `_kCoverScrimStrong`/`_kCoverScrimClear`/`_kCoverDotColor` (the 3 raw `Color(0x…)` over-photo scrim values; legit "kept" scrim, now named).
 
-**Flagged, NOT applied (needs a product call):**
-- **Dead guest mail/call buttons** — `_RoundIconButton(icon: 'mail'/'call', onPressed: null)` render but do nothing. `url_launcher ^6.3.1` is available → could wire call→`tel:`, mail→`mailto:` (or the existing `showSendEmailDialog`). The handoff shows them but is a static mock, so the wiring target is a UX decision, not handoff-mandated. Awaiting operator.
+**Mail/call buttons — WIRED (operator decision 1A):** dead `onPressed: null` read as broken to an owner. `_BDGuestCard`→`ConsumerWidget`; **mail** → existing `showSendEmailDialog(context, ref, booking)` (in-app composer, consistent with "Poruka"); **call** → `_launchTel` (`url_launcher` `tel:`, sanitized to digits+`+`, `LaunchMode.externalApplication`, snackbar on failure), **disabled when no phone**. Interactive → requires a live iPhone tap-smoke (operator rule) to confirm the launch fires — pending (iOS dev-build, plist+google-services restore per Rule #4). overflow 44/44 + gate 5/5 still green (`_BDGuestCard` ConsumerWidget pumps fine under the test's `ProviderScope`; callbacks not invoked at build).
 
 **Re-confirmed deliberate keeps:** F3 notif bell (odd on a back-button detail route), print/share parked (`onPressed: null`, honest — no PDF/share generator), F2 `…` overflow replaced by explicit complete/cancel, F5 data-honest timeline.
 

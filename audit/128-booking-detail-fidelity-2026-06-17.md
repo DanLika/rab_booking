@@ -99,3 +99,24 @@ Matched well ✓: cover scrim hex (faithful rgba), pending accent (defaults tert
 4. **F6** tablet 2-col (`booking-detail.jsx:222-237`) — include for full responsive fidelity; defer if lean (then single-col→12 tightens tablet slightly, acceptable).
 5. **Attest:** `flutter analyze` 0 · `dart format .` · action test 5 green · live light+dark+responsive vs renders (run via `run_in_background` only) → **operator eyeball gate** before commit.
 6. **Ship:** CHANGELOG **7.25** (127 took 7.24) + audit/128 §sections + memory pointer. Post-127 cleanup: `git worktree remove /tmp/bb-127-wt` + `firebase use bookbed-dev`.
+
+---
+
+## §8 — APPLIED (SHIPPED `design/128`)
+
+Base: audit/127 merged to main (`29f44b3b`; non-FF — identical add/add audit-127 doc auto-resolved `-X ours`; payload `cbf9e355` palette + `f2cc7623` changelog), `design/128` rebased; base-verified `app_gradients` → light `#F0F1F5`, dark OLED `#000`, card `#1E1E1E`.
+
+**Landed (screen `+193/−73` + new test):**
+- **F1** — `BbButtonVariant.destructive`→`destructiveSoft` ×3 (Odbij `:829`, Otkaži `:882`, mobile Odbij `:999`). Soft-pink confirmed in live render. Gate logic untouched.
+- **§2** — dropped the body `Container(color: rd.shellBg)`; Scaffold `pageBackground` shows. **Visually neutral** (old shellBg light `#F0F1F5`/dark `#000` == post-127 pageBackground), removes dead paint, single-source per audit/126.
+- **§3** — named consts `_kContentMaxWidth`/`_kSidebarWidth`/`_kKvLabelWidth`/`_kCoverHeight{Desktop,Tablet,Mobile}`/`_kTabletGap`/`_kMobileGap`/`_kTabletGridMinWidth`. Off-grid `14`→`_kMobileGap`=12 (NOT `BBSpace.xs2` — **deprecated-on-use**, see `[[bbspace-xs2-deprecated-use-named-const]]`). 2×`dynamic booking`→`BookingModel` + redundant `as` casts dropped (freezed types verified).
+- **F6** — new `_TabletGrid` (handoff `BookingDetailTablet`): full-width cover/pending/guest + 2-col [stay·notes·activity | status·price·meta] (kept all cards — data over mock). Engages ≥`_kTabletGridMinWidth`=720; 600–719 → wide single column (293px columns at 600 were cramped + overflowed).
+
+**Robustness (overflow test surfaced 3 pre-existing latent overflows; 0 visual change for real content):**
+- `_BDCover` property eyebrow non-`Flexible` → `Flexible`+ellipsis (long property names overflowed the cover Row).
+- `_TimelineRow` text non-`Expanded` → `Expanded`+ellipsis (overflowed at narrow widths).
+- 2-col threshold 720 (vs naive 600).
+
+**Test:** `@visibleForTesting buildBookingDetailContentForTest(ownerBooking, width)` seam + `owner_booking_detail_layout_test.dart` — 8 breakpoints × light/dark × {normal, long-string} + 4 status variants = **44 cells**, `tester.takeException` overflow gate. `detailActionVisibility` + its 5-case test untouched (preserve). Navigator.push FROZEN (widget tree) untouched.
+
+**Verification:** `flutter analyze` 0 · `dart format` · gate **5/5** · overflow **44/44** · live Flutter light render desktop+tablet (`audit-shots/bd-flutter-*.png`, uncommitted) — F1 soft-pink + F6 2-col + layout fidelity confirmed. Dark = the 127 token ladder (operator-verified on 127 branch; scratch-harness dark unreliable, not a screen bug). **Deferred:** owner PROD deploy batch (still 0 in PROD); F3 notif bell; l10n debt (~40 hardcoded HR strings).

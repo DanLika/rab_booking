@@ -2,7 +2,21 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-16 | **Version**: 7.24
+**Last Updated**: 2026-06-17 | **Version**: 7.25
+
+---
+
+**Changelog 7.25** (2026-06-17):
+
+### Owner — Booking detail premium fidelity + hygiene + overflow-robustness (audit/128)
+- **Recon-first:** `owner_booking_detail_screen.dart` was already premium-composed against its dedicated handoff (`booking-detail.jsx §201`) — light fidelity+hygiene pass, not a redesign. No hero wash to flatten (scrims/status-tints/accent-rail all "kept on purpose"). Sequenced behind audit/127 so `pageBackground` carries the flat ladder.
+- **F1 — destructive-soft (×3):** Odbij / Otkaži rezervaciju / mobile-sticky Odbij `BbButtonVariant.destructive`→`destructiveSoft` (error-tint pink) per handoff. Variant-only — gate logic untouched.
+- **§2 — dead `shellBg` removed:** the body `Container(color: rd.shellBg)` covered the Scaffold's `context.gradients.pageBackground` in the data path (dead paint). Dropped it → inherits the flat palette (light `#F0F1F5` / dark OLED `#000`). **Visually neutral** (old shellBg values == post-127 pageBackground), now single-source per audit/126.
+- **§3 — hygiene:** magic numbers → named consts (`_kContentMaxWidth`/`_kSidebarWidth`/`_kKvLabelWidth`/cover heights); off-grid `14`→`_kMobileGap`=12 (`BBSpace.xs2` is **deprecated-on-use** → in-file const instead); 2×`dynamic booking`→`BookingModel` + redundant `as` casts dropped.
+- **F6 — tablet 2-col (`_TabletGrid`):** handoff `BookingDetailTablet` (full-width cover/pending/guest, then 2-col stay·notes·activity | status·price·meta — kept notes/activity/meta, data over mock). Engages ≥`_kTabletGridMinWidth`=**720** (600–719 stays wide single column; 293px columns were cramped, handoff tablet = 768).
+- **Robustness (surfaced by the new overflow test, pre-existing latent overflows, 0 visual change for real content):** `_BDCover` property eyebrow → `Flexible`+ellipsis; `_TimelineRow` text → `Expanded`+ellipsis; the 720 threshold.
+- **Test:** new `owner_booking_detail_layout_test.dart` — pumps the real layouts via `@visibleForTesting buildBookingDetailContentForTest` across 8 breakpoints × light/dark × normal/long-string + 4 status variants = **44 cells**, `takeException` overflow gate. `detailActionVisibility` + its 5-case gate test **preserved** (move-not-delete). Navigator.push confirm (FROZEN, widget tree) untouched.
+- **Verifikacija:** `flutter analyze` **0** · `dart format` · gate **5/5** · overflow **44/44** · live Flutter light render (desktop + tablet) — F1 soft-pink + F6 2-col + layout fidelity confirmed. Dark = 127 token ladder (already verified). **Deferred:** owner PROD deploy batch (still 0 in PROD); F3 notif bell; l10n debt (≈40 hardcoded HR strings).
 
 ---
 

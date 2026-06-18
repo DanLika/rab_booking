@@ -1,6 +1,8 @@
 import 'dart:async' show Timer;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart'
+    show PointerSignalEvent, PointerScrollEvent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
@@ -1527,91 +1529,94 @@ class _TimelineCalendarWidgetState
 
           // Units and reservations
           Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Fixed unit names column
-                RepaintBoundary(
-                  child: TimelineUnitColumnWidget(
-                    units: units,
-                    bookingsByUnit: bookingsByUnit,
-                    scrollController: _unitNamesScrollController,
-                    dimensions: dimensions,
-                    onUnitNameTap: widget.onUnitNameTap,
-                    onScrollNotification: _handleUnitColumnScroll,
-                    showSummarySpacing: widget.showSummary,
+            child: Listener(
+              onPointerSignal: _handleTimelinePointerSignal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Fixed unit names column
+                  RepaintBoundary(
+                    child: TimelineUnitColumnWidget(
+                      units: units,
+                      bookingsByUnit: bookingsByUnit,
+                      scrollController: _unitNamesScrollController,
+                      dimensions: dimensions,
+                      onUnitNameTap: widget.onUnitNameTap,
+                      onScrollNotification: _handleUnitColumnScroll,
+                      showSummarySpacing: widget.showSummary,
+                    ),
                   ),
-                ),
 
-                // Scrollable timeline grid with direction lock
-                Expanded(
-                  child: ScrollConfiguration(
-                    // Cross-platform scroll behavior:
-                    // - Enables mouse/trackpad drag on desktop
-                    // - Removes Android overscroll glow
-                    // - Normalizes behavior across all platforms
-                    behavior: CalendarScrollBehavior(),
-                    child: SingleChildScrollView(
-                      controller: _horizontalScrollController,
-                      scrollDirection: Axis.horizontal,
-                      primary: false,
-                      // Custom snap-to-day physics handles ALL scrolling:
-                      // - Weak swipes snap to nearest day (no bounce-back)
-                      // - Strong swipes snap in velocity direction
-                      // - Critically damped spring (no oscillation)
-                      physics: TimelineSnapScrollPhysics(
-                        dayWidth: dimensions.dayWidth,
-                      ),
+                  // Scrollable timeline grid with direction lock
+                  Expanded(
+                    child: ScrollConfiguration(
+                      // Cross-platform scroll behavior:
+                      // - Enables mouse/trackpad drag on desktop
+                      // - Removes Android overscroll glow
+                      // - Normalizes behavior across all platforms
+                      behavior: CalendarScrollBehavior(),
                       child: SingleChildScrollView(
-                        controller: _verticalScrollController,
+                        controller: _horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
                         primary: false,
-                        child: Column(
-                          // FIXED: Restored mainAxisSize.min from working version
-                          // This was removed during performance optimization, causing grid to disappear
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            RepaintBoundary(
-                              child: TimelineGridWidget(
-                                units: units,
-                                bookingsByUnit: bookingsByUnit,
-                                dates: dates,
-                                offsetWidth: offsetWidth,
-                                fixedStartDate: _fixedStartDate,
-                                dimensions: dimensions,
-                                onBookingTap: _showBookingActionMenu,
-                                onBookingLongPress: _showMoveToUnitMenu,
-                                dropZoneBuilder: (unit, date, index) =>
-                                    _buildDropZone(
-                                      unit,
-                                      date,
-                                      offsetWidth,
-                                      index,
-                                      bookingsByUnit,
-                                    ),
+                        // Custom snap-to-day physics handles ALL scrolling:
+                        // - Weak swipes snap to nearest day (no bounce-back)
+                        // - Strong swipes snap in velocity direction
+                        // - Critically damped spring (no oscillation)
+                        physics: TimelineSnapScrollPhysics(
+                          dayWidth: dimensions.dayWidth,
+                        ),
+                        child: SingleChildScrollView(
+                          controller: _verticalScrollController,
+                          primary: false,
+                          child: Column(
+                            // FIXED: Restored mainAxisSize.min from working version
+                            // This was removed during performance optimization, causing grid to disappear
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              RepaintBoundary(
+                                child: TimelineGridWidget(
+                                  units: units,
+                                  bookingsByUnit: bookingsByUnit,
+                                  dates: dates,
+                                  offsetWidth: offsetWidth,
+                                  fixedStartDate: _fixedStartDate,
+                                  dimensions: dimensions,
+                                  onBookingTap: _showBookingActionMenu,
+                                  onBookingLongPress: _showMoveToUnitMenu,
+                                  dropZoneBuilder: (unit, date, index) =>
+                                      _buildDropZone(
+                                        unit,
+                                        date,
+                                        offsetWidth,
+                                        index,
+                                        bookingsByUnit,
+                                      ),
+                                ),
                               ),
-                            ),
-                            // AnimatedSize ensures smooth appearance/disappearance of summary bar
-                            // This prevents the delay issue where summary wouldn't appear
-                            // until user scrolled or performed another action
-                            AnimatedSize(
-                              duration: const Duration(milliseconds: 200),
-                              curve: Curves.easeInOut,
-                              child: widget.showSummary
-                                  ? TimelineSummaryBarWidget(
-                                      bookingsByUnit: bookingsByUnit,
-                                      dates: dates,
-                                      offsetWidth: offsetWidth,
-                                      dimensions: dimensions,
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
-                          ],
+                              // AnimatedSize ensures smooth appearance/disappearance of summary bar
+                              // This prevents the delay issue where summary wouldn't appear
+                              // until user scrolled or performed another action
+                              AnimatedSize(
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeInOut,
+                                child: widget.showSummary
+                                    ? TimelineSummaryBarWidget(
+                                        bookingsByUnit: bookingsByUnit,
+                                        dates: dates,
+                                        offsetWidth: offsetWidth,
+                                        dimensions: dimensions,
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -1636,6 +1641,29 @@ class _TimelineCalendarWidgetState
       } finally {
         _isSyncingScroll = false;
       }
+    }
+  }
+
+  /// Routes vertical mouse-wheel / trackpad scroll to the grid's vertical
+  /// scroll controller. The timeline nests a vertical SingleChildScrollView
+  /// inside the horizontal one, so the horizontal Scrollable claims the wheel
+  /// pointer-signal and vertical wheels never reach the inner viewport
+  /// (diagnosed: viewport=101, maxScrollExtent=131, but pixels stay 0).
+  /// Forwarding the dominant-vertical delta makes the wheel scroll the units;
+  /// the unit-name column follows via the existing vertical sync. Scroll
+  /// plumbing only — grid geometry, timeline_dimensions, and z-index untouched.
+  void _handleTimelinePointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) return;
+    final double dy = event.scrollDelta.dy;
+    if (dy.abs() <= event.scrollDelta.dx.abs()) return; // horizontal → pass
+    if (!_verticalScrollController.hasClients) return;
+    final ScrollPosition position = _verticalScrollController.position;
+    final double target = (position.pixels + dy).clamp(
+      0.0,
+      position.maxScrollExtent,
+    );
+    if ((target - position.pixels).abs() > 0.01) {
+      _verticalScrollController.jumpTo(target);
     }
   }
 

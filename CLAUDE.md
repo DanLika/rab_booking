@@ -82,6 +82,7 @@ try {
 - [ ] Pročitaj CLAUDE.md ako diraš kritične sekcije
 - [ ] `ref.invalidate()` POSLIJE repository poziva
 - [ ] `mounted` check prije async setState/navigation
+- [ ] **Seam-tested feature** (`@visibleForTesting` builder + a test that pumps it directly)? The seam test proves the **function**, NOT that the screen's call site wires it — green analyze/build/seam-test can hide a fully-unwired feature. Before merge: **live wiring check** (trigger the real path on the running app) OR a provider-overridden full-screen dispatch test. Memory: `seam-test-proves-fn-not-wiring` (audit/132 proof).
 
 **Responsive breakpoints:**
 - Desktop: ≥1200px

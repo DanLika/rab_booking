@@ -2,7 +2,19 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-17 | **Version**: 7.26
+**Last Updated**: 2026-06-18 | **Version**: 7.27
+
+---
+
+**Changelog 7.27** (2026-06-18):
+
+### Owner — AI Assistant premium fidelity + subtle motion (audit/132, S1+S2+S3, R1=tablet-fold)
+- **Recon-first (audit/132):** `ai_assistant_screen.dart` already premium-composed against its dedicated handoff (`design_handoff/source/ai-assistant.jsx`, 4 owner artboards) — a BEYOND-color fidelity + motion pass (127 did the palette). FROZEN-clean: client-only chat, **streaming heartbeat (`copyWith`→`ref.listen`→`animateTo`) byte-untouched**; all motion is additive render-layer only.
+- **S1 (cheap fidelity):** radial-glow mascot hero unified across empty-state + consent + quick-reply (`_AiHeroIllustration`); assistant-bubble avatar 32→24 (handoff); suggestion chips 5→**4/3/2** by width (`Wrap`-safe); composer `minLines` desktop 2 / else 1; desktop chat-list panel 320→300; **breakpoint alignment** — bubble + premium header now switch at the layout `_kDesktopBp` (1200) not 600, so **768 folds coherently to mobile**; 5 stray literals named as in-file `_k*` consts (not `BBSpace.xs2`, deprecated-on-use).
+- **S2 (user-bubble avatar):** owner name from `enhancedAuthProvider.userModel` (clean synchronous read mirroring `OwnerAppDrawer`; no new plumbing) → `BbAvatar` initials (owner photo via `avatarUrl` when set) on the right of user bubbles. `buildAiMessageBubble` gains optional `userName`/`userAvatarUrl` — backward-compatible, test seam preserved.
+- **S3 (subtle motion; design-to-system, handoff specs none):** animated 3-dot typing indicator replaces the static `'...'` pre-first-chunk (`_TypingDots`); send-button idle↔spinner cross-fade + colour transition (`AnimatedSwitcher`/`AnimatedContainer`); chat-list loading skeleton (`BBSkeleton.listRow`) replaces the bare spinner; suggestion-chip staggered fade+rise on mount (`_StaggeredChips`). All reduced-motion aware.
+- **R1 (accepted):** tablet **folds to mobile** — no distinct tablet tier built; below 1200 (incl. 768) renders the mobile single-pane path coherently. `attach_file` composer kept omitted (text-only Gemini); desktop breadcrumb out of scope (audit/126 §2B).
+- **Verifikacija:** `flutter analyze` **0 net-new** (3 changed files clean; 97 pre-existing infos in unrelated widget/util files) · `dart format` · `ai_assistant_premium_test` **14/14** (seam + new user-avatar path, 6 bp × 2 themes) · **full suite +1535 green** · `flutter build web --no-tree-shake-icons` **clean**. Dev server up on `:8093` for operator eyeball; automated live screenshot/motion/streaming capture was **blocked by the shared chrome-devtools browser held by a concurrent sibling session** (not force-closed). Branch `design/132-ai-assistant`, **NOT committed** pending operator eyeball. (Sibling branches design/130 + fix/timeline also unmerged at 7.26-base — renumber on merge if 7.27 collides.)
 
 ---
 

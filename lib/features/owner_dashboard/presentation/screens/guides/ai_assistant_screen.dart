@@ -10,7 +10,9 @@ import '../../../../../core/design/tokens.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../../core/widgets/bb_skeleton.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
+import '../../../../../shared/widgets/redesign/bb_avatar.dart';
 import '../../../../../shared/widgets/redesign/bb_dialog.dart';
 import '../../providers/ai_chat_provider.dart';
 import '../../widgets/guides/ai_assistant_premium_header.dart';
@@ -25,7 +27,7 @@ const double _kBubblePadH = 14; // handoff bubble padding 12×14
 const double _kBubblePadV = 12;
 const double _kMsgGap = 14; // gap between message rows
 const double _k12 = 12; // handoff 12px gap/pad (off the BBSpace 8px scale)
-const double _kAvatar = 32; // assistant bubble avatar (handoff 32)
+const double _kAvatar = 24; // assistant bubble avatar (handoff 24)
 const double _kAvatarSm = 20; // chat-list-item mini avatar
 const double _kTile = 36; // consent/feature icon tile
 const double _kTileIcon = 20; // glyph inside a 36px tile
@@ -41,6 +43,18 @@ const double _kUserMaxW = 0.78; // bubble max-width factor (mobile)
 const double _kUserMaxWDesktop = 0.70; // bubble max-width factor (desktop)
 const Color _kOnPrimary = Colors.white; // text/icon on primary fill
 const Color _kOnPrimaryMuted = Colors.white70; // muted on-primary (timestamps)
+// Layout/responsive — ONE desktop breakpoint shared by the screen layout, the
+// message-bubble max-width, and the premium header. audit/132 R1: below this,
+// 768 folds COHERENTLY to mobile (no distinct tablet tier — accepted).
+const double _kDesktopBp = 1200;
+const double _kConsentBtnW = 220; // consent "Prihvati" button width
+const double _kDesktopListW =
+    300; // desktop split chat-list panel (handoff 300)
+const double _kDividerW = 1; // desktop split hairline divider
+const double _kTabletBp = 600; // suggestion-chip density tier (4/3/2) only
+const int _kTypingDotCount = 3; // streaming typing indicator dot count
+const double _kTypingDot = 6; // typing dot diameter
+const double _kTypingDotGap = 3; // gap between typing dots
 
 String _formatBubbleTime(DateTime t) {
   final String h = t.hour.toString().padLeft(2, '0');
@@ -102,7 +116,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     final chatState = ref.watch(aiChatNotifierProvider);
     final chatsAsync = ref.watch(aiChatsProvider);
     final l10n = AppLocalizations.of(context);
-    final isDesktop = MediaQuery.sizeOf(context).width >= 1200;
+    final isDesktop = MediaQuery.sizeOf(context).width >= _kDesktopBp;
 
     // Scroll to bottom when streaming text updates
     ref.listen(aiChatNotifierProvider, (prev, next) {
@@ -165,7 +179,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const AiBrandAvatar(size: _kConsentIcon),
+                    const _AiHeroIllustration(size: _kConsentIcon),
                     const SizedBox(height: BBSpace.sm),
                     Text(
                       'BOOKBED AI',
@@ -222,7 +236,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                     ),
                     const SizedBox(height: BBSpace.md),
                     SizedBox(
-                      width: 220,
+                      width: _kConsentBtnW,
                       child: ElevatedButton(
                         onPressed: _acceptConsent,
                         style: ElevatedButton.styleFrom(
@@ -354,7 +368,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                   children: [
                     // Left: chat list (desktop new chat opens in right panel)
                     SizedBox(
-                      width: 320,
+                      width: _kDesktopListW,
                       child: _buildDesktopChatListContent(
                         chatState,
                         chatsAsync,
@@ -362,7 +376,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                       ),
                     ),
                     VerticalDivider(
-                      width: 1,
+                      width: _kDividerW,
                       color: context.gradients.sectionBorder,
                     ),
                     // Right: active chat or welcome
@@ -458,12 +472,34 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                     _buildChatListItem(chats[index], l10n),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: _buildChatListSkeleton,
             error: (e, st) => _buildEmptyState(l10n),
           ),
         ),
         // New Chat button at bottom — only when chat list is shown
         if (hasChats) Center(child: _buildNewChatButton(l10n)),
+      ],
+    );
+  }
+
+  /// Shimmer placeholder for the chat-list load state — replaces a bare
+  /// spinner with chat-row skeletons (predictable layout, no jump-cut).
+  Widget _buildChatListSkeleton() {
+    final BBColorSet c = BBColor.of(context);
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(_k12, BBSpace.sm, _k12, 0),
+      children: <Widget>[
+        for (int i = 0; i < 5; i++)
+          Container(
+            margin: const EdgeInsets.only(bottom: BBSpace.xs),
+            padding: const EdgeInsets.all(_kBubblePadH),
+            decoration: BoxDecoration(
+              color: c.surface,
+              borderRadius: BBRadius.smAll,
+              border: Border.all(color: c.border),
+            ),
+            child: const BBSkeleton(variant: BBSkeletonVariant.listRow),
+          ),
       ],
     );
   }
@@ -476,29 +512,8 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Radial primary backdrop behind the illustration (handoff hero).
-            Container(
-              width: _kEmptyIllustration,
-              height: _kEmptyIllustration,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  radius: 0.7,
-                  colors: [
-                    c.primary.withValues(alpha: 0.32),
-                    c.primary.withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-              child: Image.asset(
-                'assets/images/assistant_illustration.png',
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => Icon(
-                  Icons.auto_awesome,
-                  size: _kEmptyIllustration * 0.5,
-                  color: c.primary,
-                ),
-              ),
-            ),
+            // Mascot hero with radial glow — shared with consent + quick-reply.
+            const _AiHeroIllustration(),
             const SizedBox(height: BBSpace.md),
             Text(
               'BOOKBED AI',
@@ -552,7 +567,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                     _buildChatListItem(chats[index], l10n),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: _buildChatListSkeleton,
             error: (e, st) => _buildEmptyState(l10n),
           ),
         ),
@@ -758,6 +773,16 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   Widget _buildMessageList(AiChatState chatState, AppLocalizations l10n) {
     final messages = chatState.currentChat?.messages ?? [];
 
+    // Owner identity for the user-bubble avatar (mirrors OwnerAppDrawer).
+    final owner = ref.watch(enhancedAuthProvider).userModel;
+    final String first = owner?.firstName.trim() ?? '';
+    final String last = owner?.lastName.trim() ?? '';
+    final String fullName = '$first $last'.trim();
+    final String userName = fullName.isNotEmpty
+        ? fullName
+        : (owner?.displayName ?? '');
+    final String? userAvatarUrl = owner?.avatarUrl;
+
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(
@@ -769,19 +794,30 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
       itemCount: messages.length + (chatState.isStreaming ? 1 : 0),
       itemBuilder: (context, index) {
         if (index < messages.length) {
-          return buildAiMessageBubble(context, messages[index]);
+          return buildAiMessageBubble(
+            context,
+            messages[index],
+            typing: false,
+            userName: userName,
+            userAvatarUrl: userAvatarUrl,
+          );
         }
-        // Streaming message
+        // Streaming bubble — animated typing dots until the first chunk lands,
+        // then the streamed text replaces them. The streaming heartbeat
+        // (provider copyWith → ref.listen → animateTo) is untouched; this only
+        // swaps the render body of the in-flight assistant bubble.
+        final bool waiting = chatState.streamingText.isEmpty;
         return buildAiMessageBubble(
           context,
           AiChatMessage(
             role: 'assistant',
-            content: chatState.streamingText.isEmpty
-                ? '...'
-                : chatState.streamingText,
+            content: waiting ? '' : chatState.streamingText,
             timestamp: DateTime.now(),
           ),
           isStreaming: true,
+          typing: waiting,
+          userName: userName,
+          userAvatarUrl: userAvatarUrl,
         );
       },
     );
@@ -800,7 +836,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const AiBrandAvatar(size: _kConsentIcon),
+            const _AiHeroIllustration(size: _kConsentIcon),
             const SizedBox(height: BBSpace.sm),
             Text(
               l10n.aiAssistantWelcome,
@@ -823,30 +859,42 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   Widget _buildQuickChips(AiChatState chatState, AppLocalizations l10n) {
     final BBColorSet c = BBColor.of(context);
 
-    final chips = [
+    // Suggestion density per handoff: 4 desktop · 3 tablet-band · 2 mobile.
+    // The layout still folds tablet→mobile (R1) — only the chip COUNT tiers.
+    final double w = MediaQuery.sizeOf(context).width;
+    final int count = w >= _kDesktopBp
+        ? 4
+        : w >= _kTabletBp
+        ? 3
+        : 2;
+    final List<String> chips = <String>[
       l10n.aiAssistantChipAddUnit,
       l10n.aiAssistantChipPricing,
       l10n.aiAssistantChipStripe,
       l10n.aiAssistantChipIcal,
       l10n.aiAssistantChipEmbed,
-    ];
+    ].take(count).toList();
 
-    return Wrap(
-      spacing: BBSpace.xs,
-      runSpacing: BBSpace.xs,
-      alignment: WrapAlignment.center,
-      children: chips.map((chip) {
-        return ActionChip(
-          avatar: Icon(Icons.auto_awesome, size: _kChipIcon, color: c.primary),
-          label: Text(chip, style: BBType.label(context)),
-          backgroundColor: c.surfaceVariant,
-          shape: RoundedRectangleBorder(
-            borderRadius: BBRadius.mdAll,
-            side: BorderSide(color: c.primary.withValues(alpha: 0.2)),
+    return _StaggeredChips(
+      children: <Widget>[
+        for (final String chip in chips)
+          ActionChip(
+            avatar: Icon(
+              Icons.auto_awesome,
+              size: _kChipIcon,
+              color: c.primary,
+            ),
+            label: Text(chip, style: BBType.label(context)),
+            backgroundColor: c.surfaceVariant,
+            shape: RoundedRectangleBorder(
+              borderRadius: BBRadius.mdAll,
+              side: BorderSide(color: c.primary.withValues(alpha: 0.2)),
+            ),
+            onPressed: chatState.isStreaming
+                ? null
+                : () => _sendQuickReply(chip),
           ),
-          onPressed: chatState.isStreaming ? null : () => _sendQuickReply(chip),
-        );
-      }).toList(),
+      ],
     );
   }
 
@@ -928,7 +976,9 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                     focusNode: _focusNode,
                     enabled: !chatState.isStreaming,
                     maxLines: 5,
-                    minLines: 1,
+                    minLines: MediaQuery.sizeOf(context).width >= _kDesktopBp
+                        ? 2
+                        : 1,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendMessage(),
                     style: BBType.body(context),
@@ -1018,15 +1068,23 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   }
 }
 
-/// Single chat bubble — user = solid `primary` (right), assistant = `surface`
-/// + border (left) with brand avatar. Mirrors `ai-assistant.jsx` bubbles
-/// (tail corner [BBRadius.xs], 32px avatar, 11px timestamp, max-width 70/78%).
+/// Single chat bubble — user = solid `primary` (right) with an initials
+/// avatar, assistant = `surface` + border (left) with the brand avatar.
+/// Mirrors `ai-assistant.jsx` bubbles (tail corner [BBRadius.xs], 24px avatar,
+/// 11px timestamp, max-width 70/78%). [typing] swaps the body for an animated
+/// typing indicator; [userName]/[userAvatarUrl] feed the user-side avatar.
 /// Top-level + [visibleForTesting] so the overflow golden can pump it without
 /// the full screen / providers.
 @visibleForTesting
 Widget buildAiMessageBubble(
   BuildContext context,
   AiChatMessage message, {
+  // Required (not optional) so a call site that forgets to wire them is a
+  // COMPILE error, not a silent live failure — the full-screen pump that would
+  // otherwise test the wiring is blocked by provider StateNotifiers (audit/132).
+  required bool typing,
+  required String? userName,
+  required String? userAvatarUrl,
   bool isStreaming = false,
 }) {
   final BBColorSet c = BBColor.of(context);
@@ -1036,7 +1094,9 @@ Widget buildAiMessageBubble(
       MediaQuery.sizeOf(context).width *
       (isMobileWidth ? _kUserMaxW : _kUserMaxWDesktop);
 
-  final Widget content = isUser
+  final Widget content = typing
+      ? const _TypingDots()
+      : isUser
       ? Text(
           message.content,
           style: BBType.body(context).copyWith(color: _kOnPrimary),
@@ -1125,6 +1185,14 @@ Widget buildAiMessageBubble(
             const SizedBox(width: BBSpace.xs),
           ],
           Flexible(child: bubble),
+          if (isUser) ...[
+            const SizedBox(width: BBSpace.xs),
+            BbAvatar(
+              name: userName ?? '',
+              imageUrl: userAvatarUrl,
+              size: BbAvatarSize.xs,
+            ),
+          ],
         ],
       ),
     ),
@@ -1142,7 +1210,9 @@ class _SendButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final BBColorSet c = BBColor.of(context);
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
       width: _kSendBtn,
       height: _kSendBtn,
       decoration: BoxDecoration(
@@ -1154,16 +1224,25 @@ class _SendButton extends StatelessWidget {
         padding: EdgeInsets.zero,
         color: _kOnPrimary,
         iconSize: _kSendIcon,
-        icon: streaming
-            ? const SizedBox(
-                width: _kSendIcon,
-                height: _kSendIcon,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: _kOnPrimaryMuted,
-                ),
-              )
-            : const Icon(Icons.send_rounded),
+        icon: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (Widget child, Animation<double> anim) =>
+              FadeTransition(
+                opacity: anim,
+                child: ScaleTransition(scale: anim, child: child),
+              ),
+          child: streaming
+              ? const SizedBox(
+                  key: ValueKey<String>('streaming'),
+                  width: _kSendIcon,
+                  height: _kSendIcon,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: _kOnPrimaryMuted,
+                  ),
+                )
+              : const Icon(Icons.send_rounded, key: ValueKey<String>('idle')),
+        ),
       ),
     );
   }
@@ -1190,6 +1269,180 @@ class _NewChatButton extends StatelessWidget {
           shape: const RoundedRectangleBorder(borderRadius: BBRadius.smAll),
           foregroundColor: _kOnPrimary,
         ),
+      ),
+    );
+  }
+}
+
+/// Mascot illustration with the handoff radial-glow halo + asset-fail fallback.
+/// Shared by the empty-state, consent, and quick-reply heroes so all three
+/// carry the same glowing hero (handoff `ai-assistant.jsx` consent/empty hero).
+class _AiHeroIllustration extends StatelessWidget {
+  const _AiHeroIllustration({this.size = _kEmptyIllustration});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final BBColorSet c = BBColor.of(context);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          radius: 0.7,
+          colors: <Color>[
+            c.primary.withValues(alpha: 0.32),
+            c.primary.withValues(alpha: 0.0),
+          ],
+        ),
+      ),
+      child: Image.asset(
+        'assets/images/assistant_illustration.png',
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) =>
+            Icon(Icons.auto_awesome, size: size * 0.5, color: c.primary),
+      ),
+    );
+  }
+}
+
+/// Animated three-dot "typing" indicator shown in the assistant bubble while
+/// awaiting the first streamed chunk (premium replacement for the static
+/// '...'). ADDITIVE motion only — never touches the streaming pipeline
+/// (copyWith → ref.listen → animateTo). Reduced-motion → static glyph.
+class _TypingDots extends StatefulWidget {
+  const _TypingDots();
+
+  @override
+  State<_TypingDots> createState() => _TypingDotsState();
+}
+
+class _TypingDotsState extends State<_TypingDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final BBColorSet c = BBColor.of(context);
+    if (BBMotion.reduced(context)) {
+      return Text(
+        '…',
+        style: BBType.body(context).copyWith(color: c.textTertiary),
+      );
+    }
+    return SizedBox(
+      height: BBType.body(context).fontSize,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          for (int i = 0; i < _kTypingDotCount; i++) ...<Widget>[
+            if (i > 0) const SizedBox(width: _kTypingDotGap),
+            _dot(i, c.textTertiary),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _dot(int index, Color color) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (BuildContext _, Widget? _) {
+        final double phase = (_ctrl.value + index * 0.18) % 1.0;
+        // Triangle wave 0→1→0 → gentle per-dot opacity pulse.
+        final double t = (1.0 - (phase * 2.0 - 1.0).abs()).clamp(0.0, 1.0);
+        return Opacity(
+          opacity: 0.35 + 0.65 * t,
+          child: Container(
+            width: _kTypingDot,
+            height: _kTypingDot,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Wraps suggestion chips in a Wrap with a subtle staggered fade+rise on first
+/// mount (forward-once — no repeating ticker). Reduced-motion → plain Wrap.
+class _StaggeredChips extends StatefulWidget {
+  const _StaggeredChips({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  State<_StaggeredChips> createState() => _StaggeredChipsState();
+}
+
+class _StaggeredChipsState extends State<_StaggeredChips>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool reduced = BBMotion.reduced(context);
+    final int n = widget.children.length;
+    return Wrap(
+      spacing: BBSpace.xs,
+      runSpacing: BBSpace.xs,
+      alignment: WrapAlignment.center,
+      children: <Widget>[
+        for (int i = 0; i < n; i++)
+          if (reduced) widget.children[i] else _staggerItem(i, n),
+      ],
+    );
+  }
+
+  Widget _staggerItem(int i, int n) {
+    final double start = n <= 1 ? 0.0 : (i / n) * 0.5;
+    final Animation<double> anim = CurvedAnimation(
+      parent: _ctrl,
+      curve: Interval(
+        start,
+        (start + 0.5).clamp(0.0, 1.0),
+        curve: Curves.easeOut,
+      ),
+    );
+    return FadeTransition(
+      opacity: anim,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.18),
+          end: Offset.zero,
+        ).animate(anim),
+        child: widget.children[i],
       ),
     );
   }

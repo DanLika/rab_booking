@@ -12,6 +12,12 @@ const double _kIconTileRadius =
 const double _kIconInset = 4; // image inset inside the tile
 const double _kStatusDot = 8; // online status dot
 const double _k12 = 12; // handoff 12px gap/pad (off the BBSpace 8px scale)
+// Aligned with the screen's _kDesktopBp so the header folds COHERENTLY with the
+// layout at 768 (audit/132 R1: tablet → mobile, no distinct tablet tier).
+const double _kDesktopBp = 1200;
+const double _kTitleFontCompact = 24; // hero H1 below desktop
+const double _kTitleFontDesktop = 30; // hero H1 at desktop
+const double _kHeaderActionIcon = 18; // copy/delete glyph (conversation header)
 
 /// Brand icon-avatar tile — primary-tint rounded square housing the assistant
 /// glyph. Mirrors the `ai-assistant.jsx` 36×36 icon container (radius 10,
@@ -67,7 +73,7 @@ class AiAssistantPremiumHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final BBColorSet c = BBColor.of(context);
-    final bool isMobile = MediaQuery.sizeOf(context).width < 600;
+    final bool isCompact = MediaQuery.sizeOf(context).width < _kDesktopBp;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,7 +87,7 @@ class AiAssistantPremiumHeader extends StatelessWidget {
         Text(
           title,
           style: BBType.h1(context).copyWith(
-            fontSize: isMobile ? 24 : 30,
+            fontSize: isCompact ? _kTitleFontCompact : _kTitleFontDesktop,
             fontWeight: FontWeight.w800,
             letterSpacing: -0.6,
           ),
@@ -121,11 +127,11 @@ class AiConversationHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final BBColorSet c = BBColor.of(context);
-    final bool isMobile = MediaQuery.sizeOf(context).width < 600;
+    final bool isCompact = MediaQuery.sizeOf(context).width < _kDesktopBp;
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? BBSpace.sm : BBSpace.md,
+        horizontal: isCompact ? BBSpace.sm : BBSpace.md,
         vertical: _k12,
       ),
       decoration: BoxDecoration(
@@ -157,7 +163,7 @@ class AiConversationHeader extends StatelessWidget {
           if (onCopy != null)
             IconButton(
               onPressed: onCopy,
-              icon: const Icon(Icons.copy_rounded, size: 18),
+              icon: const Icon(Icons.copy_rounded, size: _kHeaderActionIcon),
               color: c.textTertiary,
               tooltip: copyTooltip,
               visualDensity: VisualDensity.compact,
@@ -165,7 +171,7 @@ class AiConversationHeader extends StatelessWidget {
           if (onDelete != null)
             IconButton(
               onPressed: onDelete,
-              icon: const Icon(Icons.delete_outline, size: 18),
+              icon: const Icon(Icons.delete_outline, size: _kHeaderActionIcon),
               color: c.textTertiary,
               tooltip: deleteTooltip,
               visualDensity: VisualDensity.compact,

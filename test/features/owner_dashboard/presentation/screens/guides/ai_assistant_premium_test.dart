@@ -1,6 +1,6 @@
 // Responsive + fidelity render harness for the owner AI Assistant premium
 // surfaces. Pumps the REAL presentation widgets the live screen renders —
-// [buildAiMessageBubble] (user solid + assistant markdown), [AiConversationHeader]
+// [buildAiMessageBubble] (user solid + initials avatar, assistant markdown), [AiConversationHeader]
 // (brand avatar + title + status + copy/delete), and [AiBrandAvatar] — across
 // the full breakpoint range in light + dark, with long-text fixtures that
 // stress wrap + ellipsis.
@@ -87,7 +87,13 @@ void main() {
                       child: ListView(
                         children: <Widget>[
                           for (final m in _fixture())
-                            buildAiMessageBubble(context, m),
+                            buildAiMessageBubble(
+                              context,
+                              m,
+                              typing: false,
+                              userName: 'Ivana Marić',
+                              userAvatarUrl: null,
+                            ),
                           // Streaming variant (no timestamp branch).
                           buildAiMessageBubble(
                             context,
@@ -97,6 +103,9 @@ void main() {
                               timestamp: DateTime(2026, 6, 16, 10, 44),
                             ),
                             isStreaming: true,
+                            typing: false,
+                            userName: '',
+                            userAvatarUrl: null,
                           ),
                         ],
                       ),

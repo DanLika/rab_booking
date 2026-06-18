@@ -59,7 +59,7 @@ class MonthCalendarKpiStrip extends ConsumerWidget {
       ),
       _Tile(
         icon: 'login',
-        label: 'Dolasci',
+        label: 'Dolasci · 7d',
         value: '${data.upcomingCheckIns}',
         tone: c.info,
         isMobile: isMobile,

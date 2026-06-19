@@ -3661,6 +3661,16 @@ class AppLocalizationsHr extends AppLocalizations {
   String get unitHubEdit => 'Uredi';
 
   @override
+  String get unitHubCopy => 'Kopiraj';
+
+  @override
+  String get unitHubBasicDataSubtitle => 'Osnovni podaci jedinice';
+
+  @override
+  String get unitHubAdvancedPricingHint =>
+      'Napredne cijene po datumu uređuju se u tabu Cjenovnik.';
+
+  @override
   String get unitHubPerNight => '/noć';
 
   @override

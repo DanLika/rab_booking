@@ -2,7 +2,20 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-18 | **Version**: 7.27
+**Last Updated**: 2026-06-19 | **Version**: 7.28
+
+---
+
+**Changelog 7.28** (2026-06-19):
+
+### Owner — Unit Hub "Osnovno" tab premium fidelity + dialog Bb-migration (audit/134, scope B+A)
+- **Recon-first (audit/134):** Unit Hub is the **most FROZEN-saturated owner screen** (hosts the FROZEN Cjenovnik pricing grid + Wizard publish). A FROZEN-intersection map drew the SAFE/FROZEN boundary per component; scope locked to **B (Osnovno tab) + A (shell confirm)** via a 7-question alignment interview. **Master panel deferred** to its own pass (≈870-line interactive selection/nav/delete surface, no tile-level handoff).
+- **B — Osnovno tab → `units.jsx`:** `_buildBasicInfoTab` rebuilt — desktop gallery (cover + 2×2 of `unit.images`) → header (`unit.name` + subtitle + **Kopiraj** [duplicate] + **Uredi**) → 2-col `BbCard` Informacije/Kapacitet (desktop+tablet 2-col, mobile stacked) → full-width Cijena `BbCard` (emphasized **PriceTile** grid + extra-fee rows + tappable **Cjenovnik banner**). Hand-rolled `_buildInfoCard`/`_buildDetailRow` (AnimatedContainer/BoxDecoration) replaced by `BbCard` + handoff primitives: `_osnovnoCardHeader` (32px primary-tint badge), `_kvRow` (uppercase label; stack-mode for the OPIS prose; status → `BbStatusBadge`), `_priceTile`, `_buildUnitGallery`/`_galleryTile` (`Image.network` + `errorBuilder`).
+- **Data honesty:** Vidljivost + Polog **dropped** — no backing field on `UnitModel` (verified); rendering them would fabricate data. Extra-bed/pet fees kept as KV rows (preserve current data).
+- **Dialogs:** 3× `AlertDialog` → `BbDialog` (delete logic + bool returns preserved; deletes `destructive`; 2 dead `theme` locals dropped).
+- **l10n:** +`unitHubCopy` / `unitHubBasicDataSubtitle` / `unitHubAdvancedPricingHint` (en + hr).
+- **FROZEN fence — 0 touch:** Cjenovnik content / `price_list_calendar_widget` / `_buildSaveButton` brand-purple gradient / Wizard `_publishUnit` 2-doc serial write / Navigator.push confirmation. Banner = local `_tabController.animateTo(1)` only (never reads/writes Cjenovnik).
+- **Verifikacija:** `flutter analyze` **0 net-new** (my file clean; 3 self-introduced redundant-default infos fixed) · `dart format` · **full suite +1535 green** · `flutter build web --no-tree-shake-icons` **clean**. **Live render** (bookbed-dev `:8094`, `scripts/seed-osnovno-eyeball-dev.js` [untracked dev aid], chrome-devtools/CanvasKit): Osnovno **all 6 — desktop/tablet/mobile × light/dark**, faithful to handoff, no overflow, dark = `#000` page + `#1E1E1E` cards (audit/127 ladder). **Interaction-verified LIVE** (not code-claims): banner tap flips selected tab to Cjenovnik (content untouched); `BbDialog` **Odustani** leaves the unit / **Obriši** deletes it (**Firestore `exists:false` confirmed**). **Dev-only → not deployed.** FROZEN: none. (Sibling 130/timeline merged off the 7.26-base without a version bump; 7.28 = next free after 7.27.)
 
 ---
 

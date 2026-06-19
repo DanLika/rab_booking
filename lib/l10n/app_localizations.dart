@@ -6786,6 +6786,24 @@ abstract class AppLocalizations {
   /// **'Edit'**
   String get unitHubEdit;
 
+  /// No description provided for @unitHubCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get unitHubCopy;
+
+  /// No description provided for @unitHubBasicDataSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit basic details'**
+  String get unitHubBasicDataSubtitle;
+
+  /// No description provided for @unitHubAdvancedPricingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Date-based advanced pricing is managed in the Pricing tab.'**
+  String get unitHubAdvancedPricingHint;
+
   /// No description provided for @unitHubPerNight.
   ///
   /// In en, this message translates to:

@@ -3635,6 +3635,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unitHubEdit => 'Edit';
 
   @override
+  String get unitHubCopy => 'Duplicate';
+
+  @override
+  String get unitHubBasicDataSubtitle => 'Unit basic details';
+
+  @override
+  String get unitHubAdvancedPricingHint =>
+      'Date-based advanced pricing is managed in the Pricing tab.';
+
+  @override
   String get unitHubPerNight => '/night';
 
   @override

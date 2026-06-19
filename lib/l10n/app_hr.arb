@@ -1465,6 +1465,9 @@
   },
   "unitHubBasicData": "Osnovni Podaci",
   "unitHubEdit": "Uredi",
+  "unitHubCopy": "Kopiraj",
+  "unitHubBasicDataSubtitle": "Osnovni podaci jedinice",
+  "unitHubAdvancedPricingHint": "Napredne cijene po datumu uređuju se u tabu Cjenovnik.",
   "unitHubPerNight": "/noć",
 
   "propertyFormTitleAdd": "Dodaj Nekretninu",

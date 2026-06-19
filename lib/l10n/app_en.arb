@@ -1465,6 +1465,9 @@
   },
   "unitHubBasicData": "Basic Data",
   "unitHubEdit": "Edit",
+  "unitHubCopy": "Duplicate",
+  "unitHubBasicDataSubtitle": "Unit basic details",
+  "unitHubAdvancedPricingHint": "Date-based advanced pricing is managed in the Pricing tab.",
   "unitHubPerNight": "/night",
 
   "propertyFormTitleAdd": "Add Property",

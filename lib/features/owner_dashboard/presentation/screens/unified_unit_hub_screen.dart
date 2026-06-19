@@ -797,7 +797,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     PropertyModel property,
     int unitCount,
   ) async {
-    final theme = Theme.of(dialogContext);
     final l10n = AppLocalizations.of(dialogContext);
 
     // Check if property has units - cannot delete
@@ -805,15 +804,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       if (!dialogContext.mounted) return;
       await showDialog<void>(
         context: dialogContext,
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.unitHubCannotDelete),
-          content: Text(l10n.unitHubCannotDeleteDesc(property.name, unitCount)),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.unitHubUnderstand),
-            ),
-          ],
+        builder: (ctx) => BbDialog(
+          title: l10n.unitHubCannotDelete,
+          body: l10n.unitHubCannotDeleteDesc(property.name, unitCount),
+          primary: BbDialogAction(
+            label: l10n.unitHubUnderstand,
+            onPressed: () => Navigator.pop(ctx),
+          ),
         ),
       );
       return;
@@ -821,22 +818,18 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     final confirmed = await showDialog<bool>(
       context: dialogContext,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.unitHubDeletePropertyTitle),
-        content: Text(l10n.unitHubDeletePropertyConfirm(property.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete),
-          ),
-        ],
+      builder: (ctx) => BbDialog(
+        title: l10n.unitHubDeletePropertyTitle,
+        body: l10n.unitHubDeletePropertyConfirm(property.name),
+        destructive: true,
+        secondary: BbDialogAction(
+          label: l10n.cancel,
+          onPressed: () => Navigator.pop(ctx, false),
+        ),
+        primary: BbDialogAction(
+          label: l10n.delete,
+          onPressed: () => Navigator.pop(ctx, true),
+        ),
       ),
     );
 
@@ -884,27 +877,22 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     BuildContext dialogContext,
     UnitModel unit,
   ) async {
-    final theme = Theme.of(dialogContext);
     final l10n = AppLocalizations.of(dialogContext);
 
     final confirmed = await showDialog<bool>(
       context: dialogContext,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.unitHubDeleteUnitTitle),
-        content: Text(l10n.unitHubDeleteUnitConfirm(unit.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete),
-          ),
-        ],
+      builder: (ctx) => BbDialog(
+        title: l10n.unitHubDeleteUnitTitle,
+        body: l10n.unitHubDeleteUnitConfirm(unit.name),
+        destructive: true,
+        secondary: BbDialogAction(
+          label: l10n.cancel,
+          onPressed: () => Navigator.pop(ctx, false),
+        ),
+        primary: BbDialogAction(
+          label: l10n.delete,
+          onPressed: () => Navigator.pop(ctx, true),
+        ),
       ),
     );
 
@@ -1305,125 +1293,77 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         screenWidth >= _kTabletBreakpoint && screenWidth < _kDesktopBreakpoint;
     final isMobile = screenWidth < _kMobileBreakpoint;
 
-    // Build individual cards as widgets for flex layout
     final l10n = AppLocalizations.of(context);
+    final unit = _selectedUnit!;
+    final BBColorSet c = BBColor.of(context);
 
-    // Capacity section - compact, fixed height
-    final kapacitetCard = _buildInfoCard(
-      theme,
-      title: l10n.unitHubCapacitySection,
-      icon: Icons.people_outline,
-      isMobile: isMobile,
-      children: [
-        _buildDetailRow(
-          theme,
-          l10n.unitHubBedrooms,
-          '${_selectedUnit!.bedrooms}',
-        ),
-        _buildDetailRow(
-          theme,
-          l10n.unitHubBathrooms,
-          '${_selectedUnit!.bathrooms}',
-        ),
-        _buildDetailRow(
-          theme,
-          l10n.unitHubMaxGuests,
-          '${_selectedUnit!.maxGuests}',
-        ),
-        if (_selectedUnit!.areaSqm != null)
-          _buildDetailRow(
-            theme,
-            l10n.unitHubArea,
-            '${_selectedUnit!.areaSqm!.toStringAsFixed(0)} m²',
+    // Informacije card — handoff units.jsx: Naziv / URL slug / Opis / Status badge
+    final informacijeCard = BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _osnovnoCardHeader(c, icon: 'info', title: l10n.unitHubInfoSection),
+          _kvRow(c, l10n.unitHubName, value: unit.name),
+          _kvRow(
+            c,
+            l10n.unitHubSlug,
+            value: unit.slug,
+            placeholder: l10n.notSet,
           ),
-      ],
+          if (unit.description != null && unit.description!.isNotEmpty)
+            _kvRow(
+              c,
+              l10n.unitHubDescription,
+              value: unit.description,
+              stack: true,
+            ),
+          _kvRow(
+            c,
+            l10n.unitHubStatus,
+            isLast: true,
+            child: BbStatusBadge(
+              status: unit.isAvailable
+                  ? BbBookingStatus.confirmed
+                  : BbBookingStatus.cancelled,
+              label: unit.isAvailable
+                  ? l10n.unitHubStatusAvailable
+                  : l10n.unitHubStatusUnavailable,
+              size: BbStatusBadgeSize.sm,
+            ),
+          ),
+        ],
+      ),
     );
 
-    // Price section
-    final cijenaCard = _buildInfoCard(
-      theme,
-      title: l10n.unitHubPriceSection,
-      icon: Icons.euro_outlined,
-      isMobile: isMobile,
-      children: [
-        _buildDetailRow(
-          theme,
-          l10n.unitHubPricePerNight,
-          '€${_selectedUnit!.pricePerNight.toStringAsFixed(0)}',
-          valueColor: theme.colorScheme.primary,
-        ),
-        if (_selectedUnit!.weekendBasePrice != null)
-          _buildDetailRow(
-            theme,
-            l10n.unitWizardStep3WeekendPrice,
-            '€${_selectedUnit!.weekendBasePrice!.toStringAsFixed(0)}',
+    // Kapacitet card
+    final kapacitetCard = BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _osnovnoCardHeader(
+            c,
+            icon: 'hotel',
+            title: l10n.unitHubCapacitySection,
           ),
-        _buildDetailRow(
-          theme,
-          l10n.unitHubMinNights,
-          '${_selectedUnit!.minStayNights}',
-        ),
-        if (_selectedUnit!.maxStayNights != null)
-          _buildDetailRow(
-            theme,
-            l10n.unitWizardStep3MaxStay,
-            '${_selectedUnit!.maxStayNights}',
+          _kvRow(c, l10n.unitHubBedrooms, value: '${unit.bedrooms}'),
+          _kvRow(c, l10n.unitHubBathrooms, value: '${unit.bathrooms}'),
+          _kvRow(
+            c,
+            l10n.unitHubMaxGuests,
+            value: '${unit.maxGuests}',
+            isLast: unit.areaSqm == null,
           ),
-        if (_selectedUnit!.maxTotalCapacity != null &&
-            _selectedUnit!.maxTotalCapacity! > _selectedUnit!.maxGuests)
-          _buildDetailRow(
-            theme,
-            l10n.unitWizardStep5ExtraBeds,
-            '${_selectedUnit!.maxTotalCapacity! - _selectedUnit!.maxGuests}',
-          ),
-        if (_selectedUnit!.extraBedFee != null)
-          _buildDetailRow(
-            theme,
-            l10n.unitWizardStep5ExtraBedFee,
-            '€${_selectedUnit!.extraBedFee!.toStringAsFixed(0)}/night',
-          ),
-        if (_selectedUnit!.petFee != null)
-          _buildDetailRow(
-            theme,
-            l10n.unitWizardStep5PetFee,
-            '€${_selectedUnit!.petFee!.toStringAsFixed(0)}/night',
-          ),
-      ],
-    );
-
-    // Additional Services section - loaded from Firestore
-    final servicesCard = _buildServicesCard(theme, isMobile);
-
-    // Information section - can have long description
-    final informacijeCard = _buildInfoCard(
-      theme,
-      title: l10n.unitHubInfoSection,
-      icon: Icons.info_outline,
-      isMobile: isMobile,
-      children: [
-        _buildDetailRow(theme, l10n.unitHubName, _selectedUnit!.name),
-        _buildDetailRow(
-          theme,
-          l10n.unitHubSlug,
-          _selectedUnit!.slug ?? l10n.notSet,
-        ),
-        if (_selectedUnit!.description != null)
-          _buildDetailRow(
-            theme,
-            l10n.unitHubDescription,
-            _selectedUnit!.description!,
-          ),
-        _buildDetailRow(
-          theme,
-          l10n.unitHubStatus,
-          _selectedUnit!.isAvailable
-              ? l10n.unitHubStatusAvailable
-              : l10n.unitHubStatusUnavailable,
-          valueColor: _selectedUnit!.isAvailable
-              ? _availableColor(theme)
-              : _unavailableColor(theme),
-        ),
-      ],
+          if (unit.areaSqm != null)
+            _kvRow(
+              c,
+              l10n.unitHubArea,
+              value: '${unit.areaSqm!.toStringAsFixed(0)} m²',
+              isLast: true,
+            ),
+        ],
+      ),
     );
 
     return ListView(
@@ -1431,87 +1371,50 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       physics: PlatformScrollPhysics.adaptive,
       padding: EdgeInsets.all(context.horizontalPadding),
       children: [
-        // Header with Edit Button
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                l10n.unitHubBasicData,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 20,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
-            BbButton(
-              label: l10n.unitHubEdit,
-              iconLeft: 'edit',
-              onPressed: () {
-                context.push(
-                  OwnerRoutes.unitWizardEdit.replaceAll(
-                    ':id',
-                    _selectedUnit!.id,
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-
-        // Unit Details Cards - Layout based on screen size
-        // Order: Information → Capacity → Pricing
-        if (isDesktop) ...[
-          // Desktop: Row 1: Information (Basic Info) + Capacity
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: informacijeCard),
-              const SizedBox(width: 14),
-              Expanded(child: kapacitetCard),
-            ],
-          ),
-          const SizedBox(height: 14),
-          cijenaCard,
-          const SizedBox(height: 14),
-          servicesCard,
-        ] else if (isTablet) ...[
-          // Tablet (800-900px): Information + Capacity side by side, then stacked
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: informacijeCard),
-              const SizedBox(width: 14),
-              Expanded(child: kapacitetCard),
-            ],
-          ),
-          const SizedBox(height: 14),
-          cijenaCard,
-          const SizedBox(height: 14),
-          servicesCard,
-        ] else ...[
-          // Mobile (<800px): All stacked in wizard order
-          informacijeCard,
-          const SizedBox(height: 14),
-          kapacitetCard,
-          const SizedBox(height: 14),
-          cijenaCard,
-          const SizedBox(height: 14),
-          servicesCard,
+        // Gallery (desktop only, when the unit carries photos) — handoff cover + 2×2
+        if (isDesktop && unit.images.isNotEmpty) ...[
+          _buildUnitGallery(c, unit.images),
+          const SizedBox(height: 20),
         ],
+
+        // Header: title + subtitle, Kopiraj (duplicate) + Uredi (edit)
+        _buildOsnovnoHeader(theme, c, l10n, unit, isMobile),
+        const SizedBox(height: 20),
+
+        // 2-col cards: Informacije + Kapacitet (stack on mobile)
+        if (isDesktop || isTablet)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: informacijeCard),
+              const SizedBox(width: 16),
+              Expanded(child: kapacitetCard),
+            ],
+          )
+        else ...[
+          informacijeCard,
+          const SizedBox(height: 16),
+          kapacitetCard,
+        ],
+        const SizedBox(height: 16),
+
+        // Cijena card: PriceTile grid + extra fees + Cjenovnik cross-reference banner
+        _buildCijenaCard(c, l10n, unit),
+        const SizedBox(height: 16),
+
+        // Additional services (loaded from Firestore)
+        _buildServicesCard(),
       ],
     );
   }
 
-  Widget _buildServicesCard(ThemeData theme, bool isMobile) {
+  Widget _buildServicesCard() {
     if (_selectedProperty == null || _selectedUnit == null) {
       return const SizedBox.shrink();
     }
 
     final l10n = AppLocalizations.of(context);
+    final BBColorSet c = BBColor.of(context);
     final repo = ref.read(additionalServicesRepositoryProvider);
 
     return FutureBuilder<List<AdditionalServiceModel>>(
@@ -1526,14 +1429,25 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           return const SizedBox.shrink();
         }
         final services = snapshot.data!;
-        return _buildInfoCard(
-          theme,
-          title: l10n.additionalServicesTitle,
-          icon: Icons.room_service,
-          isMobile: isMobile,
-          children: services
-              .map((s) => _buildDetailRow(theme, s.name, s.formattedPrice))
-              .toList(),
+        return BbCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _osnovnoCardHeader(
+                c,
+                icon: 'room_service',
+                title: l10n.additionalServicesTitle,
+              ),
+              for (int i = 0; i < services.length; i++)
+                _kvRow(
+                  c,
+                  services[i].name,
+                  value: services[i].formattedPrice,
+                  isLast: i == services.length - 1,
+                ),
+            ],
+          ),
         );
       },
     );
@@ -1581,137 +1495,413 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
   }
 
-  // Helper methods for Tab 1
-  Widget _buildInfoCard(
-    ThemeData theme, {
-    required String title,
-    required IconData icon,
-    required List<Widget> children,
-    required bool isMobile,
-  }) {
-    final isDark = theme.brightness == Brightness.dark;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.basic,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: AppShadows.getElevation(1, isDark: isDark),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: context.gradients.cardBackground,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: context.gradients.sectionBorder,
-                width: 1.5,
-              ),
-            ),
-            padding: EdgeInsets.all(isMobile ? 14.0 : 18.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header with accent border
-                Row(
-                  children: [
-                    // Larger, more prominent icon
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha(
-                          (0.15 * 255).toInt(),
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: theme.colorScheme.primary,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    // Title with accent border
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                          const SizedBox(height: 2),
-                          Container(
-                            height: 2,
-                            width: 40,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
-                              borderRadius: BorderRadius.circular(1),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+  // ── Osnovno-tab handoff primitives (units.jsx) ──────────────────────────
+  // Header: unit name + subtitle, Kopiraj (duplicate) + Uredi (edit).
+  Widget _buildOsnovnoHeader(
+    ThemeData theme,
+    BBColorSet c,
+    AppLocalizations l10n,
+    UnitModel unit,
+    bool isMobile,
+  ) {
+    final BbButtonSize size = isMobile ? BbButtonSize.sm : BbButtonSize.md;
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                unit.name,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20,
                 ),
-                const SizedBox(height: 18),
-                ...children,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                l10n.unitHubBasicDataSubtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: c.textTertiary,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        BbButton(
+          label: l10n.unitHubCopy,
+          iconLeft: 'content_copy',
+          variant: BbButtonVariant.secondary,
+          size: size,
+          onPressed: () {
+            context.push(
+              '${OwnerRoutes.unitWizard}?propertyId=${unit.propertyId}&duplicateFromId=${unit.id}',
+            );
+          },
+        ),
+        const SizedBox(width: 8),
+        BbButton(
+          label: l10n.unitHubEdit,
+          iconLeft: 'edit',
+          size: size,
+          onPressed: () {
+            context.push(OwnerRoutes.unitWizardEdit.replaceAll(':id', unit.id));
+          },
+        ),
+      ],
+    );
+  }
+
+  // Gallery (desktop): cover (2fr) + 2×2 tile grid (1fr). Read-only display of
+  // unit.images; empty slots render a neutral placeholder.
+  Widget _buildUnitGallery(BBColorSet c, List<String> images) {
+    String? at(int i) => i < images.length ? images[i] : null;
+    return SizedBox(
+      height: 200,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(flex: 2, child: _galleryTile(c, at(0), 20)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(child: _galleryTile(c, at(1), 14)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _galleryTile(c, at(2), 14)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(child: _galleryTile(c, at(3), 14)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _galleryTile(c, at(4), 14)),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildDetailRow(
-    ThemeData theme,
-    String label,
-    String value, {
-    Color? valueColor,
+  Widget _galleryTile(BBColorSet c, String? url, double radius) {
+    final Widget placeholder = DecoratedBox(
+      decoration: BoxDecoration(
+        color: c.surfaceVariant,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+      child: Center(
+        child: BbIcon(name: 'image', size: 22, color: c.textTertiary),
+      ),
+    );
+    if (url == null || url.isEmpty) return placeholder;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: Image.network(
+        url,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, _, _) => placeholder,
+        loadingBuilder: (ctx, child, progress) =>
+            progress == null ? child : placeholder,
+      ),
+    );
+  }
+
+  // Card header: 32px primary-tint icon badge + title (handoff CardHeader).
+  Widget _osnovnoCardHeader(
+    BBColorSet c, {
+    required String icon,
+    required String title,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
+          Container(
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: c.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
             ),
+            child: BbIcon(name: icon, size: 18, color: c.primary),
           ),
+          const SizedBox(width: 10),
           Expanded(
-            flex: 3,
             child: Text(
-              value,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-                color: valueColor ?? theme.colorScheme.onSurface,
-                letterSpacing: -0.2,
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: c.textPrimary,
               ),
               overflow: TextOverflow.ellipsis,
-              maxLines: 3,
+              maxLines: 1,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Key/value row (handoff KeyValueRow). `stack` = full-width label-over-value
+  // (used for prose like the description); otherwise label left / value right.
+  Widget _kvRow(
+    BBColorSet c,
+    String label, {
+    String? value,
+    String? placeholder,
+    Widget? child,
+    bool isLast = false,
+    bool stack = false,
+  }) {
+    final Widget labelWidget = Text(
+      label.toUpperCase(),
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.4,
+        color: c.textTertiary,
+      ),
+      overflow: TextOverflow.ellipsis,
+      maxLines: 2,
+    );
+
+    final Widget valueWidget =
+        child ??
+        ((value != null && value.isNotEmpty)
+            ? Text(
+                value,
+                textAlign: stack ? TextAlign.start : TextAlign.end,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  height: 1.35,
+                  color: c.textPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: stack ? 6 : 3,
+              )
+            : Text(
+                placeholder ?? '',
+                textAlign: stack ? TextAlign.start : TextAlign.end,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                  color: c.textTertiary,
+                ),
+              ));
+
+    final Widget content = stack
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              labelWidget,
+              const SizedBox(height: 4),
+              SizedBox(width: double.infinity, child: valueWidget),
+            ],
+          )
+        : Row(
+            children: [
+              Expanded(flex: 4, child: labelWidget),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 5,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: valueWidget,
+                ),
+              ),
+            ],
+          );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: isLast
+          ? null
+          : BoxDecoration(
+              border: Border(bottom: BorderSide(color: c.border)),
+            ),
+      child: content,
+    );
+  }
+
+  // Cijena card: emphasized PriceTile grid + extra-fee rows + Cjenovnik banner.
+  Widget _buildCijenaCard(BBColorSet c, AppLocalizations l10n, UnitModel unit) {
+    final List<Widget> tiles = <Widget>[
+      _priceTile(
+        c,
+        l10n.unitHubPricePerNight,
+        '€${unit.pricePerNight.toStringAsFixed(0)}',
+        emphasis: true,
+      ),
+      if (unit.weekendBasePrice != null)
+        _priceTile(
+          c,
+          l10n.unitWizardStep3WeekendPrice,
+          '€${unit.weekendBasePrice!.toStringAsFixed(0)}',
+        ),
+      _priceTile(c, l10n.unitHubMinNights, '${unit.minStayNights}'),
+      if (unit.maxStayNights != null)
+        _priceTile(c, l10n.unitWizardStep3MaxStay, '${unit.maxStayNights}'),
+    ];
+
+    // Extra fees the model carries but the handoff tiles omit — kept as rows.
+    final List<(String, String)> extras = <(String, String)>[
+      if (unit.maxTotalCapacity != null &&
+          unit.maxTotalCapacity! > unit.maxGuests)
+        (
+          l10n.unitWizardStep5ExtraBeds,
+          '${unit.maxTotalCapacity! - unit.maxGuests}',
+        ),
+      if (unit.extraBedFee != null)
+        (
+          l10n.unitWizardStep5ExtraBedFee,
+          '€${unit.extraBedFee!.toStringAsFixed(0)}',
+        ),
+      if (unit.petFee != null)
+        (l10n.unitWizardStep5PetFee, '€${unit.petFee!.toStringAsFixed(0)}'),
+    ];
+
+    return BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _osnovnoCardHeader(c, icon: 'euro', title: l10n.unitHubPriceSection),
+          const SizedBox(height: 8),
+          LayoutBuilder(
+            builder: (ctx, cons) {
+              final double w = cons.maxWidth;
+              final int cols = w >= 520 ? 4 : (w >= 340 ? 3 : 2);
+              final int useCols = tiles.length < cols ? tiles.length : cols;
+              const double gap = 12;
+              final double tileW = (w - (useCols - 1) * gap) / useCols;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: tiles
+                    .map((t) => SizedBox(width: tileW, child: t))
+                    .toList(),
+              );
+            },
+          ),
+          if (extras.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            for (int i = 0; i < extras.length; i++)
+              _kvRow(
+                c,
+                extras[i].$1,
+                value: extras[i].$2,
+                isLast: i == extras.length - 1,
+              ),
+          ],
+          const SizedBox(height: 14),
+          _buildCjenovnikHint(c, l10n),
+        ],
+      ),
+    );
+  }
+
+  Widget _priceTile(
+    BBColorSet c,
+    String label,
+    String value, {
+    bool emphasis = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: emphasis ? c.primary.withValues(alpha: 0.10) : c.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+        border: emphasis
+            ? Border.all(color: c.primary.withValues(alpha: 0.25))
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.4,
+              color: c.textTertiary,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              height: 1.1,
+              color: emphasis ? c.primary : c.textPrimary,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Cross-reference banner — tappable, jumps to the Cjenovnik tab (index 1).
+  // Local tab switch only; never reads/writes the FROZEN Cjenovnik content.
+  Widget _buildCjenovnikHint(BBColorSet c, AppLocalizations l10n) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _tabController.animateTo(1),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: c.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              BbIcon(name: 'info', size: 16, color: c.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.unitHubAdvancedPricingHint,
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.35,
+                    color: c.textSecondary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              BbIcon(name: 'chevron_right', size: 18, color: c.primary),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -7,6 +7,11 @@ import 'package:flutter/widgets.dart';
 /// - Tablet: 600px - 1024px (tablets and small laptops)
 /// - Desktop: >= 1024px (laptops and desktops)
 ///
+/// CANONICAL desktop breakpoint is 1200px ([desktopWide]) per
+/// audit/breakpoint-decide (2026-06-20); the legacy [desktop] = 1024 below
+/// flips to 1200 in a later codemod. New/migrated code gates on
+/// [isDesktopWide], not raw literals.
+///
 /// Usage:
 /// ```dart
 /// if (Breakpoints.isMobile(context)) {
@@ -26,6 +31,15 @@ class Breakpoints {
   /// Covers: Laptops, desktops, large displays
   static const double desktop = 1024;
 
+  /// CANONICAL desktop breakpoint = 1200px (audit/breakpoint-decide,
+  /// 2026-06-20). Single source of truth — NEW and migrated screens gate the
+  /// "desktop layout" switch on this, not on a raw literal. Aligns with
+  /// BBContentMaxWidth (1200) so multi-column appears exactly when content
+  /// stops growing. The legacy [desktop] = 1024 above stays until the final
+  /// codemod re-points [isDesktop]; until then both coexist (additive).
+  /// Distinct from BBBreakpoint's `wide` tier (1440).
+  static const double desktopWide = 1200;
+
   /// Check if current screen is mobile
   static bool isMobile(BuildContext context) =>
       MediaQuery.of(context).size.width < mobile;
@@ -38,6 +52,12 @@ class Breakpoints {
   /// Check if current screen is desktop
   static bool isDesktop(BuildContext context) =>
       MediaQuery.of(context).size.width >= desktop;
+
+  /// Check if current screen is desktop-wide (>= 1200px) — the CANONICAL
+  /// desktop breakpoint ([desktopWide]). Prefer this for new/migrated layout
+  /// switches over both [isDesktop] (legacy 1024) and raw literals.
+  static bool isDesktopWide(BuildContext context) =>
+      MediaQuery.of(context).size.width >= desktopWide;
 
   /// Check if screen width is less than tablet
   static bool isMobileOrTablet(BuildContext context) =>

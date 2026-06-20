@@ -15,10 +15,15 @@ extension ResponsiveExtension on BuildContext {
   /// Check if current screen is mobile (< 600px)
   bool get isMobile => Breakpoints.isMobile(this);
 
-  /// Check if current screen is tablet (600px - 1440px)
+  /// Check if current screen is tablet (600px – <1024px today). NOTE: the
+  /// canonical desktop breakpoint is 1200 (audit/breakpoint-decide); the
+  /// 1024–1199 band stays "tablet" here until the final codemod re-points
+  /// [Breakpoints.desktop] to 1200.
   bool get isTablet => Breakpoints.isTablet(this);
 
-  /// Check if current screen is desktop (>= 1440px)
+  /// Check if current screen is desktop (>= 1024px today — NOT 1440). The
+  /// canonical target is 1200; use [Breakpoints.isDesktopWide] for new layout
+  /// switches until this getter is re-pointed by the final codemod.
   bool get isDesktop => Breakpoints.isDesktop(this);
 
   /// Check if screen is mobile or tablet

@@ -2,7 +2,18 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-20 | **Version**: 7.31
+**Last Updated**: 2026-06-20 | **Version**: 7.32
+
+---
+
+**Changelog 7.32** (2026-06-20):
+
+### Design system — canonical desktop breakpoint = 1200 (decision + Foundation) (audit/breakpoint-decide-2026-06-20)
+- **Decision (doc-only, SHIPPED `ead8e25e` / #766):** resolved three competing breakpoint systems — `Breakpoints` (desktop=1024, 38 refs, powers `context.isDesktop`), `BBBreakpoint` (wide=1440, 6 refs), `ResponsiveBreakpoints` (desktop=1200, 6 refs) — none of which matched the documented 1200 convention. Banked **1200 px** as the single canonical desktop breakpoint; single source of truth `lib/core/constants/breakpoints.dart` (the other two delegate in a later codemod). Migration is **additive** — legacy `Breakpoints.desktop=1024` flips in a separate Final codemod, not in place. Resolves the §1 "breakpoint-system unification" deferral from audit/responsive-overflow-a11y (CHANGELOG 7.31).
+- **The durable rule (prevents re-drift):** classify each width comparison by what it READS — **device-class pivots** (`MediaQuery`/`screenWidth`, gate padding/typography) migrate to 1200; **content-fit reflows** (`LayoutBuilder constraints.maxWidth`, gate column-count/wrap) keep their value and just get a named local const. Content clamps (`maxWidth:1000/1100`) → unify to `BBContentMaxWidth=1200`. Intentional keeps: calendar 900, widget 1024, subscription/booking_detail 720.
+- **Foundation (SHIPPED `decb3be8` / #769, zero behavior change):** added `Breakpoints.desktopWide = 1200` + `Breakpoints.isDesktopWide(context)` as the single source new/migrated screens gate on (legacy `desktop=1024` untouched — additive). Fixed the lying `context_extensions.dart` `isTablet`/`isDesktop` docstrings (claimed desktop `>= 1440`; the code has always fired at `>= 1024`).
+- **Risk made explicit:** today `tablet == desktop == 1024` (no live tablet tier); moving to 1200 makes the 1024–1199 band hit each screen's tablet branch for the first time → every per-screen migration needs a ~1100px eyeball.
+- **Verifikacija:** `flutter analyze` **0 net-new** (changed files clean) · `dart format` · **full suite 1581 green** · `flutter build web --no-tree-shake-icons` clean. Dev-only. Deferred: per-screen migrations (ride design passes — stripe/138, ical/140, embed/137) + Final codemod (flip legacy `desktop`→1200, re-point `context.isDesktop`, eyeball all 38 `context.isDesktop` consumers @ ~1100px). (Renumber if a sibling parallel branch claims 7.32.)
 
 ---
 

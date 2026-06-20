@@ -5,6 +5,8 @@
 
 This doc **banks 1200 as the canonical desktop breakpoint** and **the device-class-vs-content-fit rule** that keeps it from rotting. No code changed.
 
+> **UPDATE 2026-06-20 — Foundation SHIPPED** (PR #769, main `decb3be8`): the additive bookend landed — `Breakpoints.desktopWide = 1200` + `Breakpoints.isDesktopWide(context)` now exist as the single source, and the lying `context_extensions.dart` docstrings are fixed. Folded passes should call `isDesktopWide`. Per-screen migrations + the Final codemod remain GO-gated (see §4).
+
 ---
 
 ## Context — why this exists

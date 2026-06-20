@@ -17,8 +17,13 @@ void main() {
   goldenSurface(
     'timeline_chrome',
     maxContentWidth: 1100,
-    build: (context, v) => const OwnerTimelineCalendarScreen()
-        .buildChromeForTest(context, isMobile: v.isMobile),
+    build: (context, v) => const OwnerTimelineCalendarScreen().buildChromeForTest(
+      context,
+      isMobile: v.isMobile,
+      // Pin the toolbar "today" day-number badge (was DateTime.now().day, daily
+      // flaky). Day 20 matches the blessed baseline.
+      now: DateTime(2026, 6, 20),
+    ),
   );
 
   goldenSurface(

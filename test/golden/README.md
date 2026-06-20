@@ -73,13 +73,15 @@ the failure PNGs that Flutter writes to `<test>/goldens/failures/`.
 
 # Coverage + deferred plan
 
-Covered today — **16 subjects × 4 variants = 64 stable baselines**:
+Covered today — **13 subjects × 4 variants = 52 stable baselines**:
 
 * **Premium focused-surfaces** (via existing `@visibleForTesting` builders):
   `pregled_panel`, `timeline_chrome`, `month_chrome`, `ai_conversation`.
-* **Self-contained full screens**: 3 legal screens, register, forgot-password,
-  change-password, FAQ, embed-help, about, subscription, stripe-connect,
-  not-found.
+  `pregled_panel` + `timeline_chrome` pin a test-only `now` (their greeting /
+  eyebrow-date / "today" badge read `DateTime.now()` in production — without the
+  pin they false-red as the clock advances).
+* **Self-contained full screens**: register, forgot-password, change-password,
+  FAQ, embed-help, about, subscription, stripe-connect, not-found.
 
 Everything below is **out of this pass** with the reason + the concrete way in.
 
@@ -88,10 +90,19 @@ Everything below is **out of this pass** with the reason + the concrete way in.
 | Subject | Why | Existing coverage |
 |---|---|---|
 | `booking_detail` | Renders a `DateTime.now()`-derived string (arrival countdown / activity timestamps); pixels differ between the bless and the compare run. | `owner_booking_detail_layout_test.dart` — overflow across 9 breakpoints × 2 themes × 4 statuses. |
+| `legal_privacy_policy` / `legal_terms_conditions` | Footer renders `DateTime.now().year` (annual drift). | — |
+| `legal_cookies_policy` | Renders the full `DateTime.now()` date (daily drift). | — |
 
-**Way in:** thread an injectable clock (`package:clock` `withClock`) through the
-detail's relative-time helpers so the test can pin "now", then golden via
-`buildBookingDetailContentForTest`.
+**On the 3 legal pages (deferred, not seamed):** they were green only because
+bless-day == run-day. Unlike `pregled` / `timeline` — high-value premium surfaces
+worth a `@visibleForTesting now` param — a static legal page adds little golden
+value, so the cheap move is to drop them rather than add a product `now` param to
+each. **Way in:** make the displayed date injectable (param or `clock.now()`),
+then re-add a `goldenScreen` per page.
+
+**Way in (booking_detail):** thread an injectable clock (`package:clock`
+`withClock`) through the detail's relative-time helpers so the test can pin "now",
+then golden via `buildBookingDetailContentForTest`.
 
 ## 2. Provider-heavy screens — need a seam OR override fixture
 

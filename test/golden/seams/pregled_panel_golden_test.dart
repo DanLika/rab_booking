@@ -26,6 +26,10 @@ void main() {
       dateRange: dashboardRange(),
       isMobile: v.isMobile,
       userName: 'Ivana',
+      // Pin the clock: the header greeting (hour) + eyebrow date (day) read
+      // DateTime.now() in production and were time-of-day/daily flaky. Fixed to
+      // the original bless instant (Sat 20 Jun 2026, 09:00 -> "Dobro jutro").
+      now: DateTime(2026, 6, 20, 9),
     ),
   );
 }

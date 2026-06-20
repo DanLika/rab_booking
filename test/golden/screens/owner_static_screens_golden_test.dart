@@ -8,41 +8,20 @@
 @Tags(['golden'])
 library;
 
-import 'package:bookbed/features/auth/presentation/screens/cookies_policy_screen.dart';
 import 'package:bookbed/features/auth/presentation/screens/enhanced_register_screen.dart';
 import 'package:bookbed/features/auth/presentation/screens/forgot_password_screen.dart';
-import 'package:bookbed/features/auth/presentation/screens/privacy_policy_screen.dart';
-import 'package:bookbed/features/auth/presentation/screens/terms_conditions_screen.dart';
 import 'package:bookbed/features/owner_dashboard/presentation/screens/change_password_screen.dart';
 import 'package:bookbed/features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import 'package:bookbed/shared/presentation/screens/not_found_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/golden_harness.dart';
 
 void main() {
-  goldenScreen(
-    'legal_privacy_policy',
-    wrapInScaffold: false,
-    tolerateOverflow: true,
-    build: (v) => const PrivacyPolicyScreen(),
-  );
-
-  goldenScreen(
-    'legal_terms_conditions',
-    wrapInScaffold: false,
-    tolerateOverflow: true,
-    build: (v) => const TermsConditionsScreen(),
-  );
-
-  goldenScreen(
-    'legal_cookies_policy',
-    wrapInScaffold: false,
-    tolerateOverflow: true,
-    build: (v) => const CookiesPolicyScreen(),
-  );
-
+  // NOTE: the 3 legal screens (privacy/terms/cookies) are DEFERRED from the net
+  // — they render a `DateTime.now()` year/date in product code (annual/daily
+  // flaky). See test/golden/README.md deferred ledger. Re-add once their date is
+  // injectable.
   goldenScreen(
     'auth_register',
     wrapInScaffold: false,

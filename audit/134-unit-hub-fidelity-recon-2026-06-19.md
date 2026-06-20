@@ -157,3 +157,25 @@ Scope **B+A, SAFE only**, per operator APPLY + a 7-question alignment interview.
 **NOT live-exercised:** real Firebase-Storage gallery photo (render used `data:` seed photos — `img-src` blocks external URLs; the `Image.network` + `errorBuilder` path is exercised, and `firebasestorage.googleapis.com` IS CSP-allowed, but no unit with real Storage URLs was seeded this pass).
 
 **Pending operator:** eyeball + 100/100 → commit (+ CHANGELOG). Deferred: master-panel Bb-migration (own pass); Services-card primitives are the same `_osnovnoCardHeader`/`_kvRow` already shown in the other cards.
+
+---
+
+## §8 — APPLIED: F (Unit Wizard chrome) — `design/134-unit-wizard` (squash-merged)
+
+Scope **F only**, per operator APPLY (`dalje`). Worktree `/tmp/bb-unit-wizard-wt` on `design/134-unit-wizard` (off `origin/main` `54f0820a`). §4 fingerprint had already scoped the wizard-chrome debt to **"1 hardcoded color (cheap)"** → this is a **1-file polish, not a stepper re-layout** (the icon-led vertical 3-tone treatment is kept — see traps below).
+
+**Changes (`wizard_progress_bar.dart`, +25/−13):**
+- **1-color hygiene:** retired `static const _completedColor = Color(0xFF66BB6A)` (off-palette bright Material green) → theme-aware `BBColor.of(context).success` (`#2E7D5B` / `#4FAE7F`), resolved per-build. Applied to completed node bg/border, completed label, completed connector, **and** the mobile `LinearProgressIndicator` fill. Same "done = green" semantic, now on the system success/confirmed palette. Helpers `_buildStepIndicator`/`_buildConnector` gained a `BuildContext` param to resolve the token.
+- **Handoff polish:** current step node `BoxDecoration.boxShadow` → `BBShadow.purpleGlow(context)` (handoff `wizard.jsx` stepper `--bb-shadow-purple-sm`) — active-step lift.
+
+**Handoff elements deliberately NOT replicated** (recorded so the boundary is explicit):
+- **Stepper "FROZEN" badge** — `wizard.jsx` marks step 4 with a FROZEN chip. That is design-doc **meta-annotation** of the locked publish flow, *not* user-facing UI. Showing owners a "FROZEN" badge is nonsensical → omitted.
+- **"Skica spremljena" autosave caption** (footer) — the wizard holds draft state in-memory (`unitWizardNotifierProvider`); nothing persists until `_publishUnit`. The caption would **fabricate** a save that didn't happen → omitted (data-honesty, same principle as the §7 Vidljivost/Polog drop).
+- **Step-1 "Odustani" tertiary** — `CommonAppBar` back already closes the pushed route; adding it needs a new callback for marginal value → left out (cheaply addable if wanted).
+- **Stepper re-layout** (handoff horizontal label-beside-node + bare step numbers + mobile discrete-segment bar) — beyond §F's "1-color + polish" scope; the current icon-led vertical treatment distinguishes done/current/pending in 3 tones (arguably clearer) and is a working widget → not churned. Available as a follow-up for fuller `wizard.jsx` parity.
+
+**FROZEN fence honored (0 touch):** Wizard `_publishUnit()` 2-doc serial write (`unit_wizard_screen.dart:235–366`) · `CommonAppBar` unification (audit/124–126 deliberate decision) · step-content (`step_1..4`) / `UnitModel`. The progress-bar labels stay l10n-driven (`Info/Capacity/Price/Review`) — the code flow (basic→capacity→pricing→review) differs from the handoff steps (Osnovno→Kapacitet→Fotografije→Objava) by design (§3 step-order delta); only the visual treatment was touched.
+
+**Coverage (new):** `test/.../unit_wizard/wizard_progress_bar_test.dart` — **42 cells** (7 breakpoints × light/dark × 3 step-states: none-done / mixed completed+current / all-done) asserting no RenderFlex overflow + clean token resolve across BOTH render branches (compact `< 600` / full stepper `≥ 600`). No prior coverage existed → additive, nothing re-pointed.
+
+**Attestation:** `flutter analyze` **0 issues** (touched paths) · `dart format` clean · render/overflow **42/42 green** · `flutter build web --release --no-tree-shake-icons` **clean** (the no-flag build trips a *pre-existing* non-const `IconData` in `bb_icon.dart:40` — BbIcon's dynamic `MaterialSymbolsRounded` lookup, unrelated to this change). **Live eyeball** (bookbed-dev `:8097`, worktree branch): operator-gated **light + dark + mobile**. **Dev-only → not deployed.**

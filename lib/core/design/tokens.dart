@@ -1115,20 +1115,6 @@ class BBGradient {
   static const Color brandPrimaryStart = Color(0xFF6B4CE6);
   static const Color brandPrimaryEnd = Color(0xFF7E5FEE);
 
-  /// Subtle background — light mode
-  static const LinearGradient subtleBackgroundLight = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: <Color>[Color(0xFFFAF8F3), Color(0xFFFFFFFF)],
-  );
-
-  /// Subtle background — dark mode
-  static const LinearGradient subtleBackgroundDark = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: <Color>[Color(0xFF1A1A1A), Color(0xFF121212)],
-  );
-
   /// Primary accent
   static const LinearGradient primaryAccent = LinearGradient(
     begin: Alignment.topLeft,

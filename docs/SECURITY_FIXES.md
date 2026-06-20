@@ -1436,7 +1436,7 @@ CF half landed via SF-023 sibling work:
 | `lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:496` | per-unit stream | `.snapshots()` realtime |
 | `lib/features/widget/data/helpers/availability_checker.dart:257` | `_checkBookings()` | `.get()` one-shot — booking-submit gate |
 
-Until these are migrated, the `unit_id+status` clause in `firestore.rules` **must stay open** — dropping it 403s the widget calendar and breaks the anonymous booking-submit conflict check. CLAUDE.md "NIKADA NE MIJENJAJ" table reflects this; also calls out that `firebase_booking_calendar_repository.dart` (989 lines, no unit tests) is do-not-touch without first adding test coverage.
+Until these are migrated, the `unit_id+status` clause in `firestore.rules` **must stay open** — dropping it 403s the widget calendar and breaks the anonymous booking-submit conflict check. CLAUDE.md "NIKADA NE MIJENJAJ" table reflects this; also calls out that `firebase_booking_calendar_repository.dart` (1293 lines, no unit tests) is do-not-touch without first adding test coverage.
 
 **Migration plan (T11c proper, separate PR)**:
 1. Add unit test coverage for the 4 calendar repo streams (covering blocked-date rendering, no-PII shape).

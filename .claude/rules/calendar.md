@@ -36,6 +36,8 @@ Timeline is horizontally scrollable — wider screens show more days with same c
 
 Cancelled bookings at base level (drawn first), confirmed on top.
 
+**DORMANT** — cancelled filtered pre-paint (`owner_calendar_provider:108-119`), rule retired by removal not inverted.
+
 ## Provider Invalidation Pattern
 
 ```dart

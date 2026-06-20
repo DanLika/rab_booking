@@ -18,26 +18,6 @@ class GradientTokens {
   // Linear Gradients
   // ============================================================================
 
-  /// Subtle background gradient (light mode)
-  static const LinearGradient subtleBackgroundLight = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Color(0xFFFAF8F3), // Cream/beige
-      Color(0xFFFFFFFF), // White
-    ],
-  );
-
-  /// Subtle background gradient (dark mode)
-  static const LinearGradient subtleBackgroundDark = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF1A1A1A), // Dark gray
-      Color(0xFF121212), // Darker gray
-    ],
-  );
-
   /// Brand gradient - Purple solid colors (no alpha transparency)
   /// Used for: App Bar, Drawer Header, Primary Buttons
   /// Consistent across Light and Dark themes

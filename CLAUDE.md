@@ -31,8 +31,8 @@
 |------------|--------|
 | Cjenovnik tab CONTENT (`unified_unit_hub_screen.dart` — pricing grid + Spremi) | FROZEN - referentna implementacija. Hub screen-shell chrome (premium header above existing layout, theme/AppBar) je additive-OK; FROZEN scope = tab content only. |
 | Unit Wizard publish flow | 2-doc serial write (unit → widget_settings, Doc 2 id sourced from Doc 1) — redoslijed kritičan |
-| Timeline Calendar z-index | Cancelled bookings at base (drawn first), confirmed on top |
-| Calendar Repository (`firebase_booking_calendar_repository.dart`) | 989 linija, duplikacija NAMJERNA - bez unit testova NE DIRATI |
+| Timeline Calendar z-index | Cancelled bookings at base (drawn first), confirmed on top. **DORMANT** — cancelled filtered pre-paint (`owner_calendar_provider:108-119`), rule retired by removal not inverted. |
+| Calendar Repository (`firebase_booking_calendar_repository.dart`) | 1293 linija, duplikacija NAMJERNA - bez unit testova NE DIRATI |
 | Owner email u `atomicBooking.ts` | UVIJEK šalje - NE vraćaj conditional check |
 | Subdomain validation regex | `/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/` (3-30 chars) |
 | `generateViewBookingUrl()` u `emailService.ts` | Email URL logika |

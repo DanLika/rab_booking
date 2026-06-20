@@ -83,11 +83,11 @@ Scope: `lib/**` + `functions/src/**`. Excluded: `*.g.dart`, `*.freezed.dart`, `t
 | `cachedWidgetContextProvider` `widget_context_provider.dart:235` | @riverpod provider | 0 ext | MED | |
 | `currentSubdomainProvider` `subdomain_provider.dart:23` | @riverpod provider | 0 ext | MED | |
 | `ownerBankDetailsProvider` `owner_bank_details_provider.dart:11` | @riverpod provider | 0 ext | MED | whole file also unreferenced (B.2) |
-| **62 unreferenced `.dart` files** (full list below) | files | 0 imports each | **HIGH** (unless noted) | basename in 0 import/export/part anywhere in `lib/`; public symbols 0 cross-file refs |
+| **61 unreferenced `.dart` files** (full list below) | files | 0 imports each | **HIGH** (unless noted) | basename in 0 import/export/part anywhere in `lib/`; public symbols 0 cross-file refs |
 
 **Category-1 private symbols:** **0 dead** — every top-level private class/mixin/enum/extension/function/var (955 checked) is referenced ≥1× beyond its declaration; all 286 private widgets are instantiated. (`_LedgerMetrics`, `_EmbedMode` were false positives — used via `.member`/enum access.)
 
-### B.2 — 62 unreferenced `.dart` files (HIGH confidence; basename in 0 imports, symbols 0 cross-file)
+### B.2 — 61 unreferenced `.dart` files (HIGH confidence; basename in 0 imports, symbols 0 cross-file)
 
 > Note: 9 conditional-import/`part` stubs (`*_web.dart`/`*_io.dart`/barrels) were correctly excluded. The coupled repo files behind dead analytics providers (B.1) are imported, so NOT counted here, but become orphaned if those providers are removed.
 
@@ -99,10 +99,12 @@ Scope: `lib/**` + `functions/src/**`. Excluded: `*.g.dart`, `*.freezed.dart`, `t
 
 **features/subscription/ (1):** `subscription/data/subscription_repository.dart`
 
-**features/widget/ (19):** `domain/models/guest_details.dart` · `presentation/models/booking_confirmation_data.dart` · `providers/ical_sync_status_provider.dart` · `providers/owner_bank_details_provider.dart` · `providers/price_calculator_provider.dart` (stale dup) · `widgets/bank_transfer/bank_details_section.dart` · `widgets/bank_transfer/important_notes_section.dart` · `widgets/bank_transfer/payment_warning_section.dart` · `widgets/bank_transfer/qr_code_payment_section.dart` · `widgets/confirmation/booking_reference_card.dart` · `widgets/confirmation/email_spam_warning_card.dart` · `widgets/popup_blocked_dialog.dart` · `widgets/pwa/connectivity_banner.dart` · `widgets/pwa/pwa_install_button.dart` · `widgets/widget_shell_skeleton.dart` · `widgets/zoom_hint_overlay.dart` · `utils/firestore_validators.dart`
+**features/widget/ (16):** `domain/models/guest_details.dart` · `presentation/models/booking_confirmation_data.dart` · `providers/ical_sync_status_provider.dart` · `providers/owner_bank_details_provider.dart` · `providers/price_calculator_provider.dart` (stale dup) · `widgets/bank_transfer/bank_details_section.dart` · `widgets/bank_transfer/important_notes_section.dart` · `widgets/bank_transfer/payment_warning_section.dart` · `widgets/bank_transfer/qr_code_payment_section.dart` · `widgets/confirmation/booking_reference_card.dart` · `widgets/confirmation/email_spam_warning_card.dart` · `widgets/pwa/connectivity_banner.dart` · `widgets/pwa/pwa_install_button.dart` · `widgets/widget_shell_skeleton.dart` · `widgets/zoom_hint_overlay.dart` · `utils/firestore_validators.dart`
 
 **shared/ (8):** `shared/models/booking_service_model.dart` · `shared/widgets/bookbed_logo.dart` · `shared/widgets/debounced_search_field.dart` · `shared/widgets/deferred_loader.dart` · `shared/widgets/feature_highlight_widget.dart` · `shared/widgets/gradient_button.dart` · `shared/widgets/loading_overlay.dart` (distinct from live `global_navigation_loader.dart`) · `shared/widgets/login_loading_overlay.dart`
 
+> **Exclusion (2026-06-20):** `widgets/popup_blocked_dialog.dart` was pulled from this list — it is being KEPT and localized (System B `WidgetTranslations`, branch `fix/widget-l10n-guest`) and will be WIRED into the blocked-popup path separately (branch #7; `booking_widget_screen.dart` is FROZEN). It is import-unreferenced only because that wiring hasn't landed yet → **B.2 must NOT delete it.** (The `features/widget/` group was also mislabeled 19; 17 entries were actually listed, now 16.)
+>
 > ⚠ Many of these are plausibly-superseded redesign artifacts (`booking_details_dialog.dart` + `_v2`, `gradient_auth_button.dart`, `glass_card.dart`, `owner_splash_screen.dart`). Recommend confirming none are referenced from web `index.html`/asset manifests or reflectively before any future removal PR.
 
 ### B.3 — TODO / FIXME / HACK / XXX debt
@@ -151,6 +153,6 @@ Scope: `lib/**` + `functions/src/**`. Excluded: `*.g.dart`, `*.freezed.dart`, `t
 ## Summary
 
 - **FROZEN: 11/11 INTACT.** Zero violations. 2 doc-hygiene notes (calendar repo line count 989→1293 stale in CLAUDE.md; #3 z-order dormant-by-removal).
-- **Dead code (high-confidence):** 1 orphan fns module + 1 stale-dup Dart file + 62 unreferenced `.dart` files + ~25 dead fns exports + 6 dead Dart extensions + 3 dead constant-holder classes + ~17 orphaned/dead-cluster providers.
+- **Dead code (high-confidence):** 1 orphan fns module + 1 stale-dup Dart file + 61 unreferenced `.dart` files + ~25 dead fns exports + 6 dead Dart extensions + 3 dead constant-holder classes + ~17 orphaned/dead-cluster providers.
 - **Debt:** 10 TODOs (0 FIXME/HACK/XXX), 34 `@deprecated` (4 live debt, ~30 removable incl. 20 token-alias guard-rails).
 - **Nothing deleted.** All candidates ref-count-verified; recommend a confirmation grep against web `index.html`/asset manifests before any removal PR (redesign artifacts likely).

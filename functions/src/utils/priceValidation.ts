@@ -36,7 +36,7 @@ interface PriceCalculationResult {
  *
  * FALLBACK: If daily_prices don't exist for some dates, falls back to
  * unit's base price (price_per_night / weekend_base_price), matching
- * the client-side calculation in price_calculator_provider.dart.
+ * the client-side calculation in booking_price_provider.dart.
  *
  * @param unitId - The unit ID to calculate price for
  * @param checkInDate - Check-in date (Firestore Timestamp)

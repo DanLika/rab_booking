@@ -21,6 +21,13 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/redesign.dart';
 import '../widgets/owner_app_drawer.dart';
 
+/// Theme-aware section divider colour. Extracted from 3 inlined ternaries
+/// (audit/138 C2) — byte-identical to the originals.
+Color _sectionDividerColor(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? AppColors.sectionDividerDark
+    : AppColors.sectionDividerLight;
+
 /// Stripe Connect setup screen for property owners
 /// Redesigned: Premium feel with consistent theme support
 class StripeConnectSetupScreen extends ConsumerStatefulWidget {
@@ -589,7 +596,7 @@ class _StripeConnectSetupScreenState
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+              color: theme.colorScheme.primary.withAlpha(25),
               borderRadius: BorderRadius.circular(8),
             ),
             child: BbIcon(name: iconName, color: theme.colorScheme.primary),
@@ -609,9 +616,7 @@ class _StripeConnectSetupScreenState
                 Text(
                   description,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha(
-                      (0.7 * 255).toInt(),
-                    ),
+                    color: theme.colorScheme.onSurface.withAlpha(178),
                   ),
                 ),
               ],
@@ -624,8 +629,6 @@ class _StripeConnectSetupScreenState
 
   Widget _buildStepsSection(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final steps = [
       (
@@ -655,12 +658,7 @@ class _StripeConnectSetupScreenState
               level: BbSectionHeaderLevel.h3,
             ),
           ),
-          Divider(
-            height: 1,
-            color: isDark
-                ? AppColors.sectionDividerDark
-                : AppColors.sectionDividerLight,
-          ),
+          Divider(height: 1, color: _sectionDividerColor(context)),
           ...steps.map((s) => _buildStepItem(context, s.$1, s.$2, s.$3, s.$4)),
         ],
       ),
@@ -693,14 +691,10 @@ class _StripeConnectSetupScreenState
                   radius: 16,
                   backgroundColor: isExpanded
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurface.withAlpha(
-                          (0.15 * 255).toInt(),
-                        ),
+                      : theme.colorScheme.onSurface.withAlpha(38),
                   foregroundColor: isExpanded
                       ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurface.withAlpha(
-                          (0.7 * 255).toInt(),
-                        ),
+                      : theme.colorScheme.onSurface.withAlpha(178),
                   child: Text(
                     '$number',
                     style: const TextStyle(
@@ -722,9 +716,7 @@ class _StripeConnectSetupScreenState
                 ),
                 BbIcon(
                   name: isExpanded ? 'expand_less' : 'expand_more',
-                  color: theme.colorScheme.onSurface.withAlpha(
-                    (0.5 * 255).toInt(),
-                  ),
+                  color: theme.colorScheme.onSurface.withAlpha(127),
                 ),
               ],
             ),
@@ -737,9 +729,7 @@ class _StripeConnectSetupScreenState
             child: Text(
               description,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.7 * 255).toInt(),
-                ),
+                color: theme.colorScheme.onSurface.withAlpha(178),
                 height: 1.5,
               ),
             ),
@@ -749,9 +739,7 @@ class _StripeConnectSetupScreenState
             height: 1,
             indent: 20,
             endIndent: 20,
-            color: Theme.of(context).brightness == Brightness.dark
-                ? AppColors.sectionDividerDark
-                : AppColors.sectionDividerLight,
+            color: _sectionDividerColor(context),
           ),
       ],
     );
@@ -760,7 +748,6 @@ class _StripeConnectSetupScreenState
   Widget _buildFaqSection(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final faqs = [
       (l10n.stripeGuideFaq1Q, l10n.stripeGuideFaq1A),
@@ -805,12 +792,7 @@ class _StripeConnectSetupScreenState
             ),
           ),
           if (_showFaq) ...[
-            Divider(
-              height: 1,
-              color: isDark
-                  ? AppColors.sectionDividerDark
-                  : AppColors.sectionDividerLight,
-            ),
+            Divider(height: 1, color: _sectionDividerColor(context)),
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -854,9 +836,7 @@ class _StripeConnectSetupScreenState
             child: Text(
               answer,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.7 * 255).toInt(),
-                ),
+                color: theme.colorScheme.onSurface.withAlpha(178),
                 height: 1.5,
               ),
             ),
@@ -929,7 +909,7 @@ class _MoneyLoadingAnimation extends StatelessWidget {
           height: 24,
           child: CircularProgressIndicator(
             strokeWidth: 2.5,
-            color: primaryColor.withAlpha((0.6 * 255).toInt()),
+            color: primaryColor.withAlpha(153),
           ),
         ),
         const SizedBox(height: 16),
@@ -937,7 +917,7 @@ class _MoneyLoadingAnimation extends StatelessWidget {
         Text(
           AppLocalizations.of(context).stripeLoadingAccount,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+            color: theme.colorScheme.onSurface.withAlpha(178),
           ),
         ),
       ],

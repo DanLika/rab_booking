@@ -1118,6 +1118,7 @@
   "notificationSettingsTitle": "Postavke Obavijesti",
   "notificationSettingsEnableAll": "Omogući Opcionalne Obavijesti",
   "notificationSettingsMasterSwitch": "Kontrolirajte marketing i podsjetnik emailove. Kritične obavijesti o rezervacijama se uvijek šalju.",
+  "notificationSettingsBannerInfo": "Odaberite kako želite biti obaviješteni. Kritične obavijesti o plaćanju uvijek šaljemo e-poštom.",
   "notificationSettingsEnabled": "Obavijesti uspješno omogućene",
   "notificationSettingsDisabled": "Opcionalne obavijesti onemogućene",
   "notificationSettingsUpdateError": "Greška pri ažuriranju postavki",

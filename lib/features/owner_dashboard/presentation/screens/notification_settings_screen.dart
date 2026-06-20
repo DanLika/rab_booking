@@ -214,8 +214,7 @@ class _NotificationSettingsScreenState
                           const SizedBox(width: BBSpace.xs),
                           Expanded(
                             child: Text(
-                              'Odaberite kako želite biti obaviješteni. Kritične '
-                              'obavijesti o plaćanju uvijek šaljemo e-poštom.',
+                              l10n.notificationSettingsBannerInfo,
                               style: BBType.body(
                                 context,
                               ).copyWith(color: c.textSecondary, fontSize: 13),

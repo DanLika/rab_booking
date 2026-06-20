@@ -457,66 +457,85 @@ class _UsersTable extends StatelessWidget {
         children: [
           BbCard(
             padded: false,
-            child: DataTable(
-              dataRowMinHeight: 60,
-              dataRowMaxHeight: 60,
-              columnSpacing: BBSpace.md,
-              horizontalMargin: BBSpace.md,
-              columns: [
-                DataColumn(label: Text('Name', style: headingStyle)),
-                DataColumn(label: Text('Email', style: headingStyle)),
-                DataColumn(label: Text('Account Type', style: headingStyle)),
-                DataColumn(label: Text('Created At', style: headingStyle)),
-                DataColumn(label: Text('Actions', style: headingStyle)),
-              ],
-              rows: owners.map((user) {
-                final displayName = user.displayName ?? user.fullName;
-                return DataRow(
-                  cells: [
-                    DataCell(
-                      Row(
-                        children: [
-                          BbAvatar(name: displayName, size: BbAvatarSize.xs),
-                          const SizedBox(width: BBSpace.sm),
-                          SelectableText(
-                            displayName,
-                            style: BBType.body(context).copyWith(
-                              fontWeight: FontWeight.w500,
-                              color: palette.textPrimary,
+            // Horizontal scroll keeps the 5-column table usable in the
+            // 800-1100px window (below the <800 card fallback). minWidth ties
+            // the table to the card width so it fills on wide screens and only
+            // scrolls when content overflows.
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                  child: DataTable(
+                    dataRowMinHeight: 60,
+                    dataRowMaxHeight: 60,
+                    columnSpacing: BBSpace.md,
+                    horizontalMargin: BBSpace.md,
+                    columns: [
+                      DataColumn(label: Text('Name', style: headingStyle)),
+                      DataColumn(label: Text('Email', style: headingStyle)),
+                      DataColumn(
+                        label: Text('Account Type', style: headingStyle),
+                      ),
+                      DataColumn(
+                        label: Text('Created At', style: headingStyle),
+                      ),
+                      DataColumn(label: Text('Actions', style: headingStyle)),
+                    ],
+                    rows: owners.map((user) {
+                      final displayName = user.displayName ?? user.fullName;
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Row(
+                              children: [
+                                BbAvatar(
+                                  name: displayName,
+                                  size: BbAvatarSize.xs,
+                                ),
+                                const SizedBox(width: BBSpace.sm),
+                                SelectableText(
+                                  displayName,
+                                  style: BBType.body(context).copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: palette.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          DataCell(
+                            SelectableText(
+                              user.email,
+                              style: BBType.body(
+                                context,
+                              ).copyWith(color: palette.textSecondary),
+                            ),
+                          ),
+                          DataCell(_AccountTypeBadge(type: user.accountType)),
+                          DataCell(
+                            Text(
+                              _formatDate(user.createdAt),
+                              style: BBType.body(
+                                context,
+                              ).copyWith(color: palette.textSecondary),
+                            ),
+                          ),
+                          DataCell(
+                            BbButton(
+                              asIcon: true,
+                              iconLeft: 'arrow_forward_ios',
+                              variant: BbButtonVariant.tertiary,
+                              semanticLabel: 'View Details',
+                              onPressed: () => context.go('/users/${user.id}'),
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    DataCell(
-                      SelectableText(
-                        user.email,
-                        style: BBType.body(
-                          context,
-                        ).copyWith(color: palette.textSecondary),
-                      ),
-                    ),
-                    DataCell(_AccountTypeBadge(type: user.accountType)),
-                    DataCell(
-                      Text(
-                        _formatDate(user.createdAt),
-                        style: BBType.body(
-                          context,
-                        ).copyWith(color: palette.textSecondary),
-                      ),
-                    ),
-                    DataCell(
-                      BbButton(
-                        asIcon: true,
-                        iconLeft: 'arrow_forward_ios',
-                        variant: BbButtonVariant.tertiary,
-                        semanticLabel: 'View Details',
-                        onPressed: () => context.go('/users/${user.id}'),
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
             ),
           ),
           if (hasMore)
@@ -689,4 +708,28 @@ class _UsersListPalette {
       isDark: false,
     );
   }
+}
+
+/// Renders the owner `DataTable` surface (`_UsersTable`) in isolation for the
+/// responsive overflow regression test, using a neutral light palette derived
+/// from the ambient [Theme] (no Firebase / Riverpod). Not for production use —
+/// see `test/features/admin/users_list_overflow_test.dart`.
+@visibleForTesting
+Widget buildUsersTableForTest({required List<UserModel> owners}) {
+  return Builder(
+    builder: (context) {
+      final scheme = Theme.of(context).colorScheme;
+      return _UsersTable(
+        owners: owners,
+        hasMore: false,
+        onLoadMore: () {},
+        palette: _UsersListPalette(
+          textPrimary: scheme.onSurface,
+          textSecondary: scheme.onSurfaceVariant,
+          textTertiary: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+          isDark: false,
+        ),
+      );
+    },
+  );
 }

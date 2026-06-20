@@ -5,6 +5,9 @@
 // a tall surface so a change anywhere in the panel — KPI chips, chart,
 // occupancy column, arrivals card — is caught.
 
+@Tags(['golden'])
+library;
+
 import 'package:bookbed/features/owner_dashboard/presentation/screens/dashboard_overview_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

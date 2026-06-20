@@ -320,7 +320,9 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Run tests with coverage
-        run: flutter test --coverage
+        # Exclude the golden net here too: macOS-rasterised baselines red on the
+        # Linux runner. Goldens are a LOCAL net (see test/golden/README.md).
+        run: flutter test --coverage --exclude-tags golden
 
       - name: Check coverage threshold
         run: |

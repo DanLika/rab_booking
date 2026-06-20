@@ -4,9 +4,13 @@
 // and a user→assistant exchange via `buildAiMessageBubble` (solid user bubble +
 // initials avatar, assistant markdown). No providers / l10n — strings passed in.
 
+@Tags(['golden'])
+library;
+
 import 'package:bookbed/features/owner_dashboard/presentation/screens/guides/ai_assistant_screen.dart';
 import 'package:bookbed/features/owner_dashboard/presentation/widgets/guides/ai_assistant_premium_header.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/golden_fixtures.dart';
 import '../../helpers/golden_harness.dart';

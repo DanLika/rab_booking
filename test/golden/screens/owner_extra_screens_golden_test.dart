@@ -2,10 +2,14 @@
 // status provider; if it can't pump hermetically it gets moved to DEFERRED.md
 // rather than papered over.
 
+@Tags(['golden'])
+library;
+
 import 'package:bookbed/features/owner_dashboard/presentation/screens/about_screen.dart';
 import 'package:bookbed/features/owner_dashboard/presentation/screens/guides/embed_help_screen.dart';
 import 'package:bookbed/features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart';
 import 'package:bookbed/features/subscription/screens/subscription_screen.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/golden_harness.dart';
 

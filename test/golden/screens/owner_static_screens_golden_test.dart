@@ -5,6 +5,9 @@
 // `wrapInScaffold: false`. `tolerateOverflow` keeps a fixed-viewport capture
 // from failing on intrinsic-height overflow (the PNG still shows it).
 
+@Tags(['golden'])
+library;
+
 import 'package:bookbed/features/auth/presentation/screens/cookies_policy_screen.dart';
 import 'package:bookbed/features/auth/presentation/screens/enhanced_register_screen.dart';
 import 'package:bookbed/features/auth/presentation/screens/forgot_password_screen.dart';
@@ -14,6 +17,7 @@ import 'package:bookbed/features/owner_dashboard/presentation/screens/change_pas
 import 'package:bookbed/features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import 'package:bookbed/shared/presentation/screens/not_found_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/golden_harness.dart';
 

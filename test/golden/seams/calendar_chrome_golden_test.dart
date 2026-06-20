@@ -4,8 +4,12 @@
 // switch), toolbar/legend card and FAB via `buildChromeForTest` — the FROZEN
 // grid is swapped for a sized placeholder inside the builder, so no Firebase.
 
+@Tags(['golden'])
+library;
+
 import 'package:bookbed/features/owner_dashboard/presentation/screens/calendar/month_calendar_screen.dart';
 import 'package:bookbed/features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/golden_harness.dart';
 

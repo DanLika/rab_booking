@@ -9,9 +9,6 @@
 ///
 /// // Change currency
 /// ref.read(selectedCurrencyProvider.notifier).setCurrency(Currency.usd);
-///
-/// // Format price (converts from EUR)
-/// final formatted = 150.0.toCurrency(currency); // "$163.50"
 /// ```
 library;
 
@@ -134,14 +131,5 @@ class CurrencyService {
       case Currency.hrk:
         return '$formatted ${currency.symbol}';
     }
-  }
-}
-
-/// Extension to easily get formatted price from any widget
-extension CurrencyConversionExtension on double {
-  /// Convert EUR price to selected currency and format
-  String toCurrency(Currency currency) {
-    final service = CurrencyService();
-    return service.formatPrice(this, currency);
   }
 }

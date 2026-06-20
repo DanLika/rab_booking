@@ -244,21 +244,3 @@ extension ThemeColorScheme on BuildContext {
   /// Outline color (for borders)
   Color get outlineColor => colorScheme.outline;
 }
-
-/// Extension for conditional theme values
-extension ThemeConditional on BuildContext {
-  /// Get value based on current theme
-  ///
-  /// Example:
-  /// ```dart
-  /// final padding = context.themeValue(light: 16.0, dark: 20.0);
-  /// ```
-  T themeValue<T>({required T light, required T dark}) {
-    return isDarkMode ? dark : light;
-  }
-
-  /// Get optional value based on theme (returns light value if dark is null)
-  T themeValueOr<T>({required T light, T? dark}) {
-    return isDarkMode ? (dark ?? light) : light;
-  }
-}

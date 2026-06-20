@@ -151,34 +151,6 @@ abstract final class BookingStatusValues {
   static const String rejected = 'rejected';
 }
 
-/// Payment method identifiers.
-abstract final class PaymentMethodValues {
-  static const String stripe = 'stripe';
-  static const String bankTransfer = 'bank_transfer';
-  static const String payOnArrival = 'pay_on_arrival';
-  static const String none = 'none';
-}
-
-/// Payment option identifiers.
-abstract final class PaymentOptionValues {
-  static const String fullPayment = 'full_payment';
-  static const String deposit = 'deposit';
-  static const String none = 'none';
-}
-
-/// Active booking statuses for availability checks.
-///
-/// These statuses indicate bookings that block dates from being booked.
-/// Used by [AvailabilityChecker] and calendar building logic.
-abstract final class ActiveBookingStatuses {
-  /// Statuses that block dates from being available.
-  static const List<String> values = [
-    BookingStatusValues.pending,
-    BookingStatusValues.confirmed,
-    'in_progress', // Legacy status still in some documents
-  ];
-}
-
 /// Error codes for availability check conflicts.
 ///
 /// Used to communicate conflict types without hardcoded UI strings.

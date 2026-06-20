@@ -5406,6 +5406,12 @@ abstract class AppLocalizations {
   /// **'Control marketing and payment reminder emails. Critical booking notifications are always sent.'**
   String get notificationSettingsMasterSwitch;
 
+  /// No description provided for @notificationSettingsBannerInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how you want to be notified. Critical payment notifications are always sent via email.'**
+  String get notificationSettingsBannerInfo;
+
   /// No description provided for @notificationSettingsEnabled.
   ///
   /// In en, this message translates to:

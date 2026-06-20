@@ -1118,6 +1118,7 @@
   "notificationSettingsTitle": "Notification Settings",
   "notificationSettingsEnableAll": "Enable Optional Notifications",
   "notificationSettingsMasterSwitch": "Control marketing and payment reminder emails. Critical booking notifications are always sent.",
+  "notificationSettingsBannerInfo": "Choose how you want to be notified. Critical payment notifications are always sent via email.",
   "notificationSettingsEnabled": "Notifications enabled successfully",
   "notificationSettingsDisabled": "Optional notifications disabled",
   "notificationSettingsUpdateError": "Error updating settings",

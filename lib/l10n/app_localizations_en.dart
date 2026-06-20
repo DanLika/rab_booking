@@ -2847,6 +2847,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Control marketing and payment reminder emails. Critical booking notifications are always sent.';
 
   @override
+  String get notificationSettingsBannerInfo =>
+      'Choose how you want to be notified. Critical payment notifications are always sent via email.';
+
+  @override
   String get notificationSettingsEnabled =>
       'Notifications enabled successfully';
 

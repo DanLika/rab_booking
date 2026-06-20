@@ -15,6 +15,7 @@ import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/presentation/providers/widget_settings_provider.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/redesign.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/advanced_settings/email_verification_card.dart';
 import '../widgets/advanced_settings/tax_legal_disclaimer_card.dart';
 
@@ -283,7 +284,11 @@ class _WidgetAdvancedSettingsScreenState
 
           return Scaffold(
             resizeToAvoidBottomInset: true,
-            appBar: AppBar(title: Text(l10n.advancedSettingsTitle)),
+            appBar: CommonAppBar(
+              title: l10n.advancedSettingsTitle,
+              leadingIcon: Icons.arrow_back,
+              onLeadingIconTap: (context) => Navigator.of(context).pop(),
+            ),
             body: _withPageBackground(errorContent),
           );
         }
@@ -388,8 +393,10 @@ class _WidgetAdvancedSettingsScreenState
             ),
             child: Scaffold(
               resizeToAvoidBottomInset: true,
-              appBar: AppBar(
-                title: Text(l10n.advancedSettingsTitle),
+              appBar: CommonAppBar(
+                title: l10n.advancedSettingsTitle,
+                leadingIcon: Icons.arrow_back,
+                onLeadingIconTap: (context) => Navigator.of(context).pop(),
                 actions: [
                   if (_isSaving)
                     const Center(
@@ -430,7 +437,11 @@ class _WidgetAdvancedSettingsScreenState
 
         return Scaffold(
           resizeToAvoidBottomInset: true,
-          appBar: AppBar(title: Text(l10n.advancedSettingsTitle)),
+          appBar: CommonAppBar(
+            title: l10n.advancedSettingsTitle,
+            leadingIcon: Icons.arrow_back,
+            onLeadingIconTap: (context) => Navigator.of(context).pop(),
+          ),
           body: _withPageBackground(loadingContent),
         );
       },
@@ -450,7 +461,11 @@ class _WidgetAdvancedSettingsScreenState
 
         return Scaffold(
           resizeToAvoidBottomInset: true,
-          appBar: AppBar(title: Text(l10n.advancedSettingsTitle)),
+          appBar: CommonAppBar(
+            title: l10n.advancedSettingsTitle,
+            leadingIcon: Icons.arrow_back,
+            onLeadingIconTap: (context) => Navigator.of(context).pop(),
+          ),
           body: _withPageBackground(errorContent),
         );
       },

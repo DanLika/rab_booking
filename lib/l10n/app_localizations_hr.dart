@@ -2868,6 +2868,10 @@ class AppLocalizationsHr extends AppLocalizations {
       'Kontrolirajte marketing i podsjetnik emailove. Kritične obavijesti o rezervacijama se uvijek šalju.';
 
   @override
+  String get notificationSettingsBannerInfo =>
+      'Odaberite kako želite biti obaviješteni. Kritične obavijesti o plaćanju uvijek šaljemo e-poštom.';
+
+  @override
   String get notificationSettingsEnabled => 'Obavijesti uspješno omogućene';
 
   @override

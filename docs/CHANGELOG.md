@@ -2,7 +2,18 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-19 | **Version**: 7.28
+**Last Updated**: 2026-06-20 | **Version**: 7.29
+
+---
+
+**Changelog 7.29** (2026-06-20):
+
+### Owner — Settings cheap-wins: widget_advanced AppBar unification + notif l10n (audit/135, scope cheap-wins)
+- **Recon-first (audit/135):** code-first fidelity diff of the audit/129-deferred settings screens (S3 hub + S4 forms + no-handoff screens). Verdict: cluster largely DONE; 2 agent-flagged "gaps" were **false** (identity-chip + public-profile = no feature → data-honest omissions; `change_password` "missing SReqList" = already present in `_PasswordStrengthMeter`). Real work = a cheap-wins bundle + one heavy item (S3 Pro-card grid, deferred).
+- **`widget_advanced_settings_screen`:** all 4 raw `AppBar(title: Text(...))` → `CommonAppBar` (`leadingIcon: arrow_back` / `onLeadingIconTap: pop`; main-branch save `actions` kept) + import. Closes the audit/126+129 chrome-unification debt. **Embed-safe (code-verified):** all 4 sit behind the `if (!widget.showAppBar) return <bare content>` guards — the screen is uniquely embedded headless in the hub Napredno tab (`showAppBar:false`) → no double-header. Chrome-only; widget-config logic (subdomain regex / App-Check) untouched.
+- **`notification_settings_screen`:** hardcoded HR banner string → new l10n key `notificationSettingsBannerInfo` (en+hr). Visually neutral. (Magic sizes 36/13/10 match the handoff + have no exact token → left to avoid pixel drift.)
+- **DROPPED `edit_profile` 2-col name grid** — the screen uses a single full-name field (`_displayNameController`), not first/last; a 2-col grid = splitting one field into two = data-model + validation + save/UX + existing-name migration. Feature, not cheap fidelity. Deferred (likely permanent).
+- **Verifikacija:** `flutter analyze` **0 net-new** · `dart format` · full suite **+1535 green** · `flutter build web --no-tree-shake-icons` clean. Embed-check (code) confirms standalone-only AppBar. Live-render skipped (budget-lean; changes = neutral l10n + canonical `CommonAppBar`). **Dev-only → not deployed.** FROZEN: none (widget_advanced chrome-only; FROZEN-adjacent config untouched). Deferred: S3 Pro-card benefits grid (heavy, 1503 LOC) until budget reset.
 
 ---
 

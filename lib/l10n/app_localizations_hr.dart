@@ -727,7 +727,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get newPassword => 'Nova lozinka';
 
   @override
-  String get confirmPassword => 'Potvrdi Lozinku';
+  String get confirmPassword => 'Potvrdi lozinku';
 
   @override
   String get confirmNewPassword => 'Potvrdite Novu Lozinku';
@@ -4573,7 +4573,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get unitPricingBasePriceDesc =>
-      'Ovo je default cijena po noćenju koja se koristi kada nema posebnih cijena.';
+      'Ovo je zadana cijena po noćenju koja se koristi kada nema posebnih cijena.';
 
   @override
   String get unitPricingPricePerNight => 'Cijena po noći (€)';

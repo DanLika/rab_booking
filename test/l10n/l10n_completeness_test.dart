@@ -87,5 +87,41 @@ void main() {
         );
       });
     }
+
+    test('declared placeholders appear in both en and hr (ICU-aware)', () {
+      // Guards interpolation parity: an arg declared in `@key.placeholders` must
+      // appear in BOTH locales' values, else gen_l10n emits a parameter the
+      // translation never uses (a silent bug). Only DECLARED args are checked —
+      // NOT ICU plural/select category words ("day"/"days" vs "dan"/"dana"),
+      // which legitimately differ. An arg may read `{arg}` or `{arg, plural,…}`,
+      // so we match `{arg` followed by `}` / `,` / whitespace.
+      final Map<String, dynamic> enMap = _load(_arbs['en']!);
+      final Map<String, dynamic> hrMap = _load(_arbs['hr']!);
+      final List<String> fails = <String>[];
+      enMap.forEach((String metaKey, dynamic meta) {
+        if (!metaKey.startsWith('@') || metaKey == '@@locale') return;
+        final String msg = metaKey.substring(1);
+        if (!enMap.containsKey(msg) || !hrMap.containsKey(msg)) return;
+        if (meta is! Map) return;
+        final dynamic ph = meta['placeholders'];
+        if (ph is! Map) return;
+        for (final dynamic arg in ph.keys) {
+          final RegExp re = RegExp('\\{$arg[,}\\s]');
+          if (!re.hasMatch(enMap[msg].toString())) {
+            fails.add('en:$msg -> {$arg}');
+          }
+          if (!re.hasMatch(hrMap[msg].toString())) {
+            fails.add('hr:$msg -> {$arg}');
+          }
+        }
+      });
+      expect(
+        fails,
+        isEmpty,
+        reason:
+            'A declared placeholder was dropped from a translation: '
+            '${fails.join(', ')}',
+      );
+    });
   });
 }

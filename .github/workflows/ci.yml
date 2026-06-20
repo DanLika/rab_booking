@@ -96,7 +96,11 @@ jobs:
         run: ./scripts/check-no-stray-stripe-ui.sh
 
       - name: Run tests
-        run: flutter test --coverage
+        # Exclude the golden net: its baselines are macOS-rasterised and would
+        # red on this Linux runner from Skia/font-hinting differences alone. The
+        # goldens are a LOCAL net — run on macOS via `flutter test --tags golden`
+        # before a visual change. See test/golden/README.md.
+        run: flutter test --coverage --exclude-tags golden
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7

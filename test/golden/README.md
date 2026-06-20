@@ -44,6 +44,16 @@ flutter test --tags golden
 flutter test --tags golden --update-goldens
 ```
 
+## Make it an ACTIVE gate (run it, or it never fires)
+
+The net is macOS-local — deliberately NOT in CI — so it only protects you if it
+is actually run. Fold it into each design apply's **pre-merge ritual on macOS**:
+run the affected subject's golden, confirm the diff is the INTENDED change (or
+none), then merge. CI excludes the `golden` tag
+(`flutter test --exclude-tags golden`, wired in `.github/workflows/ci.yml`), so
+nothing here runs on the Linux runner — that is what keeps the net from poisoning
+CI, and also what makes running it locally non-optional.
+
 ## ⚠️ Baselines are macOS-rasterised — keep them out of cross-platform CI
 
 Font hinting / anti-aliasing differs per OS, so a baseline blessed on macOS will

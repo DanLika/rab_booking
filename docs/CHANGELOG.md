@@ -2,7 +2,18 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-20 | **Version**: 7.30
+**Last Updated**: 2026-06-20 | **Version**: 7.31
+
+---
+
+**Changelog 7.31** (2026-06-20):
+
+### Admin + Owner — responsive RenderFlex-overflow P0/P1 fixes (audit/responsive-overflow-a11y-2026-06-20 §2)
+- **Recon-first:** the P5 responsive/overflow/a11y sweep's §2 ledger flagged 3 confirmed RenderFlex overflows — 1 P0 (admin) + 2 P1 (owner, same file). Both fixed here as deterministic, test-gated, layout-only changes (no l10n/restyle — admin l10n is audit/147).
+- **P0 — admin Users-list `DataTable` horizontal overflow (SHIPPED `8828e620` / #765):** the 5-col table sat in a vertical-only `SingleChildScrollView`, so in the 800–1100px window its intrinsic width painted the overflow stripe. Wrapped in `LayoutBuilder` → horizontal `SingleChildScrollView` → `ConstrainedBox(minWidth: constraints.maxWidth)` — scrolls when content exceeds the viewport, **fills the card on wide screens** (no left-float). Outer vertical scroll + the `<800` card fallback unchanged. New `users_list_overflow_test` (780/900/1100/1440) via a `@visibleForTesting buildUsersTableForTest` seam; **RED→GREEN** (the seam isolates `_UsersTable` so `_buildBody`'s filter-chip scroll can't satisfy the assertion vacuously).
+- **P1 — `booking_action_menu` name Texts wrap (this PR):** guest / platform / unit names sat in width-bounding `Expanded`s with no `maxLines`/`overflow` → a long name wrapped to 2–3 lines and broke the compact bottom-sheet header. Added `maxLines: 1, overflow: TextOverflow.ellipsis` to the **6 bounded user-content name Texts** (`BookingActionBottomSheet` header guest/platform/dates/"Manage on {source}" + `BookingMoveToUnitMenu` guest + user-defined unit name). Unbounded `Row(min)` chips/badge left as-is (ellipsis is a no-op without a width bound → separate `Flexible` pass). New `booking_action_menu_overflow_test` (both classes public → direct pump; `BookingMoveToUnitMenu` via `allOwnerUnitsProvider` override); **RED→GREEN both groups**.
+- **FROZEN fence — 0 touch:** neither file is a NIKADA surface; Timeline z-index / `timeline_dimensions` / calendar repo untouched.
+- **Verifikacija:** `flutter analyze` **0 net-new** · `dart format` · **full suite +1583 green** · `flutter build web --no-tree-shake-icons` clean. Auth-free golden eyeballs (admin table scroll/fill @800/1100/1440; menu guest name "Maximiliana-K…" single-line @360). Dev-only. (Renumber if a sibling parallel branch claims 7.31.)
 
 ---
 

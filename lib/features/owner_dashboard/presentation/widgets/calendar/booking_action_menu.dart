@@ -101,6 +101,8 @@ class BookingActionBottomSheet extends ConsumerWidget {
                               if (booking.isExternalBooking) ...[
                                 Text(
                                   booking.sourceDisplayName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -115,6 +117,8 @@ class BookingActionBottomSheet extends ConsumerWidget {
                               Text(
                                 booking.guestName ??
                                     l10n.bookingActionUnknownGuest,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -126,6 +130,8 @@ class BookingActionBottomSheet extends ConsumerWidget {
                               const SizedBox(height: 4),
                               Text(
                                 '${_formatDate(booking.checkIn)} - ${_formatDate(booking.checkOut)}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Theme.of(context).colorScheme.onSurface
@@ -537,6 +543,8 @@ class BookingActionBottomSheet extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   l10n.tooltipManageOn(booking.sourceDisplayName),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -647,6 +655,8 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                           Text(
                             widget.booking.guestName ??
                                 l10n.bookingActionUnknownGuest,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 14,
                               color: theme.colorScheme.onSurface.withValues(
@@ -762,6 +772,8 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                                         children: [
                                           Text(
                                             unit.name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w600,

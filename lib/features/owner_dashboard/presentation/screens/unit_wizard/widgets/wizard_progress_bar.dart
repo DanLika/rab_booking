@@ -14,8 +14,10 @@ class WizardProgressBar extends StatelessWidget {
   final Set<int> requiredSteps; // {1,2,3,4} - all steps required
   final Function(int)? onStepTap; // Optional - jump to step
 
-  // Green color from Confirmed badge (#66BB6A)
-  static const Color _completedColor = Color(0xFF66BB6A);
+  // Completed steps reuse the system success/confirmed token — resolved
+  // per-build via `BBColor.of(context).success` (theme-aware #2E7D5B / #4FAE7F).
+  // Replaces the legacy off-palette Material green (#66BB6A) literal
+  // (audit/134 §F — 1-color hygiene; same "done = green" semantic, on-palette).
 
   // Step icons mapping
   static const Map<int, IconData> _stepIcons = {
@@ -77,9 +79,9 @@ class WizardProgressBar extends StatelessWidget {
       child: Row(
         children: [
           for (int i = 1; i <= totalSteps; i++) ...[
-            _buildStepIndicator(i, theme, isDark, l10n),
+            _buildStepIndicator(context, i, theme, isDark, l10n),
             if (i < totalSteps)
-              Expanded(child: _buildConnector(i, theme, isDark)),
+              Expanded(child: _buildConnector(context, i, theme, isDark)),
           ],
         ],
       ),
@@ -118,9 +120,7 @@ class WizardProgressBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: completedCount / totalSteps,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              valueColor: const AlwaysStoppedAnimation(
-                _completedColor,
-              ), // Green
+              valueColor: AlwaysStoppedAnimation(BBColor.of(context).success),
               borderRadius: BorderRadius.circular(4),
               minHeight: 6,
             ),
@@ -143,6 +143,7 @@ class WizardProgressBar extends StatelessWidget {
 
   /// Step indicator (circle with icon/checkmark + label)
   Widget _buildStepIndicator(
+    BuildContext context,
     int step,
     ThemeData theme,
     bool isDark,
@@ -151,15 +152,16 @@ class WizardProgressBar extends StatelessWidget {
     final isCompleted = completedSteps[step] == true;
     final isCurrent = step == currentStep;
     final isOptional = optionalSteps.contains(step);
+    final completedColor = BBColor.of(context).success;
 
     Color backgroundColor;
     Color borderColor;
     Color iconColor;
 
     if (isCompleted) {
-      // Completed - green (#66BB6A from Confirmed badge)
-      backgroundColor = _completedColor;
-      borderColor = _completedColor;
+      // Completed - system success/confirmed token (on-palette emerald)
+      backgroundColor = completedColor;
+      borderColor = completedColor;
       iconColor = Colors.white;
     } else if (isCurrent) {
       // Current - primary (purple)
@@ -194,6 +196,9 @@ class WizardProgressBar extends StatelessWidget {
                 color: borderColor,
                 width: BBBorderWidth.thick,
               ),
+              // Active step lifts with the brand purple-sm glow (handoff
+              // wizard.jsx stepper: `--bb-shadow-purple-sm` on the current node).
+              boxShadow: isCurrent ? BBShadow.purpleGlow(context) : null,
             ),
             child: Center(
               child: isCompleted
@@ -214,7 +219,7 @@ class WizardProgressBar extends StatelessWidget {
                 ? FontWeight.w600
                 : FontWeight.w400,
             color: isCompleted
-                ? _completedColor
+                ? completedColor
                 : isCurrent
                 ? theme.colorScheme.primary
                 : theme.colorScheme.onSurfaceVariant,
@@ -238,14 +243,20 @@ class WizardProgressBar extends StatelessWidget {
   }
 
   /// Connector line between steps
-  Widget _buildConnector(int step, ThemeData theme, bool isDark) {
+  Widget _buildConnector(
+    BuildContext context,
+    int step,
+    ThemeData theme,
+    bool isDark,
+  ) {
     final isCompleted = completedSteps[step] == true;
 
     return Container(
       height: BBBorderWidth.thick,
       margin: const EdgeInsets.symmetric(horizontal: BBSpace.xs),
       color: isCompleted
-          ? _completedColor // Green for completed
+          ? BBColor.of(context)
+                .success // on-palette emerald for completed
           : theme.colorScheme.outline.withValues(alpha: 0.3),
     );
   }

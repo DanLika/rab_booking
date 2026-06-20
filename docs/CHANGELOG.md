@@ -2,7 +2,20 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-20 | **Version**: 7.29
+**Last Updated**: 2026-06-20 | **Version**: 7.30
+
+---
+
+**Changelog 7.30** (2026-06-20):
+
+### Owner — Unit Wizard progress-bar §F polish: on-palette success token + active-step glow (audit/134, scope F)
+- **Recon-first (audit/134 §F):** the last un-applied SAFE component from the §5 ledger (B+A shipped #761; C is FROZEN-gated; D/E/G/H low-value). The §4 fingerprint scoped the wizard-chrome debt to **"1 hardcoded color"** → a single-file polish, **not** a stepper re-layout.
+- **1-color hygiene:** retired the off-palette bright Material green (`#66BB6A`) literal in `wizard_progress_bar.dart` → theme-aware system success/confirmed token (`BBColor.of(context).success` = `#2E7D5B` / `#4FAE7F`) on completed nodes + labels + connectors **and** the mobile `LinearProgressIndicator`. Same "done = green" semantic, now on-palette (matches the Confirmed status badge).
+- **Handoff polish:** the **current** step node gains the `--bb-shadow-purple-sm` glow (`BBShadow.purpleGlow`) per the `wizard.jsx` stepper — subtle active-step lift.
+- **Deliberately NOT replicated (handoff = design meta / data-honesty):** the stepper **"FROZEN" badge** (design-doc annotation marking the locked publish flow, not user UI); **"Skica spremljena"** autosave caption (draft is in-memory until publish → would fabricate state); step-1 **"Odustani"** (CommonAppBar back already closes the pushed route); and the horizontal re-layout / bare-number nodes / mobile discrete-segment bar (beyond §F scope — the icon-led 3-tone treatment reads done/current/pending more clearly and is kept).
+- **FROZEN fence — 0 touch:** Wizard `_publishUnit` 2-doc serial write · `CommonAppBar` unification (audit/124–126) · step-content / `UnitModel`.
+- **Coverage:** new `wizard_progress_bar_test.dart` — **42 cells** (7 breakpoints × light/dark × 3 step-states) asserting no overflow + clean token resolve across **both** render branches (compact < 600 / full stepper ≥ 600).
+- **Verifikacija:** `flutter analyze` **0** · `dart format` · render/overflow **42/42** · `flutter build web --no-tree-shake-icons` clean. **Live eyeball** (bookbed-dev `:8097`, operator-gated light+dark+mobile). **Dev-only → not deployed.** FROZEN: none.
 
 ---
 

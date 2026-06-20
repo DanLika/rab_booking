@@ -165,9 +165,7 @@
   "validEmailRequired": "Molimo unesite validan email",
   "passwordRequired": "Molimo unesite lozinku",
   "passwordTooShort": "Lozinka mora imati najmanje 6 karaktera",
-  "confirmPassword": "Potvrdite lozinku",
   "confirmPasswordRequired": "Molimo potvrdite lozinku",
-  "passwordsDoNotMatch": "Lozinke se ne poklapaju",
   "accountType": "Vrsta računa",
   "guest": "Gost",
   "guestDescription": "Želim rezervirati smještaj",
@@ -176,10 +174,7 @@
   "iAccept": "Prihvaćam ",
   "termsOfService": "Uvjete korištenja",
   "and": " i ",
-  "privacyPolicy": "Politiku privatnosti",
   "or": "ili",
-  "enterYourEmail": "Unesite email",
-
   "properties": "Nekretnine",
   "property": "Nekretnina",
   "propertyDetails": "Detalji Nekretnine",
@@ -228,7 +223,6 @@
   "cancellationDetails": "Detalji otkazivanja",
   "cancelledOn": "Otkazano dana",
   "reason": "Razlog",
-  "viewProperty": "Pogledaj smještaj",
   "errorLoadingBooking": "Greška pri učitavanju rezervacije",
   "tryAgainOrContactSupport": "Pokušajte ponovo ili kontaktirajte podršku",
   "cancelBookingTitle": "Otkaži Rezervaciju",
@@ -288,8 +282,6 @@
   "croatian": "Hrvatski",
 
   "searchProperties": "Pretražite Nekretnine",
-  "noResultsFound": "Nema Rezultata",
-  "tryDifferentSearch": "Pokušajte drugu pretragu",
   "clearFilters": "Obriši Filtere",
   "applyFilters": "Primeni Filtere",
   "sortBy": "Sortiraj Po",
@@ -1486,7 +1478,6 @@
   "propertyFormSubdomain": "Poddomena",
   "propertyFormSubdomainHint": "vasa-nekretnina",
   "propertyFormSubdomainHelper": "Prilagođeni URL: [subdomain].bookbed.io",
-  "propertyFormSubdomainAvailable": "Dostupno",
   "propertyFormSubdomainTaken": "Zauzeto",
   "propertyFormSubdomainUseSuggestion": "Koristi prijedlog",
   "propertyFormPropertyType": "Vrsta nekretnine *",
@@ -1615,20 +1606,7 @@
   "unitFormErrorUpdate": "Greška pri ažuriranju jedinice",
   "unitFormErrorAdd": "Greška pri dodavanju jedinice",
 
-  "unitPricingTitle": "Cjenovnik",
-  "unitPricingSelectUnit": "Odaberi jedinicu",
-  "unitPricingSelectUnitHint": "Odaberite jedinicu",
-  "unitPricingUnit": "Jedinica",
-  "unitPricingNoUnits": "Nemate dodane jedinice",
-  "unitPricingNoUnitsDesc": "Dodajte jedinicu kako biste mogli upravljati cijenama za vaše smještajne objekte.",
   "unitPricingLoadError": "Greška pri učitavanju jedinica",
-  "unitPricingBasePrice": "Osnovna Cijena",
-  "unitPricingBasePriceDesc": "Ovo je zadana cijena po noćenju koja se koristi kada nema posebnih cijena.",
-  "unitPricingPricePerNight": "Cijena po noći (€)",
-  "unitPricingSave": "Spremi",
-  "unitPricingSavePrice": "Spremi cijenu",
-  "unitPricingEnterPrice": "Unesite cijenu",
-  "unitPricingPriceGreaterThanZero": "Cijena mora biti veća od 0",
   "unitPricingSuccessUpdate": "Osnovna cijena uspješno ažurirana",
   "unitPricingErrorUpdate": "Greška pri ažuriranju cijene",
 
@@ -1865,24 +1843,8 @@
   "ownerFaqNoResults": "Nema rezultata",
   "ownerFaqNoResultsDesc": "Pokušajte sa drugom pretragom ili kategorijom",
 
-  "icalSyncTitle": "iCal Sinkronizacija",
   "icalSyncNoFeeds": "Nema feedova",
   "icalSyncNoFeedsDesc": "Dodajte prvi iCal feed da započnete sinkronizaciju",
-  "icalSyncError": "Greška u sinkronizaciji",
-  "icalSyncErrorCount": "{errorCount} od {totalCount} feedova ima grešku",
-  "@icalSyncErrorCount": {
-    "placeholders": {
-      "errorCount": {"type": "int"},
-      "totalCount": {"type": "int"}
-    }
-  },
-  "icalSyncActive": "Sinkronizacija aktivna",
-  "icalSyncActiveCount": "{count} feedova aktivno sinkronizirano",
-  "@icalSyncActiveCount": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
   "icalSyncAllPaused": "Svi feedovi pauzirani",
   "icalSyncNoActiveFeeds": "Nema aktivnih feedova",
   "icalSyncWhyTitle": "Zašto iCal Sinkronizacija?",
@@ -1919,7 +1881,6 @@
       "syncs": {"type": "int"}
     }
   },
-  "icalSyncNow": "Sinkroniziraj sada",
   "icalSyncPause": "Pauziraj",
   "icalSyncResume": "Nastavi",
   "icalSyncEdit": "Uredi",
@@ -1934,18 +1895,6 @@
   },
   "icalSyncDeleteSuccess": "Feed obrisan",
   "icalSyncDeleteError": "Greška prilikom brisanja feeda",
-  "icalSyncStarted": "Sinkronizacija pokrenuta za {platform}...",
-  "@icalSyncStarted": {
-    "placeholders": {
-      "platform": {"type": "String"}
-    }
-  },
-  "icalSyncSuccess": "Sinkronizacija uspješna! Kreirano rezervacija: {count}",
-  "@icalSyncSuccess": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
   "icalSyncFailed": "Greška prilikom sinkronizacije",
   "icalSyncPaused": "Feed pauziran",
   "icalSyncPauseError": "Greška prilikom pauziranja feeda",
@@ -1977,12 +1926,6 @@
   "embedGuideAdvancedOptions": "Napredne Opcije",
   "embedGuideTroubleshooting": "Rješavanje Problema",
   "embedGuideCodeCopied": "Kod kopiran!",
-  "embedGuideYourEmbedCodes": "Vaši kodovi za ugradnju",
-  "embedGuideCopyIframe": "Kopirajte kod za svaki apartman",
-  "embedGuideWidgetLanguage": "Jezik widgeta:",
-  "embedGuideNoProperties": "Nemate nekretnina. Kreirajte nekretninu da biste dobili kodove.",
-  "embedGuideNoUnits": "Nemate apartmana. Kreirajte apartman da biste dobili kod.",
-
   "embedGuideStep1Intro": "Prvo morate konfigurirati kako će widget funkcionirati:",
   "embedGuideStep1Nav1": "Idite na: Konfiguracija → Smještajne jedinice",
   "embedGuideStep1Nav2": "Kliknite \"Uredi\" na željeni unit",
@@ -2294,18 +2237,10 @@
   "propertyFormSubdomainLabel": "Subdomena (za email linkove)",
   "propertyFormSubdomainEmailHelper": "URL za email linkove: [subdomain].bookbed.io",
 
-  "icalExportTitle": "iCal Export",
   "icalExportUnit": "Jedinica",
   "icalExportGenerating": "Generiranje...",
   "icalExportGenerate": "Generiraj iCal Export",
-  "icalExportUrl": "Export URL",
   "icalExportCopyUrl": "Kopiraj URL",
-  "icalExportLastGenerated": "Zadnje generirano: {time}",
-  "@icalExportLastGenerated": {
-    "placeholders": {
-      "time": {"type": "String"}
-    }
-  },
   "icalExportPreview": "Pregled .ics datoteke",
   "icalExportHowToTest": "Kako testirati",
   "icalExportGoogleCalendar": "1. Google Calendar",
@@ -2318,20 +2253,6 @@
   "icalExportSuccess": "iCal export uspješno generiran",
   "icalExportError": "Greška pri generiranju iCal exporta",
   "icalExportUrlCopied": "URL kopiran u međuspremnik",
-  "icalExportJustNow": "Upravo sada",
-  "icalExportMinutesAgo": "prije {minutes}m",
-  "@icalExportMinutesAgo": {
-    "placeholders": {
-      "minutes": {"type": "int"}
-    }
-  },
-  "icalExportHoursAgo": "prije {hours}h",
-  "@icalExportHoursAgo": {
-    "placeholders": {
-      "hours": {"type": "int"}
-    }
-  },
-
   "icalExportListTitle": "iCal Export - Odaberi Jedinicu",
   "icalExportListHeader": "iCal Export",
   "icalExportListDescription": "Odaberite jedinicu za koju želite generirati iCal URL za sinkronizaciju kalendara.",

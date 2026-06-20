@@ -447,13 +447,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordTooShort => 'Password must be at least 6 characters';
 
   @override
-  String get confirmPassword => 'Confirm Password';
-
-  @override
   String get confirmPasswordRequired => 'Please confirm password';
-
-  @override
-  String get passwordsDoNotMatch => 'Passwords do not match';
 
   @override
   String get accountType => 'Account Type';
@@ -480,13 +474,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get and => ' and ';
 
   @override
-  String get privacyPolicy => 'Privacy Policy';
-
-  @override
   String get or => 'or';
-
-  @override
-  String get enterYourEmail => 'Enter your email address';
 
   @override
   String get properties => 'Properties';
@@ -621,9 +609,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reason => 'Reason';
 
   @override
-  String get viewProperty => 'View Property';
-
-  @override
   String get errorLoadingBooking => 'Error loading booking';
 
   @override
@@ -733,6 +718,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newPassword => 'New Password';
 
   @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
   String get confirmNewPassword => 'Confirm New Password';
 
   @override
@@ -794,12 +782,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchProperties => 'Search Properties';
 
   @override
-  String get noResultsFound => 'No results found';
-
-  @override
-  String get tryDifferentSearch => 'Try a different search term or category';
-
-  @override
   String get clearFilters => 'Clear Filters';
 
   @override
@@ -834,6 +816,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invalidPassword => 'Password must be at least 8 characters';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
 
   @override
   String get requiredField => 'This field is required';
@@ -1000,6 +985,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'We reserve the right to modify these terms at any time. Changes will be effective immediately upon posting to the website. Your continued use of the service after changes constitutes acceptance of the new terms.';
 
   @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
   String get privacyPolicyTitle => 'Privacy Policy';
 
   @override
@@ -1102,6 +1090,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faqAccount => 'Account';
+
+  @override
+  String get noResultsFound => 'No results found';
+
+  @override
+  String get tryDifferentSearch => 'Try a different search term or category';
 
   @override
   String get stillNeedHelp => 'Still need help?';
@@ -1244,6 +1238,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseEnterName => 'Please enter your name';
 
   @override
+  String get enterYourEmail => 'Enter your email address';
+
+  @override
   String get pleaseEnterEmail => 'Please enter your email';
 
   @override
@@ -1334,6 +1331,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seeAll => 'See All';
+
+  @override
+  String get viewProperty => 'View Property';
 
   @override
   String get widgetSelectDates => 'Select Dates';
@@ -3699,9 +3699,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Custom URL: [subdomain].bookbed.io';
 
   @override
-  String get propertyFormSubdomainAvailable => 'Subdomain is available';
-
-  @override
   String get propertyFormSubdomainTaken => 'Taken';
 
   @override
@@ -3992,48 +3989,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unitFormErrorAdd => 'Error adding unit';
 
   @override
-  String get unitPricingTitle => 'Price List';
-
-  @override
-  String get unitPricingSelectUnit => 'Select Unit';
-
-  @override
-  String get unitPricingSelectUnitHint => 'Select unit';
-
-  @override
-  String get unitPricingUnit => 'Unit';
-
-  @override
-  String get unitPricingNoUnits => 'No units added';
-
-  @override
-  String get unitPricingNoUnitsDesc =>
-      'Add a unit to manage prices for your accommodation.';
-
-  @override
   String get unitPricingLoadError => 'Error loading units';
-
-  @override
-  String get unitPricingBasePrice => 'Base Price';
-
-  @override
-  String get unitPricingBasePriceDesc =>
-      'This is the default price per night used when there are no special prices.';
-
-  @override
-  String get unitPricingPricePerNight => 'Price per night (€)';
-
-  @override
-  String get unitPricingSave => 'Save';
-
-  @override
-  String get unitPricingSavePrice => 'Save Price';
-
-  @override
-  String get unitPricingEnterPrice => 'Enter price';
-
-  @override
-  String get unitPricingPriceGreaterThanZero => 'Price must be greater than 0';
 
   @override
   String get unitPricingSuccessUpdate => 'Base price successfully updated';
@@ -4559,7 +4515,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeSelectionSystemDesc => 'Follow system theme';
 
   @override
+  String get unitPricingTitle => 'Price List';
+
+  @override
+  String get unitPricingSelectUnit => 'Select Unit';
+
+  @override
+  String get unitPricingSelectUnitHint => 'Select unit';
+
+  @override
+  String get unitPricingUnit => 'Unit';
+
+  @override
+  String get unitPricingNoUnits => 'No units added';
+
+  @override
+  String get unitPricingNoUnitsDesc =>
+      'Add a unit to manage prices for your accommodation.';
+
+  @override
   String get unitPricingErrorLoading => 'Error loading units';
+
+  @override
+  String get unitPricingBasePrice => 'Base Price';
+
+  @override
+  String get unitPricingBasePriceDesc =>
+      'This is the default price per night used when there are no special prices.';
+
+  @override
+  String get unitPricingPricePerNight => 'Price per night (€)';
+
+  @override
+  String get unitPricingSave => 'Save';
+
+  @override
+  String get unitPricingSavePrice => 'Save Price';
+
+  @override
+  String get unitPricingEnterPrice => 'Enter price';
+
+  @override
+  String get unitPricingPriceGreaterThanZero => 'Price must be greater than 0';
 
   @override
   String get unitPricingSuccess => 'Base price successfully updated';
@@ -4606,30 +4603,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerFaqNoResultsDesc => 'Try a different search or category';
 
   @override
-  String get icalSyncTitle => 'iCal Synchronization';
-
-  @override
   String get icalSyncNoFeeds => 'No feeds';
 
   @override
   String get icalSyncNoFeedsDesc =>
       'Add your first iCal feed to start synchronization';
-
-  @override
-  String get icalSyncError => 'Synchronization error';
-
-  @override
-  String icalSyncErrorCount(int errorCount, int totalCount) {
-    return '$errorCount of $totalCount feeds have errors';
-  }
-
-  @override
-  String get icalSyncActive => 'Synchronization active';
-
-  @override
-  String icalSyncActiveCount(int count) {
-    return '$count feeds actively synchronized';
-  }
 
   @override
   String get icalSyncAllPaused => 'All feeds paused';
@@ -4704,9 +4682,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get icalSyncNow => 'Sync now';
-
-  @override
   String get icalSyncPause => 'Pause';
 
   @override
@@ -4731,16 +4706,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalSyncDeleteError => 'Error deleting feed';
-
-  @override
-  String icalSyncStarted(String platform) {
-    return 'Synchronization started for $platform...';
-  }
-
-  @override
-  String icalSyncSuccess(int count) {
-    return 'Synchronization successful! Reservations created: $count';
-  }
 
   @override
   String get icalSyncFailed => 'Error during synchronization';
@@ -5664,6 +5629,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get propertyFormUseSuggestion => 'Use';
 
   @override
+  String get propertyFormSubdomainAvailable => 'Subdomain is available';
+
+  @override
   String get propertyFormNoPhotos => 'No photos';
 
   @override
@@ -5677,9 +5645,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'URL for email links: [subdomain].bookbed.io';
 
   @override
-  String get icalExportTitle => 'iCal Export';
-
-  @override
   String get icalExportUnit => 'Unit';
 
   @override
@@ -5689,15 +5654,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get icalExportGenerate => 'Generate iCal Export';
 
   @override
-  String get icalExportUrl => 'Export URL';
-
-  @override
   String get icalExportCopyUrl => 'Copy URL';
-
-  @override
-  String icalExportLastGenerated(String time) {
-    return 'Last generated: $time';
-  }
 
   @override
   String get icalExportPreview => '.ics File Preview';
@@ -5738,19 +5695,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportUrlCopied => 'URL copied to clipboard';
-
-  @override
-  String get icalExportJustNow => 'Just now';
-
-  @override
-  String icalExportMinutesAgo(int minutes) {
-    return '${minutes}m ago';
-  }
-
-  @override
-  String icalExportHoursAgo(int hours) {
-    return '${hours}h ago';
-  }
 
   @override
   String get icalExportListTitle => 'iCal Export - Select Unit';
@@ -6442,11 +6386,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check-out blocked for selected days';
 
   @override
+  String get icalSyncTitle => 'iCal Synchronization';
+
+  @override
   String get icalNoFeeds => 'No feeds';
 
   @override
   String get icalNoFeedsDescription =>
       'Add your first iCal feed to start synchronization';
+
+  @override
+  String get icalSyncError => 'Synchronization error';
+
+  @override
+  String icalSyncErrorCount(int errorCount, int totalCount) {
+    return '$errorCount of $totalCount feeds have errors';
+  }
+
+  @override
+  String get icalSyncActive => 'Synchronization active';
+
+  @override
+  String icalSyncActiveCount(int count) {
+    return '$count feeds actively synchronized';
+  }
 
   @override
   String get icalAllFeedsPaused => 'All feeds paused';
@@ -6524,6 +6487,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get icalSyncNow => 'Sync now';
+
+  @override
   String get icalPause => 'Pause';
 
   @override
@@ -6531,6 +6497,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalHowItWorks => 'How does iCal synchronization work?';
+
+  @override
+  String icalSyncStarted(String platform) {
+    return 'Synchronization started for $platform...';
+  }
+
+  @override
+  String icalSyncSuccess(int count) {
+    return 'Synchronization successful! Reservations created: $count';
+  }
 
   @override
   String get icalSyncErrorMessage => 'Error during synchronization';
@@ -7583,6 +7559,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Email verification is disabled. Guests can complete bookings without verifying their email address.';
 
   @override
+  String get icalExportTitle => 'iCal Export';
+
+  @override
   String get icalExportEnabled => 'Enabled';
 
   @override
@@ -7599,8 +7578,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get icalExportInfo => 'Export Information';
 
   @override
+  String get icalExportUrl => 'Export URL';
+
+  @override
+  String icalExportLastGenerated(String time) {
+    return 'Last generated: $time';
+  }
+
+  @override
   String get icalExportInfoMessage =>
       'iCal export will be auto-generated when bookings change. Use the generated URL to sync with external calendars.';
+
+  @override
+  String get icalExportJustNow => 'Just now';
+
+  @override
+  String icalExportMinutesAgo(int minutes) {
+    return '${minutes}m ago';
+  }
+
+  @override
+  String icalExportHoursAgo(int hours) {
+    return '${hours}h ago';
+  }
 
   @override
   String icalExportDaysAgo(int days) {
@@ -8601,10 +8601,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiAssistantError => 'Failed to load chats';
 
   @override
-  String get aiAssistantDisclaimer =>
-      'The AI Assistant provides guidance based on BookBed documentation. For account issues, contact info@book-bed.com';
-
-  @override
   String get aiAssistantChipAddUnit => 'How to add a unit?';
 
   @override
@@ -8646,6 +8642,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webDevReferralContactDetails => 'Contact: dusko@book-bed.com';
+
+  @override
+  String get aiAssistantDisclaimer =>
+      'The AI Assistant provides guidance based on BookBed documentation. For account issues, contact info@book-bed.com';
 
   @override
   String get notificationActionApprove => 'Approve';

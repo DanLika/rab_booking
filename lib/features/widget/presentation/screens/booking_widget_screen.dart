@@ -3082,7 +3082,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: 'Property ID is missing. Please refresh the page.',
+          message: WidgetTranslations.of(context, ref).propertyIdMissing,
         );
       }
       return;
@@ -3092,7 +3092,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: 'Owner ID is missing. Please refresh the page.',
+          message: WidgetTranslations.of(context, ref).ownerIdMissing,
         );
       }
       return;
@@ -3230,17 +3230,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   side: BorderSide(color: dialogColors.borderDefault),
                 ),
                 title: Text(
-                  'Price Updated',
+                  WidgetTranslations.of(context, ref).priceUpdatedTitle,
                   style: TextStyle(
                     color: dialogColors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 content: Text(
-                  'The price has been updated since you started booking.\n\n'
-                  'Previous price: €${oldTotal.toStringAsFixed(2)}\n'
-                  'Current price: €${freshTotal.toStringAsFixed(2)}\n\n'
-                  'Would you like to continue with the updated price?',
+                  WidgetTranslations.of(context, ref).priceUpdatedConfirm(
+                    oldTotal.toStringAsFixed(2),
+                    freshTotal.toStringAsFixed(2),
+                  ),
                   style: TextStyle(color: dialogColors.textSecondary),
                 ),
                 actions: [
@@ -3249,7 +3249,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     style: TextButton.styleFrom(
                       foregroundColor: dialogColors.textSecondary,
                     ),
-                    child: const Text('Cancel'),
+                    child: Text(WidgetTranslations.of(context, ref).cancel),
                   ),
                   FilledButton(
                     onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -3257,7 +3257,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       backgroundColor: dialogColors.buttonPrimary,
                       foregroundColor: dialogColors.buttonPrimaryText,
                     ),
-                    child: const Text('Continue'),
+                    child: Text(
+                      WidgetTranslations.of(context, ref).continueLabel,
+                    ),
                   ),
                 ],
               ),

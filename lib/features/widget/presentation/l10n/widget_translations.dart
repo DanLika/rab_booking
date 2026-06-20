@@ -1421,6 +1421,102 @@ class WidgetTranslations {
     }
   }
 
+  String get propertyIdMissing {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Nedostaje ID smještaja. Molimo osvježite stranicu.';
+      case 'de':
+        return 'Die Unterkunft-ID fehlt. Bitte aktualisieren Sie die Seite.';
+      case 'it':
+        return "L'ID della proprietà è mancante. Aggiorna la pagina.";
+      case 'en':
+      default:
+        return 'Property ID is missing. Please refresh the page.';
+    }
+  }
+
+  String get ownerIdMissing {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Nedostaje ID vlasnika. Molimo osvježite stranicu.';
+      case 'de':
+        return 'Die Eigentümer-ID fehlt. Bitte aktualisieren Sie die Seite.';
+      case 'it':
+        return "L'ID del proprietario è mancante. Aggiorna la pagina.";
+      case 'en':
+      default:
+        return 'Owner ID is missing. Please refresh the page.';
+    }
+  }
+
+  String get priceUpdatedTitle {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Cijena ažurirana';
+      case 'de':
+        return 'Preis aktualisiert';
+      case 'it':
+        return 'Prezzo aggiornato';
+      case 'en':
+      default:
+        return 'Price Updated';
+    }
+  }
+
+  String priceUpdatedConfirm(String oldPrice, String newPrice) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Cijena je ažurirana otkako ste započeli rezervaciju.\n\n'
+            'Prethodna cijena: €$oldPrice\n'
+            'Trenutna cijena: €$newPrice\n\n'
+            'Želite li nastaviti s ažuriranom cijenom?';
+      case 'de':
+        return 'Der Preis wurde aktualisiert, seit Sie mit der Buchung begonnen haben.\n\n'
+            'Vorheriger Preis: €$oldPrice\n'
+            'Aktueller Preis: €$newPrice\n\n'
+            'Möchten Sie mit dem aktualisierten Preis fortfahren?';
+      case 'it':
+        return 'Il prezzo è stato aggiornato da quando hai iniziato la prenotazione.\n\n'
+            'Prezzo precedente: €$oldPrice\n'
+            'Prezzo attuale: €$newPrice\n\n'
+            'Vuoi continuare con il prezzo aggiornato?';
+      case 'en':
+      default:
+        return 'The price has been updated since you started booking.\n\n'
+            'Previous price: €$oldPrice\n'
+            'Current price: €$newPrice\n\n'
+            'Would you like to continue with the updated price?';
+    }
+  }
+
+  String get cancel {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Odustani';
+      case 'de':
+        return 'Abbrechen';
+      case 'it':
+        return 'Annulla';
+      case 'en':
+      default:
+        return 'Cancel';
+    }
+  }
+
+  String get continueLabel {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Nastavi';
+      case 'de':
+        return 'Weiter';
+      case 'it':
+        return 'Continua';
+      case 'en':
+      default:
+        return 'Continue';
+    }
+  }
+
   // ============================================================================
   // BOOKING CONFIRMATION SCREEN TRANSLATIONS
   // ============================================================================

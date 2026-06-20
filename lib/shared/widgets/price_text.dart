@@ -124,12 +124,3 @@ class PriceRichText extends ConsumerWidget {
     );
   }
 }
-
-/// Format extension for easy formatting without widget
-extension PriceFormatting on double {
-  /// Format price with current currency (requires BuildContext with WidgetRef)
-  String formatInCurrency(Currency currency) {
-    final service = CurrencyService();
-    return service.formatPrice(this, currency);
-  }
-}

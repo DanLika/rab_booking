@@ -120,52 +120,6 @@ class HapticService {
   }
 }
 
-/// Extension on functions to add haptic feedback
-extension HapticCallback on VoidCallback {
-  /// Execute callback with haptic feedback
-  VoidCallback withHaptic({
-    HapticFeedbackType type = HapticFeedbackType.medium,
-  }) {
-    return () async {
-      switch (type) {
-        case HapticFeedbackType.light:
-          await HapticService.lightImpact();
-          break;
-        case HapticFeedbackType.medium:
-          await HapticService.mediumImpact();
-          break;
-        case HapticFeedbackType.heavy:
-          await HapticService.heavyImpact();
-          break;
-        case HapticFeedbackType.selection:
-          await HapticService.selectionClick();
-          break;
-        case HapticFeedbackType.error:
-          await HapticService.error();
-          break;
-        case HapticFeedbackType.success:
-          await HapticService.success();
-          break;
-        case HapticFeedbackType.warning:
-          await HapticService.warning();
-          break;
-      }
-      this();
-    };
-  }
-}
-
-/// Haptic feedback types
-enum HapticFeedbackType {
-  light,
-  medium,
-  heavy,
-  selection,
-  error,
-  success,
-  warning,
-}
-
 /// Example usage:
 ///
 /// ```dart
@@ -176,12 +130,6 @@ enum HapticFeedbackType {
 ///     // Your action here
 ///   },
 ///   child: Text('Press Me'),
-/// )
-///
-/// // With extension
-/// ElevatedButton(
-///   onPressed: _handleSubmit.withHaptic(type: HapticFeedbackType.success),
-///   child: Text('Submit'),
 /// )
 ///
 /// // For specific actions

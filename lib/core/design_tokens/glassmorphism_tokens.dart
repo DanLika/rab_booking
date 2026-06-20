@@ -265,32 +265,3 @@ class GlassPreset {
   @override
   String toString() => 'GlassPreset($name: blur=$blur, opacity=$opacity)';
 }
-
-/// Extension for easy glassmorphism widget wrapping
-extension GlassmorphismWidget on Widget {
-  /// Wrap widget with glass effect
-  Widget withGlass({
-    required GlassPreset preset,
-    required bool isDark,
-    BorderRadius? borderRadius,
-    EdgeInsets? padding,
-    EdgeInsets? margin,
-  }) {
-    return Container(
-      margin: margin,
-      padding: padding,
-      decoration: GlassmorphismTokens.createGlassDecoration(
-        preset: preset,
-        isDark: isDark,
-        borderRadius: borderRadius,
-      ),
-      child: ClipRRect(
-        borderRadius: borderRadius ?? BorderRadius.circular(12),
-        child: BackdropFilter(
-          filter: GlassmorphismTokens.createBackdropFilter(preset),
-          child: this,
-        ),
-      ),
-    );
-  }
-}

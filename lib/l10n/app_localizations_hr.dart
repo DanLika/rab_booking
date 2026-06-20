@@ -721,7 +721,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get hidePassword => 'Sakrij lozinku';
 
   @override
-  String get currentPassword => 'Trenutna Lozinka';
+  String get currentPassword => 'Trenutna lozinka';
 
   @override
   String get newPassword => 'Nova lozinka';
@@ -730,7 +730,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get confirmPassword => 'Potvrdi lozinku';
 
   @override
-  String get confirmNewPassword => 'Potvrdite Novu Lozinku';
+  String get confirmNewPassword => 'Potvrdi novu lozinku';
 
   @override
   String get passwordChangedSuccessfully => 'Lozinka uspješno promijenjena';

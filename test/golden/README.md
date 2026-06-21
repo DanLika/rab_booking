@@ -44,6 +44,34 @@ flutter test --tags golden
 flutter test --tags golden --update-goldens
 ```
 
+## Isolation — scoped re-bless is safe
+
+The UI's text is `GoogleFonts.inter(...)` / `jetBrainsMono` (via `BBType.*`).
+google_fonts loads each (family, weight) lazily from the asset bundle the first
+time that variant is requested, through a fire-and-forget async
+`loadFontIfNecessary` (it is a different family from `loadGoldenFonts`' own
+`FontLoader('Inter')`, so that registration doesn't cover it). `tester.pump()`
+advances only **fake** time, so within a cell a just-requested variant may still
+be mid-load and lays out as tofu. A full run is masked — an earlier subject kicks
+the loads and they land (real async, between tests) before the subject's turn —
+but a NAME-SCOPED re-bless renders its subject's `mobile_light` first, so its
+variants (e.g. the w500 `BBType.label` field labels) are still loading.
+
+The harness closes this: `_warmGoldenAtlas` (in
+`test/helpers/golden_harness.dart`) runs once per isolate under `tester.runAsync`
+(real async), requests every weight the UI uses, then awaits
+`GoogleFonts.pendingFonts()` so they all land before the first real cell. Each
+cell is now independent of execution order, so
+
+```bash
+# Scoped re-bless / verify of a single subject is deterministic:
+flutter test --tags golden --plain-name "profile_change_password"
+```
+
+renders warm and matches the (warm-blessed) baseline. It covers Inter 300–700 +
+mono 500 (every weight `BBType` uses); if a future subject tofus a NEW variant as
+its isolate's first cell, request that variant there too.
+
 ## Make it an ACTIVE gate (run it, or it never fires)
 
 The net is macOS-local — deliberately NOT in CI — so it only protects you if it

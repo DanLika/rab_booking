@@ -28,10 +28,10 @@ import 'dart:typed_data';
 import 'package:bookbed/core/theme/app_theme.dart';
 import 'package:bookbed/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show debugDisableShadows;
 import 'package:flutter/services.dart' show ByteData, FontLoader, rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// One cell of the golden matrix.
 class GoldenVariant {
@@ -125,6 +125,50 @@ Future<void> loadGoldenFonts() async {
   _fontsLoaded = true;
 }
 
+bool _atlasWarmed = false;
+
+/// Completes google_fonts' lazy, per-variant ASSET loads for every text style
+/// the owner UI uses BEFORE the first real golden compare.
+///
+/// `BBType.*` resolve to `GoogleFonts.inter(...)` / `GoogleFonts.jetBrainsMono`.
+/// google_fonts loads each (family, weight) from the asset bundle the FIRST time
+/// that variant is requested, via a fire-and-forget async `loadFontIfNecessary`
+/// — `loadGoldenFonts`' own `FontLoader('Inter')` registration is a SEPARATE
+/// family that google_fonts-styled text never resolves to. `tester.pump(settle)`
+/// only advances FAKE time, so within a cell that real-async load may not finish
+/// — the text lays out in a fallback and rasterises as tofu. A full file run is
+/// masked because an earlier group's render kicks the loads and they land (real
+/// async, between tests) before the subject's turn; a NAME-SCOPED re-bless
+/// renders that subject's `mobile_light` first, so its just-requested variants
+/// (e.g. the w500 `BBType.label` field labels) are still mid-load — the proven
+/// 2.45% `profile_change_password` diff.
+///
+/// Fix: under `tester.runAsync` (REAL async, unlike `pump`), request every weight
+/// the UI uses so the loads enqueue, then await `GoogleFonts.pendingFonts()` so
+/// they all land in the engine before any real cell renders. Idempotent per
+/// isolate; runs once, at whichever cell runs first.
+///
+/// Covers the weights `loadGoldenFonts` registers (Inter 300–700 + JetBrains
+/// Mono 500) = every weight `BBType` uses. If a subject ever tofus a NEW variant
+/// as the isolate's first cell, request that variant here too.
+Future<void> _warmGoldenAtlas(WidgetTester tester) async {
+  if (_atlasWarmed) return;
+  await tester.runAsync(() async {
+    for (final FontWeight weight in const <FontWeight>[
+      FontWeight.w300,
+      FontWeight.w400,
+      FontWeight.w500,
+      FontWeight.w600,
+      FontWeight.w700,
+    ]) {
+      GoogleFonts.inter(fontWeight: weight);
+    }
+    GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w500);
+    await GoogleFonts.pendingFonts();
+  });
+  _atlasWarmed = true;
+}
+
 MaterialApp _app({
   required GoldenVariant v,
   required Widget home,
@@ -197,6 +241,7 @@ void goldenScreen(
     for (final GoldenVariant v in kGoldenVariants) {
       testWidgets('$name — ${v.id}', (WidgetTester tester) async {
         await _withRealShadows(() async {
+          await _warmGoldenAtlas(tester);
           _sizeView(tester, v.width, v.height);
           final Widget subject = build(v);
           await tester.pumpWidget(
@@ -244,6 +289,7 @@ void goldenSurface(
     for (final GoldenVariant v in kGoldenVariants) {
       testWidgets('$name — ${v.id}', (WidgetTester tester) async {
         await _withRealShadows(() async {
+          await _warmGoldenAtlas(tester);
           _sizeView(tester, v.width, tallHeight);
           final GlobalKey boundaryKey = GlobalKey();
           await tester.pumpWidget(

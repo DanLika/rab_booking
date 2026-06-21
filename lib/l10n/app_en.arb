@@ -165,9 +165,7 @@
   "validEmailRequired": "Please enter a valid email",
   "passwordRequired": "Please enter password",
   "passwordTooShort": "Password must be at least 6 characters",
-  "confirmPassword": "Confirm Password",
   "confirmPasswordRequired": "Please confirm password",
-  "passwordsDoNotMatch": "Passwords do not match",
   "accountType": "Account Type",
   "guest": "Guest",
   "guestDescription": "I want to book accommodation",
@@ -176,10 +174,7 @@
   "iAccept": "I accept ",
   "termsOfService": "Terms of Service",
   "and": " and ",
-  "privacyPolicy": "Privacy Policy",
   "or": "or",
-  "enterYourEmail": "Enter your email",
-
   "properties": "Properties",
   "property": "Property",
   "propertyDetails": "Property Details",
@@ -228,7 +223,6 @@
   "cancellationDetails": "Cancellation Details",
   "cancelledOn": "Cancelled On",
   "reason": "Reason",
-  "viewProperty": "View Property",
   "errorLoadingBooking": "Error loading booking",
   "tryAgainOrContactSupport": "Try again or contact support",
   "cancelBookingTitle": "Cancel Booking",
@@ -288,8 +282,6 @@
   "croatian": "Croatian",
 
   "searchProperties": "Search Properties",
-  "noResultsFound": "No Results Found",
-  "tryDifferentSearch": "Try a different search",
   "clearFilters": "Clear Filters",
   "applyFilters": "Apply Filters",
   "sortBy": "Sort By",
@@ -1486,7 +1478,6 @@
   "propertyFormSubdomain": "Subdomain",
   "propertyFormSubdomainHint": "your-property",
   "propertyFormSubdomainHelper": "Custom URL: [subdomain].bookbed.io",
-  "propertyFormSubdomainAvailable": "Available",
   "propertyFormSubdomainTaken": "Taken",
   "propertyFormSubdomainUseSuggestion": "Use suggestion",
   "propertyFormPropertyType": "Property type *",
@@ -1615,20 +1606,7 @@
   "unitFormErrorUpdate": "Error updating unit",
   "unitFormErrorAdd": "Error adding unit",
 
-  "unitPricingTitle": "Price List",
-  "unitPricingSelectUnit": "Select unit",
-  "unitPricingSelectUnitHint": "Select a unit",
-  "unitPricingUnit": "Unit",
-  "unitPricingNoUnits": "No units added",
-  "unitPricingNoUnitsDesc": "Add a unit to manage prices for your accommodation.",
   "unitPricingLoadError": "Error loading units",
-  "unitPricingBasePrice": "Base Price",
-  "unitPricingBasePriceDesc": "This is the default price per night used when there are no special prices.",
-  "unitPricingPricePerNight": "Price per night (€)",
-  "unitPricingSave": "Save",
-  "unitPricingSavePrice": "Save Price",
-  "unitPricingEnterPrice": "Enter price",
-  "unitPricingPriceGreaterThanZero": "Price must be greater than 0",
   "unitPricingSuccessUpdate": "Base price successfully updated",
   "unitPricingErrorUpdate": "Error updating price",
 
@@ -1865,24 +1843,8 @@
   "ownerFaqNoResults": "No results",
   "ownerFaqNoResultsDesc": "Try a different search or category",
 
-  "icalSyncTitle": "iCal Synchronization",
   "icalSyncNoFeeds": "No feeds",
   "icalSyncNoFeedsDesc": "Add your first iCal feed to start synchronization",
-  "icalSyncError": "Synchronization error",
-  "icalSyncErrorCount": "{errorCount} of {totalCount} feeds have errors",
-  "@icalSyncErrorCount": {
-    "placeholders": {
-      "errorCount": {"type": "int"},
-      "totalCount": {"type": "int"}
-    }
-  },
-  "icalSyncActive": "Synchronization active",
-  "icalSyncActiveCount": "{count} feeds actively synchronized",
-  "@icalSyncActiveCount": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
   "icalSyncAllPaused": "All feeds paused",
   "icalSyncNoActiveFeeds": "No active feeds",
   "icalSyncWhyTitle": "Why iCal Synchronization?",
@@ -1919,7 +1881,6 @@
       "syncs": {"type": "int"}
     }
   },
-  "icalSyncNow": "Sync now",
   "icalSyncPause": "Pause",
   "icalSyncResume": "Resume",
   "icalSyncEdit": "Edit",
@@ -1934,18 +1895,6 @@
   },
   "icalSyncDeleteSuccess": "Feed deleted",
   "icalSyncDeleteError": "Error deleting feed",
-  "icalSyncStarted": "Synchronization started for {platform}...",
-  "@icalSyncStarted": {
-    "placeholders": {
-      "platform": {"type": "String"}
-    }
-  },
-  "icalSyncSuccess": "Synchronization successful! Reservations created: {count}",
-  "@icalSyncSuccess": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
   "icalSyncFailed": "Error during synchronization",
   "icalSyncPaused": "Feed paused",
   "icalSyncPauseError": "Error pausing feed",
@@ -2288,18 +2237,10 @@
   "propertyFormSubdomainLabel": "Subdomain (for email links)",
   "propertyFormSubdomainEmailHelper": "URL for email links: [subdomain].bookbed.io",
 
-  "icalExportTitle": "iCal Export",
   "icalExportUnit": "Unit",
   "icalExportGenerating": "Generating...",
   "icalExportGenerate": "Generate iCal Export",
-  "icalExportUrl": "Export URL",
   "icalExportCopyUrl": "Copy URL",
-  "icalExportLastGenerated": "Last generated: {time}",
-  "@icalExportLastGenerated": {
-    "placeholders": {
-      "time": {"type": "String"}
-    }
-  },
   "icalExportPreview": ".ics File Preview",
   "icalExportHowToTest": "How to Test",
   "icalExportGoogleCalendar": "1. Google Calendar",
@@ -2312,20 +2253,6 @@
   "icalExportSuccess": "iCal export generated successfully",
   "icalExportError": "Failed to generate iCal export",
   "icalExportUrlCopied": "URL copied to clipboard",
-  "icalExportJustNow": "Just now",
-  "icalExportMinutesAgo": "{minutes}m ago",
-  "@icalExportMinutesAgo": {
-    "placeholders": {
-      "minutes": {"type": "int"}
-    }
-  },
-  "icalExportHoursAgo": "{hours}h ago",
-  "@icalExportHoursAgo": {
-    "placeholders": {
-      "hours": {"type": "int"}
-    }
-  },
-
   "icalExportListTitle": "iCal Export - Select Unit",
   "icalExportListHeader": "iCal Export",
   "icalExportListDescription": "Select a unit to generate iCal URL for calendar synchronization.",
@@ -3623,7 +3550,6 @@
   "aiAssistantAiError": "Something went wrong. Please try again.",
   "aiAssistantUnavailable": "AI Assistant is temporarily unavailable. Please try again in a moment.",
   "aiAssistantError": "Failed to load chats",
-  "aiAssistantDisclaimer": "AI Assistant provides guidance based on BookBed documentation. For account-specific issues, contact dusko@book-bed.com",
   "aiAssistantChipAddUnit": "How to add a unit?",
   "aiAssistantChipPricing": "Set up pricing",
   "aiAssistantChipStripe": "Connect Stripe",

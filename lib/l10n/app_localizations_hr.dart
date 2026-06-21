@@ -455,13 +455,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get passwordTooShort => 'Lozinka mora imati najmanje 6 karaktera';
 
   @override
-  String get confirmPassword => 'Potvrdi Lozinku';
-
-  @override
   String get confirmPasswordRequired => 'Molimo potvrdite lozinku';
-
-  @override
-  String get passwordsDoNotMatch => 'Lozinke se ne poklapaju';
 
   @override
   String get accountType => 'Vrsta računa';
@@ -488,13 +482,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get and => ' i ';
 
   @override
-  String get privacyPolicy => 'Pravila privatnosti';
-
-  @override
   String get or => 'ili';
-
-  @override
-  String get enterYourEmail => 'Unesite vašu email adresu';
 
   @override
   String get properties => 'Nekretnine';
@@ -629,9 +617,6 @@ class AppLocalizationsHr extends AppLocalizations {
   String get reason => 'Razlog';
 
   @override
-  String get viewProperty => 'Pogledaj Nekretninu';
-
-  @override
   String get errorLoadingBooking => 'Greška pri učitavanju rezervacije';
 
   @override
@@ -736,13 +721,16 @@ class AppLocalizationsHr extends AppLocalizations {
   String get hidePassword => 'Sakrij lozinku';
 
   @override
-  String get currentPassword => 'Trenutna Lozinka';
+  String get currentPassword => 'Trenutna lozinka';
 
   @override
   String get newPassword => 'Nova lozinka';
 
   @override
-  String get confirmNewPassword => 'Potvrdite Novu Lozinku';
+  String get confirmPassword => 'Potvrdi lozinku';
+
+  @override
+  String get confirmNewPassword => 'Potvrdi novu lozinku';
 
   @override
   String get passwordChangedSuccessfully => 'Lozinka uspješno promijenjena';
@@ -802,12 +790,6 @@ class AppLocalizationsHr extends AppLocalizations {
   String get searchProperties => 'Pretražite Nekretnine';
 
   @override
-  String get noResultsFound => 'Nema Rezultata';
-
-  @override
-  String get tryDifferentSearch => 'Pokušajte sa drugim pojmom ili kategorijom';
-
-  @override
   String get clearFilters => 'Obriši Filtere';
 
   @override
@@ -842,6 +824,9 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get invalidPassword => 'Lozinka mora imati najmanje 8 karaktera';
+
+  @override
+  String get passwordsDoNotMatch => 'Lozinke se ne poklapaju';
 
   @override
   String get requiredField => 'Ovo polje je obavezno';
@@ -1009,6 +994,9 @@ class AppLocalizationsHr extends AppLocalizations {
       'Zadržavamo pravo da izmijenimo ove uvjete u bilo kojem trenutku. Izmjene će stupiti na snagu odmah nakon objavljivanja na web stranici. Vaše nastavljeno korištenje usluge nakon izmjena predstavlja prihvaćanje novih uvjeta.';
 
   @override
+  String get privacyPolicy => 'Pravila privatnosti';
+
+  @override
   String get privacyPolicyTitle => 'Pravila privatnosti';
 
   @override
@@ -1111,6 +1099,12 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get faqAccount => 'Račun';
+
+  @override
+  String get noResultsFound => 'Nema Rezultata';
+
+  @override
+  String get tryDifferentSearch => 'Pokušajte sa drugim pojmom ili kategorijom';
 
   @override
   String get stillNeedHelp => 'Još uvijek vam je potrebna pomoć?';
@@ -1255,6 +1249,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get pleaseEnterName => 'Molimo unesite vaše ime';
 
   @override
+  String get enterYourEmail => 'Unesite vašu email adresu';
+
+  @override
   String get pleaseEnterEmail => 'Molimo unesite vaš email';
 
   @override
@@ -1345,6 +1342,9 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get seeAll => 'Pogledaj Sve';
+
+  @override
+  String get viewProperty => 'Pogledaj Nekretninu';
 
   @override
   String get widgetSelectDates => 'Odaberite Datume';
@@ -3725,9 +3725,6 @@ class AppLocalizationsHr extends AppLocalizations {
       'Prilagođeni URL: [subdomain].bookbed.io';
 
   @override
-  String get propertyFormSubdomainAvailable => 'Subdomena je dostupna';
-
-  @override
   String get propertyFormSubdomainTaken => 'Zauzeto';
 
   @override
@@ -4020,48 +4017,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get unitFormErrorAdd => 'Greška pri dodavanju jedinice';
 
   @override
-  String get unitPricingTitle => 'Cjenovnik';
-
-  @override
-  String get unitPricingSelectUnit => 'Odaberi jedinicu';
-
-  @override
-  String get unitPricingSelectUnitHint => 'Odaberite jedinicu';
-
-  @override
-  String get unitPricingUnit => 'Jedinica';
-
-  @override
-  String get unitPricingNoUnits => 'Nemate dodane jedinice';
-
-  @override
-  String get unitPricingNoUnitsDesc =>
-      'Dodajte jedinicu kako biste mogli upravljati cijenama za vaše smještajne objekte.';
-
-  @override
   String get unitPricingLoadError => 'Greška pri učitavanju jedinica';
-
-  @override
-  String get unitPricingBasePrice => 'Osnovna Cijena';
-
-  @override
-  String get unitPricingBasePriceDesc =>
-      'Ovo je default cijena po noćenju koja se koristi kada nema posebnih cijena.';
-
-  @override
-  String get unitPricingPricePerNight => 'Cijena po noći (€)';
-
-  @override
-  String get unitPricingSave => 'Spremi';
-
-  @override
-  String get unitPricingSavePrice => 'Spremi cijenu';
-
-  @override
-  String get unitPricingEnterPrice => 'Unesite cijenu';
-
-  @override
-  String get unitPricingPriceGreaterThanZero => 'Cijena mora biti veća od 0';
 
   @override
   String get unitPricingSuccessUpdate => 'Osnovna cijena uspješno ažurirana';
@@ -4591,7 +4547,48 @@ class AppLocalizationsHr extends AppLocalizations {
   String get themeSelectionSystemDesc => 'Prati sustavnu temu';
 
   @override
+  String get unitPricingTitle => 'Cjenovnik';
+
+  @override
+  String get unitPricingSelectUnit => 'Odaberi jedinicu';
+
+  @override
+  String get unitPricingSelectUnitHint => 'Odaberite jedinicu';
+
+  @override
+  String get unitPricingUnit => 'Jedinica';
+
+  @override
+  String get unitPricingNoUnits => 'Nemate dodane jedinice';
+
+  @override
+  String get unitPricingNoUnitsDesc =>
+      'Dodajte jedinicu kako biste mogli upravljati cijenama za vaše smještajne objekte.';
+
+  @override
   String get unitPricingErrorLoading => 'Greška pri učitavanju jedinica';
+
+  @override
+  String get unitPricingBasePrice => 'Osnovna Cijena';
+
+  @override
+  String get unitPricingBasePriceDesc =>
+      'Ovo je zadana cijena po noćenju koja se koristi kada nema posebnih cijena.';
+
+  @override
+  String get unitPricingPricePerNight => 'Cijena po noći (€)';
+
+  @override
+  String get unitPricingSave => 'Spremi';
+
+  @override
+  String get unitPricingSavePrice => 'Spremi cijenu';
+
+  @override
+  String get unitPricingEnterPrice => 'Unesite cijenu';
+
+  @override
+  String get unitPricingPriceGreaterThanZero => 'Cijena mora biti veća od 0';
 
   @override
   String get unitPricingSuccess => 'Osnovna cijena uspješno ažurirana';
@@ -4639,30 +4636,11 @@ class AppLocalizationsHr extends AppLocalizations {
       'Pokušajte sa drugom pretragom ili kategorijom';
 
   @override
-  String get icalSyncTitle => 'iCal Sinkronizacija';
-
-  @override
   String get icalSyncNoFeeds => 'Nema feedova';
 
   @override
   String get icalSyncNoFeedsDesc =>
       'Dodajte prvi iCal feed da započnete sinkronizaciju';
-
-  @override
-  String get icalSyncError => 'Greška u sinkronizaciji';
-
-  @override
-  String icalSyncErrorCount(int errorCount, int totalCount) {
-    return '$errorCount od $totalCount feedova ima grešku';
-  }
-
-  @override
-  String get icalSyncActive => 'Sinkronizacija aktivna';
-
-  @override
-  String icalSyncActiveCount(int count) {
-    return '$count feedova aktivno sinkronizirano';
-  }
 
   @override
   String get icalSyncAllPaused => 'Svi feedovi pauzirani';
@@ -4737,9 +4715,6 @@ class AppLocalizationsHr extends AppLocalizations {
   }
 
   @override
-  String get icalSyncNow => 'Sinkroniziraj sada';
-
-  @override
   String get icalSyncPause => 'Pauziraj';
 
   @override
@@ -4764,16 +4739,6 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalSyncDeleteError => 'Greška prilikom brisanja feeda';
-
-  @override
-  String icalSyncStarted(String platform) {
-    return 'Sinkronizacija pokrenuta za $platform...';
-  }
-
-  @override
-  String icalSyncSuccess(int count) {
-    return 'Sinkronizacija uspješna! Kreirano rezervacija: $count';
-  }
 
   @override
   String get icalSyncFailed => 'Greška prilikom sinkronizacije';
@@ -5701,6 +5666,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get propertyFormUseSuggestion => 'Koristi';
 
   @override
+  String get propertyFormSubdomainAvailable => 'Subdomena je dostupna';
+
+  @override
   String get propertyFormNoPhotos => 'Nema fotografija';
 
   @override
@@ -5714,9 +5682,6 @@ class AppLocalizationsHr extends AppLocalizations {
       'URL za email linkove: [subdomain].bookbed.io';
 
   @override
-  String get icalExportTitle => 'iCal Izvoz';
-
-  @override
   String get icalExportUnit => 'Jedinica';
 
   @override
@@ -5726,15 +5691,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get icalExportGenerate => 'Generiraj iCal Export';
 
   @override
-  String get icalExportUrl => 'URL za izvoz';
-
-  @override
   String get icalExportCopyUrl => 'Kopiraj URL';
-
-  @override
-  String icalExportLastGenerated(String time) {
-    return 'Zadnje generirano: $time';
-  }
 
   @override
   String get icalExportPreview => 'Pregled .ics datoteke';
@@ -5775,19 +5732,6 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalExportUrlCopied => 'URL kopiran u međuspremnik';
-
-  @override
-  String get icalExportJustNow => 'Upravo sada';
-
-  @override
-  String icalExportMinutesAgo(int minutes) {
-    return 'Prije ${minutes}m';
-  }
-
-  @override
-  String icalExportHoursAgo(int hours) {
-    return 'Prije ${hours}h';
-  }
 
   @override
   String get icalExportListTitle => 'iCal Export - Odaberi Jedinicu';
@@ -6491,11 +6435,30 @@ class AppLocalizationsHr extends AppLocalizations {
       'Check-out blokiran za odabrane dane';
 
   @override
+  String get icalSyncTitle => 'iCal Sinkronizacija';
+
+  @override
   String get icalNoFeeds => 'Nema feedova';
 
   @override
   String get icalNoFeedsDescription =>
       'Dodajte prvi iCal feed da započnete sinkronizaciju';
+
+  @override
+  String get icalSyncError => 'Greška u sinkronizaciji';
+
+  @override
+  String icalSyncErrorCount(int errorCount, int totalCount) {
+    return '$errorCount od $totalCount feedova ima grešku';
+  }
+
+  @override
+  String get icalSyncActive => 'Sinkronizacija aktivna';
+
+  @override
+  String icalSyncActiveCount(int count) {
+    return '$count feedova aktivno sinkronizirano';
+  }
 
   @override
   String get icalAllFeedsPaused => 'Svi feedovi pauzirani';
@@ -6573,6 +6536,9 @@ class AppLocalizationsHr extends AppLocalizations {
   }
 
   @override
+  String get icalSyncNow => 'Sinkroniziraj sada';
+
+  @override
   String get icalPause => 'Pauziraj';
 
   @override
@@ -6580,6 +6546,16 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalHowItWorks => 'Kako funkcionira iCal sinkronizacija?';
+
+  @override
+  String icalSyncStarted(String platform) {
+    return 'Sinkronizacija pokrenuta za $platform...';
+  }
+
+  @override
+  String icalSyncSuccess(int count) {
+    return 'Sinkronizacija uspješna! Kreirano rezervacija: $count';
+  }
 
   @override
   String get icalSyncErrorMessage => 'Greška prilikom sinkronizacije';
@@ -7644,6 +7620,9 @@ class AppLocalizationsHr extends AppLocalizations {
       'Verifikacija emaila je onemogućena. Gosti mogu završiti rezervacije bez verifikacije email adrese.';
 
   @override
+  String get icalExportTitle => 'iCal Izvoz';
+
+  @override
   String get icalExportEnabled => 'Omogućeno';
 
   @override
@@ -7660,8 +7639,29 @@ class AppLocalizationsHr extends AppLocalizations {
   String get icalExportInfo => 'Informacije o izvozu';
 
   @override
+  String get icalExportUrl => 'URL za izvoz';
+
+  @override
+  String icalExportLastGenerated(String time) {
+    return 'Zadnje generirano: $time';
+  }
+
+  @override
   String get icalExportInfoMessage =>
       'iCal izvoz će se automatski generirati kada se rezervacije promijene. Koristite generirani URL za sinkronizaciju s vanjskim kalendarima.';
+
+  @override
+  String get icalExportJustNow => 'Upravo sada';
+
+  @override
+  String icalExportMinutesAgo(int minutes) {
+    return 'Prije ${minutes}m';
+  }
+
+  @override
+  String icalExportHoursAgo(int hours) {
+    return 'Prije ${hours}h';
+  }
 
   @override
   String icalExportDaysAgo(int days) {
@@ -8674,10 +8674,6 @@ class AppLocalizationsHr extends AppLocalizations {
   String get aiAssistantError => 'Greška pri učitavanju razgovora';
 
   @override
-  String get aiAssistantDisclaimer =>
-      'AI Asistent pruža smjernice na temelju BookBed dokumentacije. Za probleme s računom, kontaktirajte info@book-bed.com';
-
-  @override
   String get aiAssistantChipAddUnit => 'Kako dodati apartman?';
 
   @override
@@ -8719,6 +8715,10 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get webDevReferralContactDetails => 'Kontakt: dusko@book-bed.com';
+
+  @override
+  String get aiAssistantDisclaimer =>
+      'AI Asistent pruža smjernice na temelju BookBed dokumentacije. Za probleme s računom, kontaktirajte info@book-bed.com';
 
   @override
   String get notificationActionApprove => 'Odobri';

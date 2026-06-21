@@ -914,23 +914,11 @@ abstract class AppLocalizations {
   /// **'Password must be at least 6 characters'**
   String get passwordTooShort;
 
-  /// No description provided for @confirmPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm Password'**
-  String get confirmPassword;
-
   /// No description provided for @confirmPasswordRequired.
   ///
   /// In en, this message translates to:
   /// **'Please confirm password'**
   String get confirmPasswordRequired;
-
-  /// No description provided for @passwordsDoNotMatch.
-  ///
-  /// In en, this message translates to:
-  /// **'Passwords do not match'**
-  String get passwordsDoNotMatch;
 
   /// No description provided for @accountType.
   ///
@@ -980,23 +968,11 @@ abstract class AppLocalizations {
   /// **' and '**
   String get and;
 
-  /// No description provided for @privacyPolicy.
-  ///
-  /// In en, this message translates to:
-  /// **'Privacy Policy'**
-  String get privacyPolicy;
-
   /// No description provided for @or.
   ///
   /// In en, this message translates to:
   /// **'or'**
   String get or;
-
-  /// No description provided for @enterYourEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your email address'**
-  String get enterYourEmail;
 
   /// No description provided for @properties.
   ///
@@ -1262,12 +1238,6 @@ abstract class AppLocalizations {
   /// **'Reason'**
   String get reason;
 
-  /// No description provided for @viewProperty.
-  ///
-  /// In en, this message translates to:
-  /// **'View Property'**
-  String get viewProperty;
-
   /// No description provided for @errorLoadingBooking.
   ///
   /// In en, this message translates to:
@@ -1478,6 +1448,12 @@ abstract class AppLocalizations {
   /// **'New Password'**
   String get newPassword;
 
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get confirmPassword;
+
   /// No description provided for @confirmNewPassword.
   ///
   /// In en, this message translates to:
@@ -1592,18 +1568,6 @@ abstract class AppLocalizations {
   /// **'Search Properties'**
   String get searchProperties;
 
-  /// No description provided for @noResultsFound.
-  ///
-  /// In en, this message translates to:
-  /// **'No results found'**
-  String get noResultsFound;
-
-  /// No description provided for @tryDifferentSearch.
-  ///
-  /// In en, this message translates to:
-  /// **'Try a different search term or category'**
-  String get tryDifferentSearch;
-
   /// No description provided for @clearFilters.
   ///
   /// In en, this message translates to:
@@ -1675,6 +1639,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password must be at least 8 characters'**
   String get invalidPassword;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
 
   /// No description provided for @requiredField.
   ///
@@ -1970,6 +1940,12 @@ abstract class AppLocalizations {
   /// **'We reserve the right to modify these terms at any time. Changes will be effective immediately upon posting to the website. Your continued use of the service after changes constitutes acceptance of the new terms.'**
   String get termsChangesBody;
 
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
   /// No description provided for @privacyPolicyTitle.
   ///
   /// In en, this message translates to:
@@ -2155,6 +2131,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account'**
   String get faqAccount;
+
+  /// No description provided for @noResultsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get noResultsFound;
+
+  /// No description provided for @tryDifferentSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different search term or category'**
+  String get tryDifferentSearch;
 
   /// No description provided for @stillNeedHelp.
   ///
@@ -2402,6 +2390,12 @@ abstract class AppLocalizations {
   /// **'Please enter your name'**
   String get pleaseEnterName;
 
+  /// No description provided for @enterYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email address'**
+  String get enterYourEmail;
+
   /// No description provided for @pleaseEnterEmail.
   ///
   /// In en, this message translates to:
@@ -2575,6 +2569,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'See All'**
   String get seeAll;
+
+  /// No description provided for @viewProperty.
+  ///
+  /// In en, this message translates to:
+  /// **'View Property'**
+  String get viewProperty;
 
   /// No description provided for @widgetSelectDates.
   ///
@@ -6906,12 +6906,6 @@ abstract class AppLocalizations {
   /// **'Custom URL: [subdomain].bookbed.io'**
   String get propertyFormSubdomainHelper;
 
-  /// No description provided for @propertyFormSubdomainAvailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Subdomain is available'**
-  String get propertyFormSubdomainAvailable;
-
   /// No description provided for @propertyFormSubdomainTaken.
   ///
   /// In en, this message translates to:
@@ -7452,89 +7446,11 @@ abstract class AppLocalizations {
   /// **'Error adding unit'**
   String get unitFormErrorAdd;
 
-  /// No description provided for @unitPricingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Price List'**
-  String get unitPricingTitle;
-
-  /// No description provided for @unitPricingSelectUnit.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Unit'**
-  String get unitPricingSelectUnit;
-
-  /// No description provided for @unitPricingSelectUnitHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Select unit'**
-  String get unitPricingSelectUnitHint;
-
-  /// No description provided for @unitPricingUnit.
-  ///
-  /// In en, this message translates to:
-  /// **'Unit'**
-  String get unitPricingUnit;
-
-  /// No description provided for @unitPricingNoUnits.
-  ///
-  /// In en, this message translates to:
-  /// **'No units added'**
-  String get unitPricingNoUnits;
-
-  /// No description provided for @unitPricingNoUnitsDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a unit to manage prices for your accommodation.'**
-  String get unitPricingNoUnitsDesc;
-
   /// No description provided for @unitPricingLoadError.
   ///
   /// In en, this message translates to:
   /// **'Error loading units'**
   String get unitPricingLoadError;
-
-  /// No description provided for @unitPricingBasePrice.
-  ///
-  /// In en, this message translates to:
-  /// **'Base Price'**
-  String get unitPricingBasePrice;
-
-  /// No description provided for @unitPricingBasePriceDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'This is the default price per night used when there are no special prices.'**
-  String get unitPricingBasePriceDesc;
-
-  /// No description provided for @unitPricingPricePerNight.
-  ///
-  /// In en, this message translates to:
-  /// **'Price per night (€)'**
-  String get unitPricingPricePerNight;
-
-  /// No description provided for @unitPricingSave.
-  ///
-  /// In en, this message translates to:
-  /// **'Save'**
-  String get unitPricingSave;
-
-  /// No description provided for @unitPricingSavePrice.
-  ///
-  /// In en, this message translates to:
-  /// **'Save Price'**
-  String get unitPricingSavePrice;
-
-  /// No description provided for @unitPricingEnterPrice.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter price'**
-  String get unitPricingEnterPrice;
-
-  /// No description provided for @unitPricingPriceGreaterThanZero.
-  ///
-  /// In en, this message translates to:
-  /// **'Price must be greater than 0'**
-  String get unitPricingPriceGreaterThanZero;
 
   /// No description provided for @unitPricingSuccessUpdate.
   ///
@@ -8502,11 +8418,89 @@ abstract class AppLocalizations {
   /// **'Follow system theme'**
   String get themeSelectionSystemDesc;
 
+  /// No description provided for @unitPricingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Price List'**
+  String get unitPricingTitle;
+
+  /// No description provided for @unitPricingSelectUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Unit'**
+  String get unitPricingSelectUnit;
+
+  /// No description provided for @unitPricingSelectUnitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select unit'**
+  String get unitPricingSelectUnitHint;
+
+  /// No description provided for @unitPricingUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get unitPricingUnit;
+
+  /// No description provided for @unitPricingNoUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'No units added'**
+  String get unitPricingNoUnits;
+
+  /// No description provided for @unitPricingNoUnitsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a unit to manage prices for your accommodation.'**
+  String get unitPricingNoUnitsDesc;
+
   /// No description provided for @unitPricingErrorLoading.
   ///
   /// In en, this message translates to:
   /// **'Error loading units'**
   String get unitPricingErrorLoading;
+
+  /// No description provided for @unitPricingBasePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Base Price'**
+  String get unitPricingBasePrice;
+
+  /// No description provided for @unitPricingBasePriceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the default price per night used when there are no special prices.'**
+  String get unitPricingBasePriceDesc;
+
+  /// No description provided for @unitPricingPricePerNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per night (€)'**
+  String get unitPricingPricePerNight;
+
+  /// No description provided for @unitPricingSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get unitPricingSave;
+
+  /// No description provided for @unitPricingSavePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Price'**
+  String get unitPricingSavePrice;
+
+  /// No description provided for @unitPricingEnterPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter price'**
+  String get unitPricingEnterPrice;
+
+  /// No description provided for @unitPricingPriceGreaterThanZero.
+  ///
+  /// In en, this message translates to:
+  /// **'Price must be greater than 0'**
+  String get unitPricingPriceGreaterThanZero;
 
   /// No description provided for @unitPricingSuccess.
   ///
@@ -8592,12 +8586,6 @@ abstract class AppLocalizations {
   /// **'Try a different search or category'**
   String get ownerFaqNoResultsDesc;
 
-  /// No description provided for @icalSyncTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'iCal Synchronization'**
-  String get icalSyncTitle;
-
   /// No description provided for @icalSyncNoFeeds.
   ///
   /// In en, this message translates to:
@@ -8609,30 +8597,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add your first iCal feed to start synchronization'**
   String get icalSyncNoFeedsDesc;
-
-  /// No description provided for @icalSyncError.
-  ///
-  /// In en, this message translates to:
-  /// **'Synchronization error'**
-  String get icalSyncError;
-
-  /// No description provided for @icalSyncErrorCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{errorCount} of {totalCount} feeds have errors'**
-  String icalSyncErrorCount(int errorCount, int totalCount);
-
-  /// No description provided for @icalSyncActive.
-  ///
-  /// In en, this message translates to:
-  /// **'Synchronization active'**
-  String get icalSyncActive;
-
-  /// No description provided for @icalSyncActiveCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} feeds actively synchronized'**
-  String icalSyncActiveCount(int count);
 
   /// No description provided for @icalSyncAllPaused.
   ///
@@ -8754,12 +8718,6 @@ abstract class AppLocalizations {
   /// **'{reservations} reservations • {syncs} synchronizations'**
   String icalSyncReservationsCount(int reservations, int syncs);
 
-  /// No description provided for @icalSyncNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync now'**
-  String get icalSyncNow;
-
   /// No description provided for @icalSyncPause.
   ///
   /// In en, this message translates to:
@@ -8807,18 +8765,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error deleting feed'**
   String get icalSyncDeleteError;
-
-  /// No description provided for @icalSyncStarted.
-  ///
-  /// In en, this message translates to:
-  /// **'Synchronization started for {platform}...'**
-  String icalSyncStarted(String platform);
-
-  /// No description provided for @icalSyncSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Synchronization successful! Reservations created: {count}'**
-  String icalSyncSuccess(int count);
 
   /// No description provided for @icalSyncFailed.
   ///
@@ -10500,6 +10446,12 @@ abstract class AppLocalizations {
   /// **'Use'**
   String get propertyFormUseSuggestion;
 
+  /// No description provided for @propertyFormSubdomainAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Subdomain is available'**
+  String get propertyFormSubdomainAvailable;
+
   /// No description provided for @propertyFormNoPhotos.
   ///
   /// In en, this message translates to:
@@ -10524,12 +10476,6 @@ abstract class AppLocalizations {
   /// **'URL for email links: [subdomain].bookbed.io'**
   String get propertyFormSubdomainEmailHelper;
 
-  /// No description provided for @icalExportTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'iCal Export'**
-  String get icalExportTitle;
-
   /// No description provided for @icalExportUnit.
   ///
   /// In en, this message translates to:
@@ -10548,23 +10494,11 @@ abstract class AppLocalizations {
   /// **'Generate iCal Export'**
   String get icalExportGenerate;
 
-  /// No description provided for @icalExportUrl.
-  ///
-  /// In en, this message translates to:
-  /// **'Export URL'**
-  String get icalExportUrl;
-
   /// No description provided for @icalExportCopyUrl.
   ///
   /// In en, this message translates to:
   /// **'Copy URL'**
   String get icalExportCopyUrl;
-
-  /// No description provided for @icalExportLastGenerated.
-  ///
-  /// In en, this message translates to:
-  /// **'Last generated: {time}'**
-  String icalExportLastGenerated(String time);
 
   /// No description provided for @icalExportPreview.
   ///
@@ -10637,24 +10571,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'URL copied to clipboard'**
   String get icalExportUrlCopied;
-
-  /// No description provided for @icalExportJustNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Just now'**
-  String get icalExportJustNow;
-
-  /// No description provided for @icalExportMinutesAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'{minutes}m ago'**
-  String icalExportMinutesAgo(int minutes);
-
-  /// No description provided for @icalExportHoursAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'{hours}h ago'**
-  String icalExportHoursAgo(int hours);
 
   /// No description provided for @icalExportListTitle.
   ///
@@ -11778,6 +11694,12 @@ abstract class AppLocalizations {
   /// **'Check-out blocked for selected days'**
   String get priceCalendarCheckOutBlockedForDays;
 
+  /// No description provided for @icalSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'iCal Synchronization'**
+  String get icalSyncTitle;
+
   /// No description provided for @icalNoFeeds.
   ///
   /// In en, this message translates to:
@@ -11789,6 +11711,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add your first iCal feed to start synchronization'**
   String get icalNoFeedsDescription;
+
+  /// No description provided for @icalSyncError.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization error'**
+  String get icalSyncError;
+
+  /// No description provided for @icalSyncErrorCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{errorCount} of {totalCount} feeds have errors'**
+  String icalSyncErrorCount(int errorCount, int totalCount);
+
+  /// No description provided for @icalSyncActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization active'**
+  String get icalSyncActive;
+
+  /// No description provided for @icalSyncActiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} feeds actively synchronized'**
+  String icalSyncActiveCount(int count);
 
   /// No description provided for @icalAllFeedsPaused.
   ///
@@ -11916,6 +11862,12 @@ abstract class AppLocalizations {
   /// **'{reservations} reservations • {syncs} syncs'**
   String icalReservationsAndSyncs(int reservations, int syncs);
 
+  /// No description provided for @icalSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get icalSyncNow;
+
   /// No description provided for @icalPause.
   ///
   /// In en, this message translates to:
@@ -11933,6 +11885,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'How does iCal synchronization work?'**
   String get icalHowItWorks;
+
+  /// No description provided for @icalSyncStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization started for {platform}...'**
+  String icalSyncStarted(String platform);
+
+  /// No description provided for @icalSyncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization successful! Reservations created: {count}'**
+  String icalSyncSuccess(int count);
 
   /// No description provided for @icalSyncErrorMessage.
   ///
@@ -13755,6 +13719,12 @@ abstract class AppLocalizations {
   /// **'Email verification is disabled. Guests can complete bookings without verifying their email address.'**
   String get emailVerificationInfoDisabled;
 
+  /// No description provided for @icalExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'iCal Export'**
+  String get icalExportTitle;
+
   /// No description provided for @icalExportEnabled.
   ///
   /// In en, this message translates to:
@@ -13785,11 +13755,41 @@ abstract class AppLocalizations {
   /// **'Export Information'**
   String get icalExportInfo;
 
+  /// No description provided for @icalExportUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Export URL'**
+  String get icalExportUrl;
+
+  /// No description provided for @icalExportLastGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last generated: {time}'**
+  String icalExportLastGenerated(String time);
+
   /// No description provided for @icalExportInfoMessage.
   ///
   /// In en, this message translates to:
   /// **'iCal export will be auto-generated when bookings change. Use the generated URL to sync with external calendars.'**
   String get icalExportInfoMessage;
+
+  /// No description provided for @icalExportJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get icalExportJustNow;
+
+  /// No description provided for @icalExportMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m ago'**
+  String icalExportMinutesAgo(int minutes);
+
+  /// No description provided for @icalExportHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h ago'**
+  String icalExportHoursAgo(int hours);
 
   /// No description provided for @icalExportDaysAgo.
   ///
@@ -15526,12 +15526,6 @@ abstract class AppLocalizations {
   /// **'Failed to load chats'**
   String get aiAssistantError;
 
-  /// No description provided for @aiAssistantDisclaimer.
-  ///
-  /// In en, this message translates to:
-  /// **'The AI Assistant provides guidance based on BookBed documentation. For account issues, contact info@book-bed.com'**
-  String get aiAssistantDisclaimer;
-
   /// No description provided for @aiAssistantChipAddUnit.
   ///
   /// In en, this message translates to:
@@ -15609,6 +15603,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Contact: dusko@book-bed.com'**
   String get webDevReferralContactDetails;
+
+  /// No description provided for @aiAssistantDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI Assistant provides guidance based on BookBed documentation. For account issues, contact info@book-bed.com'**
+  String get aiAssistantDisclaimer;
 
   /// Inline approve button on a bookingCreated notification (audit/114 F3).
   ///

@@ -1247,6 +1247,21 @@
   },
 
   "notificationsTitle": "Notifications",
+  "notificationsUnreadOfTotal": "{unread} unread · total {total}",
+  "@notificationsUnreadOfTotal": {
+    "placeholders": {
+      "unread": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "notificationsMarkAllRead": "Mark all as read",
+  "notificationsAllMarkedRead": "All notifications marked as read",
+  "notificationsFilterAll": "All",
+  "notificationsFilterUnread": "Unread",
+  "notificationsFilterBookings": "Bookings",
+  "notificationsFilterPayments": "Payments",
+  "notificationsFilterSystem": "System",
+  "notificationsFilterNoResults": "No notifications in this category",
   "notificationsDeleteSelected": "Delete selected?",
   "notificationsDeleteSelectedDesc": "Are you sure you want to delete {count} notifications?",
   "@notificationsDeleteSelectedDesc": {

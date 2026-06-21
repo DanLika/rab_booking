@@ -1247,6 +1247,21 @@
   },
 
   "notificationsTitle": "Obavještenja",
+  "notificationsUnreadOfTotal": "{unread} nepročitano · ukupno {total}",
+  "@notificationsUnreadOfTotal": {
+    "placeholders": {
+      "unread": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "notificationsMarkAllRead": "Označi sve kao pročitano",
+  "notificationsAllMarkedRead": "Sve obavijesti označene kao pročitane",
+  "notificationsFilterAll": "Sve",
+  "notificationsFilterUnread": "Nepročitano",
+  "notificationsFilterBookings": "Rezervacije",
+  "notificationsFilterPayments": "Plaćanja",
+  "notificationsFilterSystem": "Sustav",
+  "notificationsFilterNoResults": "Nema obavijesti u ovoj kategoriji",
   "notificationsDeleteSelected": "Obriši odabrane?",
   "notificationsDeleteSelectedDesc": "Jeste li sigurni da želite obrisati {count} obavještenja?",
   "@notificationsDeleteSelectedDesc": {

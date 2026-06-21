@@ -3183,6 +3183,37 @@ class AppLocalizationsHr extends AppLocalizations {
   String get notificationsTitle => 'Obavještenja';
 
   @override
+  String notificationsUnreadOfTotal(int unread, int total) {
+    return '$unread nepročitano · ukupno $total';
+  }
+
+  @override
+  String get notificationsMarkAllRead => 'Označi sve kao pročitano';
+
+  @override
+  String get notificationsAllMarkedRead =>
+      'Sve obavijesti označene kao pročitane';
+
+  @override
+  String get notificationsFilterAll => 'Sve';
+
+  @override
+  String get notificationsFilterUnread => 'Nepročitano';
+
+  @override
+  String get notificationsFilterBookings => 'Rezervacije';
+
+  @override
+  String get notificationsFilterPayments => 'Plaćanja';
+
+  @override
+  String get notificationsFilterSystem => 'Sustav';
+
+  @override
+  String get notificationsFilterNoResults =>
+      'Nema obavijesti u ovoj kategoriji';
+
+  @override
   String get notificationsDeleteSelected => 'Obriši odabrane?';
 
   @override

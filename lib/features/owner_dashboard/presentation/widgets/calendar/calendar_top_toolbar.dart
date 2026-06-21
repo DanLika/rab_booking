@@ -44,6 +44,10 @@ class CalendarTopToolbar extends StatelessWidget {
   final int? activeFilterCount;
   final VoidCallback? onClearFilters;
 
+  /// Test-only clock pin for the "today" day-number badge. Production passes
+  /// nothing -> live [DateTime.now].
+  final DateTime? now;
+
   const CalendarTopToolbar({
     super.key,
     required this.dateRange,
@@ -71,6 +75,7 @@ class CalendarTopToolbar extends StatelessWidget {
     this.onOverbookingBadgeTap,
     this.activeFilterCount,
     this.onClearFilters,
+    this.now,
   });
 
   @override
@@ -546,7 +551,7 @@ class CalendarTopToolbar extends StatelessWidget {
                         borderRadius: BorderRadius.circular(3),
                       ),
                       child: Text(
-                        '${DateTime.now().day}',
+                        '${(now ?? DateTime.now()).day}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 8,

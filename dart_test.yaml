@@ -1,0 +1,6 @@
+tags:
+  golden:
+    description: >-
+      Golden-image regression net (P6). Local (macOS-rasterised) baselines —
+      run with `flutter test --tags golden`, exclude in cross-platform CI with
+      `--exclude-tags golden`. See test/golden/README.md.

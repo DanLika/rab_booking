@@ -480,14 +480,19 @@ class DashboardOverviewTab extends ConsumerWidget {
     bool isDesktop,
     AsyncValue<UnifiedDashboardData> dashboardAsync,
     DateRangeFilter dateRange,
-    String? userName,
-  ) {
+    String? userName, {
+    DateTime? now,
+  }) {
     return [
       // Header (handoff PVHeader): greeting left, period pill +
       // "Nova rezervacija" CTA right on ≥600px; stacked with a
       // centered selector on mobile (handoff mobile spec).
       if (isMobile) ...[
-        _PregledGreetingHeader(userName: userName, isMobile: isMobile),
+        _PregledGreetingHeader(
+          userName: userName,
+          isMobile: isMobile,
+          nowOverride: now,
+        ),
         const SizedBox(height: _kGap14),
         Center(child: _DateRangeSelector(dateRange: dateRange)),
         const SizedBox(height: _kGap12),
@@ -498,6 +503,7 @@ class DashboardOverviewTab extends ConsumerWidget {
               child: _PregledGreetingHeader(
                 userName: userName,
                 isMobile: isMobile,
+                nowOverride: now,
               ),
             ),
             const SizedBox(width: BBSpace.sm),
@@ -638,6 +644,7 @@ class DashboardOverviewTab extends ConsumerWidget {
     required DateRangeFilter dateRange,
     required bool isMobile,
     String? userName,
+    DateTime? now,
   }) {
     final rd = BbRedesignTokens.of(context);
     final isDesktop = MediaQuery.sizeOf(context).width > 900;
@@ -668,6 +675,7 @@ class DashboardOverviewTab extends ConsumerWidget {
             AsyncValue.data(data),
             dateRange,
             userName,
+            now: now,
           ),
         ),
       ),
@@ -1187,9 +1195,13 @@ class _PregledGreetingHeader extends StatelessWidget {
   final String? userName;
   final bool isMobile;
 
+  /// Test-only clock pin. Production passes nothing → live [DateTime.now].
+  final DateTime? nowOverride;
+
   const _PregledGreetingHeader({
     required this.userName,
     required this.isMobile,
+    this.nowOverride,
   });
 
   String _greetingForHour(int hour) {
@@ -1201,7 +1213,7 @@ class _PregledGreetingHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
-    final now = DateTime.now();
+    final now = nowOverride ?? DateTime.now();
     final locale = Localizations.localeOf(context).toString();
     // Date eyebrow ("Subota · 30. svibnja 2026" on HR locale).
     // Falls back to default-locale format if the locale data is missing

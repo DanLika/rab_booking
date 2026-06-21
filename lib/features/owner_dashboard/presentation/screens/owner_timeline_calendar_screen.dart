@@ -54,6 +54,7 @@ class OwnerTimelineCalendarScreen extends ConsumerStatefulWidget {
     required bool isMobile,
     int unitCount = 4,
     DateTime? month,
+    DateTime? now,
   }) {
     final range = DateRangeSelection.days(month ?? DateTime(2026, 6), 30);
     final double pad = isMobile ? _kPagePadHMobile : _kPagePadH;
@@ -82,6 +83,7 @@ class OwnerTimelineCalendarScreen extends ConsumerStatefulWidget {
           showMultiSelectToggle: true,
           overbookingConflictCount: 1,
           activeFilterCount: 2,
+          now: now,
         ),
         Padding(
           padding: EdgeInsets.fromLTRB(pad, BBSpace.xxs, pad, _kPagePadBottom),

@@ -110,6 +110,22 @@ dart format .
 
 ---
 
+## PARALELNI TERMINALI — NIKAD NE EDITUJ SHARED MAIN CHECKOUT
+
+Više agent-terminala dijeli ovaj checkout. **SVAKI edit ide u VLASTITI worktree+branch — nikad u glavni repo dir** (`/Users/duskolicanin/git/bookbed`), čak ni jednolinijski `CLAUDE.md` / `docs/CHANGELOG.md` / audit-doc bump.
+
+```bash
+git worktree add /tmp/bb-<topic>-wt -b <type>/<topic> origin/main
+cd /tmp/bb-<topic>-wt   # SAV rad ovdje: edit + verify + commit + push
+# kraj: git worktree remove /tmp/bb-<topic>-wt
+```
+
+**Zašto:** uncommitted edit ostavljen u shared main stablu blokira sljedećem terminalu `git merge --ff-only origin/main`. Pregorjelo DVAPUT (2026-06-11 CLAUDE.md index race; 2026-06-21 — #768 changelog ostao uncommitted u mainu, ff abortao; bio je JEDINI zapis već-merge-anog code-only PR-a, umalo discardan na "vjerojatno housekeeping" pretpostavku).
+
+**Ako nađeš prljav shared main tree — look-first, NIKAD blind-discard:** (1) `git diff <files>` da pročitaš; (2) odluči superseded-vs-jedina-kopija provjerom je li sadržaj već na origin/main (`git grep <marker> origin/main -- <file>` + je li PR merge-an code-only); (3) ako je substancijalno → PRESERVE prije čišćenja: patch na ZASEBAN fresh worktree + push, TEK onda `git checkout -- <files>` + ff; (4) NIKAD blind `stash→ff→pop` (pop konfliktira na istim version/changelog linijama koje sibling merge dira). Per-branch version bumpovi se beskonačno sudaraju pod paralelnim merge-om (7.32→7.33→7.34 race) → ostavi za JEDAN end-of-campaign CHANGELOG-reconcile prolaz, ne whack-a-mole. Detalji: `memory/parallel-session-shared-tree-protocol.md`.
+
+---
+
 ## TOOLING GOTCHA: `flutter analyze` phantom errors
 
 Ako `flutter analyze` izvijesti **tisuće** `uri_does_not_exist` / `undefined_identifier` / `undefined_method` errora — **NE TRETIRAJ ih kao bug u kodu**. Skoro sigurno je pub-cache desync.

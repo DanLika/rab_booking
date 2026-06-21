@@ -2,7 +2,20 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-20 | **Version**: 7.32
+**Last Updated**: 2026-06-21 | **Version**: 7.33
+
+---
+
+**Changelog 7.33** (2026-06-21):
+
+### Widget — Localize guest-facing `PopupBlockedDialog` to 4 langs (System B; audit/l10n-hardcoded-strings-sweep-2026-06-20)
+- **Recon-first:** `popup_blocked_dialog.dart` (the dialog a paying guest sees mid-checkout when the browser blocks the Stripe payment popup) was **100% hardcoded English** — flagged by the l10n hardcoded-strings sweep. The surface uses **System B** (`WidgetTranslations.of(context, ref) → tr.*`, NOT `AppLocalizations`/`context.l10n`). The dialog is **currently unwired** (`booking_widget_screen.dart` auto-redirects ~L3738–3760 instead of `showDialog`); wiring is a separate FROZEN-file task → out of scope here.
+- **l10n (11 keys, all 4 langs hr/de/it/en):** `popupBlockedTitle`, `popupBlockedBody`, `popupOpenPayment`(+`Desc`), `popupCopyLink`(+`Desc`), `popupTryAgain`(+`Desc`), `popupCancel`, `popupLinkCopied`, `popupCopyFailed` — new `POPUP BLOCKED DIALOG` section in `widget_translations.dart`. All 11 literals (title / body / 3 option title+desc pairs / cancel / 2 copy snackbars) → `tr.*`.
+- **Async-safety:** `_handleCopyLink` now takes the resolved `WidgetTranslations` (was an **unused** `WidgetRef`) — resolving l10n off `context`/`ref` AFTER the clipboard `await` is the use-context-when-possibly-unmounted footgun; `tr` captured before the gap sidesteps it.
+- **`popupCancel` (not generic `cancel`):** #768 landed an identical generic `cancel` on main after this branch forked → reusing the name = a duplicate-getter compile break that a *textually*-clean merge hides. Kept dialog-local; values match (Odustani/Abbrechen/Annulla/Cancel) so it can collapse to `cancel` in a later hygiene pass. Verified **rebase-clean onto current main, zero getter collisions** (`cancel` + `popupCancel` coexist).
+- **FROZEN fence — 0 touch:** `booking_widget_screen.dart` (Navigator.push confirmation / 18 silent-guards) untouched; no NIKADA surface edited. Dialog stays **unwired** — the live `lang=de` wrap/overflow eyeball (German option descriptions run long vs the fixed `SizedBox(width: 400)`) is the future wiring task, not this l10n swap.
+- **Coverage:** new `popup_blocked_dialog_l10n_test.dart` — pumps the real dialog in all 4 langs (every visible string resolves + no English literal leaks in hr/de/it) + translation-map completeness. The +11 keys (all 4-lang) pass P7's now-on-main `widget_translations_coverage_test`; ARB no-dup guard stays 0.
+- **Verifikacija:** rebased clean onto current post-P7 `origin/main`; `flutter analyze` **0 net-new** · `dart format` · P7 l10n guards green with +11 keys (4-lang) + no-dup **0** · full suite green · `flutter build web --no-tree-shake-icons` clean. Pushed `fix/widget-l10n-guest`. Dev-only.
 
 ---
 

@@ -60,8 +60,8 @@ const Map<String, List<String>> _allowed = <String, List<String>>{
   ],
   // booking_widget_screen.dart — 'Cancel'/'Continue' localized to
   // WidgetTranslations in #768 (4-lang); entry dropped (ratcheted down).
-  'lib/features/widget/presentation/widgets/popup_blocked_dialog.dart':
-      <String>['Cancel'],
+  // popup_blocked_dialog.dart — 'Cancel' (its last hardcoded literal) localized
+  // to WidgetTranslations (popupCancel) in 7.33; entry dropped (ratcheted down).
   'lib/shared/presentation/screens/not_found_screen.dart': <String>[
     'Natrag',
     'Povratak na početnu',

@@ -27,10 +27,16 @@ class NotificationsScreen extends ConsumerStatefulWidget {
       _NotificationsScreenState();
 }
 
+/// Browse-view filter for the notifications inbox. Every case maps to a real,
+/// backend-backed [NotificationType] only — no review / sync / rating
+/// categories are invented (audit/141 data-honesty: those have no backend).
+enum _NotifFilter { all, unread, bookings, payments, system }
+
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   bool _isSelectionMode = false;
   final Set<String> _selectedIds = {};
   bool _isDeleting = false;
+  _NotifFilter _activeFilter = _NotifFilter.all;
 
   void _toggleSelectionMode() {
     setState(() {
@@ -162,6 +168,52 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
   }
 
+  /// Mark every notification read in one shot (audit/141). Non-destructive →
+  /// no confirm dialog; best-effort with a success / error toast.
+  Future<void> _markAllRead() async {
+    final ownerId = ref.read(enhancedAuthProvider).firebaseUser?.uid;
+    if (ownerId == null) return;
+    final l10n = AppLocalizations.of(context);
+    try {
+      await ref.read(notificationActionsProvider).markAllAsRead(ownerId);
+      if (mounted) {
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10n.notificationsAllMarkedRead,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(context, e);
+      }
+    }
+  }
+
+  bool _matchesFilter(NotificationModel n) => switch (_activeFilter) {
+    _NotifFilter.all => true,
+    _NotifFilter.unread => !n.isRead,
+    _NotifFilter.bookings =>
+      n.type == NotificationType.bookingCreated ||
+          n.type == NotificationType.bookingUpdated ||
+          n.type == NotificationType.bookingCancelled,
+    _NotifFilter.payments => n.type == NotificationType.paymentReceived,
+    _NotifFilter.system => n.type == NotificationType.system,
+  };
+
+  /// Apply the active filter to the date-grouped map, dropping now-empty day
+  /// groups so the date headers stay truthful.
+  Map<String, List<NotificationModel>> _applyFilter(
+    Map<String, List<NotificationModel>> grouped,
+  ) {
+    if (_activeFilter == _NotifFilter.all) return grouped;
+    final out = <String, List<NotificationModel>>{};
+    for (final entry in grouped.entries) {
+      final kept = entry.value.where(_matchesFilter).toList();
+      if (kept.isNotEmpty) out[entry.key] = kept;
+    }
+    return out;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -171,17 +223,41 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final actions = ref.watch(notificationActionsProvider);
 
     // Flatten notifications for select all
-    final allNotifications = notificationsAsync.valueOrNull ?? [];
+    final allNotifications =
+        notificationsAsync.valueOrNull ?? <NotificationModel>[];
+
+    // Unread count — wired to the server-side stream (audit/141), falling back
+    // to a local tally while that stream is still loading so the header + chip
+    // never flash a stale 0.
+    final unreadCount =
+        ref.watch(unreadNotificationsCountProvider).valueOrNull ??
+        allNotifications.where((n) => !n.isRead).length;
+    final totalCount = allNotifications.length;
 
     final l10n = AppLocalizations.of(context);
+    final bool isCompact = MediaQuery.of(context).size.width < 600;
+    final bool canMarkAll = unreadCount > 0;
 
     return Scaffold(
       appBar: _isSelectionMode
           ? _buildSelectionAppBar(theme, allNotifications, l10n)
           : CommonAppBar(
               title: l10n.notificationsTitle,
+              // Premium screens carry the title in an in-body header on wide
+              // layouts (audit/126 §2A); on mobile the AppBar keeps the title
+              // and owns the mark-all-read action.
+              showTitle: isCompact,
               leadingIcon: Icons.menu,
               onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+              actions: isCompact && canMarkAll
+                  ? <Widget>[
+                      IconButton(
+                        icon: const Icon(Icons.done_all),
+                        onPressed: _markAllRead,
+                        tooltip: l10n.notificationsMarkAllRead,
+                      ),
+                    ]
+                  : null,
             ),
       // Shell background per handoff (`--bb-shell-bg`), matching sibling
       // screens that paint `context.gradients.pageBackground` explicitly.
@@ -196,6 +272,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   return _buildEmptyState(context);
                 }
 
+                // Selection mode operates on the full list; the filter chips
+                // only narrow the browse view.
+                final groups = _isSelectionMode
+                    ? groupedNotifications
+                    : _applyFilter(groupedNotifications);
+
+                // Index 0 carries the in-body header + filter chips (so they
+                // scroll with the inbox); the date groups follow.
+                final bool showChrome = !_isSelectionMode;
+                final int leadCount = showChrome ? 1 : 0;
+
                 // Content clamp — center + cap width on tablet/desktop web.
                 return BBContentMaxWidth(
                   maxWidth: 1100,
@@ -206,12 +293,34 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     },
                     child: ListView.builder(
                       padding: const EdgeInsets.all(BBSpace.sm),
-                      itemCount: groupedNotifications.length,
+                      itemCount: groups.length + leadCount,
                       itemBuilder: (context, index) {
-                        final dateKey = groupedNotifications.keys.elementAt(
-                          index,
+                        if (showChrome && index == 0) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              _buildInBodyHeader(
+                                context,
+                                unread: unreadCount,
+                                total: totalCount,
+                                isCompact: isCompact,
+                                canMarkAll: canMarkAll,
+                              ),
+                              _buildFilterChips(
+                                context,
+                                allNotifications,
+                                unreadCount,
+                              ),
+                              if (groups.isEmpty)
+                                _buildFilterNoResults(context),
+                            ],
+                          );
+                        }
+
+                        final dateKey = groups.keys.elementAt(
+                          index - leadCount,
                         );
-                        final dayNotifications = groupedNotifications[dateKey]!;
+                        final dayNotifications = groups[dateKey]!;
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -572,6 +681,139 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// In-body premium header (audit/141): title + "X unread · total Y" + the
+  /// wired mark-all-read action. On mobile the AppBar owns the title and the
+  /// action, so this collapses to just the count caption.
+  Widget _buildInBodyHeader(
+    BuildContext context, {
+    required int unread,
+    required int total,
+    required bool isCompact,
+    required bool canMarkAll,
+  }) {
+    final c = BBColor.of(context);
+    final l10n = AppLocalizations.of(context);
+
+    final Widget countLine = Text(
+      l10n.notificationsUnreadOfTotal(unread, total),
+      style: BBType.caption(context).copyWith(
+        color: c.textTertiary,
+        fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+      ),
+    );
+
+    if (isCompact) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: BBSpace.sm),
+        child: Align(alignment: Alignment.centerLeft, child: countLine),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: BBSpace.xs, bottom: BBSpace.sm),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(l10n.notificationsTitle, style: BBType.h1(context)),
+                const SizedBox(height: 2),
+                countLine,
+              ],
+            ),
+          ),
+          if (canMarkAll) ...<Widget>[
+            const SizedBox(width: BBSpace.sm),
+            BbButton(
+              label: l10n.notificationsMarkAllRead,
+              iconLeft: 'done_all',
+              variant: BbButtonVariant.tertiary,
+              size: BbButtonSize.sm,
+              onPressed: _markAllRead,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Data-honest filter chips — only the 5 real [NotificationType]s are
+  /// represented. Booking* types fold into one "Rezervacije" chip.
+  Widget _buildFilterChips(
+    BuildContext context,
+    List<NotificationModel> all,
+    int unread,
+  ) {
+    final c = BBColor.of(context);
+    final l10n = AppLocalizations.of(context);
+
+    void select(_NotifFilter f) => setState(() => _activeFilter = f);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: BBSpace.sm),
+      child: Wrap(
+        spacing: BBSpace.xs,
+        runSpacing: BBSpace.xs,
+        children: <Widget>[
+          BbChip(
+            label: l10n.notificationsFilterAll,
+            selected: _activeFilter == _NotifFilter.all,
+            count: all.length,
+            onTap: () => select(_NotifFilter.all),
+          ),
+          BbChip(
+            label: l10n.notificationsFilterUnread,
+            selected: _activeFilter == _NotifFilter.unread,
+            dotColor: _activeFilter == _NotifFilter.unread ? null : c.primary,
+            count: unread,
+            onTap: () => select(_NotifFilter.unread),
+          ),
+          BbChip(
+            label: l10n.notificationsFilterBookings,
+            selected: _activeFilter == _NotifFilter.bookings,
+            iconLeft: 'event_available',
+            onTap: () => select(_NotifFilter.bookings),
+          ),
+          BbChip(
+            label: l10n.notificationsFilterPayments,
+            selected: _activeFilter == _NotifFilter.payments,
+            iconLeft: 'payments',
+            onTap: () => select(_NotifFilter.payments),
+          ),
+          BbChip(
+            label: l10n.notificationsFilterSystem,
+            selected: _activeFilter == _NotifFilter.system,
+            iconLeft: 'settings',
+            onTap: () => select(_NotifFilter.system),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Shown when an active filter matches nothing (but notifications exist).
+  Widget _buildFilterNoResults(BuildContext context) {
+    final c = BBColor.of(context);
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: BBSpace.lg),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          BbIcon(name: 'filter_list_off', size: 40, color: c.textTertiary),
+          const SizedBox(height: BBSpace.sm),
+          Text(
+            l10n.notificationsFilterNoResults,
+            style: BBType.body(context).copyWith(color: c.textSecondary),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

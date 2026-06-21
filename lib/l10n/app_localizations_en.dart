@@ -3158,6 +3158,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsTitle => 'Notifications';
 
   @override
+  String notificationsUnreadOfTotal(int unread, int total) {
+    return '$unread unread · total $total';
+  }
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all as read';
+
+  @override
+  String get notificationsAllMarkedRead => 'All notifications marked as read';
+
+  @override
+  String get notificationsFilterAll => 'All';
+
+  @override
+  String get notificationsFilterUnread => 'Unread';
+
+  @override
+  String get notificationsFilterBookings => 'Bookings';
+
+  @override
+  String get notificationsFilterPayments => 'Payments';
+
+  @override
+  String get notificationsFilterSystem => 'System';
+
+  @override
+  String get notificationsFilterNoResults =>
+      'No notifications in this category';
+
+  @override
   String get notificationsDeleteSelected => 'Delete selected?';
 
   @override

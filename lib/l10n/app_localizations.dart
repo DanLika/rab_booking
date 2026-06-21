@@ -5934,6 +5934,60 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get notificationsTitle;
 
+  /// No description provided for @notificationsUnreadOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{unread} unread · total {total}'**
+  String notificationsUnreadOfTotal(int unread, int total);
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get notificationsMarkAllRead;
+
+  /// No description provided for @notificationsAllMarkedRead.
+  ///
+  /// In en, this message translates to:
+  /// **'All notifications marked as read'**
+  String get notificationsAllMarkedRead;
+
+  /// No description provided for @notificationsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get notificationsFilterAll;
+
+  /// No description provided for @notificationsFilterUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get notificationsFilterUnread;
+
+  /// No description provided for @notificationsFilterBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookings'**
+  String get notificationsFilterBookings;
+
+  /// No description provided for @notificationsFilterPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get notificationsFilterPayments;
+
+  /// No description provided for @notificationsFilterSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get notificationsFilterSystem;
+
+  /// No description provided for @notificationsFilterNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications in this category'**
+  String get notificationsFilterNoResults;
+
   /// No description provided for @notificationsDeleteSelected.
   ///
   /// In en, this message translates to:

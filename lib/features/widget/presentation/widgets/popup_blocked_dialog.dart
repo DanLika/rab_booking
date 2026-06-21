@@ -8,6 +8,7 @@ import '../../../../core/design/tokens.dart';
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
+import '../l10n/widget_translations.dart';
 
 /// Dialog shown when Stripe Checkout popup is blocked by browser
 /// Provides multiple options for user to proceed with payment
@@ -29,6 +30,7 @@ class PopupBlockedDialog extends ConsumerWidget {
 
     // Get WidgetColorScheme for widget-specific colors
     final widgetColors = colors;
+    final tr = WidgetTranslations.of(context, ref);
 
     return AlertDialog(
       backgroundColor: dialogBg,
@@ -41,7 +43,7 @@ class PopupBlockedDialog extends ConsumerWidget {
           const SizedBox(width: BBSpace.xs),
           Expanded(
             child: Text(
-              'Popup Blocked',
+              tr.popupBlockedTitle,
               style: TextStyle(
                 fontSize: BBTypeBridges.fontSizeL,
                 fontWeight: FontWeight.bold,
@@ -58,7 +60,7 @@ class PopupBlockedDialog extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Your browser blocked the payment popup. To complete your booking, please choose one of the options below:',
+              tr.popupBlockedBody,
               style: TextStyle(
                 fontSize: BBTypeBridges.fontSizeM,
                 color: colors.textSecondary,
@@ -70,8 +72,8 @@ class PopupBlockedDialog extends ConsumerWidget {
               context: context,
               colors: widgetColors,
               icon: Icons.open_in_new,
-              title: 'Open Payment Page',
-              description: 'Opens Stripe Checkout in a new tab',
+              title: tr.popupOpenPayment,
+              description: tr.popupOpenPaymentDesc,
               onTap: () => _handleOpenPaymentPage(context),
             ),
             const SizedBox(height: BBSpace.sm),
@@ -79,9 +81,9 @@ class PopupBlockedDialog extends ConsumerWidget {
               context: context,
               colors: widgetColors,
               icon: Icons.copy,
-              title: 'Copy Payment Link',
-              description: 'Copy link to share or open manually',
-              onTap: () => _handleCopyLink(context, ref),
+              title: tr.popupCopyLink,
+              description: tr.popupCopyLinkDesc,
+              onTap: () => _handleCopyLink(context, tr),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: BBSpace.sm),
@@ -89,8 +91,8 @@ class PopupBlockedDialog extends ConsumerWidget {
                 context: context,
                 colors: colors,
                 icon: Icons.refresh,
-                title: 'Try Again',
-                description: 'Allow popups and try opening again',
+                title: tr.popupTryAgain,
+                description: tr.popupTryAgainDesc,
                 onTap: () => _handleRetry(context),
               ),
             ],
@@ -100,7 +102,10 @@ class PopupBlockedDialog extends ConsumerWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel', style: TextStyle(color: colors.textSecondary)),
+          child: Text(
+            tr.popupCancel,
+            style: TextStyle(color: colors.textSecondary),
+          ),
         ),
       ],
     );
@@ -173,24 +178,24 @@ class PopupBlockedDialog extends ConsumerWidget {
     }
   }
 
-  Future<void> _handleCopyLink(BuildContext context, WidgetRef ref) async {
+  Future<void> _handleCopyLink(
+    BuildContext context,
+    WidgetTranslations tr,
+  ) async {
     try {
       await Clipboard.setData(ClipboardData(text: checkoutUrl));
       if (context.mounted) {
         Navigator.of(context).pop();
         SnackBarHelper.showSuccess(
           context: context,
-          message: 'Payment link copied to clipboard',
+          message: tr.popupLinkCopied,
         );
       }
     } catch (e) {
       // Clipboard API can fail on some browsers (e.g., Safari in iframe)
       if (context.mounted) {
         Navigator.of(context).pop();
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Could not copy link. Please copy manually.',
-        );
+        SnackBarHelper.showError(context: context, message: tr.popupCopyFailed);
       }
     }
   }

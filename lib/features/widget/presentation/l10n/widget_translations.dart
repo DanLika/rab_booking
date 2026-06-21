@@ -5238,4 +5238,175 @@ class WidgetTranslations {
         return 'Powered by BookBed';
     }
   }
+
+  // ============================================================================
+  // POPUP BLOCKED DIALOG TRANSLATIONS
+  // ============================================================================
+
+  /// Title of the dialog shown when the browser blocks the payment popup
+  String get popupBlockedTitle {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Skočni prozor blokiran';
+      case 'de':
+        return 'Popup blockiert';
+      case 'it':
+        return 'Popup bloccato';
+      case 'en':
+      default:
+        return 'Popup Blocked';
+    }
+  }
+
+  /// Body text explaining the blocked popup and prompting an option choice
+  String get popupBlockedBody {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Vaš preglednik je blokirao skočni prozor za plaćanje. Za dovršetak rezervacije odaberite jednu od opcija u nastavku:';
+      case 'de':
+        return 'Ihr Browser hat das Zahlungs-Popup blockiert. Um Ihre Buchung abzuschließen, wählen Sie bitte eine der folgenden Optionen:';
+      case 'it':
+        return 'Il tuo browser ha bloccato il popup di pagamento. Per completare la prenotazione, scegli una delle opzioni seguenti:';
+      case 'en':
+      default:
+        return 'Your browser blocked the payment popup. To complete your booking, please choose one of the options below:';
+    }
+  }
+
+  /// "Open Payment Page" option title
+  String get popupOpenPayment {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Otvori stranicu za plaćanje';
+      case 'de':
+        return 'Zahlungsseite öffnen';
+      case 'it':
+        return 'Apri pagina di pagamento';
+      case 'en':
+      default:
+        return 'Open Payment Page';
+    }
+  }
+
+  /// "Open Payment Page" option description
+  String get popupOpenPaymentDesc {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Otvara Stripe naplatu u novoj kartici';
+      case 'de':
+        return 'Öffnet Stripe Checkout in einem neuen Tab';
+      case 'it':
+        return 'Apre Stripe Checkout in una nuova scheda';
+      case 'en':
+      default:
+        return 'Opens Stripe Checkout in a new tab';
+    }
+  }
+
+  /// "Copy Payment Link" option title
+  String get popupCopyLink {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Kopiraj poveznicu za plaćanje';
+      case 'de':
+        return 'Zahlungslink kopieren';
+      case 'it':
+        return 'Copia link di pagamento';
+      case 'en':
+      default:
+        return 'Copy Payment Link';
+    }
+  }
+
+  /// "Copy Payment Link" option description
+  String get popupCopyLinkDesc {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Kopirajte poveznicu za dijeljenje ili ručno otvaranje';
+      case 'de':
+        return 'Link zum Teilen oder manuellen Öffnen kopieren';
+      case 'it':
+        return 'Copia il link per condividerlo o aprirlo manualmente';
+      case 'en':
+      default:
+        return 'Copy link to share or open manually';
+    }
+  }
+
+  /// "Try Again" option title (shown when a retry callback is available)
+  String get popupTryAgain {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Pokušaj ponovno';
+      case 'de':
+        return 'Erneut versuchen';
+      case 'it':
+        return 'Riprova';
+      case 'en':
+      default:
+        return 'Try Again';
+    }
+  }
+
+  /// "Try Again" option description
+  String get popupTryAgainDesc {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Dopustite skočne prozore i pokušajte ponovno';
+      case 'de':
+        return 'Popups zulassen und erneut versuchen';
+      case 'it':
+        return 'Consenti i popup e riprova ad aprire';
+      case 'en':
+      default:
+        return 'Allow popups and try opening again';
+    }
+  }
+
+  /// Cancel / dismiss label for the popup-blocked dialog. Kept dialog-local
+  /// (NOT the generic 'cancel' that #768 added with identical values) so this
+  /// branch stays merge-independent; collapse to the canonical 'cancel' later.
+  String get popupCancel {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Odustani';
+      case 'de':
+        return 'Abbrechen';
+      case 'it':
+        return 'Annulla';
+      case 'en':
+      default:
+        return 'Cancel';
+    }
+  }
+
+  /// Snackbar shown after the payment link is copied to the clipboard
+  String get popupLinkCopied {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Poveznica za plaćanje kopirana u međuspremnik';
+      case 'de':
+        return 'Zahlungslink in die Zwischenablage kopiert';
+      case 'it':
+        return 'Link di pagamento copiato negli appunti';
+      case 'en':
+      default:
+        return 'Payment link copied to clipboard';
+    }
+  }
+
+  /// Snackbar shown when copying the payment link fails
+  String get popupCopyFailed {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Kopiranje poveznice nije uspjelo. Kopirajte ručno.';
+      case 'de':
+        return 'Link konnte nicht kopiert werden. Bitte manuell kopieren.';
+      case 'it':
+        return 'Impossibile copiare il link. Copialo manualmente.';
+      case 'en':
+      default:
+        return 'Could not copy link. Please copy manually.';
+    }
+  }
 }

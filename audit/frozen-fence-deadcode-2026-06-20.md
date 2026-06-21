@@ -4,6 +4,8 @@
 **HEAD:** `54f0820a` (feat(owner): Settings cheap-wins — widget_advanced AppBar unification + notif l10n (audit/135) (#762))
 **Mode:** READ-ONLY (no code changed, no files deleted). Verification via `git log/show/diff` + ref-counting greps.
 
+**Update 2026-06-20 (post-#767):** B.1 Tier-1 singletons were SHIPPED via `9ba7a5ff` (#767) and are removed from the candidate tables below (rolled up under "✅ Shipped via #767"). Cascade: deleting `price_calculator_provider.dart` newly-orphaned `booking_price_breakdown.dart` (+`NightlyPrice`), now folded into B.2 with a deletability verdict (see B.2 "Addition" note). Net B.2 count holds at 61 (−1 shipped, +1 new). This recon doc still deletes nothing itself; #767 was a separate PR.
+
 ---
 
 ## PART A — FROZEN-FENCE ("NIKADA NE MIJENJAJ") INTEGRITY
@@ -39,13 +41,10 @@ Scope: `lib/**` + `functions/src/**`. Excluded: `*.g.dart`, `*.freezed.dart`, `t
 
 ### B.1 — Dead-code candidates (high-confidence first)
 
+> **✅ Shipped via #767 (`9ba7a5ff`, 2026-06-20):** the following Tier-1 candidates were deleted and are removed from the table below — `functions/src/config/tokenConfig.ts` (orphan fns module), `lib/features/widget/presentation/providers/price_calculator_provider.dart` (stale dup; cascade → see B.2 "Addition"), the 3 constant-holder classes `PaymentMethodValues` / `PaymentOptionValues` / `ActiveBookingStatuses`, the 5 dead extensions `GlassmorphismWidget` / `CurrencyConversionExtension` / `HapticCallback` / `PriceFormatting` / `ThemeConditional`, and the cascade-orphaned `HapticFeedbackType` enum.
+
 | symbol / file:line | kind | ref count | confidence | note |
 |--------------------|------|-----------|------------|------|
-| `functions/src/config/tokenConfig.ts` | orphan module (file) | 0 imports | **HIGH** | only one of 100 fns files NOT reachable from `index.ts`; exports `TOKEN_CONFIG`/`TokenConfig` both 0-ref. Fully dead. |
-| `lib/features/widget/presentation/providers/price_calculator_provider.dart` | file | 0 imports | **HIGH** | **stale duplicate** of live `booking_price_provider.dart` (`bookingPriceProvider`). 101 lines. |
-| `PaymentMethodValues` `lib/features/widget/domain/constants/widget_constants.dart:155` | class | 0 | **HIGH** | constant-holder, 0 refs anywhere |
-| `PaymentOptionValues` `widget_constants.dart:163` | class | 0 | **HIGH** | constant-holder, 0 refs |
-| `ActiveBookingStatuses` `widget_constants.dart:173` | class | 0 | **HIGH** | constant-holder, 0 refs |
 | `withSentry` `functions/src/sentry.ts:189` | fn | 0 | **HIGH** | unused Sentry wrapper |
 | `sendSms` `functions/src/smsService.ts:29` | fn | 0 | **HIGH** | SMS never wired (cf. TODO `index.ts:95`) |
 | `sendPaymentReminderEmail` `emailService.ts:800` | fn | 0 | **HIGH** | dormant-by-design email sender |
@@ -66,11 +65,6 @@ Scope: `lib/**` + `functions/src/**`. Excluded: `*.g.dart`, `*.freezed.dart`, `t
 | `logDebug` `functions/src/logger.ts:211` | const | 0 | **HIGH** | unused log level wrapper |
 | `logComplete` `logger.ts:237` | const | 0 | **HIGH** | unused |
 | `LogLevel` `logger.ts:38` | enum | 0 | **HIGH** | unused |
-| `GlassmorphismWidget` (`.withGlass`) `lib/core/design_tokens/glassmorphism_tokens.dart:270` | extension | 0 | **HIGH** | dead ext in live file |
-| `CurrencyConversionExtension` (`.toCurrency`) `lib/core/services/currency_service.dart:141` | extension | 0 | **HIGH** | dead ext in live file |
-| `HapticCallback` (`.withHaptic`) `lib/core/services/haptic_service.dart:124` | extension | 0 | **HIGH** | dead ext in live file |
-| `PriceFormatting` (`.formatInCurrency`) `lib/shared/widgets/price_text.dart:129` | extension | 0 | **HIGH** | dead ext in live file |
-| `ThemeConditional` (`.themeValue/.themeValueOr`) `lib/core/theme/theme_extensions.dart:249` | extension | 0 | **HIGH** | dead ext in live file |
 | `widgetSettingsExistProvider` `widget_settings_provider.dart:51` | provider | 0 | **HIGH** | manual provider, 0 consumers |
 | `revenueAnalyticsRepositoryProvider` `lib/shared/providers/repository_providers.dart:65` | provider | 0 | MED-HIGH | provider + backing `FirebaseRevenueAnalyticsRepository` both unconsumed (dead cluster; removing orphans `firebase_revenue_analytics_repository.dart`) |
 | `propertyPerformanceRepositoryProvider` `repository_providers.dart:72` | provider | 0 | MED-HIGH | provider + `FirebasePropertyPerformanceRepository` both unconsumed (removing orphans `firebase_property_performance_repository.dart`) |
@@ -83,11 +77,11 @@ Scope: `lib/**` + `functions/src/**`. Excluded: `*.g.dart`, `*.freezed.dart`, `t
 | `cachedWidgetContextProvider` `widget_context_provider.dart:235` | @riverpod provider | 0 ext | MED | |
 | `currentSubdomainProvider` `subdomain_provider.dart:23` | @riverpod provider | 0 ext | MED | |
 | `ownerBankDetailsProvider` `owner_bank_details_provider.dart:11` | @riverpod provider | 0 ext | MED | whole file also unreferenced (B.2) |
-| **62 unreferenced `.dart` files** (full list below) | files | 0 imports each | **HIGH** (unless noted) | basename in 0 import/export/part anywhere in `lib/`; public symbols 0 cross-file refs |
+| **61 unreferenced `.dart` files** (full list below) | files | 0 imports each | **HIGH** (unless noted) | basename in 0 import/export/part anywhere in `lib/`; public symbols 0 cross-file refs |
 
 **Category-1 private symbols:** **0 dead** — every top-level private class/mixin/enum/extension/function/var (955 checked) is referenced ≥1× beyond its declaration; all 286 private widgets are instantiated. (`_LedgerMetrics`, `_EmbedMode` were false positives — used via `.member`/enum access.)
 
-### B.2 — 62 unreferenced `.dart` files (HIGH confidence; basename in 0 imports, symbols 0 cross-file)
+### B.2 — 61 unreferenced `.dart` files (HIGH confidence; basename in 0 imports, symbols 0 cross-file)
 
 > Note: 9 conditional-import/`part` stubs (`*_web.dart`/`*_io.dart`/barrels) were correctly excluded. The coupled repo files behind dead analytics providers (B.1) are imported, so NOT counted here, but become orphaned if those providers are removed.
 
@@ -99,11 +93,15 @@ Scope: `lib/**` + `functions/src/**`. Excluded: `*.g.dart`, `*.freezed.dart`, `t
 
 **features/subscription/ (1):** `subscription/data/subscription_repository.dart`
 
-**features/widget/ (19):** `domain/models/guest_details.dart` · `presentation/models/booking_confirmation_data.dart` · `providers/ical_sync_status_provider.dart` · `providers/owner_bank_details_provider.dart` · `providers/price_calculator_provider.dart` (stale dup) · `widgets/bank_transfer/bank_details_section.dart` · `widgets/bank_transfer/important_notes_section.dart` · `widgets/bank_transfer/payment_warning_section.dart` · `widgets/bank_transfer/qr_code_payment_section.dart` · `widgets/confirmation/booking_reference_card.dart` · `widgets/confirmation/email_spam_warning_card.dart` · `widgets/popup_blocked_dialog.dart` · `widgets/pwa/connectivity_banner.dart` · `widgets/pwa/pwa_install_button.dart` · `widgets/widget_shell_skeleton.dart` · `widgets/zoom_hint_overlay.dart` · `utils/firestore_validators.dart`
+**features/widget/ (16):** `domain/models/guest_details.dart` · `domain/models/booking_price_breakdown.dart` (newly orphaned by #767 → ✅ removed via #778, see "Addition" note) · `presentation/models/booking_confirmation_data.dart` · `providers/ical_sync_status_provider.dart` · `providers/owner_bank_details_provider.dart` · `widgets/bank_transfer/bank_details_section.dart` · `widgets/bank_transfer/important_notes_section.dart` · `widgets/bank_transfer/payment_warning_section.dart` · `widgets/bank_transfer/qr_code_payment_section.dart` · `widgets/confirmation/booking_reference_card.dart` · `widgets/confirmation/email_spam_warning_card.dart` · `widgets/pwa/connectivity_banner.dart` · `widgets/pwa/pwa_install_button.dart` · `widgets/widget_shell_skeleton.dart` · `widgets/zoom_hint_overlay.dart` · `utils/firestore_validators.dart`
 
 **shared/ (8):** `shared/models/booking_service_model.dart` · `shared/widgets/bookbed_logo.dart` · `shared/widgets/debounced_search_field.dart` · `shared/widgets/deferred_loader.dart` · `shared/widgets/feature_highlight_widget.dart` · `shared/widgets/gradient_button.dart` · `shared/widgets/loading_overlay.dart` (distinct from live `global_navigation_loader.dart`) · `shared/widgets/login_loading_overlay.dart`
 
+> **Exclusion (2026-06-20):** `widgets/popup_blocked_dialog.dart` was pulled from this list — it is being KEPT and localized (System B `WidgetTranslations`, branch `fix/widget-l10n-guest`) and will be WIRED into the blocked-popup path separately (branch #7; `booking_widget_screen.dart` is FROZEN). It is import-unreferenced only because that wiring hasn't landed yet → **B.2 must NOT delete it.** (The `features/widget/` group was also mislabeled 19; 17 entries were actually listed, now 16.)
+>
 > ⚠ Many of these are plausibly-superseded redesign artifacts (`booking_details_dialog.dart` + `_v2`, `gradient_auth_button.dart`, `glass_card.dart`, `owner_splash_screen.dart`). Recommend confirming none are referenced from web `index.html`/asset manifests or reflectively before any future removal PR.
+>
+> **Addition (2026-06-20, post-#767):** `domain/models/booking_price_breakdown.dart` (148 L; classes `BookingPriceBreakdown`, `NightlyPrice`, `AdditionalServicePrice`) is **newly orphaned** by #767. Its sole consumer was the now-deleted `price_calculator_provider.dart`, which `import`ed it and built `NightlyPrice` lists (confirmed against `9ba7a5ff^`: `import '../../domain/models/booking_price_breakdown.dart'` + `NightlyPrice(...)` at L60/83). Post-#767 grep: **0 importers** of the basename repo-wide; `BookingPriceBreakdown` + `NightlyPrice` are referenced only inside the file itself. The two `dashboard_overview_tab.dart` "NightlyPrice" hits are the local var **`avgNightlyPrice`** (substring false positive — that file does not import the model). **B.2 verdict: the WHOLE FILE is deletable** — `NightlyPrice` has no external consumer, so it goes with the file (all 3 classes are dead-by-orphan). It occupies the `features/widget/` slot vacated by `price_calculator_provider.dart`, so the net 61 is unchanged. **✅ removed via `chore/deadcode-b2-rm-price-breakdown` (c00bab36 → PR #778, squashed to main `fc07eb8d`) on 2026-06-21.**
 
 ### B.3 — TODO / FIXME / HACK / XXX debt
 
@@ -151,6 +149,6 @@ Scope: `lib/**` + `functions/src/**`. Excluded: `*.g.dart`, `*.freezed.dart`, `t
 ## Summary
 
 - **FROZEN: 11/11 INTACT.** Zero violations. 2 doc-hygiene notes (calendar repo line count 989→1293 stale in CLAUDE.md; #3 z-order dormant-by-removal).
-- **Dead code (high-confidence):** 1 orphan fns module + 1 stale-dup Dart file + 62 unreferenced `.dart` files + ~25 dead fns exports + 6 dead Dart extensions + 3 dead constant-holder classes + ~17 orphaned/dead-cluster providers.
+- **Dead code (high-confidence):** 61 unreferenced `.dart` files + ~25 dead fns exports + ~17 orphaned/dead-cluster providers. *(✅ Shipped via #767 (`9ba7a5ff`): 1 orphan fns module + 1 stale-dup Dart file + 5 dead Dart extensions + 3 dead constant-holder classes + `HapticFeedbackType`. B.2 holds at 61: `price_calculator_provider.dart` removed as shipped, `booking_price_breakdown.dart` added as newly orphaned, then ✅ removed via #778.)*
 - **Debt:** 10 TODOs (0 FIXME/HACK/XXX), 34 `@deprecated` (4 live debt, ~30 removable incl. 20 token-alias guard-rails).
-- **Nothing deleted.** All candidates ref-count-verified; recommend a confirmation grep against web `index.html`/asset manifests before any removal PR (redesign artifacts likely).
+- **Nothing deleted by this recon.** B.1 Tier-1 shipped separately via #767 (`9ba7a5ff`). Remaining candidates ref-count-verified; recommend a confirmation grep against web `index.html`/asset manifests before any removal PR (redesign artifacts likely).

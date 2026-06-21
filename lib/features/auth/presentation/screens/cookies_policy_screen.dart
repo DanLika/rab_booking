@@ -9,6 +9,12 @@ import '../../../../shared/widgets/redesign.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../widgets/legal_tabs_row.dart';
 
+/// Two-column legal reader breakpoint — CONTENT-FIT reflow (audit/146 option B):
+/// sidebar(240) + gap(48) + doc column fit inside the 980 clamp from 900px up,
+/// so this reads the layout BOX (LayoutBuilder), not device width, and is
+/// intentionally kept at 900 (NOT migrated to the 1200 device-class breakpoint).
+const double _kLegalTwoColMin = 900;
+
 class CookiesPolicyScreen extends StatefulWidget {
   const CookiesPolicyScreen({super.key});
 
@@ -74,14 +80,6 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final rd = BbRedesignTokens.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final isDesktop = screenWidth >= 900;
-    final horizontalPadding = isMobile
-        ? 16.0
-        : screenWidth < 900
-        ? 24.0
-        : 32.0;
     final l10n = AppLocalizations.of(context);
 
     final tocItems = <(String, String)>[
@@ -115,39 +113,58 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
-          child: Stack(
-            alignment: Alignment.topLeft,
-            children: [
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 980),
-                  child: isDesktop
-                      ? _buildDesktop(
-                          l10n: l10n,
-                          horizontalPadding: horizontalPadding,
-                          tocItems: tocItems,
-                          lastUpdated: lastUpdated,
-                        )
-                      : _buildMobile(
-                          l10n: l10n,
-                          horizontalPadding: horizontalPadding,
-                          isMobile: isMobile,
-                          tocItems: tocItems,
-                          lastUpdated: lastUpdated,
-                        ),
-                ),
-              ),
-              if (_showScrollToTop)
-                Positioned(
-                  bottom: isMobile ? 16 : 24,
-                  right: isMobile ? 16 : 24,
-                  child: FloatingActionButton(
-                    onPressed: _scrollToTop,
-                    backgroundColor: theme.colorScheme.primary,
-                    child: const Icon(Icons.arrow_upward, color: Colors.white),
+          // Box-driven reflow (audit/146 option B): read available CONTENT width
+          // (LayoutBuilder), not device width (MediaQuery). The 2-col reader fits
+          // from _kLegalTwoColMin up inside the 980 clamp → content-fit; kept at
+          // 900, NOT migrated to the 1200 device-class breakpoint.
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final double width = constraints.maxWidth;
+              final bool isMobile = width < 600;
+              final bool isDesktop = width >= _kLegalTwoColMin;
+              final double horizontalPadding = isMobile
+                  ? 16.0
+                  : width < _kLegalTwoColMin
+                  ? 24.0
+                  : 32.0;
+              return Stack(
+                alignment: Alignment.topLeft,
+                children: [
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 980),
+                      child: isDesktop
+                          ? _buildDesktop(
+                              l10n: l10n,
+                              horizontalPadding: horizontalPadding,
+                              tocItems: tocItems,
+                              lastUpdated: lastUpdated,
+                            )
+                          : _buildMobile(
+                              l10n: l10n,
+                              horizontalPadding: horizontalPadding,
+                              isMobile: isMobile,
+                              tocItems: tocItems,
+                              lastUpdated: lastUpdated,
+                            ),
+                    ),
                   ),
-                ),
-            ],
+                  if (_showScrollToTop)
+                    Positioned(
+                      bottom: isMobile ? 16 : 24,
+                      right: isMobile ? 16 : 24,
+                      child: FloatingActionButton(
+                        onPressed: _scrollToTop,
+                        backgroundColor: theme.colorScheme.primary,
+                        child: const Icon(
+                          Icons.arrow_upward,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ),
       ),

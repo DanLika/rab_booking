@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/design/tokens.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
@@ -6,6 +7,12 @@ import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../../../../shared/widgets/redesign.dart';
 import '../../widgets/owner_app_drawer.dart';
+
+/// FAQ body-column width gates — content-fit reflow (audit/145): read the layout
+/// BOX (`constraints.maxWidth`), not device width, so they stay at 1024/600 and
+/// are intentionally NOT migrated to the 1200 desktop breakpoint.
+const double _kFaqDesktopColMin = 1024;
+const double _kFaqTabletColMin = 600;
 
 class FAQItem {
   final String question;
@@ -212,6 +219,15 @@ class _FAQScreenState extends State<FAQScreen> {
     super.dispose();
   }
 
+  /// Opens the device mail composer to the support address — audit/145 F3.
+  /// Mirrors the mailto precedent in about_screen / profile_screen.
+  Future<void> _launchSupportEmail() async {
+    final Uri uri = Uri.parse('mailto:info@bookbed.io');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   List<FAQItem> _getFilteredFAQs(AppLocalizations l10n) {
     var faqs = _getAllFAQs(l10n);
 
@@ -249,7 +265,6 @@ class _FAQScreenState extends State<FAQScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final c = BBColor.of(context);
     final filteredFAQs = _getFilteredFAQs(l10n);
     final showResultsHeader =
@@ -270,9 +285,10 @@ class _FAQScreenState extends State<FAQScreen> {
             builder: (BuildContext _, BoxConstraints constraints) {
               // Center body column on wider viewports (handoff: 800px column
               // on desktop, 620px on tablet, edge-to-edge on mobile).
-              final double maxColumn = constraints.maxWidth >= 1024
+              final double maxColumn =
+                  constraints.maxWidth >= _kFaqDesktopColMin
                   ? 800
-                  : constraints.maxWidth >= 600
+                  : constraints.maxWidth >= _kFaqTabletColMin
                   ? 620
                   : double.infinity;
 
@@ -370,7 +386,14 @@ class _FAQScreenState extends State<FAQScreen> {
                         ...filteredFAQs.map(
                           (faq) => Padding(
                             padding: const EdgeInsets.only(bottom: BBSpace.xs),
-                            child: _buildFAQCard(faq, l10n, c, theme),
+                            child: _FaqExpansionCard(
+                              faq: faq,
+                              categoryLabel: _getCategoryLabel(
+                                faq.categoryKey,
+                                l10n,
+                              ),
+                              iconName: _categoryIconName(faq.categoryKey),
+                            ),
                           ),
                         ),
 
@@ -383,73 +406,6 @@ class _FAQScreenState extends State<FAQScreen> {
               );
             },
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFAQCard(
-    FAQItem faq,
-    AppLocalizations l10n,
-    BBColorSet c,
-    ThemeData theme,
-  ) {
-    final categoryLabel = _getCategoryLabel(faq.categoryKey, l10n);
-    final iconName = _categoryIconName(faq.categoryKey);
-
-    return BbCard(
-      // Per mandate: wrap EACH Q+A pair in its own card. (Handoff JSX wraps
-      // the whole list in one outer card with row dividers; mandate is
-      // explicit on per-item cards — recorded as INT drift in PR body.)
-      padding: EdgeInsets.zero,
-      child: Theme(
-        // Strip Material's default divider above ExpansionTile children.
-        data: theme.copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(
-            horizontal: BBSpace.sm,
-            vertical: 4,
-          ),
-          childrenPadding: const EdgeInsets.fromLTRB(
-            BBSpace.sm,
-            0,
-            BBSpace.sm,
-            BBSpace.sm,
-          ),
-          iconColor: c.primary,
-          collapsedIconColor: c.primary,
-          leading: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: c.primary.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(BBRadius.xs),
-            ),
-            child: Center(
-              child: BbIcon(name: iconName, size: 18, color: c.primary),
-            ),
-          ),
-          title: Text(faq.question, style: BBType.h3(context)),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              categoryLabel,
-              style: BBType.caption(context).copyWith(color: c.textTertiary),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          children: [
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                faq.answer,
-                style: BBType.body(
-                  context,
-                ).copyWith(color: c.textSecondary, height: 1.6),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -469,6 +425,7 @@ class _FAQScreenState extends State<FAQScreen> {
       variant: BbCardVariant.accentLeft,
       accentTone: BbCardAccentTone.info,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 48,
@@ -495,10 +452,109 @@ class _FAQScreenState extends State<FAQScreen> {
                     context,
                   ).copyWith(color: c.textSecondary),
                 ),
+                const SizedBox(height: BBSpace.sm),
+                // "E-pošta" mailto CTA — audit/145 F3. Live-chat (D2) omitted:
+                // no chat backend exists → data-honest omission, not faked.
+                BbButton(
+                  label: l10n.email,
+                  iconLeft: 'mail',
+                  variant: BbButtonVariant.secondary,
+                  size: BbButtonSize.sm,
+                  onPressed: _launchSupportEmail,
+                ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// One FAQ accordion card. Stateful so the leading category disc flips to
+/// filled-primary (icon white) while expanded — audit/145 F2 (handoff
+/// active-state). Expansion tracked via [ExpansionTile.onExpansionChanged].
+class _FaqExpansionCard extends StatefulWidget {
+  const _FaqExpansionCard({
+    required this.faq,
+    required this.categoryLabel,
+    required this.iconName,
+  });
+
+  final FAQItem faq;
+  final String categoryLabel;
+  final String iconName;
+
+  @override
+  State<_FaqExpansionCard> createState() => _FaqExpansionCardState();
+}
+
+class _FaqExpansionCardState extends State<_FaqExpansionCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final theme = Theme.of(context);
+    return BbCard(
+      // Per mandate: wrap EACH Q+A pair in its own card (handoff uses one outer
+      // card with dividers; per-item mandate recorded as INT drift, audit/145 F1).
+      padding: EdgeInsets.zero,
+      child: Theme(
+        // Strip Material's default divider above ExpansionTile children.
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          onExpansionChanged: (bool value) => setState(() => _expanded = value),
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: BBSpace.sm,
+            vertical: 4,
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            BBSpace.sm,
+            0,
+            BBSpace.sm,
+            BBSpace.sm,
+          ),
+          iconColor: c.primary,
+          collapsedIconColor: c.primary,
+          leading: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: _expanded ? c.primary : c.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(BBRadius.xs),
+            ),
+            child: Center(
+              child: BbIcon(
+                name: widget.iconName,
+                size: 18,
+                color: _expanded ? Colors.white : c.primary,
+              ),
+            ),
+          ),
+          title: Text(widget.faq.question, style: BBType.h3(context)),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              widget.categoryLabel,
+              style: BBType.caption(context).copyWith(color: c.textTertiary),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          children: [
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                widget.faq.answer,
+                style: BBType.body(
+                  context,
+                ).copyWith(color: c.textSecondary, height: 1.6),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,8 +1,43 @@
 # BookBed Changelog
 
-All version history from v4.6 to v6.67.
+All version history from v4.6 to v7.36.
 
-**Last Updated**: 2026-06-21 | **Version**: 7.33
+**Last Updated**: 2026-06-22 | **Version**: 7.36
+
+---
+
+**Changelog 7.36** (2026-06-22):
+
+### Owner/pre-auth — FAQ E-pošta CTA + accordion active-state · Legal box-driven 2-col (audit/145 + /146)
+- **Folded in the 2026-06-22 CHANGELOG reconcile** — work merged 2026-06-21 (`dad72d7c`, #780); shipped without its own version entry.
+- **FAQ (audit/145, buildable gaps; colour settled by 126/127):** the contact-support card gains an **E-pošta `mailto:` CTA** (`info@bookbed.io`, mirroring the `url_launcher` precedent in about/profile); each accordion is now a stateful `_FaqExpansionCard` whose leading category disc flips to **filled-primary + white icon while expanded** (handoff active-state, via `ExpansionTile.onExpansionChanged`). Live-chat (D2) + helpful-vote row (D1) stay omitted — no backend, data-honest.
+- **Legal (audit/146, LG1 option B — terms/privacy/cookies uniformly):** the two-column-reader threshold stays **900** (named `_kLegalTwoColMin`, **NOT** migrated to the 1200 device-class breakpoint — sidebar 240 + gap 48 + doc fit the 980 clamp from 900px up = content-fit reflow; 1200 would drop the 2-col reader on iPad-landscape 1024). Decision moved from `MediaQuery…size.width` → `LayoutBuilder constraints.maxWidth` (true box-driven reflow). `LegalTabsRow` pushReplacement nav contract untouched; "Preuzmi PDF" omitted — no generator, data-honest.
+- **Breakpoint hygiene:** FAQ body-column gates named `_kFaqDesktopColMin` (1024) / `_kFaqTabletColMin` (600) — box-reads, intentionally not migrated to 1200 (audit/breakpoint-decide §durable-rule, CHANGELOG 7.32).
+- **FROZEN fence — 0 touch.** Dev-only.
+
+---
+
+**Changelog 7.35** (2026-06-22):
+
+### Owner — Notifications inbox premium chrome: header + count + mark-all + filter chips (audit/141)
+- **Folded in the 2026-06-22 CHANGELOG reconcile** — work merged 2026-06-21 (`0d36f1db`, #781); shipped without its own version entry. (`notifications_screen` = the inbox/list; `notification_settings` was audit/135.)
+- **In-body premium header** (`CommonAppBar.showTitle:false` on wide per audit/126 §2A): "Obavještenja" + "X nepročitano · ukupno Y" caption; on mobile the AppBar keeps the title + owns the mark-all action (`done_all`).
+- **Count** → `unreadNotificationsCountProvider` (X) + total (Y), with a local-tally fallback while the stream loads. **Mark-all-read** → `NotificationActions.markAllAsRead(ownerId)` (header button on wide / AppBar action on mobile; shown only when unread > 0).
+- **Data-honest filter chips:** Sve / Nepročitano / Rezervacije (`booking*`) / Plaćanja (`paymentReceived`) / Sustav (`system`) — no review/sync/rating categories invented (no backend); empty filter → inline no-results. Header + chips ride as the leading `ListView` item (scroll with the inbox, preserve `RefreshIndicator`); selection mode unchanged.
+- **l10n:** +9 keys × en+hr (gen-l10n regenerated). New inbox-chrome test (wiring: count + 5 chips + chip-narrows-list; no-overflow render mobile/tablet/desktop × light/dark — best-effort PNG, NOT a golden baseline). analyze 0 net-new, suite +8 green, build web clean. **FROZEN: none.** Dev-only.
+
+---
+
+**Changelog 7.34** (2026-06-22):
+
+### Widget — localize 3 guest-facing English strings in FROZEN `booking_widget_screen.dart` → WidgetTranslations (4-lang)
+- **Folded in the 2026-06-22 CHANGELOG reconcile** — work merged 2026-06-20 (`6854f11f`, #768); its rescue-branch draft was mis-headed **7.32** (collided with the breakpoint #775=7.32 already on main) → re-numbered **7.34** here.
+- **Problem:** the FROZEN `booking_widget_screen.dart` shipped **English** error/confirm text to paying guests of HR/DE/IT owners on the public, no-auth `view.bookbed.io` widget — two defensive submit toasts ("Property ID is missing" / "Owner ID is missing") and the entire price-change `AlertDialog` (title + body + Cancel/Continue). None were routed through the widget's existing 4-language `WidgetTranslations` (System B).
+- **Scope (operator-approved whole-dialog):** 6 string-only expression swaps in the FROZEN screen → `WidgetTranslations.of(context, ref).<key>` (the inline idiom already in this file at lines 1039/3437), plus **two unavoidable `const` drops** on the dialog buttons (a `const Text` can't hold a runtime value — the only non-string tokens touched).
+- **+6 keys** in `widget_translations.dart` (hr/en/de/it each): `propertyIdMissing`, `ownerIdMissing`, `priceUpdatedTitle`, `priceUpdatedConfirm(oldPrice,newPrice)`, `cancel`, `continueLabel`. **EN output byte-identical** to the removed literals (`priceUpdatedConfirm` keeps the call-site `.toStringAsFixed(2)`; € + labels live in the key).
+- **FROZEN fence — 0 logic touch:** booking submit flow / defensive `return`s / `showDialog` / `Navigator.of(dialogContext).pop(true/false)` / `finalCalculation` recompute all unchanged. Frozen-file diff eyeballed = only the 6 swaps + 2 `const` drops.
+- **Verifikacija:** `flutter analyze` **0 net-new** · `dart format` · **full suite +1587 green** · `flutter build web --no-tree-shake-icons` clean. **Layer-1** throwaway EN byte-identical + 4-lang resolve test **10/10**. **Layer-2** golden harness (dialog + toasts × 4 langs × mobile/desktop × light/dark, Inter-loaded) — legible, correct diacritics + €, **no overflow** incl. German. Both throwaway (deleted pre-commit). **Merged main `6854f11f` (#768).**
+- **Deploy: HELD (not live).** A CI-equivalent PROD widget bundle was built + locally smoke-tested (boots, icons render, console clean, **App Check NOT activated**, DE l10n live) but **NOT deployed** (CI GitHub-billing-blocked; manual deploy held per operator). `view.bookbed.io` still serves `2ee8d838` → guests still see English on these guarded paths until a widget hosting deploy.
 
 ---
 
@@ -35,7 +70,7 @@ All version history from v4.6 to v6.67.
 ### Admin + Owner — responsive RenderFlex-overflow P0/P1 fixes (audit/responsive-overflow-a11y-2026-06-20 §2)
 - **Recon-first:** the P5 responsive/overflow/a11y sweep's §2 ledger flagged 3 confirmed RenderFlex overflows — 1 P0 (admin) + 2 P1 (owner, same file). Both fixed here as deterministic, test-gated, layout-only changes (no l10n/restyle — admin l10n is audit/147).
 - **P0 — admin Users-list `DataTable` horizontal overflow (SHIPPED `8828e620` / #765):** the 5-col table sat in a vertical-only `SingleChildScrollView`, so in the 800–1100px window its intrinsic width painted the overflow stripe. Wrapped in `LayoutBuilder` → horizontal `SingleChildScrollView` → `ConstrainedBox(minWidth: constraints.maxWidth)` — scrolls when content exceeds the viewport, **fills the card on wide screens** (no left-float). Outer vertical scroll + the `<800` card fallback unchanged. New `users_list_overflow_test` (780/900/1100/1440) via a `@visibleForTesting buildUsersTableForTest` seam; **RED→GREEN** (the seam isolates `_UsersTable` so `_buildBody`'s filter-chip scroll can't satisfy the assertion vacuously).
-- **P1 — `booking_action_menu` name Texts wrap (this PR):** guest / platform / unit names sat in width-bounding `Expanded`s with no `maxLines`/`overflow` → a long name wrapped to 2–3 lines and broke the compact bottom-sheet header. Added `maxLines: 1, overflow: TextOverflow.ellipsis` to the **6 bounded user-content name Texts** (`BookingActionBottomSheet` header guest/platform/dates/"Manage on {source}" + `BookingMoveToUnitMenu` guest + user-defined unit name). Unbounded `Row(min)` chips/badge left as-is (ellipsis is a no-op without a width bound → separate `Flexible` pass). New `booking_action_menu_overflow_test` (both classes public → direct pump; `BookingMoveToUnitMenu` via `allOwnerUnitsProvider` override); **RED→GREEN both groups**.
+- **P1 — `booking_action_menu` name Texts wrap (`#771`):** guest / platform / unit names sat in width-bounding `Expanded`s with no `maxLines`/`overflow` → a long name wrapped to 2–3 lines and broke the compact bottom-sheet header. Added `maxLines: 1, overflow: TextOverflow.ellipsis` to the **6 bounded user-content name Texts** (`BookingActionBottomSheet` header guest/platform/dates/"Manage on {source}" + `BookingMoveToUnitMenu` guest + user-defined unit name). Unbounded `Row(min)` chips/badge left as-is (ellipsis is a no-op without a width bound → separate `Flexible` pass). New `booking_action_menu_overflow_test` (both classes public → direct pump; `BookingMoveToUnitMenu` via `allOwnerUnitsProvider` override); **RED→GREEN both groups**.
 - **FROZEN fence — 0 touch:** neither file is a NIKADA surface; Timeline z-index / `timeline_dimensions` / calendar repo untouched.
 - **Verifikacija:** `flutter analyze` **0 net-new** · `dart format` · **full suite +1583 green** · `flutter build web --no-tree-shake-icons` clean. Auth-free golden eyeballs (admin table scroll/fill @800/1100/1440; menu guest name "Maximiliana-K…" single-line @360). Dev-only. (Renumber if a sibling parallel branch claims 7.31.)
 

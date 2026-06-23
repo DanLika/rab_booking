@@ -35,9 +35,12 @@ const API_KEY = 'AIzaSyCokYMO3Q0Q8cM5f_y4Ne8C3GaP7cwR-bE';
   }
 
   // 2. F-123-07 rate limit: sign in, hammer getStripeAccountStatus
+  // Owner test password is NOT hardcoded — export it before running:
+  //   export BB_SMOKE_PW='<bookbed-test@bookbed.io password — see memory/test-account.md>'
+  const PW = process.env.BB_SMOKE_PW || (() => { throw new Error('set BB_SMOKE_PW env var before running (creds in memory/test-account.md)'); })();
   const auth = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`, {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({email: 'bookbed-test@bookbed.io', password: 'BookBedTest2026!', returnSecureToken: true}),
+    body: JSON.stringify({email: 'bookbed-test@bookbed.io', password: PW, returnSecureToken: true}),
   });
   const authData = await auth.json();
   if (!authData.idToken) { console.log('RATE: SKIP — signin failed', authData.error?.message); process.exit(0); }

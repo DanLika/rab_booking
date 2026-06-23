@@ -112,7 +112,7 @@ void main() {
         );
         await tester.enterText(
           find.byKey(const ValueKey('login_password')),
-          'BookBedTest2026!',
+          'test-password-mock',
         );
 
         await tester.tap(find.byKey(const ValueKey('login_submit')));
@@ -123,7 +123,7 @@ void main() {
 
         expect(fake.signInCallCount, equals(1));
         expect(fake.lastEmail, equals('bookbed-test@bookbed.io'));
-        expect(fake.lastPassword, equals('BookBedTest2026!'));
+        expect(fake.lastPassword, equals('test-password-mock'));
         // Owner login screen ships with "Zapamti me" checked by default
         // (`_rememberMe = true` initial). The screen passes that state into
         // signInWithEmail, which is what we capture here.

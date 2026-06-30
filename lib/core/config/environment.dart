@@ -122,9 +122,9 @@ class EnvironmentConfig {
       case Environment.production:
         return 'BJ34pleaflOU2jRZNOSkKt1K_-DXsepYhUlCwSrmQfX8HrlTqr5d2HTH6UODaZiwkvideADX_yTcCpLOTNwkIzM';
       case Environment.staging:
-        return ''; // TODO: paste bookbed-staging VAPID key from Firebase Console
+        return 'YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE';
       case Environment.development:
-        return ''; // TODO: paste bookbed-dev VAPID key from Firebase Console
+        return 'YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE';
     }
   }
 }

@@ -14,23 +14,23 @@ void main() {
     const converter = TimestampConverter();
 
     test('fromJson converts Timestamp correctly', () {
-      final date = DateTime(2024, 1, 1);
+      final date = DateTime(2024);
       final timestamp = Timestamp.fromDate(date);
       expect(converter.fromJson(timestamp), equals(date));
     });
 
     test('fromJson converts String correctly', () {
-      final date = DateTime(2024, 1, 1);
+      final date = DateTime(2024);
       expect(converter.fromJson('2024-01-01T00:00:00.000'), equals(date));
     });
 
     test('fromJson converts int correctly', () {
-      final date = DateTime(2024, 1, 1);
+      final date = DateTime(2024);
       expect(converter.fromJson(date.millisecondsSinceEpoch), equals(date));
     });
 
     test('fromJson converts coerced web types', () {
-      final date = DateTime(2024, 1, 1);
+      final date = DateTime(2024);
       final mockDate = _MockJSDate('2024-01-01T00:00:00.000');
       expect(converter.fromJson(mockDate), equals(date));
     });
@@ -48,7 +48,7 @@ void main() {
     });
 
     test('toJson converts DateTime correctly', () {
-      final date = DateTime(2024, 1, 1);
+      final date = DateTime(2024);
       final result = converter.toJson(date);
       expect(result, isA<Timestamp>());
       expect((result as Timestamp).toDate(), equals(date));
@@ -59,23 +59,23 @@ void main() {
     const converter = NullableTimestampConverter();
 
     test('fromJson converts Timestamp correctly', () {
-      final date = DateTime(2024, 1, 1);
+      final date = DateTime(2024);
       final timestamp = Timestamp.fromDate(date);
       expect(converter.fromJson(timestamp), equals(date));
     });
 
     test('fromJson converts String correctly', () {
-      final date = DateTime(2024, 1, 1);
+      final date = DateTime(2024);
       expect(converter.fromJson('2024-01-01T00:00:00.000'), equals(date));
     });
 
     test('fromJson converts int correctly', () {
-      final date = DateTime(2024, 1, 1);
+      final date = DateTime(2024);
       expect(converter.fromJson(date.millisecondsSinceEpoch), equals(date));
     });
 
     test('fromJson converts coerced web types', () {
-      final date = DateTime(2024, 1, 1);
+      final date = DateTime(2024);
       final mockDate = _MockJSDate('2024-01-01T00:00:00.000');
       expect(converter.fromJson(mockDate), equals(date));
     });
@@ -90,7 +90,7 @@ void main() {
     });
 
     test('toJson converts DateTime correctly', () {
-      final date = DateTime(2024, 1, 1);
+      final date = DateTime(2024);
       final result = converter.toJson(date);
       expect(result, isA<Timestamp>());
       expect((result as Timestamp).toDate(), equals(date));

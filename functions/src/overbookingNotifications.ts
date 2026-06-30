@@ -1,6 +1,7 @@
 import {db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import {sendPushNotification} from "./fcmService";
+import {sendOverbookingSmsNotification} from "./smsService";
 import {createNotification} from "./notificationService";
 import {sendEmailIfAllowed} from "./emailNotificationHelper";
 import {sendOverbookingDetectedEmailV2} from "./email";
@@ -73,6 +74,12 @@ export async function sendOverbookingNotifications(
         ownerId: conflict.ownerId,
         viewInAppUrl,
       }),
+      sendOverbookingSmsNotification(
+        conflict.ownerId,
+        conflict.unitName,
+        conflict.booking1.guestName,
+        conflict.booking2.guestName
+      ).catch((e) => logError("[Overbooking Notifications] SMS failed", e)),
       createOverbookingFirestoreNotification(conflict),
     ]);
 

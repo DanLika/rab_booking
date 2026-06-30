@@ -17,6 +17,7 @@ class GuestCancellationDisabledError extends Error {
 import {sendBookingCancellationEmail} from "./emailService";
 import {fetchPropertyAndUnitDetails} from "./utils/bookingHelpers";
 import {sendGuestCancellationPushNotification} from "./fcmService";
+import {sendGuestCancellationSmsNotification} from "./smsService";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
 import {safeToDate} from "./utils/dateValidation";
@@ -366,6 +367,13 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY", stripeSecr
           safeToDate(booking.check_in, "check_in"),
           safeToDate(booking.check_out, "check_out")
         ).catch((e) => logError("Failed to send guest cancellation push notification", e));
+
+        sendGuestCancellationSmsNotification(
+          ownerId,
+          guestName,
+          safeToDate(booking.check_in, "check_in"),
+          safeToDate(booking.check_out, "check_out")
+        ).catch((e) => logError("Failed to send guest cancellation SMS notification", e));
 
         logInfo("Owner push notification sent for guest cancellation", {
           ownerId,

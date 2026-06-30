@@ -9,6 +9,7 @@ import {admin, db} from "./firebase";
 import {getStripeClient, stripeSecretKey} from "./stripe";
 import {createPaymentNotification} from "./notificationService";
 import {sendPaymentPushNotification} from "./fcmService";
+import {sendPaymentSmsNotification} from "./smsService";
 import {
   generateBookingAccessToken,
   calculateTokenExpiration,
@@ -1474,6 +1475,16 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
         "EUR"
       ).catch((err) => {
         logError("Failed to send payment push notification", err);
+      });
+
+      // Send SMS notification for payment (non-blocking)
+      sendPaymentSmsNotification(
+        ownerId,
+        guestName,
+        depositAmount,
+        "EUR"
+      ).catch((err) => {
+        logError("Failed to send payment SMS notification", err);
       });
 
       res.json({

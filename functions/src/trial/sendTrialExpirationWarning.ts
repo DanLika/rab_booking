@@ -3,6 +3,7 @@ import {admin, db} from "../firebase";
 import {logInfo, logError, logSuccess} from "../logger";
 import {sendTrialExpiringEmail} from "../emailService";
 import {sendTrialExpiringPushNotification} from "../fcmService";
+import {sendTrialExpiringSmsNotification} from "../smsService";
 import {captureException, captureMessage, addBreadcrumb} from "../sentry";
 
 /**
@@ -146,6 +147,21 @@ async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
           userId: doc.id,
           days,
           context: "sendTrialExpiringPushNotification",
+        });
+      }
+
+      // Send SMS notification (non-blocking)
+      try {
+        await sendTrialExpiringSmsNotification(doc.id, days);
+      } catch (smsError) {
+        logError("[Trial Warning] Failed to send SMS notification", smsError, {
+          userId: doc.id,
+          days,
+        });
+        captureException(smsError, {
+          userId: doc.id,
+          days,
+          context: "sendTrialExpiringSmsNotification",
         });
       }
 

@@ -1,4 +1,6 @@
+import {admin} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
+import {shouldSendSmsNotification} from "./notificationPreferences";
 
 /**
  * SMS Service using Twilio
@@ -100,3 +102,149 @@ export async function sendSms(params: SendSmsParams): Promise<boolean> {
   }
 }
 
+/**
+ * High-level SMS notifications (Localized)
+ */
+
+export interface SmsNotificationData {
+  userId: string;
+  body: string;
+  category: "bookings" | "payments" | "calendar" | "marketing";
+}
+
+async function getUserPhoneNumber(userId: string): Promise<string | null> {
+  try {
+    const profileDoc = await admin
+      .firestore()
+      .collection("users")
+      .doc(userId)
+      .collection("data")
+      .doc("profile")
+      .get();
+
+    if (!profileDoc.exists) return null;
+    return profileDoc.data()?.phoneE164 || null;
+  } catch (error) {
+    logError("[SMS Service] Error fetching user phone number", error, {userId});
+    return null;
+  }
+}
+
+export async function sendNotificationSms(
+  data: SmsNotificationData
+): Promise<boolean> {
+  const {userId, body, category} = data;
+
+  try {
+    const shouldSend = await shouldSendSmsNotification(userId, category);
+    if (!shouldSend) {
+      logInfo("[SMS Service] User opted out of SMS notifications", {userId, category});
+      return false;
+    }
+
+    const phoneNumber = await getUserPhoneNumber(userId);
+    if (!phoneNumber) {
+      logInfo("[SMS Service] No phone number available for user", {userId});
+      return false;
+    }
+
+    return await sendSms({
+      to: phoneNumber,
+      message: body,
+      ownerId: userId,
+      category,
+    });
+  } catch (error) {
+    logError("[SMS Service] Error sending notification SMS", error, {userId, category});
+    return false;
+  }
+}
+
+function formatDateRange(checkInDate: Date, checkOutDate: Date): string {
+  const formattedCheckIn = checkInDate.toLocaleDateString("hr-HR", {
+    day: "2-digit",
+    month: "short",
+  });
+  const formattedCheckOut = checkOutDate.toLocaleDateString("hr-HR", {
+    day: "2-digit",
+    month: "short",
+  });
+  return `${formattedCheckIn} - ${formattedCheckOut}`;
+}
+
+export async function sendPaymentSmsNotification(
+  userId: string,
+  guestName: string,
+  amount: number,
+  currency: string = "EUR"
+): Promise<boolean> {
+  const formattedAmount = new Intl.NumberFormat("hr-HR", {
+    style: "currency",
+    currency,
+  }).format(amount);
+
+  return sendNotificationSms({
+    userId,
+    body: `${guestName} je platio/la ${formattedAmount} za rezervaciju.`,
+    category: "bookings",
+  });
+}
+
+export async function sendPendingBookingSmsNotification(
+  userId: string,
+  guestName: string,
+  checkInDate: Date,
+  checkOutDate: Date
+): Promise<boolean> {
+  const dateRange = formatDateRange(checkInDate, checkOutDate);
+
+  return sendNotificationSms({
+    userId,
+    body: `${guestName} je zatražio/la rezervaciju za ${dateRange}.`,
+    category: "bookings",
+  });
+}
+
+export async function sendGuestCancellationSmsNotification(
+  userId: string,
+  guestName: string,
+  checkInDate: Date,
+  checkOutDate: Date
+): Promise<boolean> {
+  const dateRange = formatDateRange(checkInDate, checkOutDate);
+
+  return sendNotificationSms({
+    userId,
+    body: `${guestName} je otkazao/la rezervaciju za ${dateRange}.`,
+    category: "bookings",
+  });
+}
+
+export async function sendTrialExpiringSmsNotification(
+  userId: string,
+  daysRemaining: number
+): Promise<boolean> {
+  const dayText = daysRemaining === 1 ? "dan" : "dana";
+  const urgency = daysRemaining === 1 ?
+    "ističe sutra" :
+    `ističe za ${daysRemaining} ${dayText}`;
+
+  return sendNotificationSms({
+    userId,
+    body: `Vaš besplatni probni period ${urgency}. Nadogradite kako biste nastavili upravljati rezervacijama.`,
+    category: "marketing",
+  });
+}
+
+export async function sendOverbookingSmsNotification(
+  userId: string,
+  unitName: string,
+  guestName1: string,
+  guestName2: string
+): Promise<boolean> {
+  return sendNotificationSms({
+    userId,
+    body: `⚠️ UPOZORENJE: Preklapanje rezervacija za ${unitName}. Konflikt između ${guestName1} i ${guestName2}. Riješite odmah!`,
+    category: "bookings",
+  });
+}

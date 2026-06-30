@@ -12,6 +12,7 @@ import {
   sendPendingBookingOwnerNotification,
 } from "./emailService";
 import {sendPendingBookingPushNotification} from "./fcmService";
+import {sendPendingBookingSmsNotification} from "./smsService";
 import {createBookingNotification} from "./notificationService";
 import {sendEmailIfAllowed} from "./emailNotificationHelper";
 import {validateEmail} from "./utils/emailValidation";
@@ -1373,6 +1374,14 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"], cors: ge
           checkInDate.toDate(),
           checkOutDate.toDate()
         ).catch((e) => logError("[AtomicBooking] Pending push notification failed", e));
+
+        // Send SMS notification for pending booking (non-blocking)
+        sendPendingBookingSmsNotification(
+          ownerId,
+          sanitizedGuestName,
+          checkInDate.toDate(),
+          checkOutDate.toDate()
+        ).catch((e) => logError("[AtomicBooking] Pending SMS notification failed", e));
 
         createBookingNotification(
           ownerId,

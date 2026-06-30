@@ -34,7 +34,7 @@ void main() {
     });
 
     test('parseOrDefault returns parsed date for valid string', () {
-      final defaultDate = DateTime(2020, 1, 1);
+      final defaultDate = DateTime(2020);
       final date = DateTimeParser.parseOrDefault('2024-12-04', defaultDate);
       expect(date.year, 2024);
       expect(date.month, 12);
@@ -42,19 +42,19 @@ void main() {
     });
 
     test('parseOrDefault returns default for invalid string', () {
-      final defaultDate = DateTime(2020, 1, 1);
+      final defaultDate = DateTime(2020);
       final date = DateTimeParser.parseOrDefault('invalid', defaultDate);
       expect(date, defaultDate);
     });
 
     test('parseOrDefault returns default for null string', () {
-      final defaultDate = DateTime(2020, 1, 1);
+      final defaultDate = DateTime(2020);
       final date = DateTimeParser.parseOrDefault(null, defaultDate);
       expect(date, defaultDate);
     });
 
     test('parseOrElse executes fallback function on invalid string', () {
-      final defaultDate = DateTime(2020, 1, 1);
+      final defaultDate = DateTime(2020);
       final date = DateTimeParser.parseOrElse('invalid', () => defaultDate);
       expect(date, defaultDate);
     });
@@ -93,7 +93,7 @@ void main() {
     test('fromTimestampOrDefault returns valid date from timestamp', () {
       final dateTime = DateTime(2024, 12, 4);
       final timestamp = Timestamp.fromDate(dateTime);
-      final defaultDate = DateTime(2020, 1, 1);
+      final defaultDate = DateTime(2020);
       final parsed = DateTimeParser.fromTimestampOrDefault(
         timestamp,
         defaultDate,
@@ -102,7 +102,7 @@ void main() {
     });
 
     test('fromTimestampOrDefault returns default from null timestamp', () {
-      final defaultDate = DateTime(2020, 1, 1);
+      final defaultDate = DateTime(2020);
       final parsed = DateTimeParser.fromTimestampOrDefault(null, defaultDate);
       expect(parsed, defaultDate);
     });

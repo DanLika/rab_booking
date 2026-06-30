@@ -195,23 +195,13 @@ class LoggingService {
     );
   }
 
-  // Keys to redact in logs (GDPR/Security compliance)
-  static const _sensitiveKeys = {
-    'password',
-    'token',
-    'access_token',
-    'refresh_token',
-    'auth',
-    'key',
-    'secret',
-    'authorization',
-    'api_key',
-    'session_id',
-    'cvv',
-    'card_number',
-    'stripe_session_id',
-    'code', // OTP or Auth codes
-  };
+  // Pattern for explicitly sensitive substring matches
+  // Matches 'password', 'access_token', 'refresh_token', 'secret',
+  // 'authorization', 'api_key', 'session_id', 'cvv', 'card_number',
+  // and 'stripe_session_id'
+  static final RegExp _sensitivePattern = RegExp(
+    r'password|access_token|refresh_token|secret|authorization|api_key|session_id|cvv|card_number|stripe_session_id',
+  );
 
   /// Redact sensitive query parameters from URL
   static String _redactUrl(String url) {
@@ -258,11 +248,7 @@ class LoggingService {
     if (exactMatches.contains(lowerKey)) return true;
 
     // Substring matches for explicitly sensitive terms
-    for (final sensitive in _sensitiveKeys) {
-      if (exactMatches.contains(sensitive)) continue;
-      if (lowerKey.contains(sensitive)) return true;
-    }
-    return false;
+    return _sensitivePattern.hasMatch(lowerKey);
   }
 
   /// Log a network response

@@ -35,7 +35,7 @@ OwnerBooking _ob({
   String unit = 'Studio 4',
   String? notes,
 }) {
-  final DateTime now = DateTime(2026, 7, 8, 14, 0);
+  final DateTime now = DateTime(2026, 7, 8, 14);
   return OwnerBooking(
     booking: BookingModel(
       id: 'bd-test',

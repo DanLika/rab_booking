@@ -16,7 +16,7 @@ import 'package:bookbed/shared/models/unit_model.dart';
 
 /// Fixed "last 30 days" range for the Pregled panel.
 DateRangeFilter dashboardRange() => DateRangeFilter(
-  startDate: DateTime(2026, 5, 1),
+  startDate: DateTime(2026, 5),
   endDate: DateTime(2026, 5, 30),
   preset: 'last30',
 );
@@ -24,7 +24,7 @@ DateRangeFilter dashboardRange() => DateRangeFilter(
 /// Pregled / Dashboard Overview fixture — handoff sample numbers + a rising
 /// 14-point revenue & booking history so the chart and sparkline render.
 UnifiedDashboardData dashboardFixture() {
-  final DateTime base = DateTime(2026, 5, 1);
+  final DateTime base = DateTime(2026, 5);
   const List<double> amounts = <double>[
     600,
     950,
@@ -123,7 +123,7 @@ OwnerBooking ownerBookingFixture({
   String unit = 'Studio 4',
   String? notes = 'Stižemo oko 21:00, molim ostavite ključ.',
 }) {
-  final DateTime now = DateTime(2026, 7, 8, 14, 0);
+  final DateTime now = DateTime(2026, 7, 8, 14);
   return OwnerBooking(
     booking: BookingModel(
       id: 'bd-test',

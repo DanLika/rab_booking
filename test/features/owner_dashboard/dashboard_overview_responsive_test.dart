@@ -67,13 +67,13 @@ Future<void> _loadFonts() async {
 }
 
 DateRangeFilter get _range => DateRangeFilter(
-  startDate: DateTime(2026, 5, 1),
+  startDate: DateTime(2026, 5),
   endDate: DateTime(2026, 5, 30),
   preset: 'last30',
 );
 
 UnifiedDashboardData _fixture() {
-  final base = DateTime(2026, 5, 1);
+  final base = DateTime(2026, 5);
   const amounts = <double>[
     600,
     950,
@@ -242,7 +242,7 @@ void main() {
             final boundary =
                 boundaryKey.currentContext!.findRenderObject()
                     as RenderRepaintBoundary;
-            final image = await boundary.toImage(pixelRatio: 1.0);
+            final image = await boundary.toImage();
             final data = await image.toByteData(format: ui.ImageByteFormat.png);
             if (data != null) {
               final dir = Directory('/tmp/pregled-impl')

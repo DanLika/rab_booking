@@ -118,12 +118,20 @@ export function getRefundIcon(size = 64, _color?: string): string {
 }
 
 /**
+ * Shield/Security Icon
+ * Used for: Security alerts, suspicious activity
+ */
+export function getShieldIcon(size = 64, _color?: string): string {
+  return emojiIcon("🛡️", size);
+}
+
+/**
  * Get icon by name
  * Convenience function to retrieve icon by string name
  */
 export function getIcon(
   name: "success" | "info" | "warning" | "error" | "calendar" | "money" |
-       "home" | "user" | "email" | "clock" | "bell" | "approved" | "refund",
+       "home" | "user" | "email" | "clock" | "bell" | "approved" | "refund" | "shield",
   size?: number,
   _color?: string
 ): string {
@@ -141,6 +149,7 @@ export function getIcon(
   case "bell": return getBellIcon(size);
   case "approved": return getApprovedIcon(size);
   case "refund": return getRefundIcon(size);
+  case "shield": return getShieldIcon(size);
   default: return "";
   }
 }

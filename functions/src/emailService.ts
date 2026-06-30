@@ -21,8 +21,6 @@
  * ✅ sendBookingRejectedEmail - Migrated to V2 template (Refined Premium)
  *
  * ALL EMAIL FUNCTIONS FULLY MIGRATED! 🎉
- *
- * TODO: Suspicious Activity Email (deferred for future implementation)
  */
 
 import {Resend} from "resend";
@@ -63,6 +61,8 @@ import {
   type PendingOwnerNotificationParams,
   sendBookingRejectedEmailV2,
   type BookingRejectedParams,
+  sendSuspiciousActivityEmailV2,
+  type SuspiciousActivityParams,
 } from "./email";
 
 // ==========================================
@@ -975,7 +975,57 @@ export async function sendCheckOutReminderEmail(
 // ADDITIONAL EMAIL FUNCTIONS
 // ==========================================
 
-// NOTE: sendSuspiciousActivityEmail has been removed (TODO for future implementation)
+/**
+ * Send suspicious activity email
+ *
+ * Notifies the user of potentially unauthorized access or activity.
+ *
+ * @param email - User's email address
+ * @param name - User's name
+ * @param activityDescription - Description of the activity (e.g., "Novi prijava sa nepoznatog uređaja")
+ * @param time - Time the activity occurred
+ * @param ipAddress - IP address of the activity
+ * @param secureAccountUrl - URL for the user to secure their account (e.g., reset password)
+ */
+export async function sendSuspiciousActivityEmail(
+  email: string,
+  name: string,
+  activityDescription: string,
+  time: Date,
+  ipAddress: string,
+  secureAccountUrl: string
+): Promise<void> {
+  // Input validation
+  validateEmail(email, "email");
+  validateRequiredString(name, "name");
+  validateRequiredString(activityDescription, "activityDescription");
+  validateDate(time, "time");
+  validateRequiredString(ipAddress, "ipAddress");
+  validateRequiredString(secureAccountUrl, "secureAccountUrl");
+
+  try {
+    const params: SuspiciousActivityParams = {
+      email,
+      name,
+      activityDescription,
+      time,
+      ipAddress,
+      secureAccountUrl,
+    };
+
+    await sendSuspiciousActivityEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Suspicious activity email sent (V2 - Refined Premium)", {emailRedacted: redactEmail(email)});
+  } catch (error) {
+    logError("Error sending suspicious activity email", error);
+    throw error;
+  }
+}
 
 /**
  * Bank details for bank transfer payments

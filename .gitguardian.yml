@@ -1,0 +1,6 @@
+version: 2
+
+ignore-paths:
+  # Test fixture files — fake credentials used as validator inputs, not real secrets
+  - test/
+  - integration_test/

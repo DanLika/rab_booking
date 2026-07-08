@@ -7,7 +7,7 @@ const projectId = 'bookbed-dev';
 admin.initializeApp({projectId, credential: admin.credential.applicationDefault()});
 const db = admin.firestore();
 const BASE = 'https://us-central1-bookbed-dev.cloudfunctions.net';
-const API_KEY = 'AIzaSyCokYMO3Q0Q8cM5f_y4Ne8C3GaP7cwR-bE';
+const API_KEY = process.env.BB_SMOKE_API_KEY || (() => { throw new Error('set BB_SMOKE_API_KEY env var (Firebase Web API key for bookbed-dev)'); })();
 
 (async () => {
   // 1. find an export-enabled unit with readable token

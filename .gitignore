@@ -119,3 +119,9 @@ jest_dx/
 # Session scratch dirs (never commit)
 .tmp/
 functions/.tmp/
+
+# In-repo Obsidian audit vault (working-tree only, not committed)
+obsidian-vault/
+
+# Claude Code file-history backups (may contain edited .env content)
+.claude/file_history/

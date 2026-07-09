@@ -333,6 +333,16 @@ export const setPropertySubdomain = onCall<{
     throw new HttpsError("unauthenticated", "Must be authenticated");
   }
 
+  // S-3 (audit 2026-07-09): rate-limit parity with checkSubdomainAvailability /
+  // generateSubdomainFromName. The write path was unthrottled → scripted
+  // subdomain squatting/cycling and faster enumeration than the read helpers.
+  if (!checkRateLimit(`subdomain_set:${request.auth.uid}`, 30, 300)) {
+    throw new HttpsError(
+      "resource-exhausted",
+      "Too many subdomain changes. Please wait a few minutes."
+    );
+  }
+
   // Set user context for Sentry error tracking
   setUser(request.auth.uid);
 

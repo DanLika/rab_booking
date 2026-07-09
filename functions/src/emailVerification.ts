@@ -419,6 +419,20 @@ export const verifyEmailCode = onCall(
 export const checkEmailVerificationStatus = onCall(
   {cors: getCorsAllowlist()},
   async (request) => {
+    // S-2 (audit 2026-07-09): rate-limit parity with verifyEmailCode. Without
+    // it this status check is an email-enumeration oracle (distinguishes
+    // "has a verification record" from "does not") that bypasses the throttled
+    // send path.
+    const clientIp = getClientIp(request);
+    const ipHash = hashIp(clientIp);
+    if (!checkRateLimit(`check_verify_status_${ipHash}`, 10, 60)) {
+      logWarn("[EmailVerification] checkEmailVerificationStatus IP rate limit exceeded", {ipHash});
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many verification attempts from your location. Please try again later."
+      );
+    }
+
     try {
       const {email} = request.data;
 

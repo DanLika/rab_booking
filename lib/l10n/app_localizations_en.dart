@@ -8179,6 +8179,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionFeatureAdvancedAnalytics => 'Advanced analytics';
 
   @override
+  String get subscriptionFeatureAiAssistant => 'Unlimited AI assistant';
+
+  @override
   String get subscriptionFeaturePrioritySupport => 'Priority support';
 
   @override

@@ -8247,6 +8247,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get subscriptionFeatureAdvancedAnalytics => 'Napredna analitika';
 
   @override
+  String get subscriptionFeatureAiAssistant => 'AI asistent bez ograničenja';
+
+  @override
   String get subscriptionFeaturePrioritySupport => 'Prioritetna podrška';
 
   @override

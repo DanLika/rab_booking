@@ -14764,6 +14764,12 @@ abstract class AppLocalizations {
   /// **'Advanced analytics'**
   String get subscriptionFeatureAdvancedAnalytics;
 
+  /// No description provided for @subscriptionFeatureAiAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited AI assistant'**
+  String get subscriptionFeatureAiAssistant;
+
   /// No description provided for @subscriptionFeaturePrioritySupport.
   ///
   /// In en, this message translates to:

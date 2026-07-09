@@ -34,3 +34,42 @@ Dev-only, worktree-per-page, flat chrome (no gradients), BB* tokens. Each entry 
 - Featured-card purple shadow (127-adjacent re-color domain).
 - Tablet column cap 640 vs ~704; bottom pad xl→lg.
 - Global (audit/126): desktop/tablet breadcrumb app-bar §2B; persistent sidebar/rail §3B.
+
+---
+
+## Iteration 3 — Embed Widget Guide (`embed_widget_guide_screen`) vs `embed.jsx`
+
+**Verdict: NO pixel-moving change — data honesty.** The handoff is largely
+**aspirational**: it renders a mode toggle (Ugrađeno/Skočni gumb/Poveznica),
+an accent-color picker (5 swatches → `data-accent`), a live mint-widget mock,
+platform tabs (HTML/WordPress/Wix) with per-platform steps, and customization
+toggles (Jezik/Tema/Zaobljenost + PRO "Powered by" removal). **None of these
+map to the real product** — the widget is a fixed
+`view.bookbed.io/?property=…&unit=…&embed=true` iframe with no accent/mode/
+platform/language config surface. Building them would wire dishonest UI to
+nothing (per `seam-test-proves-fn-not-wiring` / fidelity-render-as-target: only
+render what the product actually does).
+
+The real screen is already premium-composed and correct: BbCard hero, numbered
+step ladder (filled-primary circles + connector line), auto-generated per-unit
+embed codes with **property/unit IDs highlighted** (a genuine feature the
+handoff lacks), developer customization block, scroll-protection overlay-script
+snippet, live-preview launcher, help links. Considered swapping the light
+`surfaceVar` code block for the handoff's dark `#1B2330` ink surface, but that
+requires a NEW hardcoded color token (violates "no raw Color() in new code")
+and the light block with primary-highlighted IDs is arguably clearer — rejected
+as scope creep, not fidelity. Icon-family Rounded swap rejected: whole codebase
+uses `Icons.*`; one-screen drift ≠ fidelity.
+
+**Shipped (bonus quick-win): `ical_export_list_screen.dart` stale-docstring
+flatten.** Two docstrings still described a "TIP 1 diagonal `sectionBackground`
+gradient (2 colors/2 stops, topRight→bottomLeft)" — reversed by CHANGELOG 7.23
+(flat chrome). The `context.gradients.sectionBackground` API already renders a
+FLAT solid fill (the `LinearGradient` is retained but flat), so **zero visual
+change**; only the lying comments were corrected. Continues iteration-2's sync-
+screen flatten (#841).
+
+Verify: dart format clean; `flutter analyze lib/` 0 errors (76 pre-existing
+off-scale deprecation infos, 0 net-new — comment-only edit); golden `--tags
+golden` 52 cells + models/widgets **All tests passed**. No live eyeball — no
+embed pixels moved; docstring edits carry no runtime signal.

@@ -143,3 +143,28 @@ Login + register were already deeply aligned (audit/124 `cd4d6914`/`5256bd25` sh
 ### Deferred
 - Recovery `VerifyCard` 6-digit code UI (separate email-verification screen).
 - Register SSO row (product decision — no social path currently wired on register).
+
+---
+
+## Iteration 5 — owner profile hub (`profile_screen.dart`) BookBed Pro card
+
+**Deferred S3 item from audit/135** ("profile-hub Pro-card benefits grid"). Worktree `design/profile-hub-fidelity` off `origin/main` `df9be9d5`.
+
+### Gap (vs `profile-premium.jsx` §248 `PFPProCard`)
+Card rendered title + trial pill + subtitle + CTA only. Handoff adds: (1) 4-benefit grid w/ `check_circle` marks, (2) trial-progress bar, (3) `€19 / mjesečno` price above CTA.
+
+### Changed — `_ProfilProCard`
+- **Benefits grid** (`_ProProBenefits`): 4 static labels (`subscriptionFeatureUnlimitedProperties` / `AdvancedAnalytics` / **new** `AiAssistant` / `PrioritySupport`), each `BbIcon check_circle size:16 color:BBColor.success` (theme-aware #2E7D5B / #4FAE7F). Desktop = free-wrapping `Wrap` (repeat(4,auto)); mobile = `LayoutBuilder` 2-col grid, chips `maxLines:2` (no mid-word truncation on narrow phones). Named `_kProBenefitsTopGap=16`, `_kProBenefitColGap=18`.
+- **Price** (`subscriptionProPrice` / `subscriptionProPeriod`): `€19` (h1, w800, -0.5 ls) + `/ mjesečno` (caption, textTertiary) baseline-aligned above the CTA; CTA full-width on mobile.
+- **Trial-progress bar OMITTED — data honesty.** No trial-day-count field on the model (`grep trialEndsAt/trialDays` = 0); handoff's "12 od 14 dana"/86% is placeholder → rendering it would fabricate data. Same principle as audit/135 identity-chip + stat-strip gates.
+
+### l10n
+Added `subscriptionFeatureAiAssistant` (en "Unlimited AI assistant" / hr "AI asistent bez ograničenja"). Other 3 benefits + price/period + `subscriptionStatusTrial` already existed. Regenerated `app_localizations*.dart`.
+
+### Verify
+- `dart format` · `flutter analyze` **0 net-new** (file: No issues found) · full suite **1677 green** · `--tags golden` **green**.
+- New seam: `@visibleForTesting buildProCardForTest` + `test/golden/seams/profile_pro_card_golden_test.dart` (4 cells: mobile/tablet × light/dark). **PNGs read back** — no tofu; benefits grid + green checks + price + CTA render correct both themes/bp, mobile 2-line wrap graceful.
+- Live web login CanvasKit-blocked (known); auth-free seam golden used as eyeball per `memory/golden-fidelity-provider-screen-gotchas`.
+
+### Deferred
+- Trial-progress bar (needs `trialEndsAt` on UserModel — feature, not fidelity).

@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -1039,6 +1039,14 @@ class _RadialGaugePainter extends CustomPainter {
 // BookBed Pro card — handoff §248 accent-left gradient with workspace_premium
 // icon + benefits + CTA. Trial-only.
 // ============================================================================
+/// Seam builder for the BookBed Pro trial card — lets golden/unit tests pump
+/// the real card (benefits grid + price + CTA) without providers or auth.
+@visibleForTesting
+Widget buildProCardForTest({
+  required AppLocalizations l10n,
+  required bool isMobile,
+}) => _ProfilProCard(l10n: l10n, isMobile: isMobile);
+
 class _ProfilProCard extends StatelessWidget {
   final AppLocalizations l10n;
   final bool isMobile;
@@ -1138,6 +1146,14 @@ class _ProfilProCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        const SizedBox(height: _kProBenefitsTopGap),
+                        // Benefit grid — profile-premium.jsx §270. Static
+                        // feature copy (all l10n); 2-col mobile, wraps on
+                        // desktop. The handoff's trial-progress bar is
+                        // intentionally omitted: no trial-day-count field
+                        // exists on the model, so rendering "12 of 14 days"
+                        // would be fabricated data.
+                        _ProProBenefits(l10n: l10n, isMobile: isMobile),
                       ],
                     ),
                   ),
@@ -1146,15 +1162,45 @@ class _ProfilProCard extends StatelessWidget {
             ),
             if (isMobile) const SizedBox(height: 14),
             if (!isMobile) const SizedBox(width: 16),
-            Align(
-              alignment: isMobile
-                  ? Alignment.centerLeft
-                  : Alignment.centerRight,
-              child: BbButton(
-                label: l10n.ownerDrawerSubscription,
-                iconLeft: 'arrow_forward',
-                onPressed: () => context.push(OwnerRoutes.subscription),
-              ),
+            Column(
+              crossAxisAlignment: isMobile
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Price — profile-premium.jsx §296 (€19 / mjesečno).
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      l10n.subscriptionProPrice,
+                      style: BBType.h1(context).copyWith(
+                        color: c.textPrimary,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '/ ${l10n.subscriptionProPeriod}',
+                      style: BBType.caption(
+                        context,
+                      ).copyWith(color: c.textTertiary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: isMobile ? double.infinity : null,
+                  child: BbButton(
+                    label: l10n.ownerDrawerSubscription,
+                    iconLeft: 'arrow_forward',
+                    onPressed: () => context.push(OwnerRoutes.subscription),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -1162,6 +1208,81 @@ class _ProfilProCard extends StatelessWidget {
     );
   }
 }
+
+/// Benefit chips inside the BookBed Pro card — profile-premium.jsx §270.
+/// Four static feature labels, each with a `check_circle` success mark.
+/// 2-column grid on mobile; free-wrapping row on desktop.
+const double _kProBenefitsTopGap = 16;
+
+class _ProProBenefits extends StatelessWidget {
+  final AppLocalizations l10n;
+  final bool isMobile;
+
+  const _ProProBenefits({required this.l10n, required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final labels = <String>[
+      l10n.subscriptionFeatureUnlimitedProperties,
+      l10n.subscriptionFeatureAdvancedAnalytics,
+      l10n.subscriptionFeatureAiAssistant,
+      l10n.subscriptionFeaturePrioritySupport,
+    ];
+
+    Widget chip(String label, {bool tight = false}) => Row(
+      mainAxisSize: tight ? MainAxisSize.max : MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: BbIcon(name: 'check_circle', size: 16, color: c.success),
+        ),
+        const SizedBox(width: 7),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: BBType.body(
+              context,
+            ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
+    );
+
+    if (isMobile) {
+      // 2-column grid — handoff compact layout. LayoutBuilder gives the true
+      // in-card width so labels get their full share instead of a guessed
+      // constant; 2-line chips prevent mid-word truncation on narrow phones.
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final cellWidth = (constraints.maxWidth - _kProBenefitColGap) / 2;
+          return Wrap(
+            spacing: _kProBenefitColGap,
+            runSpacing: 8,
+            children: labels
+                .map(
+                  (l) =>
+                      SizedBox(width: cellWidth, child: chip(l, tight: true)),
+                )
+                .toList(),
+          );
+        },
+      );
+    }
+
+    // Desktop — free-wrapping single row (repeat(4, auto)).
+    return Wrap(
+      spacing: 18,
+      runSpacing: 8,
+      children: labels.map(chip).toList(),
+    );
+  }
+}
+
+const double _kProBenefitColGap = 18;
 
 // ============================================================================
 // Settings group wrapper — section header + BbCard with rows.

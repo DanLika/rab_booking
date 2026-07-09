@@ -3399,6 +3399,7 @@
   "subscriptionProPeriod": "per month",
   "subscriptionFeatureUnlimitedProperties": "Unlimited properties",
   "subscriptionFeatureAdvancedAnalytics": "Advanced analytics",
+  "subscriptionFeatureAiAssistant": "Unlimited AI assistant",
   "subscriptionFeaturePrioritySupport": "Priority support",
   "subscriptionFeatureCustomBranding": "Custom branding",
   "subscriptionFeatureApiAccess": "API access",

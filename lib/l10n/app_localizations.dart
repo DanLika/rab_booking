@@ -14848,6 +14848,18 @@ abstract class AppLocalizations {
   /// **'Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.'**
   String get subscriptionFaqDataSafeAnswer;
 
+  /// No description provided for @subscriptionUpgradeComingSoonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Pro'**
+  String get subscriptionUpgradeComingSoonTitle;
+
+  /// No description provided for @subscriptionUpgradeComingSoonBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro subscription is coming soon. We\'re integrating Stripe payments so you can unlock unlimited properties and premium features. Stay tuned!'**
+  String get subscriptionUpgradeComingSoonBody;
+
   /// No description provided for @subscriptionComingSoon.
   ///
   /// In en, this message translates to:

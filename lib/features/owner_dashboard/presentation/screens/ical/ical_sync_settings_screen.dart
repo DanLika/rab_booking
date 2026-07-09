@@ -31,10 +31,16 @@ import '../../widgets/owner_app_drawer.dart';
 const double _kDialogMaxWidth = 500.0;
 const double _kDialogWidthFactor = 0.9;
 
+/// Flat status-hero tints (flat-chrome; supersedes the retired purple gradient).
+const double _kHeroTintAlpha = 0.08;
+const double _kHeroIconTintAlpha = 0.16;
+
 /// iCal import sync — manages external calendar feeds (Booking.com, Airbnb, …).
 ///
 /// Refactored onto the redesign Bb* foundation (PR redesign/r3-embed-ical).
-/// Hero card uses the brand-primary gradient + `rd.purpleGlow`; sections use
+/// Status hero is a FLAT tinted card (flat-chrome, CHANGELOG 7.23 — the
+/// retired saturated brand-primary gradient/purpleGlow is gone); the "Dodaj
+/// feed" CTA lives in [IcalSyncPremiumHeader]. Sections use
 /// [BbCard] with [BbSectionHeader]; dialog form swaps to [BbInput] +
 /// [BbSwitch] + [BbButton]. Parent [Scaffold] + [CommonAppBar] +
 /// [OwnerAppDrawer] are deliberately not swapped (deferred to the shell-swap
@@ -203,6 +209,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           totalFeeds: totalFeeds,
           activeFeeds: activeFeeds,
           errorFeeds: errorFeeds,
+          onAddFeed: () => _showAddFeedDialog(context),
         ),
         const SizedBox(height: BBSpace.md),
         hero,
@@ -230,11 +237,13 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     );
   }
 
-  /// Hero — brand-primary gradient surface with status pill, description and
-  /// CTA. Uses [BbRedesignTokens.brandPrimaryGradient] + `rd.purpleGlow` for
-  /// the floating console feel; CTA is a `BbButton(onGradientSolid)`.
+  /// Hero — FLAT status card (flat-chrome decision, CHANGELOG 7.23; supersedes
+  /// the retired saturated brand-primary gradient + purpleGlow). Mirrors the
+  /// handoff `ical.jsx` FeedCard status row: tinted flat surface keyed to the
+  /// aggregate feed status, a solid status icon backplate, and a plain-language
+  /// description. The "Dodaj feed" CTA now lives in [IcalSyncPremiumHeader], so
+  /// this card is status-only (no duplicate primary action).
   Widget _buildHeroCard(BuildContext context, Map<String, dynamic>? stats) {
-    final rd = BbRedesignTokens.of(context);
     final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
 
@@ -250,94 +259,61 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
       c: c,
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth > 700;
+    // Flat tinted surface — error uses the error tint, everything else the
+    // calm status tint at a low alpha (handoff `--bb-surface-variant` feel).
+    final Color surfaceTint = status.tint.withValues(alpha: _kHeroTintAlpha);
 
-        final iconBackplate = Container(
-          padding: const EdgeInsets.all(BBSpace.sm),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BBRadius.smAll,
-          ),
-          child: BbIcon(
-            name: status.icon,
-            size: isDesktop ? 24 : 32,
-            color: Colors.white,
-          ),
-        );
+    final iconBackplate = Container(
+      padding: const EdgeInsets.all(BBSpace.sm),
+      decoration: BoxDecoration(
+        color: status.tint.withValues(alpha: _kHeroIconTintAlpha),
+        borderRadius: BBRadius.smAll,
+      ),
+      child: BbIcon(name: status.icon, size: 24, color: status.tint),
+    );
 
-        final statusPill = Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: status.tint.withValues(alpha: 0.9),
-            borderRadius: BBRadius.fullAll,
-          ),
-          child: Text(
-            status.title,
-            style: BBType.caption(
-              context,
-            ).copyWith(color: Colors.white, fontWeight: FontWeight.w700),
-          ),
-        );
+    final statusPill = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: status.tint,
+        borderRadius: BBRadius.fullAll,
+      ),
+      child: Text(
+        status.title,
+        style: BBType.caption(
+          context,
+        ).copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+      ),
+    );
 
-        final statusBlock = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            statusPill,
-            const SizedBox(height: BBSpace.xs),
-            Text(
-              status.description,
-              style: BBType.body(
-                context,
-              ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
-            ),
-          ],
-        );
-
-        final cta = BbButton(
-          key: const ValueKey('ical_add_feed_button'),
-          label: l10n.icalAddFeedButton,
-          iconLeft: 'add',
-          variant: BbButtonVariant.onGradientSolid,
-          fullWidth: !isDesktop,
-          onPressed: () => _showAddFeedDialog(context),
-        );
-
-        return Container(
-          decoration: BoxDecoration(
-            gradient: rd.brandPrimaryGradient,
-            borderRadius: BBRadius.mdAll,
-            boxShadow: rd.purpleGlow,
-          ),
-          padding: const EdgeInsets.all(BBSpace.md),
-          child: isDesktop
-              ? Row(
-                  children: [
-                    iconBackplate,
-                    const SizedBox(width: BBSpace.sm),
-                    Expanded(child: statusBlock),
-                    const SizedBox(width: BBSpace.sm),
-                    SizedBox(width: 200, child: cta),
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        iconBackplate,
-                        const SizedBox(width: BBSpace.sm),
-                        Expanded(child: statusBlock),
-                      ],
-                    ),
-                    const SizedBox(height: BBSpace.sm),
-                    cta,
-                  ],
+    return Container(
+      decoration: BoxDecoration(
+        color: surfaceTint,
+        borderRadius: BBRadius.mdAll,
+        border: Border.all(color: status.tint.withValues(alpha: 0.24)),
+      ),
+      padding: const EdgeInsets.all(BBSpace.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          iconBackplate,
+          const SizedBox(width: BBSpace.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                statusPill,
+                const SizedBox(height: BBSpace.xs),
+                Text(
+                  status.description,
+                  style: BBType.body(context).copyWith(color: c.textSecondary),
                 ),
-        );
-      },
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

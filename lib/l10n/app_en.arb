@@ -3413,6 +3413,8 @@
   "subscriptionFaqCancelAnswer": "Yes! You can cancel your subscription at any time. Your access will continue until the end of your billing period.",
   "subscriptionFaqDataSafeQuestion": "Is my data safe?",
   "subscriptionFaqDataSafeAnswer": "Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.",
+  "subscriptionUpgradeComingSoonTitle": "Upgrade to Pro",
+  "subscriptionUpgradeComingSoonBody": "Pro subscription is coming soon. We're integrating Stripe payments so you can unlock unlimited properties and premium features. Stay tuned!",
   "subscriptionComingSoon": "Manage on Web",
   "subscriptionComingSoonMessage": "To upgrade your subscription or manage billing, please visit our web dashboard at app.bookbed.io",
   "subscriptionVisitWebsite": "Visit Website",

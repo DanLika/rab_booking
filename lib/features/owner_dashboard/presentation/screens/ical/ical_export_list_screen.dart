@@ -28,10 +28,12 @@ import '../../../domain/models/ical_feed.dart';
 /// Screen that lists all units for iCal export selection.
 ///
 /// Redesigned onto the Bb* premium foundation (`lib/shared/widgets/redesign/`):
-/// page background keeps `context.gradients.pageBackground` (TIP 1); section
-/// surfaces use the TIP 1 diagonal `sectionBackground` gradient + `sectionBorder`
-/// hairline + restored elevation shadow; interactive chrome is Bb* primitives
-/// (BbButton / BbDropdown / BbIcon / BBType / BBColor / BBSpace / BBRadius).
+/// page background is `context.gradients.pageBackground` (FLAT solid fill since
+/// CHANGELOG 7.23 — the `LinearGradient` API is retained but renders a solid
+/// fill); section surfaces use `sectionBackground` (likewise a FLAT raised
+/// fill) + a `sectionBorder` hairline + elevation shadow; interactive chrome is
+/// Bb* primitives (BbButton / BbDropdown / BbIcon / BBType / BBColor / BBSpace /
+/// BBRadius).
 ///
 /// The `widget_secrets` write in [_showDynamicLinkDialog] (5-field `hasOnly`
 /// rule, firestore.rules) is FROZEN — only chrome was migrated, never the
@@ -55,9 +57,9 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     _loadUnits();
   }
 
-  /// TIP 1 section surface — simple diagonal `sectionBackground` gradient
-  /// (2 colors / 2 stops, topRight → bottomLeft, theme-aware) + hairline
-  /// `sectionBorder` + restored elevation shadow. User-mandated section look.
+  /// Section surface — FLAT `sectionBackground` raised fill (the gradient stops
+  /// were retired in CHANGELOG 7.23; the `LinearGradient` API renders a solid
+  /// theme-aware fill) + hairline `sectionBorder` + elevation shadow.
   BoxDecoration _sectionDecoration(BuildContext context) {
     return BoxDecoration(
       gradient: context.gradients.sectionBackground,

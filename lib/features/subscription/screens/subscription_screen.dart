@@ -9,7 +9,6 @@ import '../../../core/theme/gradient_extensions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/common_app_bar.dart';
 import '../../../shared/widgets/redesign.dart';
-import '../../owner_dashboard/presentation/widgets/owner_app_drawer.dart';
 
 /// Subscription Screen
 ///
@@ -44,10 +43,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       backgroundColor: c.bg,
       appBar: CommonAppBar(
         title: l10n.subscriptionTitle,
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (BuildContext ctx) => Scaffold.of(ctx).openDrawer(),
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (BuildContext ctx) => Navigator.of(ctx).maybePop(),
       ),
-      drawer: const OwnerAppDrawer(currentRoute: 'subscription'),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
@@ -424,20 +422,19 @@ class _TrialHero extends StatelessWidget {
 
   static void _showUpgradeDialog(BuildContext context) {
     final BBColorSet c = BBColor.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context);
     showDialog<void>(
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
-        title: const Text('Upgrade to Pro'),
+        title: Text(l10n.subscriptionUpgradeComingSoonTitle),
         content: Text(
-          'Pro subscription coming soon! We\'re working on integrating '
-          'Stripe payments. Stay tuned for unlimited properties and '
-          'premium features.',
+          l10n.subscriptionUpgradeComingSoonBody,
           style: TextStyle(color: c.textSecondary),
         ),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -695,8 +692,6 @@ class _ProPlanCard extends StatelessWidget {
       clipBehavior: Clip.none,
       children: <Widget>[
         BbCard(
-          variant: BbCardVariant.accentLeft,
-          accentTone: BbCardAccentTone.primary,
           selected: true,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

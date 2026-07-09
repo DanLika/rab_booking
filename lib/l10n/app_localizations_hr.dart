@@ -8294,6 +8294,13 @@ class AppLocalizationsHr extends AppLocalizations {
       'Apsolutno. Vaši podaci su sigurno pohranjeni i nikada neće biti obrisani, čak i ako vaš probni period istekne ili otkažete pretplatu.';
 
   @override
+  String get subscriptionUpgradeComingSoonTitle => 'Nadogradi na Pro';
+
+  @override
+  String get subscriptionUpgradeComingSoonBody =>
+      'Pro pretplata uskoro stiže. Integriramo Stripe plaćanja kako biste otključali neograničen broj objekata i premium značajke. Ostanite s nama!';
+
+  @override
   String get subscriptionComingSoon => 'Upravljaj na Webu';
 
   @override

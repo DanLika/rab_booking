@@ -3414,6 +3414,8 @@
   "subscriptionFaqCancelAnswer": "Da! Možete otkazati svoju pretplatu u bilo kojem trenutku. Vaš pristup će nastaviti do kraja obračunskog razdoblja.",
   "subscriptionFaqDataSafeQuestion": "Jesu li moji podaci sigurni?",
   "subscriptionFaqDataSafeAnswer": "Apsolutno. Vaši podaci su sigurno pohranjeni i nikada neće biti obrisani, čak i ako vaš probni period istekne ili otkažete pretplatu.",
+  "subscriptionUpgradeComingSoonTitle": "Nadogradi na Pro",
+  "subscriptionUpgradeComingSoonBody": "Pro pretplata uskoro stiže. Integriramo Stripe plaćanja kako biste otključali neograničen broj objekata i premium značajke. Ostanite s nama!",
   "subscriptionComingSoon": "Upravljaj na Webu",
   "subscriptionComingSoonMessage": "Za nadogradnju pretplate ili upravljanje naplatom, posjetite našu web aplikaciju na app.bookbed.io",
   "subscriptionVisitWebsite": "Posjeti web stranicu",

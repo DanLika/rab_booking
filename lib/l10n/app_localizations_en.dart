@@ -8225,6 +8225,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.';
 
   @override
+  String get subscriptionUpgradeComingSoonTitle => 'Upgrade to Pro';
+
+  @override
+  String get subscriptionUpgradeComingSoonBody =>
+      'Pro subscription is coming soon. We\'re integrating Stripe payments so you can unlock unlimited properties and premium features. Stay tuned!';
+
+  @override
   String get subscriptionComingSoon => 'Manage on Web';
 
   @override

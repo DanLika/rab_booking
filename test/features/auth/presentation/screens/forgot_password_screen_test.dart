@@ -19,18 +19,24 @@ void main() {
       expect(find.byType(ForgotPasswordScreen), findsOneWidget);
     });
 
-    testWidgets('renders key Bb* primitives (logo, input, submit button)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        createTestWidget(withL10n: true, child: const ForgotPasswordScreen()),
-      );
-      await tester.pump();
+    testWidgets(
+      'renders key Bb* primitives (recovery icon-tile, input, submit button)',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(withL10n: true, child: const ForgotPasswordScreen()),
+        );
+        await tester.pump();
 
-      expect(find.byType(BbLogo), findsOneWidget);
-      expect(find.byType(BbInput), findsOneWidget);
-      expect(find.byType(BbButton), findsWidgets);
-    });
+        // Handoff RecCard header uses a tinted `lock_reset` icon-tile in
+        // place of the login/register BbLogo.
+        expect(
+          find.byWidgetPredicate((w) => w is BbIcon && w.name == 'lock_reset'),
+          findsOneWidget,
+        );
+        expect(find.byType(BbInput), findsOneWidget);
+        expect(find.byType(BbButton), findsWidgets);
+      },
+    );
 
     testWidgets('email validator fires on empty submit', (tester) async {
       await tester.pumpWidget(

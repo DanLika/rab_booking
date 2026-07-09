@@ -381,14 +381,14 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         : EdgeInsets.all(isCompact ? BBSpace.md : 36);
 
     final card = ClipRRect(
-      borderRadius: BBRadius.lgAll,
+      borderRadius: BBRadius.xlAll,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           decoration: BoxDecoration(
             color: rd.glassBg,
             border: Border.all(color: rd.glassBorder),
-            borderRadius: BBRadius.lgAll,
+            borderRadius: BBRadius.xlAll,
             boxShadow: rd.panelShadow,
           ),
           padding: cardPadding,

@@ -72,4 +72,3 @@ on Pregled/Rezervacije (audit/126 §flatten); CanvasKit owner-auth eyeball not r
 - Featured-card purple shadow (127-adjacent re-color domain).
 - Tablet column cap 640 vs ~704; bottom pad xl→lg.
 - Global (audit/126): desktop/tablet breadcrumb app-bar §2B; persistent sidebar/rail §3B.
->>>>>>> origin/main

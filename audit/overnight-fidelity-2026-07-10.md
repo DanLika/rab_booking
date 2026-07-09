@@ -111,3 +111,35 @@ Verify: dart format clean; `flutter analyze lib/` 0 errors (76 pre-existing
 off-scale deprecation infos, 0 net-new — comment-only edit); golden `--tags
 golden` 52 cells + models/widgets **All tests passed**. No live eyeball — no
 embed pixels moved; docstring edits carry no runtime signal.
+
+---
+
+## Iteration 4 — Owner auth cluster (login · register · recovery)
+
+**Handoffs:** `design_handoff/source/auth.jsx`, `register.jsx`, `recovery.jsx` (+ tokens.css, primitives.jsx).
+**Files:** `enhanced_login_screen.dart`, `enhanced_register_screen.dart`, `forgot_password_screen.dart` (+ `forgot_password_screen_test.dart`).
+
+### Recon
+Login + register were already deeply aligned (audit/124 `cd4d6914`/`5256bd25` shipped the handoff desktop split: brand pitch panel + 560px glass card ≥1200, pitch stats, legal footer, SSO). No divergence found in their structure/copy — left as-is. The **recovery** screen (`forgot_password_screen`) was the real gap: it reused the login/register **BbLogo** header + a full-width `BbButton` back-link + a `BbEmptyState` success view, none of which match handoff `recovery.jsx` `RecCard`.
+
+### Sections changed
+- **forgot_password (recovery) — request view:** BbLogo header → handoff `RecCard` **tinted icon-tile** (`_buildIconTile`: 64×64, radius 18, 32px `lock_reset` glyph, `primary` tint @ alpha 0.06 from tokens.css). Title/sub kept; sub gains `height:1.55` per handoff. Full-width back-button → compact inline **`RecBackLink`** (`arrow_back` 16px + label in primary, 44px tap target).
+- **forgot_password — success (sent) view:** rebuilt from `BbEmptyState` to match handoff `SentCard` — success-tinted `mark_email_read` icon-tile (alpha 0.12) + h1 title + submitted-email sub + primary "return to login" (`arrow_forward`) + tertiary "resend". All routes/security-mask logic preserved verbatim.
+- **All three cards — radius:** handoff cards use `--bb-radius-xl` (32px, "hero cards"); code used `BBRadius.lgAll` (24). Bumped login/register/forgot glass cards `lgAll`→`xlAll` (6 sites) for handoff-accurate softer corners.
+- **Named consts:** `_kIconTileSize/Radius/Glyph`, `_kPrimaryTintAlpha/_kSuccessTintAlpha` (sourced to tokens.css rgba).
+
+### Untouched (data honesty / logic)
+- Register omits the handoff SSO row — documented preserved-as-is (register screen has no social sign-in path); NOT invented.
+- Recovery `VerifyCard` (6-digit code) is a separate email-verification screen, out of this file's scope — not fabricated here.
+- Zero auth-logic edits (enhanced_auth_provider, sign-in/reset flows, Remember Me, keyboard-dismiss mixin all intact).
+
+### Verify
+- `dart format` clean; `flutter analyze lib/features/auth/` **0 issues**.
+- Auth widget tests **15/15** green (login flow `signInWithEmail` dispatch test passes — login logic untouched, only card radius). Re-pointed forgot `BbLogo` assertion → new `lock_reset` icon-tile (coverage moved, not deleted).
+- `flutter test` full suite **1673 passed, 0 failed**.
+- `--tags golden`: 8 intended baselines re-blessed via full warm-font run (`auth_register` + `auth_forgot_password` × mobile/tablet × light/dark) — radius + icon-tile deltas; all other goldens untouched (proves no collateral). Re-blessed PNGs read back = correct Inter render, no tofu.
+- Live web eyeball `:8111` (chrome-devtools, CanvasKit): **login desktop split ✓**, **register desktop split ✓**, **forgot/recovery icon-tile ✓** — all match handoffs. Live login sanity: CanvasKit text-input not automatable (known `flutter-web-input-bypass`); login call site unchanged (radius-only) + dispatch test green → deemed sufficient.
+
+### Deferred
+- Recovery `VerifyCard` 6-digit code UI (separate email-verification screen).
+- Register SSO row (product decision — no social path currently wired on register).

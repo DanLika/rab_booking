@@ -119,4 +119,3 @@ jest_dx/
 # Session scratch dirs (never commit)
 .tmp/
 functions/.tmp/
-test/golden/**

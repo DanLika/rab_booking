@@ -1,12 +1,11 @@
-# Archived: audit/smoke/ one-shot scripts
+# audit/smoke/ — reusable live regression smokes (KEPT)
 
-Deleted 2026-07-09 (recoverable via `git log --diff-filter=D -- audit/smoke/`). One-line record of what each probed so the knowledge survives the code.
+**Correction 2026-07-09:** an earlier pass in this branch deleted these as "closed one-shots" — that was wrong. Re-reading them + their README shows they are the *deliberately-kept* reusable regression tools (a prior June prune already removed the true one-shots). **Restored + kept.** They hit the **deployed bookbed-dev** environment — coverage the emulator rules suite cannot give.
 
-| Script | Purpose | Status |
+| Script | What it guards | Run |
 |---|---|---|
-| `audit123-deploy-smoke.js` | audit/123 dev-deploy smoke: F-92-01 iCal feed 200/403 regression + F-123-07 `getStripeAccountStatus` 30/300s per-owner rate limit. bookbed-dev only; needed `BB_SMOKE_API_KEY`. | Findings closed; secret already stripped (#803). |
-| `complete-booking-smoke.js` | F-67-01 closure smoke: `completeBooking` CF on bookbed-dev — mint throwaway confirmed booking, ID-token via custom-token, call CF, assert post-state, cleanup. | Closed. |
-| `f92-01-probe.js` | F-92-01 read-only probe: enumerate `widget_settings`/`widget_secrets` on bookbed-dev, classify each `ical_export_enabled` unit vulnerable/safe/unknown. | Closed (SF fix wave). |
-| `README.md` | Noted these were reusable dev smokes; earlier one-time scripts already pruned 2026-06-11. | — |
+| `f92-01-probe.js` | READ-ONLY iCal export-token schema matrix (OK / BROKEN-FEED / FAIL-CLOSED). Regression tool for the audit/92 `_plaintext`/`_hash` vs canonical `ical_export_token` mismatch. PROD-refused. | `GOOGLE_CLOUD_PROJECT=bookbed-dev node audit/smoke/f92-01-probe.js` |
+| `complete-booking-smoke.js` | `completeBooking` CF end-to-end (F-67-01): seed confirmed booking → call → assert `completed`+`completed_at` → idempotency-reject → cleanup. PW from `BB_TEST_PW` env, public web key read from `firebase_options_dev.dart`. | `BB_TEST_PW=… GOOGLE_CLOUD_PROJECT=bookbed-dev node audit/smoke/complete-booking-smoke.js` |
+| `audit123-deploy-smoke.js` | Post-deploy: iCal feed 200/403 + `getStripeAccountStatus` rate-limit exhaustion (~call 31, limit 30/300s). Secrets from `BB_SMOKE_API_KEY`/`BB_SMOKE_PW` env. Fixed a hardcoded absolute-path wart on line 5 → relative resolve. | `BB_SMOKE_API_KEY=… BB_SMOKE_PW=… node audit/smoke/audit123-deploy-smoke.js` |
 
-**Invariants these guarded are covered by the emulator suite:** `cd functions && npm run test:rules` (run manually before rules deploys; not CI-wired). Related: [[../../obsidian-vault/01-Security/Known Open Items]], `.claude/rules/firestore.md`.
+All secret-clean (env-var creds, PROD asserted). Not CI-wired (manual pre-deploy smokes). Related: `.claude/rules/firestore.md`, memory `test-account`.

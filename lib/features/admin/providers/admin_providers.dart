@@ -11,6 +11,21 @@ import '../presentation/screens/admin_shell_screen.dart';
 import '../presentation/screens/user_detail_screen.dart';
 import '../presentation/screens/users_list_screen.dart';
 
+/// Global admin owners-search query, written by the topbar search input and
+/// consumed by [UsersListScreen] to seed its local text filter. DATA-HONEST:
+/// this searches OWNERS ONLY (real `UserModel` data via the existing
+/// `ownersListProvider` + in-screen filter) — the admin console has no
+/// bookings/properties screens, so no other scope is searchable. This is
+/// presentation/navigation plumbing only; it introduces NO new search backend.
+final adminOwnersSearchQueryProvider = StateProvider<String>((ref) => '');
+
+/// Currently-selected owner id for the desktop master-detail split on the
+/// Users screen (handoff `admin-users.jsx` `AUOwnerPanel`). `null` = no row
+/// selected yet (panel shows an empty placeholder). Presentation-only state;
+/// selecting a row populates the inline detail panel instead of navigating to
+/// the standalone `/users/:id` route. Cleared when the screen unmounts.
+final adminSelectedOwnerIdProvider = StateProvider<String?>((ref) => null);
+
 /// Fade transition for tab-like navigation (dashboard, users, activity log)
 CustomTransitionPage<void> _fadePage(LocalKey key, Widget child) =>
     CustomTransitionPage(

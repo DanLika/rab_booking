@@ -812,18 +812,20 @@ class DashboardOverviewTab extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(child: bookingsCard),
-                const SizedBox(width: _kGap10),
+                // Match the tablet/desktop KPI gutter (BBSpace.sm) so the
+                // 2×2 mobile grid uses one consistent card gutter (was 10).
+                const SizedBox(width: BBSpace.sm),
                 Expanded(child: avgPriceCard),
               ],
             ),
           ),
-          const SizedBox(height: _kGap10),
+          const SizedBox(height: BBSpace.sm),
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(child: newGuestsCard),
-                const SizedBox(width: _kGap10),
+                const SizedBox(width: BBSpace.sm),
                 Expanded(child: avgRatingCard),
               ],
             ),
@@ -1272,6 +1274,9 @@ class _PregledKpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
+    // Minimalist pass 3: decorative tile + glyph + sparkline collapse to a
+    // single primary tint in light; dark keeps the caller tone (BBColor.monoKpiTone).
+    final tone = BBColor.monoKpiTone(context, this.tone);
     final iconBoxSize = isMobile ? 32.0 : 36.0;
     final iconSize = isMobile ? 18.0 : 20.0;
     final valueStyle =

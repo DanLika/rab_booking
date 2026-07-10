@@ -239,7 +239,7 @@ class _CapacityWarning extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(BBSpace.xs),
       decoration: BoxDecoration(
-        color: colors.error.withValues(alpha: 0.1),
+        color: colors.error.withValues(alpha: 0.16),
         borderRadius: BBRadius.xsAll,
         border: Border.all(color: colors.error),
       ),

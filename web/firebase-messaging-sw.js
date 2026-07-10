@@ -22,6 +22,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-comp
 const FIREBASE_CONFIGS = {
   production: {
     // nosemgrep: generic.secrets.security.detected-generic-api-key.detected-generic-api-key
+    // gitguardian:ignore
     apiKey: 'AIzaSyB2J8MaHvIU1sw4ItO3tzsn5LC9pDvgD5s',
     appId: '1:592597958982:web:7703de3f5a2ab47dd3e547',
     messagingSenderId: '592597958982',
@@ -31,6 +32,7 @@ const FIREBASE_CONFIGS = {
   },
   staging: {
     // nosemgrep: generic.secrets.security.detected-generic-api-key.detected-generic-api-key
+    // gitguardian:ignore
     apiKey: 'AIzaSyDEayEl_0_Ne3Xwy8bEaEqI0Mybe4LTGrU',
     appId: '1:584902480248:web:767f9d3bc1837eea94f88d',
     messagingSenderId: '584902480248',
@@ -40,6 +42,7 @@ const FIREBASE_CONFIGS = {
   },
   development: {
     // nosemgrep: generic.secrets.security.detected-generic-api-key.detected-generic-api-key
+    // gitguardian:ignore
     apiKey: 'AIzaSyDc6vDPLBTN3ePkY39Pw9Jrheh30OhLWEM',
     appId: '1:733027606474:web:cdac74e20c8fb05aebf933',
     messagingSenderId: '733027606474',

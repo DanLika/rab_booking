@@ -7,8 +7,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
+
 class MockHttpsCallable extends Mock implements HttpsCallable {}
-class MockHttpsCallableResult<T> extends Mock implements HttpsCallableResult<T> {}
+
+class MockHttpsCallableResult<T> extends Mock
+    implements HttpsCallableResult<T> {}
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
@@ -80,62 +83,65 @@ void main() {
     });
 
     test('getUserPropertiesCount returns properties count', () async {
-      await fakeFirestore.collection('properties').add({
-        'owner_id': 'user123',
-      });
-      await fakeFirestore.collection('properties').add({
-        'owner_id': 'user123',
-      });
-      await fakeFirestore.collection('properties').add({
-        'owner_id': 'other',
-      });
+      await fakeFirestore.collection('properties').add({'owner_id': 'user123'});
+      await fakeFirestore.collection('properties').add({'owner_id': 'user123'});
+      await fakeFirestore.collection('properties').add({'owner_id': 'other'});
 
       final count = await repository.getUserPropertiesCount('user123');
       expect(count, 2);
     });
 
     test('getUserBookingsCount returns collectionGroup count', () async {
-      await fakeFirestore.collection('properties').doc('prop1').collection('bookings').add({
-        'owner_id': 'user123',
-      });
-      await fakeFirestore.collection('properties').doc('prop2').collection('bookings').add({
-        'owner_id': 'user123',
-      });
-      await fakeFirestore.collection('properties').doc('prop1').collection('bookings').add({
-        'owner_id': 'other',
-      });
+      await fakeFirestore
+          .collection('properties')
+          .doc('prop1')
+          .collection('bookings')
+          .add({'owner_id': 'user123'});
+      await fakeFirestore
+          .collection('properties')
+          .doc('prop2')
+          .collection('bookings')
+          .add({'owner_id': 'user123'});
+      await fakeFirestore
+          .collection('properties')
+          .doc('prop1')
+          .collection('bookings')
+          .add({'owner_id': 'other'});
 
       final count = await repository.getUserBookingsCount('user123');
       expect(count, 2);
     });
 
-    test('updateAdminFlags updates hide_subscription and override type', () async {
-      await fakeFirestore.collection('users').doc('user123').set({
-        'email': 'test@test.com',
-      });
+    test(
+      'updateAdminFlags updates hide_subscription and override type',
+      () async {
+        await fakeFirestore.collection('users').doc('user123').set({
+          'email': 'test@test.com',
+        });
 
-      await repository.updateAdminFlags(
-        'user123',
-        hideSubscription: true,
-        adminOverrideAccountType: AccountType.premium,
-      );
+        await repository.updateAdminFlags(
+          'user123',
+          hideSubscription: true,
+          adminOverrideAccountType: AccountType.premium,
+        );
 
-      final doc = await fakeFirestore.collection('users').doc('user123').get();
-      final data = doc.data()!;
-      expect(data['hide_subscription'], true);
-      expect(data['admin_override_account_type'], 'premium');
-      expect(data['updated_at'], isNotNull);
-    });
+        final doc = await fakeFirestore
+            .collection('users')
+            .doc('user123')
+            .get();
+        final data = doc.data()!;
+        expect(data['hide_subscription'], true);
+        expect(data['admin_override_account_type'], 'premium');
+        expect(data['updated_at'], isNotNull);
+      },
+    );
 
     test('updateAdminFlags clears override', () async {
       await fakeFirestore.collection('users').doc('user123').set({
         'admin_override_account_type': 'lifetime',
       });
 
-      await repository.updateAdminFlags(
-        'user123',
-        clearOverride: true,
-      );
+      await repository.updateAdminFlags('user123', clearOverride: true);
 
       final doc = await fakeFirestore.collection('users').doc('user123').get();
       expect(doc.data()!.containsKey('admin_override_account_type'), false);
@@ -145,9 +151,13 @@ void main() {
       final mockCallable = MockHttpsCallable();
       final mockResult = MockHttpsCallableResult<Map<String, dynamic>>();
 
-      when(() => mockFunctions.httpsCallable('updateUserStatus')).thenReturn(mockCallable);
+      when(
+        () => mockFunctions.httpsCallable('updateUserStatus'),
+      ).thenReturn(mockCallable);
       when(() => mockResult.data).thenReturn({'message': 'Success'});
-      when(() => mockCallable.call<Map<String, dynamic>>(any())).thenAnswer((_) async => mockResult);
+      when(
+        () => mockCallable.call<Map<String, dynamic>>(any()),
+      ).thenAnswer((_) async => mockResult);
 
       final message = await repository.updateUserStatus(
         userId: 'user123',
@@ -156,20 +166,26 @@ void main() {
       );
 
       expect(message, 'Success');
-      verify(() => mockCallable.call<Map<String, dynamic>>({
-        'userId': 'user123',
-        'newStatus': 'active',
-        'reason': 'Payment received',
-      })).called(1);
+      verify(
+        () => mockCallable.call<Map<String, dynamic>>({
+          'userId': 'user123',
+          'newStatus': 'active',
+          'reason': 'Payment received',
+        }),
+      ).called(1);
     });
 
     test('setLifetimeLicense calls Cloud Function', () async {
       final mockCallable = MockHttpsCallable();
       final mockResult = MockHttpsCallableResult<Map<String, dynamic>>();
 
-      when(() => mockFunctions.httpsCallable('setLifetimeLicense')).thenReturn(mockCallable);
+      when(
+        () => mockFunctions.httpsCallable('setLifetimeLicense'),
+      ).thenReturn(mockCallable);
       when(() => mockResult.data).thenReturn({'message': 'License granted'});
-      when(() => mockCallable.call<Map<String, dynamic>>(any())).thenAnswer((_) async => mockResult);
+      when(
+        () => mockCallable.call<Map<String, dynamic>>(any()),
+      ).thenAnswer((_) async => mockResult);
 
       final message = await repository.setLifetimeLicense(
         userId: 'user123',
@@ -177,10 +193,12 @@ void main() {
       );
 
       expect(message, 'License granted');
-      verify(() => mockCallable.call<Map<String, dynamic>>({
-        'userId': 'user123',
-        'grant': true,
-      })).called(1);
+      verify(
+        () => mockCallable.call<Map<String, dynamic>>({
+          'userId': 'user123',
+          'grant': true,
+        }),
+      ).called(1);
     });
   });
 }

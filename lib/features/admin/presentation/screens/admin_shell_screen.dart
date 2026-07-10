@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,8 @@ import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/redesign.dart';
+import '../../providers/admin_providers.dart';
 
 const _kAdminDarkModeKey = 'admin_dark_mode';
 
@@ -237,6 +240,7 @@ class _AdminRail extends ConsumerWidget {
                 child: _RailItem(
                   item: _navItems[i],
                   isSelected: navIndex == i,
+                  isDark: isDarkMode,
                   onTap: () => context.go(_navItems[i].path),
                 ),
               ),
@@ -251,6 +255,7 @@ class _AdminRail extends ConsumerWidget {
                 path: '',
               ),
               isSelected: false,
+              isDark: isDarkMode,
               onTap: () => ref.read(adminDarkModeProvider.notifier).toggle(),
             ),
             const SizedBox(height: 4),
@@ -290,46 +295,59 @@ class _AdminRail extends ConsumerWidget {
 class _RailItem extends StatelessWidget {
   final _NavItem item;
   final bool isSelected;
+  final bool isDark;
   final VoidCallback onTap;
 
   const _RailItem({
     required this.item,
     required this.isSelected,
+    required this.isDark,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final tokens = BbAdminDarkTokens.of(context);
     final colorScheme = Theme.of(context).colorScheme;
+    // Handoff admin-shell.jsx:27-39: 48px tile, radius 12, hero gradient +
+    // glow when active, idle fill rgba(255,255,255,0.05). Gradient/white-alpha
+    // fills are dark-console-only; light mode falls back to primary tints.
+    final bool gradientActive = isSelected && isDark;
+    final Color idleFill = isDark ? tokens.navTileIdleBg : Colors.transparent;
+    final Color selectedLightFill = colorScheme.primary.withValues(alpha: 0.1);
     return Tooltip(
       message: item.label,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           // 48x48 target (>= 44px touch minimum)
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: isSelected
-                  ? colorScheme.primary.withValues(alpha: 0.1)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isSelected
-                    ? colorScheme.primary.withValues(alpha: 0.2)
-                    : Colors.transparent,
-              ),
+              gradient: gradientActive ? tokens.navIconActiveGradient : null,
+              color: gradientActive
+                  ? null
+                  : (isSelected ? selectedLightFill : idleFill),
+              borderRadius: BorderRadius.circular(12),
+              border: isSelected && !isDark
+                  ? Border.all(
+                      color: colorScheme.primary.withValues(alpha: 0.2),
+                    )
+                  : null,
+              boxShadow: gradientActive ? tokens.navActiveGlow : null,
             ),
             child: Icon(
               isSelected ? item.activeIcon : item.icon,
               size: 22,
-              color: isSelected
-                  ? colorScheme.primary
-                  : colorScheme.onSurfaceVariant,
+              color: gradientActive
+                  ? Colors.white
+                  : (isSelected
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant),
             ),
           ),
         ),
@@ -393,27 +411,31 @@ class _AdminNavPanel extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'BookBed',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: colorScheme.onSurface,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'BookBed',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        letterSpacing: -0.02 * 18,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Admin Portal',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant,
+                    Text(
+                      'Admin Portal',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              if (isDarkMode) const _AdminBadgePill(),
             ],
           ),
         ),
@@ -541,7 +563,33 @@ class _AdminNavPanel extends ConsumerWidget {
   }
 }
 
-class _DrawerItem extends StatelessWidget {
+/// ADMIN tag pill in the dark sidebar header (handoff admin-shell.jsx:81).
+class _AdminBadgePill extends StatelessWidget {
+  const _AdminBadgePill();
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = BbAdminDarkTokens.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: tokens.adminBadgeBg,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        'ADMIN',
+        style: TextStyle(
+          color: tokens.adminBadgeFg,
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.1 * 9,
+        ),
+      ),
+    );
+  }
+}
+
+class _DrawerItem extends ConsumerWidget {
   final IconData icon;
   final IconData activeIcon;
   final String label;
@@ -557,60 +605,62 @@ class _DrawerItem extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = ref.watch(adminDarkModeProvider);
+    final tokens = BbAdminDarkTokens.of(context);
+
+    // Handoff (admin-shell.jsx:41-64): full nav row = 44px, radius 12, active
+    // fill rgba(255,255,255,0.08) + border 0.10; icon lives in a 28px rounded
+    // tile that carries the hero gradient + purple glow when active.
+    final Color rowBg = isSelected
+        ? (isDark
+              ? tokens.navTileActiveBg
+              : colorScheme.primary.withValues(alpha: 0.1))
+        : Colors.transparent;
+    final Color rowBorder = isSelected
+        ? (isDark
+              ? tokens.navTileActiveBorder
+              : colorScheme.primary.withValues(alpha: 0.2))
+        : Colors.transparent;
+    final Color labelColor = isSelected
+        ? (isDark ? tokens.textPrimary : colorScheme.primary)
+        : colorScheme.onSurfaceVariant;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.primary.withValues(alpha: 0.1)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isSelected
-                  ? colorScheme.primary.withValues(alpha: 0.2)
-                  : Colors.transparent,
-            ),
+            color: rowBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: rowBorder),
           ),
           child: Row(
             children: [
-              Icon(
-                isSelected ? activeIcon : icon,
-                size: 20,
-                color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
+              _NavIconTile(
+                icon: isSelected ? activeIcon : icon,
+                isSelected: isSelected,
+                isDark: isDark,
+                size: 28,
+                iconSize: 18,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 11),
               Expanded(
                 child: Text(
                   label,
                   style: TextStyle(
-                    color: isSelected
-                        ? colorScheme.primary
-                        : colorScheme.onSurfaceVariant,
+                    color: labelColor,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     fontSize: 14,
                   ),
                 ),
               ),
-              if (isSelected)
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
             ],
           ),
         ),
@@ -619,14 +669,95 @@ class _DrawerItem extends StatelessWidget {
   }
 }
 
-class _AdminHeader extends StatelessWidget {
+/// Rounded icon tile shared by drawer/sidebar rows and the rail. Active =
+/// hero gradient fill + purple glow (dark) per admin-shell.jsx:51-58.
+class _NavIconTile extends StatelessWidget {
+  final IconData icon;
+  final bool isSelected;
+  final bool isDark;
+  final double size;
+  final double iconSize;
+
+  const _NavIconTile({
+    required this.icon,
+    required this.isSelected,
+    required this.isDark,
+    required this.size,
+    required this.iconSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = BbAdminDarkTokens.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final bool gradientActive = isSelected && isDark;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: gradientActive ? tokens.navIconActiveGradient : null,
+        color: gradientActive
+            ? null
+            : (isSelected
+                  ? colorScheme.primary.withValues(alpha: 0.12)
+                  : (isDark ? tokens.navTileIdleBg : Colors.transparent)),
+        borderRadius: BorderRadius.circular(size >= 40 ? 12 : 9),
+        boxShadow: gradientActive ? tokens.navActiveGlow : null,
+      ),
+      child: Icon(
+        icon,
+        size: iconSize,
+        color: gradientActive
+            ? Colors.white
+            : (isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant),
+      ),
+    );
+  }
+}
+
+class _AdminHeader extends ConsumerStatefulWidget {
   final bool showMenuButton;
 
   const _AdminHeader({this.showMenuButton = true});
 
   @override
+  ConsumerState<_AdminHeader> createState() => _AdminHeaderState();
+}
+
+class _AdminHeaderState extends ConsumerState<_AdminHeader> {
+  final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Reflect any existing query (e.g. set from the Users screen filter) so the
+    // topbar and the list stay in sync when navigating back to a shell that
+    // rebuilds the header.
+    _searchController.text = ref.read(adminOwnersSearchQueryProvider);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  /// Publishes the query to the shared provider and routes to the Users screen,
+  /// which seeds its local filter from the same provider. OWNERS-ONLY: reuses
+  /// the existing owners list + filter — no new search backend.
+  void _submit(String query) {
+    ref.read(adminOwnersSearchQueryProvider.notifier).state = query.trim();
+    if (!GoRouterState.of(context).matchedLocation.startsWith('/users')) {
+      context.go('/users');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Handoff AdminTopbar (admin-shell.jsx:121): the search field is present on
+    // desktop + tablet, hidden on mobile — same gate as the hamburger button.
+    final bool showSearch = !widget.showMenuButton;
 
     return Container(
       height: 64,
@@ -639,7 +770,7 @@ class _AdminHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (showMenuButton) ...[
+          if (widget.showMenuButton) ...[
             IconButton(
               icon: const Icon(Icons.menu),
               tooltip: 'Menu',
@@ -664,9 +795,136 @@ class _AdminHeader extends StatelessWidget {
             'Admin',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
-          const Spacer(),
+          if (showSearch) ...[
+            const SizedBox(width: 16),
+            // maxWidth 420 + marginLeft 12 per handoff admin-shell.jsx:122.
+            Expanded(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: BbInput(
+                  key: const Key('admin_topbar_search'),
+                  controller: _searchController,
+                  placeholder: 'Search owners…',
+                  iconLeft: 'search',
+                  size: BbInputSize.sm,
+                  onSubmitted: _submit,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+          ] else
+            const Spacer(),
+          // Handoff AdminTopbar: environment pill. Reads the REAL runtime
+          // Firebase project id — never fabricated. Green when the app is
+          // wired to Production, amber otherwise (dev/staging).
+          const _AdminEnvPill(),
         ],
       ),
     );
   }
 }
+
+/// Data-honest environment badge for the admin topbar. Resolves the label from
+/// the live `Firebase.app().options.projectId` (same source the boot asserts
+/// use in the env-specific entry points). PROD project = `rab-booking-248fc`.
+class _AdminEnvPill extends StatelessWidget {
+  const _AdminEnvPill();
+
+  static const String _prodProjectId = 'rab-booking-248fc';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    String projectId;
+    try {
+      projectId = Firebase.app().options.projectId;
+    } catch (_) {
+      // Firebase not initialised (e.g. isolated widget test) → hide the pill.
+      return const SizedBox.shrink();
+    }
+
+    final bool isProd = projectId == _prodProjectId;
+    final String label = isProd
+        ? 'Production'
+        : projectId.contains('staging')
+        ? 'Staging'
+        : 'Development';
+    // Green = prod (BB success), amber = non-prod (BB warning).
+    final Color tone = isProd ? BBColor.success : BBColor.warning;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: tone.withValues(alpha: 0.32)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: tone, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: tone,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Renders the dark-console nav chrome pieces (active + idle nav rows, ADMIN
+/// badge, rail tile) in isolation for the fidelity seam test — no Firebase /
+/// auth provider. `adminDarkModeProvider` must be overridden by the caller
+/// (both `_DrawerItem` and `_RailItem` icon-tile branch on it). Not for
+/// production use — see `test/features/admin/admin_shell_nav_test.dart`.
+@visibleForTesting
+Widget buildAdminNavChromeForTest() {
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const _AdminBadgePill(),
+      const SizedBox(height: 8),
+      _DrawerItem(
+        icon: _navItems[0].icon,
+        activeIcon: _navItems[0].activeIcon,
+        label: _navItems[0].label,
+        isSelected: true,
+        onTap: () {},
+      ),
+      const SizedBox(height: 4),
+      _DrawerItem(
+        icon: _navItems[1].icon,
+        activeIcon: _navItems[1].activeIcon,
+        label: _navItems[1].label,
+        isSelected: false,
+        onTap: () {},
+      ),
+      const SizedBox(height: 8),
+      _RailItem(
+        item: _navItems[0],
+        isSelected: true,
+        isDark: true,
+        onTap: () {},
+      ),
+    ],
+  );
+}
+
+/// Renders the admin topbar in isolation for the search seam test. `_AdminEnvPill`
+/// self-hides when Firebase is uninitialised, so this pumps without Firebase/auth.
+/// `showMenuButton` toggles the mobile gate (mobile → no search). Not for
+/// production use — see `test/features/admin/admin_topbar_search_test.dart`.
+@visibleForTesting
+Widget buildAdminTopbarForTest({bool showMenuButton = false}) =>
+    _AdminHeader(showMenuButton: showMenuButton);

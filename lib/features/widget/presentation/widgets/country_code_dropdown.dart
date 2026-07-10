@@ -266,9 +266,7 @@ class CountryCodeDropdown extends StatelessWidget {
         decoration: BoxDecoration(
           color: backgroundColor,
           border: Border.all(color: borderColor ?? Colors.grey.shade300),
-          borderRadius: const BorderRadius.all(
-            Radius.circular(BBRadiusBridges.medium),
-          ),
+          borderRadius: BBRadius.smAll,
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<Country>(

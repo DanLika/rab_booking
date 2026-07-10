@@ -28,5 +28,4 @@ export 'opacity_tokens.dart';
 export 'animation_tokens.dart';
 export 'icon_size_tokens.dart';
 export 'gradient_tokens.dart';
-export 'glassmorphism_tokens.dart';
 export 'constraints_tokens.dart';

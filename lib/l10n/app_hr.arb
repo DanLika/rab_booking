@@ -257,6 +257,7 @@
 
   "editProfile": "Uredi Profil",
   "changePassword": "Promijeni lozinku",
+  "changePasswordSecurityEyebrow": "SIGURNOST RAČUNA",
   "showPassword": "Prikaži lozinku",
   "hidePassword": "Sakrij lozinku",
   "currentPassword": "Trenutna lozinka",
@@ -1036,6 +1037,25 @@
   },
 
   "ownerProfileTitle": "Profil",
+  "ownerProfileEyebrow": "Račun · Vlasnik",
+  "ownerProfileHostBadge": "Domaćin",
+  "ownerProfileMemberSince": "Član od {year}",
+  "@ownerProfileMemberSince": {
+    "placeholders": { "year": { "type": "int" } }
+  },
+  "ownerProfileEmailVerified": "Email potvrđen",
+  "ownerProfilePhoneAdded": "Telefon dodan",
+  "ownerProfilePhoneMissing": "Telefon nedostaje",
+  "ownerProfileCompleteHeading": "Dovršite profil",
+  "ownerProfileCompleteRemaining": "Još {steps} koraka do 100%.",
+  "@ownerProfileCompleteRemaining": {
+    "placeholders": { "steps": { "type": "int" } }
+  },
+  "ownerProfileCompleteCta": "Dovrši",
+  "ownerProfileCompleteFilledLabel": "ispunjeno",
+  "ownerProfileGroupApp": "Aplikacija",
+  "ownerProfileGroupLegal": "Pravno",
+  "ownerProfileTrialBadge": "Probni period",
   "ownerProfileThemeLight": "Svijetla",
   "ownerProfileThemeDark": "Tamna",
   "ownerProfileLanguageEnglish": "English",
@@ -1088,6 +1108,8 @@
   "editProfileFullName": "Ime i Prezime",
   "editProfileEmail": "Email",
   "editProfilePhone": "Telefon",
+  "editProfileEmailVerified": "Potvrđeno",
+  "editProfilePhoneHelper": "Vidljivo gostima nakon potvrde rezervacije",
   "editProfileAddress": "Adresa",
   "editProfileAddressSubtitle": "Vaša fizička adresa",
   "editProfileCountry": "Država",
@@ -1126,6 +1148,7 @@
   "notificationSettingsBookingsDesc": "Emailovi kada gosti naprave instant rezervacije. Rezervacije na čekanju koje zahtijevaju odobrenje uvijek se šalju.",
   "notificationSettingsPayments": "Podsjetnici za plaćanje",
   "notificationSettingsPaymentsDesc": "Opcionalni emailovi o plaćanjima. Početne Stripe potvrde plaćanja se uvijek šalju.",
+  "notificationSettingsChannelsEyebrow": "KANALI · EMAIL + PUSH",
   "notificationSettingsCalendar": "Sinkronizacija kalendara",
   "notificationSettingsCalendarDesc": "Upozorenja iCal sinkronizacije i konflikti u kalendaru.",
   "notificationSettingsMarketing": "Marketing i ažuriranja",
@@ -1136,6 +1159,19 @@
   "notificationSettingsPushChannelDesc": "Primajte push obavijesti na uređaj",
   "notificationSettingsSmsChannel": "SMS",
   "notificationSettingsSmsChannelDesc": "Primajte obavijesti putem SMS-a",
+  "quietHoursTitle": "Tihi sati",
+  "quietHoursEnable": "Uključi tihe sate",
+  "quietHoursSubtitle": "Utišajte push obavijesti tijekom određenog vremenskog razdoblja",
+  "quietHoursStart": "Početak",
+  "quietHoursEnd": "Kraj",
+  "quietHoursInfo": "Tijekom tihih sati push obavijesti se zadržavaju — i dalje ćete primati e-poštu i vidjeti sve kada otvorite aplikaciju.",
+  "quietHoursCrossMidnight": "Ovo razdoblje traje preko noći, od {start} do {end} sljedećeg jutra.",
+  "@quietHoursCrossMidnight": {
+    "placeholders": {
+      "start": {"type": "String"},
+      "end": {"type": "String"}
+    }
+  },
   "notificationSettingsLoadError": "Greška pri učitavanju postavki",
   "notificationSettingsUpdated": "Postavke obavijesti za {category} ažurirane",
   "@notificationSettingsUpdated": {
@@ -1169,6 +1205,13 @@
   "unitHubTitle": "Smještajne Jedinice",
   "unitHubShowAllUnits": "Prikaži sve jedinice",
   "unitHubPropertiesAndUnits": "Objekti i Jedinice",
+  "unitHubPropertiesUnitsSubtitle": "{propertyCount} objekata · {unitCount} jedinica",
+  "@unitHubPropertiesUnitsSubtitle": {
+    "placeholders": {
+      "propertyCount": {"type": "int"},
+      "unitCount": {"type": "int"}
+    }
+  },
   "unitHubAddProperty": "Dodaj novi objekt",
   "unitHubSearch": "Pretraži...",
   "unitHubLoadingError": "Greška pri učitavanju",
@@ -1362,6 +1405,13 @@
   "bankAccountTitle": "Bankovni Račun",
   "bankAccountBankDetails": "Bankovni Podaci",
   "bankAccountBankDetailsSubtitle": "Podaci za primanje uplata",
+  "bankAccountActiveBadge": "Aktivan",
+  "bankAccountHolderLabel": "Vlasnik: {holder} · EUR",
+  "@bankAccountHolderLabel": {
+    "placeholders": {
+      "holder": {"type": "String"}
+    }
+  },
   "bankAccountIban": "IBAN",
   "bankAccountSwift": "SWIFT/BIC",
   "bankAccountBankName": "Naziv Banke",
@@ -2662,6 +2712,8 @@
   "icalImportEnabledDescription": "Uvozi rezervacije iz ovog kalendara u BookBed",
   "icalImportDisabledNote": "Samo izvoz - vaše rezervacije su vidljive ovoj platformi, ali se njihovi događaji neće uvoziti. Koristite za platforme koje re-exportaju uvezene podatke (sprječava echo loop).",
   "icalImportDisabledWarning": "Uvoz je onemogućen za ovaj feed",
+  "icalDirectionImport": "Uvoz",
+  "icalDirectionExport": "Izvoz",
   "icalEchoStatusActive": "Aktivno",
   "icalEchoStatusNeedsReview": "Potrebna provjera",
   "icalEchoStatusConfirmedEcho": "Potvrđeni echo",
@@ -3388,6 +3440,26 @@
       "date": {"type": "String"}
     }
   },
+  "subscriptionTrialEyebrow": "VAŠ PLAN",
+  "subscriptionTrialDaysRemaining": "{daysLeft} od {totalDays} dana preostalo",
+  "@subscriptionTrialDaysRemaining": {
+    "placeholders": {
+      "daysLeft": {"type": "int"},
+      "totalDays": {"type": "int"}
+    }
+  },
+  "subscriptionTrialEndsShort": "do {date}",
+  "@subscriptionTrialEndsShort": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "subscriptionTrialEndsInline": "Uživate sve Pro mogućnosti. Završava {date}.",
+  "@subscriptionTrialEndsInline": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
   "subscriptionFreeTrial": "Besplatan probni period",
   "subscriptionFreeTrialPrice": "€0",
   "subscriptionFreeTrialPeriod": "30 dana",
@@ -3400,6 +3472,7 @@
   "subscriptionProPeriod": "mjesečno",
   "subscriptionFeatureUnlimitedProperties": "Neograničen broj nekretnina",
   "subscriptionFeatureAdvancedAnalytics": "Napredna analitika",
+  "subscriptionFeatureAiAssistant": "AI asistent bez ograničenja",
   "subscriptionFeaturePrioritySupport": "Prioritetna podrška",
   "subscriptionFeatureCustomBranding": "Prilagođeni branding",
   "subscriptionFeatureApiAccess": "API pristup",
@@ -3414,6 +3487,8 @@
   "subscriptionFaqCancelAnswer": "Da! Možete otkazati svoju pretplatu u bilo kojem trenutku. Vaš pristup će nastaviti do kraja obračunskog razdoblja.",
   "subscriptionFaqDataSafeQuestion": "Jesu li moji podaci sigurni?",
   "subscriptionFaqDataSafeAnswer": "Apsolutno. Vaši podaci su sigurno pohranjeni i nikada neće biti obrisani, čak i ako vaš probni period istekne ili otkažete pretplatu.",
+  "subscriptionUpgradeComingSoonTitle": "Nadogradi na Pro",
+  "subscriptionUpgradeComingSoonBody": "Pro pretplata uskoro stiže. Integriramo Stripe plaćanja kako biste otključali neograničen broj objekata i premium značajke. Ostanite s nama!",
   "subscriptionComingSoon": "Upravljaj na Webu",
   "subscriptionComingSoonMessage": "Za nadogradnju pretplate ili upravljanje naplatom, posjetite našu web aplikaciju na app.bookbed.io",
   "subscriptionVisitWebsite": "Posjeti web stranicu",

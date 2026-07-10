@@ -2,12 +2,12 @@
 // audit/123 dev-deploy smoke: F-92-01 regression (feed 200/403) + F-123-07
 // (getStripeAccountStatus 30/300s per-owner rate limit). bookbed-dev ONLY.
 const path = require('path');
-const admin = require(path.resolve('/Users/duskolicanin/git/bookbed/functions/node_modules/firebase-admin'));
+const admin = require(path.resolve(__dirname, '..', '..', 'functions', 'node_modules', 'firebase-admin'));
 const projectId = 'bookbed-dev';
 admin.initializeApp({projectId, credential: admin.credential.applicationDefault()});
 const db = admin.firestore();
 const BASE = 'https://us-central1-bookbed-dev.cloudfunctions.net';
-const API_KEY = 'AIzaSyCokYMO3Q0Q8cM5f_y4Ne8C3GaP7cwR-bE';
+const API_KEY = process.env.BB_SMOKE_API_KEY || (() => { throw new Error('set BB_SMOKE_API_KEY env var (Firebase Web API key for bookbed-dev)'); })();
 
 (async () => {
   // 1. find an export-enabled unit with readable token

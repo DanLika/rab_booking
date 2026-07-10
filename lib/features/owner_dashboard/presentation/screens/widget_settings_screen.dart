@@ -27,6 +27,7 @@ import '../widgets/widget_embed_code_section.dart';
 import '../widgets/widget_platform_install_section.dart';
 import '../widgets/widget_live_preview_section.dart';
 import '../widgets/widget_appearance_section.dart';
+import '../../../subscription/providers/trial_status_provider.dart';
 
 /// Widget Settings Screen - Configure embedded widget for each unit
 class WidgetSettingsScreen extends ConsumerStatefulWidget {
@@ -652,9 +653,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                       WidgetAppearanceSection(
                         options: _themeOptions,
                         onChanged: (o) => setState(() => _themeOptions = o),
-                        // isPro defaults to false → branding-removal stays
-                        // Pro-gated (locked + PRO pill).
-                        // TODO(wave1a): wire real subscription tier.
+                        // branding-removal stays Pro-gated (locked + PRO pill).
+                        isPro: ref.watch(hasFullAccessProvider),
                       ),
 
                       const SizedBox(height: BBSpace.lg),

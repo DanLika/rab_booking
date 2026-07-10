@@ -112,6 +112,12 @@ export {
   type PasswordResetParams,
 } from "./templates/password-reset";
 
+export {
+  sendSuspiciousActivityEmailV2,
+  generateSuspiciousActivityEmailV2,
+  type SuspiciousActivityParams,
+} from "./templates/suspicious-activity";
+
 // Custom
 export {
   sendCustomGuestEmailV2,
@@ -186,6 +192,7 @@ export {
   getBellIcon,
   getApprovedIcon,
   getRefundIcon,
+  getShieldIcon,
   getIcon,
 } from "./utils/svg-icons";
 

@@ -246,8 +246,9 @@ class _PremiumHeaderRow extends StatelessWidget {
   }
 }
 
-/// 4-tile KPI strip: pending count / confirmed count / monthly revenue /
-/// upcoming check-ins. Mirrors handoff RZPStatStrip.
+/// KPI strip. Desktop/tablet (≥600) = 4 tiles (pending / confirmed / monthly
+/// revenue / upcoming). Mobile (<600) = 2 tiles (Na čekanju + Zarada) to match
+/// handoff `RezervacijePremiumMobile`. Mirrors handoff RZPStatStrip.
 class _RezKpiStrip extends StatelessWidget {
   final bool isMobile;
   final AsyncValue<UnifiedDashboardData> dashboard;
@@ -317,23 +318,14 @@ class _RezKpiStrip extends StatelessWidget {
     ];
 
     if (isMobile) {
-      return Column(
+      // Handoff `RezervacijePremiumMobile` shows exactly 2 KPI cards in a
+      // 2-col grid: "Na čekanju" (tiles[0]) + "Zarada (mj.)" (tiles[2]).
+      // Potvrđeno / Nadolazeći are desktop/tablet-only in the handoff.
+      return Row(
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(child: tiles[0]),
-              const SizedBox(width: 12),
-              Expanded(child: tiles[1]),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: <Widget>[
-              Expanded(child: tiles[2]),
-              const SizedBox(width: 12),
-              Expanded(child: tiles[3]),
-            ],
-          ),
+          Expanded(child: tiles[0]),
+          const SizedBox(width: 12),
+          Expanded(child: tiles[2]),
         ],
       );
     }
@@ -348,6 +340,28 @@ class _RezKpiStrip extends StatelessWidget {
     );
   }
 }
+
+/// Test seam for the KPI strip. Lets a widget test pump the real strip across
+/// breakpoints (mobile <600 = 2 cards; tablet/desktop ≥600 = 4 cards) without
+/// the provider-bound [BookingsPremiumHeader].
+@visibleForTesting
+Widget buildRezKpiStripForTest({
+  required bool isMobile,
+  int pendingCount = 2,
+}) => _RezKpiStrip(
+  isMobile: isMobile,
+  dashboard: const AsyncValue.data(
+    UnifiedDashboardData(
+      revenue: 3840,
+      bookings: 9,
+      upcomingCheckIns: 4,
+      occupancyRate: 0.5,
+      revenueHistory: <RevenueDataPoint>[],
+      bookingHistory: <BookingDataPoint>[],
+    ),
+  ),
+  pendingCount: pendingCount,
+);
 
 class _RezStatTile extends StatelessWidget {
   final String icon;
@@ -371,6 +385,8 @@ class _RezStatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
+    // Minimalist pass 3: mono primary tile+glyph+spark in light; dark unchanged.
+    final tone = BBColor.monoKpiTone(context, this.tone);
     final bool hasSpark = spark != null && spark!.length >= 2;
 
     return BbCard(

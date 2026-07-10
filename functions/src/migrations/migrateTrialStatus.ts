@@ -2,6 +2,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "../firebase";
 import {logInfo, logError, logSuccess} from "../logger";
 import {getCorsAllowlist} from "../utils/corsAllowlist";
+import {checkRateLimit} from "../utils/rateLimit";
 
 /**
  * Migration: Trial Status
@@ -48,7 +49,20 @@ export const migrateTrialStatus = onCall(
     }
 
     const adminUid = request.auth.uid;
-    const {dryRun = true, batchSize = BATCH_SIZE} = request.data as MigrationRequest;
+
+    // S-4 (audit 2026-07-09): defense-in-depth rate limit. Admin-gated, but a
+    // stolen admin token could otherwise invoke unthrottled large-batch
+    // migrations. 2 per hour per admin is ample for a real migration run.
+    if (!checkRateLimit(`migrate_trial:${adminUid}`, 2, 3600)) {
+      throw new HttpsError(
+        "resource-exhausted",
+        "Migration rate limit exceeded. Please wait before retrying."
+      );
+    }
+
+    const {dryRun = true, batchSize: rawBatchSize = BATCH_SIZE} = request.data as MigrationRequest;
+    // Cap caller-supplied batchSize so one invocation can't touch an unbounded set.
+    const batchSize = Math.min(Math.max(1, rawBatchSize), BATCH_SIZE);
 
     logInfo("[Migration] Starting trial status migration", {
       dryRun,

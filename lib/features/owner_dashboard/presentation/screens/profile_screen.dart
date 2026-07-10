@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -122,7 +122,13 @@ class ProfileScreen extends ConsumerWidget {
                         : l10n.ownerProfileNoEmail);
                 final screenWidth = MediaQuery.of(context).size.width;
                 final isMobile = screenWidth < 600;
-                final isDesktop = screenWidth >= 1024;
+                // Column-count reflow (single vs 2-col settings), NOT a
+                // typography/padding pivot — so this stays a local reflow const,
+                // not the canonical 1200 desktop breakpoint (content is clamped
+                // to 1100 via BBContentMaxWidth, so 1200 would never trigger the
+                // 2-col layout the handoff wants). Per audit/breakpoint-decide.
+                const kProfileTwoColReflow = 1024.0;
+                final isDesktop = screenWidth >= kProfileTwoColReflow;
                 final completionPercentage =
                     userDataAsync.value?.profile.completionPercentage ??
                     _calculateCompletionFromUserModel(authState.userModel);
@@ -180,7 +186,9 @@ class ProfileScreen extends ConsumerWidget {
                                     isMobile: isMobile,
                                     isAnonymous: isAnonymous,
                                   ),
-                                  SizedBox(height: isMobile ? 14 : 18),
+                                  SizedBox(
+                                    height: isMobile ? BBSpace.sm : BBSpace.md,
+                                  ),
 
                                   // Identity command card
                                   _ProfilIdentityCard(
@@ -197,7 +205,9 @@ class ProfileScreen extends ConsumerWidget {
                                     completionPercentage: completionPercentage,
                                     isMobile: isMobile,
                                   ),
-                                  SizedBox(height: isMobile ? 14 : 18),
+                                  SizedBox(
+                                    height: isMobile ? BBSpace.sm : BBSpace.md,
+                                  ),
 
                                   // Host-trust KPI strip — profile-premium.jsx
                                   // §405 PFP_STATS row (rating / response rate /
@@ -209,7 +219,11 @@ class ProfileScreen extends ConsumerWidget {
                                   // partial 1-tile row that looks broken.
                                   if (!isAnonymous) ...[
                                     const _ProfilStatStrip(),
-                                    SizedBox(height: isMobile ? 14 : 18),
+                                    SizedBox(
+                                      height: isMobile
+                                          ? BBSpace.sm
+                                          : BBSpace.md,
+                                    ),
                                   ],
 
                                   // Subscription banner — trial-only (unchanged condition)
@@ -220,7 +234,11 @@ class ProfileScreen extends ConsumerWidget {
                                       l10n: l10n,
                                       isMobile: isMobile,
                                     ),
-                                    SizedBox(height: isMobile ? 14 : 18),
+                                    SizedBox(
+                                      height: isMobile
+                                          ? BBSpace.sm
+                                          : BBSpace.md,
+                                    ),
                                   ],
 
                                   // Settings groups — desktop = 2-col, mobile/tablet = single column.
@@ -394,7 +412,11 @@ class ProfileScreen extends ConsumerWidget {
       ),
     ];
 
-    return _ProfilSettingsGroup(icon: 'apps', title: 'Aplikacija', rows: rows);
+    return _ProfilSettingsGroup(
+      icon: 'apps',
+      title: l10n.ownerProfileGroupApp,
+      rows: rows,
+    );
   }
 
   Widget _buildLegalGroup({
@@ -426,7 +448,11 @@ class ProfileScreen extends ConsumerWidget {
       ),
     ];
 
-    return _ProfilSettingsGroup(icon: 'gavel', title: 'Pravno', rows: rows);
+    return _ProfilSettingsGroup(
+      icon: 'gavel',
+      title: l10n.ownerProfileGroupLegal,
+      rows: rows,
+    );
   }
 
   Widget _buildDangerGroup({
@@ -445,7 +471,7 @@ class ProfileScreen extends ConsumerWidget {
               const BbIcon(name: 'warning', size: 16, color: AppColors.error),
               const SizedBox(width: 8),
               Text(
-                'OPASNA ZONA',
+                l10n.dangerZone.toUpperCase(),
                 style: BBType.eyebrow(context).copyWith(color: AppColors.error),
               ),
             ],
@@ -461,19 +487,17 @@ class ProfileScreen extends ConsumerWidget {
                 onLogout: () async {
                   final confirmed = await showDialog<bool>(
                     context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text(l10n.logoutConfirmTitle),
-                      content: Text(l10n.logoutConfirmMessage),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: Text(l10n.cancel),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: Text(l10n.logout),
-                        ),
-                      ],
+                    builder: (ctx) => BbDialog(
+                      title: l10n.logoutConfirmTitle,
+                      body: l10n.logoutConfirmMessage,
+                      secondary: BbDialogAction(
+                        label: l10n.cancel,
+                        onPressed: () => Navigator.pop(ctx, false),
+                      ),
+                      primary: BbDialogAction(
+                        label: l10n.logout,
+                        onPressed: () => Navigator.pop(ctx, true),
+                      ),
                     ),
                   );
                   if (confirmed != true) return;
@@ -538,7 +562,7 @@ class _ProfilHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'RAČUN · VLASNIK',
+                l10n.ownerProfileEyebrow.toUpperCase(),
                 style: BBType.eyebrow(context).copyWith(color: c.primary),
               ),
               const SizedBox(height: 6),
@@ -612,6 +636,7 @@ class _ProfilIdentityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final rd = BbRedesignTokens.of(context);
     final c = BBColor.of(context);
+    final l10n = AppLocalizations.of(context);
     final location = _locationLabel();
 
     final identity = Row(
@@ -673,7 +698,7 @@ class _ProfilIdentityCard extends StatelessWidget {
                           BbIcon(name: 'verified', size: 14, color: c.primary),
                           const SizedBox(width: 4),
                           Text(
-                            'Domaćin',
+                            l10n.ownerProfileHostBadge,
                             style: BBType.caption(context).copyWith(
                               color: c.primary,
                               fontWeight: FontWeight.w700,
@@ -694,7 +719,7 @@ class _ProfilIdentityCard extends StatelessWidget {
                   if (memberSinceYear != null)
                     _MetaItem(
                       icon: 'calendar_month',
-                      label: 'Član od $memberSinceYear',
+                      label: l10n.ownerProfileMemberSince(memberSinceYear!),
                     ),
                 ],
               ),
@@ -706,15 +731,15 @@ class _ProfilIdentityCard extends StatelessWidget {
                   runSpacing: 6,
                   children: [
                     _VerifyChip(
-                      label: 'Email potvrđen',
+                      label: l10n.ownerProfileEmailVerified,
                       state: emailVerified
                           ? _VerifyState.done
                           : _VerifyState.pending,
                     ),
                     _VerifyChip(
                       label: phoneFilled
-                          ? 'Telefon dodan'
-                          : 'Telefon nedostaje',
+                          ? l10n.ownerProfilePhoneAdded
+                          : l10n.ownerProfilePhoneMissing,
                       state: phoneFilled
                           ? _VerifyState.done
                           : _VerifyState.pending,
@@ -892,7 +917,7 @@ class _CompletionPanel extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Dovršite profil',
+                l10n.ownerProfileCompleteHeading,
                 style: BBType.h3(context).copyWith(color: c.textPrimary),
               ),
               const SizedBox(height: 4),
@@ -901,7 +926,7 @@ class _CompletionPanel extends StatelessWidget {
                 child: Text(
                   stepsLeft == 0
                       ? l10n.ownerProfileSuggestionPhone
-                      : 'Još $stepsLeft koraka do 100%.',
+                      : l10n.ownerProfileCompleteRemaining(stepsLeft),
                   style: BBType.caption(
                     context,
                   ).copyWith(color: c.textSecondary),
@@ -915,7 +940,7 @@ class _CompletionPanel extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: () => context.push(OwnerRoutes.profileEdit),
                   icon: const Icon(Icons.arrow_forward, size: 16),
-                  label: const Text('Dovrši'),
+                  label: Text(l10n.ownerProfileCompleteCta),
                   style: FilledButton.styleFrom(
                     backgroundColor: c.primary,
                     foregroundColor: Colors.white,
@@ -982,7 +1007,7 @@ class _RadialGauge extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'ispunjeno',
+                AppLocalizations.of(context).ownerProfileCompleteFilledLabel,
                 style: BBType.caption(context).copyWith(color: c.textTertiary),
               ),
             ],
@@ -1039,6 +1064,14 @@ class _RadialGaugePainter extends CustomPainter {
 // BookBed Pro card — handoff §248 accent-left gradient with workspace_premium
 // icon + benefits + CTA. Trial-only.
 // ============================================================================
+/// Seam builder for the BookBed Pro trial card — lets golden/unit tests pump
+/// the real card (benefits grid + price + CTA) without providers or auth.
+@visibleForTesting
+Widget buildProCardForTest({
+  required AppLocalizations l10n,
+  required bool isMobile,
+}) => _ProfilProCard(l10n: l10n, isMobile: isMobile);
+
 class _ProfilProCard extends StatelessWidget {
   final AppLocalizations l10n;
   final bool isMobile;
@@ -1120,7 +1153,7 @@ class _ProfilProCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                'Probni period',
+                                l10n.ownerProfileTrialBadge,
                                 style: BBType.caption(context).copyWith(
                                   color: rd.statusPendingDeep,
                                   fontWeight: FontWeight.w700,
@@ -1138,6 +1171,14 @@ class _ProfilProCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        const SizedBox(height: _kProBenefitsTopGap),
+                        // Benefit grid — profile-premium.jsx §270. Static
+                        // feature copy (all l10n); 2-col mobile, wraps on
+                        // desktop. The handoff's trial-progress bar is
+                        // intentionally omitted: no trial-day-count field
+                        // exists on the model, so rendering "12 of 14 days"
+                        // would be fabricated data.
+                        _ProProBenefits(l10n: l10n, isMobile: isMobile),
                       ],
                     ),
                   ),
@@ -1146,15 +1187,45 @@ class _ProfilProCard extends StatelessWidget {
             ),
             if (isMobile) const SizedBox(height: 14),
             if (!isMobile) const SizedBox(width: 16),
-            Align(
-              alignment: isMobile
-                  ? Alignment.centerLeft
-                  : Alignment.centerRight,
-              child: BbButton(
-                label: l10n.ownerDrawerSubscription,
-                iconLeft: 'arrow_forward',
-                onPressed: () => context.push(OwnerRoutes.subscription),
-              ),
+            Column(
+              crossAxisAlignment: isMobile
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Price — profile-premium.jsx §296 (€19 / mjesečno).
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      l10n.subscriptionProPrice,
+                      style: BBType.h1(context).copyWith(
+                        color: c.textPrimary,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '/ ${l10n.subscriptionProPeriod}',
+                      style: BBType.caption(
+                        context,
+                      ).copyWith(color: c.textTertiary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: isMobile ? double.infinity : null,
+                  child: BbButton(
+                    label: l10n.ownerDrawerSubscription,
+                    iconLeft: 'arrow_forward',
+                    onPressed: () => context.push(OwnerRoutes.subscription),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -1162,6 +1233,81 @@ class _ProfilProCard extends StatelessWidget {
     );
   }
 }
+
+/// Benefit chips inside the BookBed Pro card — profile-premium.jsx §270.
+/// Four static feature labels, each with a `check_circle` success mark.
+/// 2-column grid on mobile; free-wrapping row on desktop.
+const double _kProBenefitsTopGap = 16;
+
+class _ProProBenefits extends StatelessWidget {
+  final AppLocalizations l10n;
+  final bool isMobile;
+
+  const _ProProBenefits({required this.l10n, required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final labels = <String>[
+      l10n.subscriptionFeatureUnlimitedProperties,
+      l10n.subscriptionFeatureAdvancedAnalytics,
+      l10n.subscriptionFeatureAiAssistant,
+      l10n.subscriptionFeaturePrioritySupport,
+    ];
+
+    Widget chip(String label, {bool tight = false}) => Row(
+      mainAxisSize: tight ? MainAxisSize.max : MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: BbIcon(name: 'check_circle', size: 16, color: c.success),
+        ),
+        const SizedBox(width: 7),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: BBType.body(
+              context,
+            ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
+    );
+
+    if (isMobile) {
+      // 2-column grid — handoff compact layout. LayoutBuilder gives the true
+      // in-card width so labels get their full share instead of a guessed
+      // constant; 2-line chips prevent mid-word truncation on narrow phones.
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final cellWidth = (constraints.maxWidth - _kProBenefitColGap) / 2;
+          return Wrap(
+            spacing: _kProBenefitColGap,
+            runSpacing: 8,
+            children: labels
+                .map(
+                  (l) =>
+                      SizedBox(width: cellWidth, child: chip(l, tight: true)),
+                )
+                .toList(),
+          );
+        },
+      );
+    }
+
+    // Desktop — free-wrapping single row (repeat(4, auto)).
+    return Wrap(
+      spacing: 18,
+      runSpacing: 8,
+      children: labels.map(chip).toList(),
+    );
+  }
+}
+
+const double _kProBenefitColGap = 18;
 
 // ============================================================================
 // Settings group wrapper — section header + BbCard with rows.
@@ -1410,7 +1556,12 @@ class _ProfilStatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
     final rd = BbRedesignTokens.of(context);
-    final tone = _resolveTone(c, rd);
+    // Minimalist pass 3: light collapses every stat tile to a single primary
+    // tint+glyph+spark; dark keeps the per-tone (status) resolution.
+    final bool isLight = Theme.of(context).brightness != Brightness.dark;
+    final tone = isLight
+        ? (bg: c.primary.withValues(alpha: 0.10), fg: c.primary)
+        : _resolveTone(c, rd);
     final hasDelta = stat.delta != null;
     final hasSpark = stat.spark != null && stat.spark!.isNotEmpty;
 

@@ -140,15 +140,23 @@ class NotificationService {
         }
       } else {
         // Fallback: Find each notification via collection group
-        for (final id in notificationIds) {
+        // Chunk array since whereIn supports up to 30 elements max
+        const chunkSize = 30;
+        for (var i = 0; i < notificationIds.length; i += chunkSize) {
+          final chunk = notificationIds.sublist(
+            i,
+            i + chunkSize > notificationIds.length
+                ? notificationIds.length
+                : i + chunkSize,
+          );
+
           final query = await _firestore
               .collectionGroup('notifications')
-              .where(FieldPath.documentId, isEqualTo: id)
-              .limit(1)
+              .where(FieldPath.documentId, whereIn: chunk)
               .get();
 
-          if (query.docs.isNotEmpty) {
-            batch.update(query.docs.first.reference, {'isRead': true});
+          for (final doc in query.docs) {
+            batch.update(doc.reference, {'isRead': true});
           }
         }
       }
@@ -232,33 +240,44 @@ class NotificationService {
       // Firestore batch limit is 500 operations
       const batchLimit = 500;
 
-      for (var i = 0; i < notificationIds.length; i += batchLimit) {
-        final batch = _firestore.batch();
-        final end = (i + batchLimit < notificationIds.length)
-            ? i + batchLimit
-            : notificationIds.length;
+      if (ownerId != null) {
+        // Optimize owner subcollection deletion directly without chunking loop logic internally
+        for (var i = 0; i < notificationIds.length; i += batchLimit) {
+          final batch = _firestore.batch();
+          final end = (i + batchLimit < notificationIds.length)
+              ? i + batchLimit
+              : notificationIds.length;
 
-        for (var j = i; j < end; j++) {
-          if (ownerId != null) {
-            // NEW STRUCTURE: Use subcollection path
+          for (var j = i; j < end; j++) {
             batch.delete(
               _notificationsCollection(ownerId).doc(notificationIds[j]),
             );
-          } else {
-            // Fallback: Find via collection group
-            final query = await _firestore
-                .collectionGroup('notifications')
-                .where(FieldPath.documentId, isEqualTo: notificationIds[j])
-                .limit(1)
-                .get();
-
-            if (query.docs.isNotEmpty) {
-              batch.delete(query.docs.first.reference);
-            }
           }
+          await batch.commit();
         }
+      } else {
+        // Fallback: Find via collection group
+        // Chunk array since whereIn supports up to 30 elements max
+        const chunkSize = 30;
+        for (var i = 0; i < notificationIds.length; i += chunkSize) {
+          final batch = _firestore.batch();
+          final chunk = notificationIds.sublist(
+            i,
+            i + chunkSize > notificationIds.length
+                ? notificationIds.length
+                : i + chunkSize,
+          );
 
-        await batch.commit();
+          final query = await _firestore
+              .collectionGroup('notifications')
+              .where(FieldPath.documentId, whereIn: chunk)
+              .get();
+
+          for (final doc in query.docs) {
+            batch.delete(doc.reference);
+          }
+          await batch.commit();
+        }
       }
     } catch (e) {
       throw NotificationException(

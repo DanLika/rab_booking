@@ -48,15 +48,11 @@ const Map<String, List<String>> _allowed = <String, List<String>>{
       <String>['Grid'],
   'lib/features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart':
       <String>['Grid'],
-  'lib/features/owner_dashboard/presentation/screens/profile_screen.dart':
-      <String>['Dovrši'],
   'lib/features/owner_dashboard/presentation/widgets/embed_code_generator_dialog.dart':
       <String>['Kopiraj'],
   'lib/features/subscription/screens/subscription_screen.dart': <String>[
     'Besplatno',
-    'OK',
     'Pro',
-    'Upgrade to Pro',
   ],
   // booking_widget_screen.dart — 'Cancel'/'Continue' localized to
   // WidgetTranslations in #768 (4-lang); entry dropped (ratcheted down).

@@ -877,7 +877,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       case DateStatus.available:
       case DateStatus.partialCheckIn:
       case DateStatus.partialCheckOut:
-        return colors.statusAvailableBorder;
+        // Handoff: neutral border on white available cells (light);
+        // dark keeps the teal border with its teal fill.
+        return colors.backgroundPrimary.computeLuminance() > 0.5
+            ? colors.borderDefault
+            : colors.statusAvailableBorder;
       case DateStatus.booked:
       case DateStatus.partialBoth:
         return colors.statusBookedBorder;

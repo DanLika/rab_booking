@@ -2,7 +2,36 @@
 
 All version history from v4.6 to v7.37.
 
-**Last Updated**: 2026-07-10 | **Version**: 7.38
+**Last Updated**: 2026-07-10 | **Version**: 7.39
+
+---
+
+**Changelog 7.39** (2026-07-10):
+
+### Notification Quiet Hours (Tihi sati) — data-honest omit built end-to-end (audit/quiet-hours)
+The handoff "Tihi sati" push-suppression control was previously omitted (no model,
+no enforcement). Now a full vertical slice, DEV-ONLY (bookbed-dev), enforcement
+included so the toggle actually suppresses:
+- **Model:** new freezed `QuietHours {enabled, start:'HH:mm', end:'HH:mm',
+  timezone}` nested in `NotificationPreferences` (default OFF, 22:00→07:00,
+  Europe/Zagreb), persisted at `users/{uid}/data/preferences`; copyWith on the
+  nested config (never reconstructed).
+- **Enforcement (PUSH ONLY):** `functions/src/notificationPreferences.ts`
+  `shouldSendPushNotification` now suppresses push during the window via new pure
+  predicates `isQuietNow`/`isWithinQuietWindow`/`nowMinutesInTz`
+  (DST-correct via `Intl.DateTimeFormat`, cross-midnight aware, fail-open on
+  disabled/malformed). Email + in-app/DB records untouched — nothing lost.
+- **UI:** "Tihi sati" card in `notification_settings_screen.dart` — enable switch
+  + native TimePicker start/end fields (12px inputs) gated on enabled, cross-
+  midnight hint; saves via existing repo + `ref.invalidate`.
+  `@visibleForTesting buildQuietHoursCard` seam.
+- **Rules:** no change needed (owner already writes `data/preferences`);
+  4-case `quiet_hours_prefs.test.ts` proves owner-write ALLOW / stranger DENY /
+  blocklist still bites.
+- **l10n:** 8 `quietHours*` keys (en+hr).
+- **Verify:** analyze 0 net-new; flutter test 1757 green (golden unchanged — no
+  seam for this screen); CF jest 475/24; rules emulator 245/16; CF unit 12/12.
+  Live web eyeball bookbed-dev. FROZEN: none. Not deployed (DEV-ONLY).
 
 ---
 

@@ -5664,6 +5664,48 @@ abstract class AppLocalizations {
   /// **'Receive notifications via SMS'**
   String get notificationSettingsSmsChannelDesc;
 
+  /// No description provided for @quietHoursTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet Hours'**
+  String get quietHoursTitle;
+
+  /// No description provided for @quietHoursEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Quiet Hours'**
+  String get quietHoursEnable;
+
+  /// No description provided for @quietHoursSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Silence push notifications during a set time window'**
+  String get quietHoursSubtitle;
+
+  /// No description provided for @quietHoursStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get quietHoursStart;
+
+  /// No description provided for @quietHoursEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get quietHoursEnd;
+
+  /// No description provided for @quietHoursInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'During quiet hours, push notifications are held back — you\'ll still receive emails and see everything when you open the app.'**
+  String get quietHoursInfo;
+
+  /// No description provided for @quietHoursCrossMidnight.
+  ///
+  /// In en, this message translates to:
+  /// **'This window runs overnight, from {start} to {end} the next morning.'**
+  String quietHoursCrossMidnight(String start, String end);
+
   /// No description provided for @notificationSettingsLoadError.
   ///
   /// In en, this message translates to:

@@ -389,24 +389,18 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     List<Map<String, dynamic>> bookings,
     DateRangeFilter dateRange,
   ) {
-    final Map<String, double> dailyRevenue = {};
+    final Map<DateTime, double> dailyRevenue = {};
 
     for (final booking in bookings) {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
-      final dayKey =
-          '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}-${checkIn.day.toString().padLeft(2, '0')}';
+      final dayKey = DateTime.utc(checkIn.year, checkIn.month, checkIn.day);
       final revenue = (booking['total_price'] as num?)?.toDouble() ?? 0.0;
       dailyRevenue[dayKey] = (dailyRevenue[dayKey] ?? 0.0) + revenue;
     }
 
     return dailyRevenue.entries.map((entry) {
-      final parts = entry.key.split('-');
-      final date = DateTime(
-        int.parse(parts[0]),
-        int.parse(parts[1]),
-        int.parse(parts[2]),
-      );
+      final date = DateTime(entry.key.year, entry.key.month, entry.key.day);
       return RevenueDataPoint(
         date: date,
         amount: entry.value,
@@ -419,25 +413,21 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     List<Map<String, dynamic>> bookings,
     DateRangeFilter dateRange,
   ) {
-    final Map<String, double> weeklyRevenue = {};
+    final Map<DateTime, double> weeklyRevenue = {};
 
     for (final booking in bookings) {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
       // Get week number (ISO week)
       final weekStart = checkIn.subtract(Duration(days: checkIn.weekday - 1));
-      final weekKey =
-          '${weekStart.year}-W${_getWeekNumber(weekStart).toString().padLeft(2, '0')}';
+      final weekKey = DateTime.utc(weekStart.year, weekStart.month, weekStart.day);
       final revenue = (booking['total_price'] as num?)?.toDouble() ?? 0.0;
       weeklyRevenue[weekKey] = (weeklyRevenue[weekKey] ?? 0.0) + revenue;
     }
 
     return weeklyRevenue.entries.map((entry) {
-      final parts = entry.key.split('-W');
-      final year = int.parse(parts[0]);
-      final week = int.parse(parts[1]);
-      // Approximate date for week start
-      final date = DateTime(year).add(Duration(days: (week - 1) * 7));
+      final date = DateTime(entry.key.year, entry.key.month, entry.key.day);
+      final week = _getWeekNumber(date);
       return RevenueDataPoint(date: date, amount: entry.value, label: 'W$week');
     }).toList()..sort((a, b) => a.date.compareTo(b.date));
   }
@@ -445,26 +435,22 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
   List<RevenueDataPoint> _generateMonthlyRevenue(
     List<Map<String, dynamic>> bookings,
   ) {
-    final Map<String, double> monthlyRevenue = {};
+    final Map<DateTime, double> monthlyRevenue = {};
 
     for (final booking in bookings) {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
-      final monthKey =
-          '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
+      final monthKey = DateTime.utc(checkIn.year, checkIn.month);
       final revenue = (booking['total_price'] as num?)?.toDouble() ?? 0.0;
       monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] ?? 0.0) + revenue;
     }
 
     return monthlyRevenue.entries.map((entry) {
-      final parts = entry.key.split('-');
-      final year = int.parse(parts[0]);
-      final month = int.parse(parts[1]);
-      final date = DateTime(year, month);
+      final date = DateTime(entry.key.year, entry.key.month);
       return RevenueDataPoint(
         date: date,
         amount: entry.value,
-        label: _getMonthLabel(month),
+        label: _getMonthLabel(date.month),
       );
     }).toList()..sort((a, b) => a.date.compareTo(b.date));
   }
@@ -488,23 +474,17 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
   List<BookingDataPoint> _generateDailyBookings(
     List<Map<String, dynamic>> bookings,
   ) {
-    final Map<String, int> dailyBookings = {};
+    final Map<DateTime, int> dailyBookings = {};
 
     for (final booking in bookings) {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
-      final dayKey =
-          '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}-${checkIn.day.toString().padLeft(2, '0')}';
+      final dayKey = DateTime.utc(checkIn.year, checkIn.month, checkIn.day);
       dailyBookings[dayKey] = (dailyBookings[dayKey] ?? 0) + 1;
     }
 
     return dailyBookings.entries.map((entry) {
-      final parts = entry.key.split('-');
-      final date = DateTime(
-        int.parse(parts[0]),
-        int.parse(parts[1]),
-        int.parse(parts[2]),
-      );
+      final date = DateTime(entry.key.year, entry.key.month, entry.key.day);
       return BookingDataPoint(
         date: date,
         count: entry.value,
@@ -516,22 +496,19 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
   List<BookingDataPoint> _generateWeeklyBookings(
     List<Map<String, dynamic>> bookings,
   ) {
-    final Map<String, int> weeklyBookings = {};
+    final Map<DateTime, int> weeklyBookings = {};
 
     for (final booking in bookings) {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
       final weekStart = checkIn.subtract(Duration(days: checkIn.weekday - 1));
-      final weekKey =
-          '${weekStart.year}-W${_getWeekNumber(weekStart).toString().padLeft(2, '0')}';
+      final weekKey = DateTime.utc(weekStart.year, weekStart.month, weekStart.day);
       weeklyBookings[weekKey] = (weeklyBookings[weekKey] ?? 0) + 1;
     }
 
     return weeklyBookings.entries.map((entry) {
-      final parts = entry.key.split('-W');
-      final year = int.parse(parts[0]);
-      final week = int.parse(parts[1]);
-      final date = DateTime(year).add(Duration(days: (week - 1) * 7));
+      final date = DateTime(entry.key.year, entry.key.month, entry.key.day);
+      final week = _getWeekNumber(date);
       return BookingDataPoint(date: date, count: entry.value, label: 'W$week');
     }).toList()..sort((a, b) => a.date.compareTo(b.date));
   }
@@ -539,25 +516,21 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
   List<BookingDataPoint> _generateMonthlyBookings(
     List<Map<String, dynamic>> bookings,
   ) {
-    final Map<String, int> monthlyBookings = {};
+    final Map<DateTime, int> monthlyBookings = {};
 
     for (final booking in bookings) {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
-      final monthKey =
-          '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
+      final monthKey = DateTime.utc(checkIn.year, checkIn.month);
       monthlyBookings[monthKey] = (monthlyBookings[monthKey] ?? 0) + 1;
     }
 
     return monthlyBookings.entries.map((entry) {
-      final parts = entry.key.split('-');
-      final year = int.parse(parts[0]);
-      final month = int.parse(parts[1]);
-      final date = DateTime(year, month);
+      final date = DateTime(entry.key.year, entry.key.month);
       return BookingDataPoint(
         date: date,
         count: entry.value,
-        label: _getMonthLabel(month),
+        label: _getMonthLabel(date.month),
       );
     }).toList()..sort((a, b) => a.date.compareTo(b.date));
   }

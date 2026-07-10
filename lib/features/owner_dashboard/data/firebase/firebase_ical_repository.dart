@@ -32,15 +32,20 @@ class FirebaseIcalRepository {
 
       if (propertyIds.isEmpty) return [];
 
-      // Query feeds from each property's subcollection
-      final List<IcalFeed> allFeeds = [];
-      for (final propertyId in propertyIds) {
-        final feedsSnapshot = await _firestore
+      // Query feeds from each property's subcollection concurrently
+      final futures = propertyIds.map(
+        (propertyId) => _firestore
             .collection('properties')
             .doc(propertyId)
             .collection('ical_feeds')
-            .get();
-        allFeeds.addAll(feedsSnapshot.docs.map(IcalFeed.fromFirestore));
+            .get(),
+      );
+
+      final snapshots = await Future.wait(futures);
+
+      final List<IcalFeed> allFeeds = [];
+      for (final snapshot in snapshots) {
+        allFeeds.addAll(snapshot.docs.map(IcalFeed.fromFirestore));
       }
 
       return allFeeds;
@@ -79,15 +84,20 @@ class FirebaseIcalRepository {
 
           if (propertyIds.isEmpty) return <IcalFeed>[];
 
-          // Query feeds from each property's subcollection
-          final List<IcalFeed> allFeeds = [];
-          for (final propertyId in propertyIds) {
-            final feedsSnapshot = await _firestore
+          // Query feeds from each property's subcollection concurrently
+          final futures = propertyIds.map(
+            (propertyId) => _firestore
                 .collection('properties')
                 .doc(propertyId)
                 .collection('ical_feeds')
-                .get();
-            allFeeds.addAll(feedsSnapshot.docs.map(IcalFeed.fromFirestore));
+                .get(),
+          );
+
+          final snapshots = await Future.wait(futures);
+
+          final List<IcalFeed> allFeeds = [];
+          for (final snapshot in snapshots) {
+            allFeeds.addAll(snapshot.docs.map(IcalFeed.fromFirestore));
           }
 
           return allFeeds;
@@ -344,16 +354,21 @@ class FirebaseIcalRepository {
 
       if (propertyIds.isEmpty) return [];
 
-      // Query events from each property's subcollection
-      final List<IcalEvent> allEvents = [];
-      for (final propertyId in propertyIds) {
-        final eventsSnapshot = await _firestore
+      // Query events from each property's subcollection concurrently
+      final futures = propertyIds.map(
+        (propertyId) => _firestore
             .collection('properties')
             .doc(propertyId)
             .collection('ical_events')
             .orderBy('start_date', descending: true)
-            .get();
-        allEvents.addAll(eventsSnapshot.docs.map(IcalEvent.fromFirestore));
+            .get(),
+      );
+
+      final snapshots = await Future.wait(futures);
+
+      final List<IcalEvent> allEvents = [];
+      for (final snapshot in snapshots) {
+        allEvents.addAll(snapshot.docs.map(IcalEvent.fromFirestore));
       }
 
       // Sort by start date descending (most recent first)

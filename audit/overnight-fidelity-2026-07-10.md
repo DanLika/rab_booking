@@ -635,3 +635,27 @@ read PNGs back → both TextFields show clean **12px rounded corners** (light: w
 ### Outcome
 Dev-only, no deploy. iOS plist untouched. 3 files changed, all input-radius token
 swaps at the helper/theme level.
+
+---
+
+## Iteration 15 — units master-panel PropertyTree flat-row rework (#845 deferred)
+
+**Screen:** `unified_unit_hub_screen.dart` `_buildPropertySection` (owner units master panel — desktop sidebar + mobile endDrawer). **Handoff:** `units.jsx` `PropertyTree`.
+
+**Root cause (from iter 6 / #850):** the property header was an `ExpansionTile` that packed the property name into a fixed `title` slot competing with a `trailing` 3-icon action cluster (edit/delete/add) + chevron. A long name had no room → wrapped vertically; #850 band-aided with `maxLines:1`+ellipsis but the structural competition remained.
+
+**Fix (structural, not band-aid):** replaced the `ExpansionTile` with the handoff flat-row layout — a real `Row`: `[chevron][domain icon][name (Expanded)][count][edit][delete][add]`. The name now gets true `Expanded` priority so it ellipsizes cleanly and the fixed-width action cluster never steals its width. Expand/collapse, all three actions, and selection wiring unchanged.
+
+### Structural changes
+- New `@visibleForTesting PropertyTreeHeader` (StatelessWidget) — the flat toggle row per units.jsx: chevron (`AnimatedRotation`, -0.25 turn collapsed) + `domain` icon + `Expanded` name (maxLines:1/ellipsis, kept from #850) + count label + fixed 3×28px `IconButton` action cluster.
+- New private `_PropertyTreeSection` (StatefulWidget) — owns expand state (default expanded, matching old `initiallyExpanded:true`); renders header + `AnimatedCrossFade` children (200ms).
+- `_buildPropertySection` now composes these instead of `ExpansionTile`+`Theme(dividerColor)` wrapper. Container/border/`_kMasterRowRadius`/`context.gradients.cardBackground` grouping preserved. #845 tokens (badge/subtitle count/3px selected accent) unaffected (they live in `_buildReorderableUnitList`/`UnitTreeItem`, untouched).
+- No new strings (reused existing `unitHub*` l10n); no new deps.
+
+### Verification
+- `dart format`: clean. `flutter analyze` (target file): **0 issues**.
+- New seam test `property_tree_header_layout_test.dart` — pumps real `PropertyTreeHeader` with a pathologically long name at **320/390/768/1440 × light/dark** (8 cells): asserts no RenderFlex overflow, name ellipsizes on one row, 3 action icons present; + toggle-fires, collapsed-chevron, edit/delete/add-fire. **11/11 green.** RED on main (symbol did not exist).
+- Full suite: **1697 passed** (`All tests passed!`). Golden `--tags golden`: **56 passed**.
+- Live web eyeball (`flutter run -d chrome` main_dev, :8099, logged in): desktop sidebar renders the flat PropertyTree row — chevron-left toggle + domain icon + ellipsized name + right-aligned edit/delete/add cluster, single row, no vertical wrap. Matches units.jsx. **Verdict: PASS.** (Mobile 320/390 covered by seam test; CanvasKit resize-protocol blocks live mobile resize per known memory.)
+
+**Defects: 0.** Dev-only, no deploy. FROZEN (Cjenovnik grid, publish flow) untouched. iOS plist untouched.

@@ -653,7 +653,17 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
   }
 
-  /// Property section with expandable units
+  /// Property section with expandable units.
+  ///
+  /// Handoff units.jsx `PropertyTree`: the property header is a FLAT toggle row
+  /// (`[chevron][domain icon][name (flex:1)][count][actions]`), NOT an
+  /// `ExpansionTile`. The old ExpansionTile packed the name into a fixed `title`
+  /// slot competing with a `trailing` 3-icon action cluster, so a long name had
+  /// no room and wrapped (band-aided with ellipsis in iter 6/#850). Restructured
+  /// to a real `Row` where the name gets true `Expanded` priority and the action
+  /// cluster is fixed-width trailing — the name shrinks/ellipsizes cleanly, no
+  /// vertical wrap at any width. Expand/collapse, actions, and selection wiring
+  /// are unchanged.
   Widget _buildPropertySection(
     ThemeData theme,
     bool isDark, {
@@ -672,160 +682,76 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         borderRadius: BorderRadius.circular(_kMasterRowRadius),
         border: Border.all(color: context.gradients.sectionBorder),
       ),
-      child: Theme(
-        data: theme.copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          initiallyExpanded: true,
-          iconColor: theme.colorScheme.primary,
-          collapsedIconColor: theme.colorScheme.primary,
-          tilePadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
-          ), // Consistent sidebar padding
-          childrenPadding: const EdgeInsets.only(bottom: 8),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.apartment,
-              color: theme.colorScheme.primary,
-              size: 20,
-            ),
+      child: _PropertyTreeSection(
+        header: (expanded, onToggle) => PropertyTreeHeader(
+          theme: theme,
+          propertyName: property.name,
+          canDelete: units.isEmpty,
+          expanded: expanded,
+          onToggle: onToggle,
+          editTooltip: l10n.unitHubEditProperty,
+          addTooltip: l10n.unitHubAddUnit,
+          deleteTooltip: units.isEmpty
+              ? l10n.unitHubDeleteProperty
+              : l10n.unitHubDeleteAllUnitsFirst,
+          unitsCountLabel: l10n.unitHubUnitsCount(units.length),
+          onEdit: () => context.push(
+            OwnerRoutes.propertyEdit.replaceAll(':id', property.id),
           ),
-          // maxLines:1 + ellipsis so a long property name stays on one row and
-          // does not wrap vertically under the fixed 3-icon action cluster in
-          // `trailing` (pre-existing width-constraint bug, deferred audit iter 6).
-          title: Text(
-            property.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+          onDelete: () =>
+              _confirmDeleteProperty(context, property, units.length),
+          onAdd: () => context.push(
+            '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
           ),
-          subtitle: Text(
-            l10n.unitHubUnitsCount(units.length),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Horizontal row of action buttons (more compact)
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 16),
-                  onPressed: () {
-                    context.push(
-                      OwnerRoutes.propertyEdit.replaceAll(':id', property.id),
-                    );
-                  },
-                  tooltip: l10n.unitHubEditProperty,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+        ),
+        children: [
+          if (units.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ),
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: IconButton(
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: 16,
-                    color: units.isEmpty
-                        ? theme.colorScheme.error
-                        : theme.colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.5,
-                          ),
-                  ),
-                  onPressed: () =>
-                      _confirmDeleteProperty(context, property, units.length),
-                  tooltip: units.isEmpty
-                      ? l10n.unitHubDeleteProperty
-                      : l10n.unitHubDeleteAllUnitsFirst,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ),
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: IconButton(
-                  icon: const Icon(Icons.add_circle_outline, size: 16),
-                  onPressed: () {
-                    context.push(
-                      '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
-                    );
-                  },
-                  tooltip: l10n.unitHubAddUnit,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.expand_more, size: 20),
-            ],
-          ),
-          children: [
-            if (units.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          l10n.unitHubNoUnitsInProperty,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.unitHubNoUnitsInProperty,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      BbButton(
-                        label: l10n.unitHubAdd,
-                        size: BbButtonSize.sm,
-                        onPressed: () {
-                          context.push(
-                            '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                    ),
+                    BbButton(
+                      label: l10n.unitHubAdd,
+                      size: BbButtonSize.sm,
+                      onPressed: () {
+                        context.push(
+                          '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
+                        );
+                      },
+                    ),
+                  ],
                 ),
-              )
-            else
-              _buildReorderableUnitList(
-                theme,
-                isDark,
-                units: units,
-                property: property,
-                onUnitSelected: onUnitSelected,
               ),
-          ],
-        ),
+            )
+          else
+            _buildReorderableUnitList(
+              theme,
+              isDark,
+              units: units,
+              property: property,
+              onUnitSelected: onUnitSelected,
+            ),
+        ],
       ),
     );
   }
@@ -1934,6 +1860,198 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+// ============================================================================
+// PROPERTY TREE (handoff units.jsx PropertyTree flat-row layout)
+// ============================================================================
+
+/// Collapsible property group. Owns expand/collapse state (default expanded,
+/// matching the old `ExpansionTile(initiallyExpanded: true)`) and renders the
+/// flat [PropertyTreeHeader] toggle row above its animated children.
+class _PropertyTreeSection extends StatefulWidget {
+  const _PropertyTreeSection({required this.header, required this.children});
+
+  /// Builds the header given the current expanded state + a toggle callback.
+  final Widget Function(bool expanded, VoidCallback onToggle) header;
+  final List<Widget> children;
+
+  @override
+  State<_PropertyTreeSection> createState() => _PropertyTreeSectionState();
+}
+
+class _PropertyTreeSectionState extends State<_PropertyTreeSection> {
+  bool _expanded = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        widget.header(_expanded, () => setState(() => _expanded = !_expanded)),
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 200),
+          firstCurve: Curves.easeInOut,
+          secondCurve: Curves.easeInOut,
+          sizeCurve: Curves.easeInOut,
+          crossFadeState: _expanded
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
+          firstChild: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: widget.children,
+            ),
+          ),
+          secondChild: const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
+  }
+}
+
+/// Flat property-header row per handoff units.jsx `PropertyTree`.
+///
+/// `[chevron][domain icon][name (Expanded)][count][edit][delete][add]`. The
+/// name gets true `Expanded` priority so it shrinks/ellipsizes cleanly instead
+/// of wrapping vertically under the fixed-width trailing action cluster — this
+/// is the structural fix for the wrap bug band-aided with ellipsis in
+/// iter 6/#850. Tapping anywhere on the name/chevron region toggles expand.
+@visibleForTesting
+class PropertyTreeHeader extends StatelessWidget {
+  const PropertyTreeHeader({
+    super.key,
+    required this.theme,
+    required this.propertyName,
+    required this.canDelete,
+    required this.expanded,
+    required this.onToggle,
+    required this.editTooltip,
+    required this.deleteTooltip,
+    required this.addTooltip,
+    required this.unitsCountLabel,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onAdd,
+  });
+
+  final ThemeData theme;
+  final String propertyName;
+  final bool canDelete;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final String editTooltip;
+  final String deleteTooltip;
+  final String addTooltip;
+  final String unitsCountLabel;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = theme.colorScheme;
+    return Row(
+      children: [
+        // Toggle region: chevron + domain icon + name. Expanded so the name
+        // owns all slack width and never competes with the action cluster.
+        Expanded(
+          child: InkWell(
+            onTap: onToggle,
+            borderRadius: BorderRadius.circular(_kMasterRowRadius),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+              child: Row(
+                children: [
+                  AnimatedRotation(
+                    duration: const Duration(milliseconds: 200),
+                    turns: expanded ? 0 : -0.25,
+                    child: Icon(
+                      Icons.expand_more,
+                      size: 18,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(Icons.domain, size: 16, color: cs.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      propertyName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  // Handoff count badge (bb-tnum). Fixed intrinsic width.
+                  Text(
+                    unitsCountLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // Fixed-width action cluster — never steals width from the name.
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  onPressed: onEdit,
+                  tooltip: editTooltip,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: 16,
+                    color: canDelete
+                        ? cs.error
+                        : cs.onSurfaceVariant.withValues(alpha: 0.5),
+                  ),
+                  onPressed: onDelete,
+                  tooltip: deleteTooltip,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: IconButton(
+                  icon: const Icon(Icons.add_circle_outline, size: 16),
+                  onPressed: onAdd,
+                  tooltip: addTooltip,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

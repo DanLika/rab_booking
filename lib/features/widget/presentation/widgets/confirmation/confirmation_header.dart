@@ -123,20 +123,69 @@ class ConfirmationHeader extends ConsumerWidget {
     );
   }
 
+  /// Handoff waiting-state mark (widget-error.jsx tone pattern): white disc
+  /// with a 2px tone border + two soft tone rings. Used for the not-yet-final
+  /// states (pending approval, bank transfer awaited) — amber "in progress".
+  Widget _buildWaitingMark(double iconSize, IconData icon) {
+    const Color fg = Color(0xFFE69A28); // handoff --warn-fg
+    const Color ringSoft = Color(0x29FFB84D); // rgba(255,184,77,.16)
+    const Color ringMedium = Color(0x1AFFB84D); // rgba(255,184,77,.10)
+    final double disc = iconSize + 24;
+    final double ring = disc + 20;
+    return SizedBox(
+      width: ring + 20,
+      height: ring + 20,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: ring + 20,
+            height: ring + 20,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: ringMedium,
+            ),
+          ),
+          Container(
+            width: ring,
+            height: ring,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: ringSoft,
+            ),
+          ),
+          Container(
+            width: disc,
+            height: disc,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border: Border.all(color: fg, width: 2),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A141E32), // rgba(20,30,50,.10)
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Icon(icon, size: disc * 0.42, color: fg),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _getConfirmationIcon(double iconSize) {
     switch (paymentMethod) {
       case 'stripe':
         return _buildSuccessMark(iconSize);
       case 'bank_transfer':
-        return Icon(
-          Icons.schedule,
-          size: iconSize,
-          color: colors.textSecondary,
-        );
+        return _buildWaitingMark(iconSize, Icons.schedule_rounded);
       case 'pay_on_arrival':
         return _buildSuccessMark(iconSize);
       case 'pending':
-        return Icon(Icons.pending, size: iconSize, color: colors.textSecondary);
+        return _buildWaitingMark(iconSize, Icons.hourglass_top_rounded);
       default:
         return _buildSuccessMark(iconSize);
     }

@@ -6,7 +6,6 @@ import '../providers/theme_provider.dart';
 import '../mixins/theme_detection_mixin.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/design/tokens.dart';
-import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/utils/web_utils.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../shared/models/booking_model.dart';
@@ -278,7 +277,6 @@ class _BookingConfirmationScreenState
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
     final tr = WidgetTranslations.of(context, ref);
-    final rd = BbRedesignTokens.of(context);
     final c = BBColor.of(context);
 
     // Extract widget settings values safely to avoid null check operator errors
@@ -289,10 +287,13 @@ class _BookingConfirmationScreenState
     final allowGuestCancellation =
         widgetSettings?.allowGuestCancellation == true;
 
-    // Mint surface validates BbRedesignTokens.mintWidget end-to-end (handoff #3DD9B0).
-    // In dark mode we keep pure black to preserve the original screen's design intent
-    // so the mint accent stays a success cue rather than a page wash.
-    final backgroundColor = isDarkMode ? Colors.black : rd.mintWidget;
+    // Handoff widget-confirmation.jsx: plain page surface — the mint accent
+    // lives in the success mark and deposit band, not as a page wash. (The
+    // earlier full-bleed rd.mintWidget background was a one-off token
+    // validation, retired 2026-07-10.)
+    final backgroundColor = isDarkMode
+        ? Colors.black
+        : colors.backgroundPrimary;
 
     return Scaffold(
       backgroundColor: backgroundColor,

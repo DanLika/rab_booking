@@ -122,7 +122,13 @@ class ProfileScreen extends ConsumerWidget {
                         : l10n.ownerProfileNoEmail);
                 final screenWidth = MediaQuery.of(context).size.width;
                 final isMobile = screenWidth < 600;
-                final isDesktop = screenWidth >= 1024;
+                // Column-count reflow (single vs 2-col settings), NOT a
+                // typography/padding pivot — so this stays a local reflow const,
+                // not the canonical 1200 desktop breakpoint (content is clamped
+                // to 1100 via BBContentMaxWidth, so 1200 would never trigger the
+                // 2-col layout the handoff wants). Per audit/breakpoint-decide.
+                const kProfileTwoColReflow = 1024.0;
+                final isDesktop = screenWidth >= kProfileTwoColReflow;
                 final completionPercentage =
                     userDataAsync.value?.profile.completionPercentage ??
                     _calculateCompletionFromUserModel(authState.userModel);
@@ -180,7 +186,9 @@ class ProfileScreen extends ConsumerWidget {
                                     isMobile: isMobile,
                                     isAnonymous: isAnonymous,
                                   ),
-                                  SizedBox(height: isMobile ? 14 : 18),
+                                  SizedBox(
+                                    height: isMobile ? BBSpace.sm : BBSpace.md,
+                                  ),
 
                                   // Identity command card
                                   _ProfilIdentityCard(
@@ -197,7 +205,9 @@ class ProfileScreen extends ConsumerWidget {
                                     completionPercentage: completionPercentage,
                                     isMobile: isMobile,
                                   ),
-                                  SizedBox(height: isMobile ? 14 : 18),
+                                  SizedBox(
+                                    height: isMobile ? BBSpace.sm : BBSpace.md,
+                                  ),
 
                                   // Host-trust KPI strip — profile-premium.jsx
                                   // §405 PFP_STATS row (rating / response rate /
@@ -209,7 +219,11 @@ class ProfileScreen extends ConsumerWidget {
                                   // partial 1-tile row that looks broken.
                                   if (!isAnonymous) ...[
                                     const _ProfilStatStrip(),
-                                    SizedBox(height: isMobile ? 14 : 18),
+                                    SizedBox(
+                                      height: isMobile
+                                          ? BBSpace.sm
+                                          : BBSpace.md,
+                                    ),
                                   ],
 
                                   // Subscription banner — trial-only (unchanged condition)
@@ -220,7 +234,11 @@ class ProfileScreen extends ConsumerWidget {
                                       l10n: l10n,
                                       isMobile: isMobile,
                                     ),
-                                    SizedBox(height: isMobile ? 14 : 18),
+                                    SizedBox(
+                                      height: isMobile
+                                          ? BBSpace.sm
+                                          : BBSpace.md,
+                                    ),
                                   ],
 
                                   // Settings groups — desktop = 2-col, mobile/tablet = single column.

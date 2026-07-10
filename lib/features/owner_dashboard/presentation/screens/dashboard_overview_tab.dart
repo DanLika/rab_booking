@@ -812,18 +812,20 @@ class DashboardOverviewTab extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(child: bookingsCard),
-                const SizedBox(width: _kGap10),
+                // Match the tablet/desktop KPI gutter (BBSpace.sm) so the
+                // 2×2 mobile grid uses one consistent card gutter (was 10).
+                const SizedBox(width: BBSpace.sm),
                 Expanded(child: avgPriceCard),
               ],
             ),
           ),
-          const SizedBox(height: _kGap10),
+          const SizedBox(height: BBSpace.sm),
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(child: newGuestsCard),
-                const SizedBox(width: _kGap10),
+                const SizedBox(width: BBSpace.sm),
                 Expanded(child: avgRatingCard),
               ],
             ),

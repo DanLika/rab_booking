@@ -694,7 +694,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           deleteTooltip: units.isEmpty
               ? l10n.unitHubDeleteProperty
               : l10n.unitHubDeleteAllUnitsFirst,
-          unitsCountLabel: l10n.unitHubUnitsCount(units.length),
+          // Handoff PropertyTree count = bare tnum number (not "N jedinica"): the
+          // verbose label crushed the Expanded name to ~22px on the narrow mobile
+          // panel (edit/delete/add cluster already claims 84px). Total is in the
+          // panel subtitle; units are listed directly below.
+          unitsCountLabel: '${units.length}',
           onEdit: () => context.push(
             OwnerRoutes.propertyEdit.replaceAll(':id', property.id),
           ),

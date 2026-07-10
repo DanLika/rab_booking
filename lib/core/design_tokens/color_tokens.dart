@@ -265,6 +265,19 @@ abstract class WidgetColorScheme {
   List<BoxShadow> get shadowMedium;
   List<BoxShadow> get shadowStrong;
   List<BoxShadow> get shadowHover;
+
+  // ---- Mint selection ladder (handoff widget-calendar.jsx) ----
+  // MinimalistColorSchemeAdapter (the active widget scheme) overrides these
+  // with the mint palette; Light/Dark schemes map them to their existing
+  // selected tokens. Values-only, no geometry.
+  /// Border for selected range endpoints (check-in / check-out day).
+  Color get statusSelectedRangeBorder;
+
+  /// Fill tint for days inside a selected range.
+  Color get statusInRangeBackground;
+
+  /// Soft glow cast by a selected day cell.
+  List<BoxShadow> get selectedGlowShadow;
 }
 
 // ============================================================================
@@ -371,6 +384,12 @@ class LightColorScheme implements WidgetColorScheme {
   Color get statusBlockedBackground => ColorTokens.blockedLight;
   @override
   Color get statusBlockedBorder => ColorTokens.grey400;
+  @override
+  Color get statusSelectedRangeBorder => statusSelectedBorder;
+  @override
+  Color get statusInRangeBackground => statusSelectedBackground;
+  @override
+  List<BoxShadow> get selectedGlowShadow => shadowLight;
   @override
   Color get statusSelectedBackground => ColorTokens.azure100;
   @override
@@ -583,6 +602,12 @@ class DarkColorScheme implements WidgetColorScheme {
   Color get statusBlockedBackground => ColorTokens.blockedDark;
   @override
   Color get statusBlockedBorder => ColorTokens.slate500;
+  @override
+  Color get statusSelectedRangeBorder => statusSelectedBorder;
+  @override
+  Color get statusInRangeBackground => statusSelectedBackground;
+  @override
+  List<BoxShadow> get selectedGlowShadow => shadowLight;
   @override
   Color get statusSelectedBackground => ColorTokens.azure900;
   @override

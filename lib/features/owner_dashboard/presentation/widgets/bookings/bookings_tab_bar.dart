@@ -31,14 +31,17 @@ class BookingsTabBar extends ConsumerWidget {
       ('imported', l10n.bookingsTabImported), // Special marker for imported
     ];
 
-    // F-63-04: Wrap allows tabs to flow to a second line under large-text
-    // accessibility (system font_scale=2.0) and long HR translations
-    // ("Otkazane" → "O…" clip already visible at 1.0× per audit/63).
-    return Padding(
+    // Handoff RZPTabs: a SINGLE horizontally-scrollable row of tabs (mobile
+    // wraps them in `overflow-x: auto`), never a multi-line Wrap. The old Wrap
+    // stacked the 6 chips into a vertical pile on the narrow mobile ledger
+    // header (they share the row with the Filteri button) — the "ugly" look.
+    // Horizontal scroll also handles large-text a11y (font_scale=2.0) + long HR
+    // labels ("Otkazane") by scrolling, not clipping — supersedes F-63-04 Wrap.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.only(bottom: 16, left: 4, right: 4),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: List.generate(tabs.length, (index) {
           final tabValue = tabs[index].$1;
           final label = tabs[index].$2;
@@ -55,22 +58,25 @@ class BookingsTabBar extends ConsumerWidget {
             isSelected = !filters.showImportedOnly && filters.status == status;
           }
 
-          return _TabButton(
-            label: label,
-            isSelected: isSelected,
-            status: status,
-            isImportedTab: isImportedTab,
-            onTap: () {
-              if (isImportedTab) {
-                ref
-                    .read(bookingsFiltersNotifierProvider.notifier)
-                    .setShowImportedOnly(true);
-              } else {
-                ref
-                    .read(bookingsFiltersNotifierProvider.notifier)
-                    .setStatus(status);
-              }
-            },
+          return Padding(
+            padding: EdgeInsets.only(right: index == tabs.length - 1 ? 0 : 8),
+            child: _TabButton(
+              label: label,
+              isSelected: isSelected,
+              status: status,
+              isImportedTab: isImportedTab,
+              onTap: () {
+                if (isImportedTab) {
+                  ref
+                      .read(bookingsFiltersNotifierProvider.notifier)
+                      .setShowImportedOnly(true);
+                } else {
+                  ref
+                      .read(bookingsFiltersNotifierProvider.notifier)
+                      .setStatus(status);
+                }
+              },
+            ),
           );
         }),
       ),

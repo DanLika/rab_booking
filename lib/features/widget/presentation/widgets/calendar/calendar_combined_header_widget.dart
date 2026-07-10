@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/web_utils.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
@@ -167,6 +167,23 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
 }
 
 /// Language switcher button with popup menu
+/// Seam builder for the widget language switcher (globe icon + code chip).
+/// Lets tests pump the control in isolation without the full calendar header.
+@visibleForTesting
+Widget buildWidgetLanguageSwitcherForTest({
+  required WidgetColorScheme colors,
+  bool isSmallScreen = false,
+  bool isTinyScreen = false,
+  bool isDesktop = true,
+  double containerSize = 48.0,
+}) => _LanguageSwitcherButton(
+  colors: colors,
+  isSmallScreen: isSmallScreen,
+  isTinyScreen: isTinyScreen,
+  isDesktop: isDesktop,
+  containerSize: containerSize,
+);
+
 class _LanguageSwitcherButton extends ConsumerWidget {
   final WidgetColorScheme colors;
   final bool isSmallScreen;
@@ -195,6 +212,9 @@ class _LanguageSwitcherButton extends ConsumerWidget {
   static const _menuItemFontSize = 18.0;
   static const _menuItemSpacing = 12.0;
   static const _checkIconSize = 18.0;
+  static const _codeGap = 4.0;
+  static const _codeFontDelta = 2.0;
+  static const _codeLetterSpacing = 0.4;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -225,9 +245,18 @@ class _LanguageSwitcherButton extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Handoff (widget-calendar.jsx WidgetToolbar): globe/translate icon
+            // + uppercase 2-letter language code chip, near-black ink.
+            Icon(Icons.language, size: fontSize, color: colors.textPrimary),
+            const SizedBox(width: _codeGap),
             Text(
-              _getFlagEmoji(currentLanguage),
-              style: TextStyle(fontSize: fontSize),
+              _getLanguageCode(currentLanguage),
+              style: TextStyle(
+                fontSize: fontSize - _codeFontDelta,
+                fontWeight: FontWeight.w700,
+                letterSpacing: _codeLetterSpacing,
+                color: colors.textPrimary,
+              ),
             ),
             Icon(
               Icons.arrow_drop_down,
@@ -285,19 +314,20 @@ class _LanguageSwitcherButton extends ConsumerWidget {
     );
   }
 
-  String _getFlagEmoji(String languageCode) {
+  /// Uppercase 2-letter language code shown next to the globe icon on the
+  /// trigger button (handoff widget-calendar.jsx). Language-neutral — no l10n.
+  String _getLanguageCode(String languageCode) {
     switch (languageCode) {
       case 'hr':
-        return '🇭🇷';
       case 'en':
-        return '🇬🇧';
       case 'de':
-        return '🇩🇪';
       case 'it':
-        return '🇮🇹';
+        return languageCode.toUpperCase();
       default:
-        // Use globe emoji for unknown languages (neutral fallback)
-        return '🌐';
+        // Neutral fallback for unknown codes.
+        return languageCode.isEmpty
+            ? '--'
+            : languageCode.substring(0, 1).toUpperCase();
     }
   }
 

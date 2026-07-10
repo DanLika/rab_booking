@@ -31,10 +31,16 @@ import '../../widgets/owner_app_drawer.dart';
 const double _kDialogMaxWidth = 500.0;
 const double _kDialogWidthFactor = 0.9;
 
+/// Flat status-hero tints (flat-chrome; supersedes the retired purple gradient).
+const double _kHeroTintAlpha = 0.08;
+const double _kHeroIconTintAlpha = 0.16;
+
 /// iCal import sync — manages external calendar feeds (Booking.com, Airbnb, …).
 ///
 /// Refactored onto the redesign Bb* foundation (PR redesign/r3-embed-ical).
-/// Hero card uses the brand-primary gradient + `rd.purpleGlow`; sections use
+/// Status hero is a FLAT tinted card (flat-chrome, CHANGELOG 7.23 — the
+/// retired saturated brand-primary gradient/purpleGlow is gone); the "Dodaj
+/// feed" CTA lives in [IcalSyncPremiumHeader]. Sections use
 /// [BbCard] with [BbSectionHeader]; dialog form swaps to [BbInput] +
 /// [BbSwitch] + [BbButton]. Parent [Scaffold] + [CommonAppBar] +
 /// [OwnerAppDrawer] are deliberately not swapped (deferred to the shell-swap
@@ -203,6 +209,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           totalFeeds: totalFeeds,
           activeFeeds: activeFeeds,
           errorFeeds: errorFeeds,
+          onAddFeed: () => _showAddFeedDialog(context),
         ),
         const SizedBox(height: BBSpace.md),
         hero,
@@ -230,11 +237,13 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     );
   }
 
-  /// Hero — brand-primary gradient surface with status pill, description and
-  /// CTA. Uses [BbRedesignTokens.brandPrimaryGradient] + `rd.purpleGlow` for
-  /// the floating console feel; CTA is a `BbButton(onGradientSolid)`.
+  /// Hero — FLAT status card (flat-chrome decision, CHANGELOG 7.23; supersedes
+  /// the retired saturated brand-primary gradient + purpleGlow). Mirrors the
+  /// handoff `ical.jsx` FeedCard status row: tinted flat surface keyed to the
+  /// aggregate feed status, a solid status icon backplate, and a plain-language
+  /// description. The "Dodaj feed" CTA now lives in [IcalSyncPremiumHeader], so
+  /// this card is status-only (no duplicate primary action).
   Widget _buildHeroCard(BuildContext context, Map<String, dynamic>? stats) {
-    final rd = BbRedesignTokens.of(context);
     final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
 
@@ -250,94 +259,61 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
       c: c,
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth > 700;
+    // Flat tinted surface — error uses the error tint, everything else the
+    // calm status tint at a low alpha (handoff `--bb-surface-variant` feel).
+    final Color surfaceTint = status.tint.withValues(alpha: _kHeroTintAlpha);
 
-        final iconBackplate = Container(
-          padding: const EdgeInsets.all(BBSpace.sm),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BBRadius.smAll,
-          ),
-          child: BbIcon(
-            name: status.icon,
-            size: isDesktop ? 24 : 32,
-            color: Colors.white,
-          ),
-        );
+    final iconBackplate = Container(
+      padding: const EdgeInsets.all(BBSpace.sm),
+      decoration: BoxDecoration(
+        color: status.tint.withValues(alpha: _kHeroIconTintAlpha),
+        borderRadius: BBRadius.smAll,
+      ),
+      child: BbIcon(name: status.icon, size: 24, color: status.tint),
+    );
 
-        final statusPill = Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: status.tint.withValues(alpha: 0.9),
-            borderRadius: BBRadius.fullAll,
-          ),
-          child: Text(
-            status.title,
-            style: BBType.caption(
-              context,
-            ).copyWith(color: Colors.white, fontWeight: FontWeight.w700),
-          ),
-        );
+    final statusPill = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: status.tint,
+        borderRadius: BBRadius.fullAll,
+      ),
+      child: Text(
+        status.title,
+        style: BBType.caption(
+          context,
+        ).copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+      ),
+    );
 
-        final statusBlock = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            statusPill,
-            const SizedBox(height: BBSpace.xs),
-            Text(
-              status.description,
-              style: BBType.body(
-                context,
-              ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
-            ),
-          ],
-        );
-
-        final cta = BbButton(
-          key: const ValueKey('ical_add_feed_button'),
-          label: l10n.icalAddFeedButton,
-          iconLeft: 'add',
-          variant: BbButtonVariant.onGradientSolid,
-          fullWidth: !isDesktop,
-          onPressed: () => _showAddFeedDialog(context),
-        );
-
-        return Container(
-          decoration: BoxDecoration(
-            gradient: rd.brandPrimaryGradient,
-            borderRadius: BBRadius.mdAll,
-            boxShadow: rd.purpleGlow,
-          ),
-          padding: const EdgeInsets.all(BBSpace.md),
-          child: isDesktop
-              ? Row(
-                  children: [
-                    iconBackplate,
-                    const SizedBox(width: BBSpace.sm),
-                    Expanded(child: statusBlock),
-                    const SizedBox(width: BBSpace.sm),
-                    SizedBox(width: 200, child: cta),
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        iconBackplate,
-                        const SizedBox(width: BBSpace.sm),
-                        Expanded(child: statusBlock),
-                      ],
-                    ),
-                    const SizedBox(height: BBSpace.sm),
-                    cta,
-                  ],
+    return Container(
+      decoration: BoxDecoration(
+        color: surfaceTint,
+        borderRadius: BBRadius.mdAll,
+        border: Border.all(color: status.tint.withValues(alpha: 0.24)),
+      ),
+      padding: const EdgeInsets.all(BBSpace.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          iconBackplate,
+          const SizedBox(width: BBSpace.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                statusPill,
+                const SizedBox(height: BBSpace.xs),
+                Text(
+                  status.description,
+                  style: BBType.body(context).copyWith(color: c.textSecondary),
                 ),
-        );
-      },
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -537,12 +513,21 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           ),
           title: Row(
             children: [
-              Text(
-                feed.platformDisplayName,
-                style: BBType.body(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w600),
+              Flexible(
+                child: Text(
+                  feed.platformDisplayName,
+                  style: BBType.body(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 6),
+              // Handoff ical.jsx FeedCard direction badge. Data-honest: keyed
+              // on the real `importEnabled` field — import feeds pull events in,
+              // export-only feeds just publish our bookings out.
+              DirectionBadge(importEnabled: feed.importEnabled),
               const SizedBox(width: BBSpace.xs),
               Container(
                 width: 8,
@@ -553,11 +538,15 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 ),
               ),
               const SizedBox(width: 6),
-              Text(
-                _getStatusLabel(feed.status, l10n),
-                style: BBType.caption(
-                  context,
-                ).copyWith(color: statusColor, fontWeight: FontWeight.w500),
+              Flexible(
+                child: Text(
+                  _getStatusLabel(feed.status, l10n),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: statusColor, fontWeight: FontWeight.w500),
+                ),
               ),
             ],
           ),
@@ -596,52 +585,55 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 ),
             ],
           ),
-          trailing: PopupMenuButton<String>(
-            onSelected: (value) => _handleFeedAction(value, feed),
-            itemBuilder: (ctx) => [
-              PopupMenuItem(
-                value: 'sync',
-                child: Row(
-                  children: [
-                    const BbIcon(name: 'sync', size: 18),
-                    const SizedBox(width: 8),
-                    Text(l10n.icalSyncNow),
-                  ],
-                ),
+        ),
+        // Inline footer action bar — handoff ical.jsx FeedCard §112 (replaces
+        // the trailing PopupMenu). Tertiary "Sinkroniziraj" text button +
+        // secondary icon buttons (pause/resume, edit, delete). Pure UI swap:
+        // every button routes through the unchanged `_handleFeedAction`; no
+        // sync/callable logic touched.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            BBSpace.md,
+            0,
+            BBSpace.md,
+            BBSpace.sm,
+          ),
+          child: Row(
+            children: [
+              BbButton(
+                label: l10n.icalSyncNow,
+                iconLeft: 'sync',
+                variant: BbButtonVariant.tertiary,
+                size: BbButtonSize.sm,
+                onPressed: () => _handleFeedAction('sync', feed),
               ),
-              PopupMenuItem(
-                value: feed.isActive ? 'pause' : 'resume',
-                child: Row(
-                  children: [
-                    BbIcon(
-                      name: feed.isActive ? 'pause' : 'play_arrow',
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(feed.isActive ? l10n.icalPause : l10n.icalResume),
-                  ],
-                ),
+              const Spacer(),
+              BbButton(
+                iconLeft: feed.isActive ? 'pause' : 'play_arrow',
+                variant: BbButtonVariant.secondary,
+                size: BbButtonSize.sm,
+                asIcon: true,
+                semanticLabel: feed.isActive ? l10n.icalPause : l10n.icalResume,
+                onPressed: () =>
+                    _handleFeedAction(feed.isActive ? 'pause' : 'resume', feed),
               ),
-              PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    const BbIcon(name: 'edit', size: 18),
-                    const SizedBox(width: 8),
-                    Text(l10n.edit),
-                  ],
-                ),
+              const SizedBox(width: BBSpace.xs),
+              BbButton(
+                iconLeft: 'edit',
+                variant: BbButtonVariant.secondary,
+                size: BbButtonSize.sm,
+                asIcon: true,
+                semanticLabel: l10n.edit,
+                onPressed: () => _handleFeedAction('edit', feed),
               ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    BbIcon(name: 'delete', size: 18, color: c.error),
-                    const SizedBox(width: 8),
-                    Text(l10n.delete, style: TextStyle(color: c.error)),
-                  ],
-                ),
+              const SizedBox(width: BBSpace.xs),
+              BbButton(
+                iconLeft: 'delete',
+                variant: BbButtonVariant.destructiveSoft,
+                size: BbButtonSize.sm,
+                asIcon: true,
+                semanticLabel: l10n.delete,
+                onPressed: () => _handleFeedAction('delete', feed),
               ),
             ],
           ),
@@ -1650,5 +1642,52 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         ),
       );
     }
+  }
+}
+
+/// Compact Uvoz/Izvoz (Import/Export) direction pill for an iCal feed row.
+/// Data-honest — reflects the real `IcalFeed.importEnabled` field.
+@visibleForTesting
+class DirectionBadge extends StatelessWidget {
+  const DirectionBadge({super.key, required this.importEnabled});
+
+  final bool importEnabled;
+
+  static const double _kBadgeRadius = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final l10n = AppLocalizations.of(context);
+    // Import = pulls events in (primary tone); export-only = publishes out
+    // (tertiary tone, calmer — it's the passive direction).
+    final Color tone = importEnabled ? c.primary : c.textTertiary;
+    final String label = importEnabled
+        ? l10n.icalDirectionImport
+        : l10n.icalDirectionExport;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(_kBadgeRadius),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          BbIcon(
+            name: importEnabled ? 'download' : 'upload',
+            size: 12,
+            color: tone,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: BBType.caption(
+              context,
+            ).copyWith(color: tone, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
   }
 }

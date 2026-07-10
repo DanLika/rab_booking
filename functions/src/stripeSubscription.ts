@@ -167,6 +167,15 @@ export const createSubscriptionCheckoutSession = onCall({region: "us-central1", 
  * Allows users to manage their billing (cancel, update payment method)
  */
 export const createCustomerPortalSession = onCall({region: "us-central1", secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
+  // S-1 (audit 2026-07-09): rate-limit parity with createSubscriptionCheckoutSession.
+  const rawRequest = request.rawRequest as { ip?: string; headers?: Record<string, string> } | undefined;
+  const clientIp = rawRequest?.ip ||
+        rawRequest?.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        "unknown";
+  if (!checkRateLimit(`portal_session:${clientIp}`, 10, 300)) {
+    throw new HttpsError("resource-exhausted", "Too many attempts. Please try again later.");
+  }
+
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be logged in.");
   }

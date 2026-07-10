@@ -162,6 +162,70 @@ class _NotificationSettingsScreenState
     }
   }
 
+  /// Persist a quiet-hours change. Uses copyWith on the nested [QuietHours]
+  /// config so no field is lost (CLAUDE.md: never reconstruct nested config).
+  Future<void> _updateQuietHours(QuietHours quietHours) async {
+    if (_currentPreferences == null) return;
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    setState(() => _isSaving = true);
+
+    try {
+      final updated = _currentPreferences!.copyWith(quietHours: quietHours);
+      await ref
+          .read(userProfileNotifierProvider.notifier)
+          .updateNotificationPreferences(updated);
+
+      if (mounted) {
+        ref.invalidate(notificationPreferencesProvider);
+        setState(() {
+          _currentPreferences = updated;
+          _isSaving = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      LoggingService.log(
+        'Error updating quiet hours: $e',
+        tag: 'NotificationSettings',
+      );
+      await LoggingService.logError(
+        'Failed to update quiet hours',
+        e,
+        stackTrace,
+      );
+      if (mounted) {
+        setState(() => _isSaving = false);
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.notificationSettingsUpdateError,
+        );
+      }
+    }
+  }
+
+  /// Open a native TimePicker seeded from an "HH:mm" string; on confirm,
+  /// persist the picked time via [onPicked] as a zero-padded "HH:mm".
+  Future<void> _pickTime(
+    String currentHhmm,
+    ValueChanged<String> onPicked,
+  ) async {
+    final parts = currentHhmm.split(':');
+    final initial = TimeOfDay(
+      hour: int.tryParse(parts.isNotEmpty ? parts[0] : '') ?? 22,
+      minute: int.tryParse(parts.length > 1 ? parts[1] : '') ?? 0,
+    );
+    final picked = await showTimePicker(context: context, initialTime: initial);
+    if (picked != null) {
+      final hh = picked.hour.toString().padLeft(2, '0');
+      final mm = picked.minute.toString().padLeft(2, '0');
+      onPicked('$hh:$mm');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final preferencesAsync = ref.watch(notificationPreferencesProvider);
@@ -320,7 +384,7 @@ class _NotificationSettingsScreenState
                           Padding(
                             padding: const EdgeInsets.only(top: BBSpace.xs),
                             child: Text(
-                              'KANALI · EMAIL + PUSH',
+                              l10n.notificationSettingsChannelsEyebrow,
                               style: BBType.eyebrow(
                                 context,
                               ).copyWith(color: c.textTertiary, fontSize: 10),
@@ -353,6 +417,34 @@ class _NotificationSettingsScreenState
                       ),
                     ),
                     const SizedBox(height: BBSpace.md),
+
+                    // Quiet Hours (Tihi sati) — enforced server-side in
+                    // notificationPreferences.ts (push suppressed during window).
+                    BbSectionHeader(
+                      title: l10n.quietHoursTitle,
+                      level: BbSectionHeaderLevel.h3,
+                    ),
+                    buildQuietHoursCard(
+                      context: context,
+                      quietHours: _currentPreferences!.quietHours,
+                      enabled: !_isSaving,
+                      onToggle: (bool v) => _updateQuietHours(
+                        _currentPreferences!.quietHours.copyWith(enabled: v),
+                      ),
+                      onPickStart: () => _pickTime(
+                        _currentPreferences!.quietHours.start,
+                        (String hhmm) => _updateQuietHours(
+                          _currentPreferences!.quietHours.copyWith(start: hhmm),
+                        ),
+                      ),
+                      onPickEnd: () => _pickTime(
+                        _currentPreferences!.quietHours.end,
+                        (String hhmm) => _updateQuietHours(
+                          _currentPreferences!.quietHours.copyWith(end: hhmm),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: BBSpace.md),
                   ],
                 );
               },
@@ -376,6 +468,142 @@ class _NotificationSettingsScreenState
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Quiet Hours (Tihi sati) card — enable switch + start/end time pickers.
+/// Time pickers only render when [quietHours.enabled] is true.
+///
+/// Extracted as a top-level `@visibleForTesting` builder so a seam test can
+/// pump it directly without the provider-backed screen. Pure presentation:
+/// all persistence flows through the callbacks.
+@visibleForTesting
+Widget buildQuietHoursCard({
+  required BuildContext context,
+  required QuietHours quietHours,
+  required bool enabled,
+  required ValueChanged<bool> onToggle,
+  required VoidCallback onPickStart,
+  required VoidCallback onPickEnd,
+}) {
+  final BBColorSet c = BBColor.of(context);
+  final l10n = AppLocalizations.of(context);
+  final startMin = _hhmmToMinutes(quietHours.start);
+  final endMin = _hhmmToMinutes(quietHours.end);
+  final crossesMidnight =
+      startMin != null && endMin != null && startMin > endMin;
+
+  return BbCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        BbSwitch(
+          key: const ValueKey('quiet_hours_switch'),
+          value: quietHours.enabled,
+          onChanged: enabled ? onToggle : null,
+          label: l10n.quietHoursEnable,
+          subtitle: l10n.quietHoursSubtitle,
+        ),
+        if (quietHours.enabled) ...<Widget>[
+          const SizedBox(height: BBSpace.xs),
+          Divider(height: 1, thickness: 1, color: c.border),
+          const SizedBox(height: BBSpace.xs),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: _QuietTimeField(
+                  fieldKey: const ValueKey('quiet_hours_start'),
+                  label: l10n.quietHoursStart,
+                  value: quietHours.start,
+                  onTap: enabled ? onPickStart : null,
+                ),
+              ),
+              const SizedBox(width: BBSpace.sm),
+              Expanded(
+                child: _QuietTimeField(
+                  fieldKey: const ValueKey('quiet_hours_end'),
+                  label: l10n.quietHoursEnd,
+                  value: quietHours.end,
+                  onTap: enabled ? onPickEnd : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: BBSpace.xs),
+          Text(
+            crossesMidnight
+                ? l10n.quietHoursCrossMidnight(quietHours.start, quietHours.end)
+                : l10n.quietHoursInfo,
+            style: BBType.caption(context).copyWith(color: c.textTertiary),
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+int? _hhmmToMinutes(String hhmm) {
+  final parts = hhmm.split(':');
+  if (parts.length != 2) return null;
+  final h = int.tryParse(parts[0]);
+  final m = int.tryParse(parts[1]);
+  if (h == null || m == null) return null;
+  return h * 60 + m;
+}
+
+/// Read-only tappable time field with a 12px-radius border (CLAUDE.md input
+/// standard) that opens the native TimePicker via [onTap].
+class _QuietTimeField extends StatelessWidget {
+  const _QuietTimeField({
+    required this.fieldKey,
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  final Key fieldKey;
+  final String label;
+  final String value;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final BBColorSet c = BBColor.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          label,
+          style: BBType.caption(context).copyWith(color: c.textTertiary),
+        ),
+        const SizedBox(height: BBSpace.xxs),
+        InkWell(
+          key: fieldKey,
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: BBSpace.sm,
+              vertical: BBSpace.xs,
+            ),
+            decoration: BoxDecoration(
+              border: Border.all(color: c.border),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text(
+                  value,
+                  style: BBType.body(context).copyWith(color: c.textPrimary),
+                ),
+                Icon(Icons.schedule, size: 18, color: c.textTertiary),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,8 +1,110 @@
 # BookBed Changelog
 
-All version history from v4.6 to v7.36.
+All version history from v4.6 to v7.37.
 
-**Last Updated**: 2026-06-22 | **Version**: 7.36
+**Last Updated**: 2026-07-10 | **Version**: 7.40
+
+---
+
+**Changelog 7.40** (2026-07-10):
+
+### Admin Users status TAB-COUNTS — data-honest omit built end-to-end (audit/admin-users-tabcounts)
+The handoff `admin-users.jsx` `AU_TABS` status tabs (All / Active / Trial /
+Suspended) with live count badges were omitted by #860/#864 (needed aggregation).
+Now real, DEV-ONLY (bookbed-dev), no PROD, no callable/rules change:
+- **Counts:** new `AdminUsersRepository.getStatusCounts()` — 5 Firestore `.count()`
+  aggregates (same proven pattern as `getDashboardStats`) over the whole `users`
+  collection, NOT a partial page count; a failed query drops its key (no fabricated
+  0). New `ownerStatusCountsProvider`.
+- **Model:** `UserModel.accountStatus` (`String?`, raw — no enum coercion) added so
+  the loaded list can filter by lifecycle status; regenerated freezed/g (one field).
+- **UI:** `_StatusTabs` row above the search input (BbChip `tab` variant + count
+  badge, dark console tokens), single-select nav tab (default All) wired into the
+  existing filter/clear state. `trial_expired` folds into the Trial tab (badge sums
+  both, filter matches both). Preserves #860 pagination/cards, #862 search, #864
+  master-detail, #765 overflow.
+- **Verify:** analyze 0; new `users_list_status_tabs_test` 12 cells; admin suite 33
+  green; full `flutter test` +1769 green; seam-golden eyeball renders All 248 /
+  Active 210 / Trial 26 / Suspended 12. No golden baselines touch this screen.
+
+---
+
+**Changelog 7.39** (2026-07-10):
+
+### Notification Quiet Hours (Tihi sati) — data-honest omit built end-to-end (audit/quiet-hours)
+The handoff "Tihi sati" push-suppression control was previously omitted (no model,
+no enforcement). Now a full vertical slice, DEV-ONLY (bookbed-dev), enforcement
+included so the toggle actually suppresses:
+- **Model:** new freezed `QuietHours {enabled, start:'HH:mm', end:'HH:mm',
+  timezone}` nested in `NotificationPreferences` (default OFF, 22:00→07:00,
+  Europe/Zagreb), persisted at `users/{uid}/data/preferences`; copyWith on the
+  nested config (never reconstructed).
+- **Enforcement (PUSH ONLY):** `functions/src/notificationPreferences.ts`
+  `shouldSendPushNotification` now suppresses push during the window via new pure
+  predicates `isQuietNow`/`isWithinQuietWindow`/`nowMinutesInTz`
+  (DST-correct via `Intl.DateTimeFormat`, cross-midnight aware, fail-open on
+  disabled/malformed). Email + in-app/DB records untouched — nothing lost.
+- **UI:** "Tihi sati" card in `notification_settings_screen.dart` — enable switch
+  + native TimePicker start/end fields (12px inputs) gated on enabled, cross-
+  midnight hint; saves via existing repo + `ref.invalidate`.
+  `@visibleForTesting buildQuietHoursCard` seam.
+- **Rules:** no change needed (owner already writes `data/preferences`);
+  4-case `quiet_hours_prefs.test.ts` proves owner-write ALLOW / stranger DENY /
+  blocklist still bites.
+- **l10n:** 8 `quietHours*` keys (en+hr).
+- **Verify:** analyze 0 net-new; flutter test 1757 green (golden unchanged — no
+  seam for this screen); CF jest 475/24; rules emulator 245/16; CF unit 12/12.
+  Live web eyeball bookbed-dev. FROZEN: none. Not deployed (DEV-ONLY).
+
+---
+
+**Changelog 7.38** (2026-07-10):
+
+### Owner Subscription — trial progress bar wired to real data (audit/trial-progress-bar)
+`subscription_screen.dart` `_TrialHero` had hardcoded fake trial numbers
+(`14/12/'10. lipnja 2026.'`). Now a `ConsumerWidget` gated on `trialStatusProvider`,
+DERIVING days from the already-persisted `trialStartDate`+`trialExpiresAt`
+(zero schema/CF/rules change): new `TrialStatus.totalTrialDays` +
+`getDaysElapsed({now})` (clamped). Honest hide (`SizedBox.shrink()`) when not in
+trial / bounds unpersisted. `@visibleForTesting TrialBarData.fromTrialStatus` +
+`buildTrialHeroForTest` seam; 8-cell `trial_hero_test` (derivation clamp/null +
+visual). 4 new l10n keys (en+hr), HR date via `DateFormat('d. MMMM yyyy')`.
+analyze 0 net-new, full suite green, golden unchanged. Live web eyeball on
+bookbed-dev (real trial user) confirmed "29 od 30 dana preostalo · Završava
+9. kolovoza 2026". Dev-only, no deploy; FROZEN: none.
+
+---
+
+**Changelog 7.37** (2026-07-10):
+
+### Overnight design-fidelity campaign — 15 iterations, owner + widget + admin (audit/overnight-fidelity-2026-07-10)
+Page-by-page handoff fidelity sweep (`BookBed Design.html` / `*-premium.jsx` / `*.jsx` as the visual TARGET, not token-hygiene), fix-as-you-go across 15 PRs (#840–#854). Every change dev-only, no deploy; FROZEN fences (Cjenovnik grid, publish flow, timeline dimensions, booking widget submit) untouched throughout.
+
+**Owner:**
+- **#840** (`da0515e0`) — Subscription (Pretplata) cheap-wins: back-nav, Pro-card border, dialog l10n (audit/149).
+- **#843** (`df9be9d5`) — auth recovery cluster: RecCard icon-tile + handoff-xl card radius (login/register/recovery).
+- **#844** (`67fe8cd3`) + **#851** (`912f1e96`) — profile hub `BookBed Pro` card benefits grid + €19 price + l10n remainder (audit/135 S3); iCal FeedCard footer bar folded into #851.
+- **#841** (`d492a332`) — iCal sync-settings hero flattened to a flat status card (flat-chrome enforcement per CHANGELOG 7.23/audit/126).
+- **#842** (`72a79fa2`) — embed/owner docstring flatten (stale TIP-1 gradient text removed) + embed guide **data-honesty** verdict (no invented feature).
+- **#845** (`a5a663d1`) + **#854** (`40cad472`) — unit-hub master panel: fidelity vs `units.jsx`, then PropertyTree **flat-row** rework (`ExpansionTile`→flat `Row` `[chevron][icon][name Expanded][count][edit][delete][add]`, closing the long-name vertical-wrap band-aid from #850).
+- **#849** (`c11c1a71`) — 5 owner `AlertDialog` confirms → `BbDialog`.
+- **#850** (`85301145`) — deferred-backlog mop-up: units title one-line, iCal Uvoz/Izvoz direction badge, admin env pill (reads REAL env).
+
+**Widget (guest-facing):**
+- **#846** (`ec71d98e`) — mint-accent success mark + deposit band fidelity (confirmation/deposit).
+- **#847** (`e96bb8f7`) — mint selection ladder on calendar + guest-form quick wins (values-only, zero structural painter edits).
+- **#853** (`eef254f3`) — guest-form input radius **8→12px** per handoff (`buildDecoration()`/theme-level; the canonical 12px input-radius standard).
+
+**Admin:**
+- **#848** (`8d4bed10`) — dark-console nav chrome wired to `BbAdminDarkTokens` (shell fidelity, deep-purple).
+
+**Key decisions:**
+- **Flat-chrome enforcement** — every hero/gradient straggler flattened to solid fills (do NOT re-add TIP-1 gradient stops).
+- **Data-honesty skips** — features with no backing field/backend (embed guide extras, live-chat, helpful-vote) omitted rather than faked.
+- **CanvasKit login unlock** — post-login programmatic access via `flt-semantics-placeholder` click enabled the iter-13 live-verification sweep (#852, `370d2e52`, doc-only attestation of #840–#851).
+- **Input radius 12** — widget guest-form corners standardized to 12px (matches owner input convention).
+
+**Verification:** full suite **1697 green** (`All tests passed!`); golden **56/56** green (no widget golden — all owner-side, zero collateral re-bless). `flutter analyze` 0 net-new, `dart format` clean, `flutter build web --no-tree-shake-icons` clean per PR. Live web eyeball on `main_dev` per fidelity iteration. Dev-only — PROD deploy batch deferred.
 
 ---
 

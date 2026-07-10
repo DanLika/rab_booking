@@ -173,6 +173,10 @@ class _Tile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
+    // Minimalist pass 3: decorative stat icon-tile collapses to a single
+    // primary tint in LIGHT; DARK keeps the caller tone (BBColor.monoKpiTone).
+    // Status pills/dots are unaffected — they route their hue directly.
+    final tone = BBColor.monoKpiTone(context, this.tone);
     return BbCard(
       padding: EdgeInsets.all(isMobile ? 12 : 16),
       child: Row(

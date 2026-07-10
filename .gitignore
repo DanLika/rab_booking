@@ -119,5 +119,10 @@ jest_dx/
 # Session scratch dirs (never commit)
 .tmp/
 functions/.tmp/
-test/golden/screens/failures/
-test/golden/seams/failures/
+
+# Personal notes vault (local only)
+obsidian-vault/
+test/golden/**/failures/
+
+# Claude Code file-history backups (may contain edited .env content)
+.claude/file_history/

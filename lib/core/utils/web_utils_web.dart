@@ -346,7 +346,7 @@ external JSString _jsonStringify(JSAny value);
 /// F-NEW-04: postMessage origin allowlist. Mirrors `web/payment_bridge.js`
 /// validator. Without this check, an attacker-hosted page that embeds the
 /// widget in an iframe can postMessage `{source:'bookbed-widget',
-/// type:'stripe-payment-complete', sessionId:'cs_<leaked>'}` and trigger
+/// type:'stripe-payment-complete', sessionId:'cs_&lt;leaked&gt;'}` and trigger
 /// the widget to call `getBookingByStripeSession` and render guest PII —
 /// which the parent attacker page can then scrape.
 bool _isAllowedPostMessageOrigin(String origin) {

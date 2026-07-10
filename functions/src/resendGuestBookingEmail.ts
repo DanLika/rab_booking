@@ -8,6 +8,8 @@ import {
 } from "./bookingAccessToken";
 import {setUser} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
+import {sanitizeEmail} from "./utils/inputSanitization";
+import {validateEmail} from "./utils/emailValidation";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
 
@@ -62,8 +64,12 @@ export const resendGuestBookingEmail = onCall(
       );
     }
 
-    // Sanitize email
-    const sanitizedEmail = guestEmail.trim().toLowerCase();
+    // S-6 (audit 2026-07-09): platform-standard email hygiene (parity with
+    // loginLockout / emailVerification) — replaces raw trim().toLowerCase().
+    const sanitizedEmail = sanitizeEmail(guestEmail);
+    if (!sanitizedEmail || !validateEmail(sanitizedEmail)) {
+      throw new HttpsError("invalid-argument", "Invalid email format");
+    }
 
     // SECURITY (audit/31 MED-2): per-IP pre-check prevents a single IP from
     // grinding the endpoint, and the per-(IP, bookingReference) key prevents

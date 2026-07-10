@@ -1424,6 +1424,12 @@ abstract class AppLocalizations {
   /// **'Change Password'**
   String get changePassword;
 
+  /// No description provided for @changePasswordSecurityEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'ACCOUNT SECURITY'**
+  String get changePasswordSecurityEyebrow;
+
   /// No description provided for @showPassword.
   ///
   /// In en, this message translates to:
@@ -5358,6 +5364,18 @@ abstract class AppLocalizations {
   /// **'Phone'**
   String get editProfilePhone;
 
+  /// No description provided for @editProfileEmailVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get editProfileEmailVerified;
+
+  /// No description provided for @editProfilePhoneHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible to guests after booking confirmation'**
+  String get editProfilePhoneHelper;
+
   /// No description provided for @editProfileAddress.
   ///
   /// In en, this message translates to:
@@ -5579,6 +5597,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Optional payment notification emails. Initial Stripe payment confirmations are always sent.'**
   String get notificationSettingsPaymentsDesc;
+
+  /// No description provided for @notificationSettingsChannelsEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'CHANNELS · EMAIL + PUSH'**
+  String get notificationSettingsChannelsEyebrow;
 
   /// No description provided for @notificationSettingsCalendar.
   ///
@@ -6323,6 +6347,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Data for receiving payments'**
   String get bankAccountBankDetailsSubtitle;
+
+  /// No description provided for @bankAccountActiveBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get bankAccountActiveBadge;
+
+  /// No description provided for @bankAccountHolderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner: {holder} · EUR'**
+  String bankAccountHolderLabel(String holder);
 
   /// No description provided for @bankAccountIban.
   ///

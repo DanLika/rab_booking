@@ -208,9 +208,9 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                     style: BBType.h3(context).copyWith(color: c.textPrimary),
                   ),
                 ),
-                const BbStatusBadge(
+                BbStatusBadge(
                   status: BbBookingStatus.confirmed,
-                  label: 'Aktivan',
+                  label: l10n.bankAccountActiveBadge,
                 ),
               ],
             ),
@@ -255,7 +255,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Vlasnik: $holder · EUR',
+                        l10n.bankAccountHolderLabel(holder),
                         style: BBType.caption(
                           context,
                         ).copyWith(color: c.textTertiary),

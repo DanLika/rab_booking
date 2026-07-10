@@ -311,7 +311,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Text(
-                                                  'SIGURNOST RAČUNA',
+                                                  l10n.changePasswordSecurityEyebrow,
                                                   style: BBType.eyebrow(
                                                     context,
                                                   ).copyWith(color: c.primary),

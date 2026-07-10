@@ -950,3 +950,44 @@ handoff; `?lang=de` flips chip to **"DE"** + localizes UI, confirming
 `_getLanguageCode` + provider + URL persistence live. Dark trigger inferred
 from unchanged `textPrimary` token wiring (Flutter-web synthetic pointer
 can't drive the moon toggle; golden dark variants green).
+
+---
+
+## Iteration — Rezervacije MOBILE KPI strip 4→2 (design/rezervacije-mobile-2kpi)
+
+Handoff-exactness trim. `#858` correctly wrapped the mobile Rezervacije screen in
+an elevated console panel, but the KPI strip still rendered **4** cards on mobile
+(2×2 grid). The handoff `rezervacije-premium.jsx` `RezervacijePremiumMobile` shows
+a 2-col grid with **exactly 2** cards: "Na čekanju" (tertiary) + "Zarada (mj.)"
+(primary). Potvrđeno / Nadolazeći are desktop/tablet-only in the handoff.
+
+**Verify-first:** confirmed the mobile strip currently renders 4 (was-it-4 = **YES**,
+`_RezKpiStrip` mobile branch built a `Column` of two 2-tile `Row`s).
+
+**Changed (`bookings_premium_header.dart` `_RezKpiStrip`, mobile branch ONLY):**
+the `isMobile` branch now returns a single `Row` of exactly the 2 handoff tiles
+(`tiles[0]` Na čekanju + `tiles[2]` Zarada). Tablet/desktop (`≥600`) Row of all 4
+**untouched**. Stale "4-tile" docstring corrected. No provider/data/logic edits —
+the 2 kept cards reuse the exact same `pendingCount` + `unifiedDashboardProvider`
+values (data-honest; seeded owner has 0 bookings → "0" / "€0" live). FROZEN lean
+ledger + `detailActionVisibility` gate + Navigator.push confirmation untouched.
+
+**Seam (RED→GREEN):** `@visibleForTesting buildRezKpiStripForTest(isMobile,
+pendingCount)` + `bookings_premium_kpi_count_test.dart` (3 cells): mobile (<600)
+renders exactly the 2 handoff cards (NA ČEKANJU + ZARADA, no POTVRĐENO/NADOLAZEĆI);
+tablet/desktop (≥600) renders all 4; mobile no-overflow @ 320/360/390. The mobile
+"NADOLAZEĆI findsNothing" assertion bites the old 4-card layout.
+
+**Verify:** `dart format` clean; `flutter analyze` (changed file + new test)
+**No issues found** (0 net-new); full `flutter test` **1724 green** (incl. golden
+— KPI strip is in no golden seam, no baseline moved, no re-bless); existing
+`rezervacije_mobile_panel_overflow_test` 6/6 green (2-card layout no overflow @
+320/360/390 light+dark). **Live web eyeball** (`main_dev.dart` on chrome `:8123`,
+JS-SDK sign-in bypass `test-owner-2026-07-10@bookbed.io`, viewport 390): Rezervacije
+mobile shows **exactly 2 KPI cards** side-by-side in the console panel — NA ČEKANJU
+(tertiary clipboard) + ZARADA (MJ.) (primary payments) — faithful to
+`RezervacijePremiumMobile`; no third/fourth card, no overflow.
+
+**Reversible:** 4→2 is a handoff-exactness trim of the mobile KPI strip; operator
+can revert to the 2×2 four-card grid by restoring the `Column` branch. Dev-only,
+no deploy. FROZEN: 0 touch.

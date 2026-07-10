@@ -249,6 +249,19 @@ class BBColor {
     return Theme.of(context).brightness == Brightness.dark ? dark : light;
   }
 
+  /// Mono-tone flip point for decorative stat/KPI icon-tile backplates
+  /// (minimalist pass 3, 2026-07-10). Owner LIGHT theme collapses the
+  /// polychrome amber/green/blue/purple tiles to a single **primary** tint to
+  /// reduce color noise; the caller's [original] tone is preserved in DARK so
+  /// the OLED chrome is untouched. Semantic status dots/pills do NOT route
+  /// through here — they keep their hue.
+  ///
+  /// REVERSIBLE: to restore polychrome tiles, `return original;` unconditionally.
+  /// To try neutral-gray instead of purple, swap the light branch to a grey.
+  static Color monoKpiTone(BuildContext context, Color original) {
+    return Theme.of(context).brightness == Brightness.dark ? original : primary;
+  }
+
   // -------------------------------------------------------------------------
   // Legacy aliases (existing call-sites; keep referential)
   // -------------------------------------------------------------------------

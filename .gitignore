@@ -122,3 +122,4 @@ functions/.tmp/
 
 # Personal notes vault (local only)
 obsidian-vault/
+test/golden/**/failures/

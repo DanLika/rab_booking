@@ -1124,3 +1124,57 @@ black in dark). All other goldens unmoved. Live web owner eyeball was blocked by
 port-8097 contention with a parallel admin dev instance (my `flutter run` exit 144);
 time-boxed per layout-fix-gate-and-auth-free-eyeball — shipped on seam tests +
 golden read-back. Dev-only, no deploy.
+
+## Minimalist pass 2 — MONO ICON TILES (light-only) (2026-07-10, design/mono-icon-tiles)
+
+Plan `Minimalist Light Theme 2026-07-10.md` Pass 2 (REDUCE COLOR NOISE): collapse
+the polychrome (amber/green/blue/purple @ ~10–16% tint) decorative stat/KPI
+icon-tile backplates + glyphs to a **single primary-purple tint** across owner
+LIGHT theme. Semantic status indicators (status dots on filter chips, status pills
+`Na čekanju`/`Email potvrđen`/`Telefon nedostaje`, success/error/destructive,
+trend chips) KEEP their hue. Dark (OLED) untouched. REVERSIBLE.
+
+### Change — TOKEN flip point (1 helper) + 4 one-line call-site adoptions
+- `lib/core/design/tokens.dart` — new `BBColor.monoKpiTone(context, original)`:
+  light → `primary`; dark → `original` (dark stays polychrome). Single reversible
+  flip point (`return original;` restores polychrome; swap light branch to a grey
+  for the neutral-gray variant the operator may prefer).
+- 4 shared stat-tile builders route `tone` through it (backplate + glyph + spark):
+  - Pregled `_PregledKpiCard` (`dashboard_overview_tab.dart`)
+  - Rezervacije `_RezStatTile` (`bookings/bookings_premium_header.dart`)
+  - Kalendar `_Tile` (`calendar/month_calendar_kpi_strip.dart`) — light mono uses a
+    uniform 10% tint (dark keeps the handoff per-tone 6/16/12%).
+  - Profil `_ProfilStatTile` (`profile_screen.dart`) — light branch = primary
+    bg/fg tuple; dark keeps `_resolveTone` (status tints).
+- Unit Hub tiles: already primary-only (no change). iCal: no polychrome decorative
+  tiles (only a semantic status badge — left alone).
+
+### Gates
+- `dart format` clean; `flutter analyze` (5 changed files) **0 issues**.
+- full suite **1687 passed** (excl. golden); no test asserted tile colors → 0 test edits.
+- `--tags golden`: only `pregled_panel` **mobile_light + tablet_light** moved →
+  re-blessed (warm Inter, read back = all 4 KPI tiles purple, status pills/trend
+  chips still colored). **Dark PNGs unmoved** (`git status` = only 2 light PNGs) →
+  confirms the change is truly light-only.
+
+### Live web eyeball (owner_main_dev, chrome, 390px, JS-input-event login bypass)
+- **Pregled** ✓ — REZERVACIJE/PROSJ.CIJENA/NOVI GOSTI/PROSJEČNA OCJENA tiles all
+  purple (were purple/blue/green/amber).
+- **Rezervacije** ✓ — NA ČEKANJU + ZARADA tiles purple; `Na čekanju` filter-chip
+  **status dot stays amber** (semantic preserved).
+- **Profil** ✓ (bonus) — all 4 stat tiles purple; `Email potvrđen` green /
+  `Telefon nedostaje` amber pills + green trend chips intact.
+- **Units** — could not verify: pre-existing **`RenderFlex overflowed by 39px`**
+  ErrorBoundary on `unified_unit_hub_screen` at 390px (reproduces at all viewports;
+  **NOT in this diff** — file untouched; flagged as a separate defect, likely a
+  #869 spacing regression / long property name). Units tiles were already primary,
+  so no mono work was needed there regardless.
+- Login recipe used: set field value via DOM `input` event (NOT synthetic keydown)
+  to dodge the `!`-char `hardware_keyboard.dart` KeyDownEvent assert crash.
+
+Dev-only, no deploy. FROZEN untouched. REVERSIBLE (single-helper flip; operator
+can pivot to neutral-gray by editing the light branch of `monoKpiTone`).
+
+### Follow-up (separate task, NOT this PR)
+- Units 390px 39px RenderFlex overflow on `unified_unit_hub_screen` — pre-existing,
+  layout not color; needs its own responsive fix.

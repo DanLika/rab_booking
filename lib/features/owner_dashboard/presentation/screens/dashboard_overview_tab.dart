@@ -1274,6 +1274,9 @@ class _PregledKpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
+    // Minimalist pass 3: decorative tile + glyph + sparkline collapse to a
+    // single primary tint in light; dark keeps the caller tone (BBColor.monoKpiTone).
+    final tone = BBColor.monoKpiTone(context, this.tone);
     final iconBoxSize = isMobile ? 32.0 : 36.0;
     final iconSize = isMobile ? 18.0 : 20.0;
     final valueStyle =

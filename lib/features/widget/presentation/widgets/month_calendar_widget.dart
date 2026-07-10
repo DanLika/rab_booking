@@ -554,9 +554,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             decoration: BoxDecoration(
               border: Border.all(
                 color: isRangeStart || isRangeEnd
-                    ? colors.textPrimary
+                    ? colors.statusSelectedRangeBorder
                     : isToday
-                    ? colors.textPrimary
+                    ? colors.statusTodayBorder
                     : isHovered
                     ? colors.borderStrong
                     : _getBorderColorForDate(dateInfo.status, colors),
@@ -566,7 +566,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                     : BorderTokens.widthMedium,
               ),
               borderRadius: BorderTokens.calendarCell,
-              boxShadow: isHovered ? ShadowTokens.hover : ShadowTokens.light,
+              boxShadow: (isRangeStart || isRangeEnd)
+                  ? colors.selectedGlowShadow
+                  : isHovered
+                  ? ShadowTokens.hover
+                  : ShadowTokens.light,
             ),
             child: Stack(
               children: [

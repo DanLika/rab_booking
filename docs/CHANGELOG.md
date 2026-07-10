@@ -2,7 +2,24 @@
 
 All version history from v4.6 to v7.37.
 
-**Last Updated**: 2026-07-10 | **Version**: 7.37
+**Last Updated**: 2026-07-10 | **Version**: 7.38
+
+---
+
+**Changelog 7.38** (2026-07-10):
+
+### Owner Subscription — trial progress bar wired to real data (audit/trial-progress-bar)
+`subscription_screen.dart` `_TrialHero` had hardcoded fake trial numbers
+(`14/12/'10. lipnja 2026.'`). Now a `ConsumerWidget` gated on `trialStatusProvider`,
+DERIVING days from the already-persisted `trialStartDate`+`trialExpiresAt`
+(zero schema/CF/rules change): new `TrialStatus.totalTrialDays` +
+`getDaysElapsed({now})` (clamped). Honest hide (`SizedBox.shrink()`) when not in
+trial / bounds unpersisted. `@visibleForTesting TrialBarData.fromTrialStatus` +
+`buildTrialHeroForTest` seam; 8-cell `trial_hero_test` (derivation clamp/null +
+visual). 4 new l10n keys (en+hr), HR date via `DateFormat('d. MMMM yyyy')`.
+analyze 0 net-new, full suite green, golden unchanged. Live web eyeball on
+bookbed-dev (real trial user) confirmed "29 od 30 dana preostalo · Završava
+9. kolovoza 2026". Dev-only, no deploy; FROZEN: none.
 
 ---
 

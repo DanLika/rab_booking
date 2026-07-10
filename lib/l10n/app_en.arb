@@ -3432,6 +3432,26 @@
       "date": {"type": "String"}
     }
   },
+  "subscriptionTrialEyebrow": "YOUR PLAN",
+  "subscriptionTrialDaysRemaining": "{daysLeft} of {totalDays} days remaining",
+  "@subscriptionTrialDaysRemaining": {
+    "placeholders": {
+      "daysLeft": {"type": "int"},
+      "totalDays": {"type": "int"}
+    }
+  },
+  "subscriptionTrialEndsShort": "until {date}",
+  "@subscriptionTrialEndsShort": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "subscriptionTrialEndsInline": "You enjoy all Pro features. Ends {date}.",
+  "@subscriptionTrialEndsInline": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
   "subscriptionFreeTrial": "Free Trial",
   "subscriptionFreeTrialPrice": "€0",
   "subscriptionFreeTrialPeriod": "30 days",

@@ -14824,6 +14824,30 @@ abstract class AppLocalizations {
   /// **'Expires: {date}'**
   String subscriptionExpires(String date);
 
+  /// No description provided for @subscriptionTrialEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR PLAN'**
+  String get subscriptionTrialEyebrow;
+
+  /// No description provided for @subscriptionTrialDaysRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{daysLeft} of {totalDays} days remaining'**
+  String subscriptionTrialDaysRemaining(int daysLeft, int totalDays);
+
+  /// No description provided for @subscriptionTrialEndsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'until {date}'**
+  String subscriptionTrialEndsShort(String date);
+
+  /// No description provided for @subscriptionTrialEndsInline.
+  ///
+  /// In en, this message translates to:
+  /// **'You enjoy all Pro features. Ends {date}.'**
+  String subscriptionTrialEndsInline(String date);
+
   /// No description provided for @subscriptionFreeTrial.
   ///
   /// In en, this message translates to:

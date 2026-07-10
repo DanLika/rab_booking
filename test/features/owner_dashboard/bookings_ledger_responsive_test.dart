@@ -190,7 +190,8 @@ List<BookingsLedgerEntry> _fixture() => const <BookingsLedgerEntry>[
 ];
 
 /// Lightweight stand-in for `BookingsTabBar` (which reads providers + l10n).
-/// Mirrors its Wrap-of-chips shape so the ledger header layout is realistic.
+/// Mirrors its horizontal-scroll row-of-chips shape (handoff RZPTabs) so the
+/// ledger header layout is realistic.
 class _StubTabs extends StatelessWidget {
   const _StubTabs();
 
@@ -205,20 +206,28 @@ class _StubTabs extends StatelessWidget {
       'Otkazane',
       'Uvezene',
     ];
-    return Wrap(
-      spacing: BBSpace.xs,
-      runSpacing: BBSpace.xs,
-      children: <Widget>[
-        for (final l in labels)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            decoration: BoxDecoration(
-              color: c.surfaceVariant,
-              borderRadius: BBRadius.fullAll,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          for (final l in labels)
+            Padding(
+              padding: const EdgeInsets.only(right: BBSpace.xs),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: c.surfaceVariant,
+                  borderRadius: BBRadius.fullAll,
+                ),
+                child: Text(l, style: BBType.label(context)),
+              ),
             ),
-            child: Text(l, style: BBType.label(context)),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

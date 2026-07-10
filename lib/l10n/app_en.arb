@@ -1169,6 +1169,13 @@
   "unitHubTitle": "Accommodation Units",
   "unitHubShowAllUnits": "Show all units",
   "unitHubPropertiesAndUnits": "Properties and Units",
+  "unitHubPropertiesUnitsSubtitle": "{propertyCount} properties · {unitCount} units",
+  "@unitHubPropertiesUnitsSubtitle": {
+    "placeholders": {
+      "propertyCount": {"type": "int"},
+      "unitCount": {"type": "int"}
+    }
+  },
   "unitHubAddProperty": "Add new property",
   "unitHubSearch": "Search...",
   "unitHubLoadingError": "Error loading",

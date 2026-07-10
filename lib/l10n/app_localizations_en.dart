@@ -3025,6 +3025,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unitHubPropertiesAndUnits => 'Properties and Units';
 
   @override
+  String unitHubPropertiesUnitsSubtitle(int propertyCount, int unitCount) {
+    return '$propertyCount properties · $unitCount units';
+  }
+
+  @override
   String get unitHubAddProperty => 'Add new property';
 
   @override

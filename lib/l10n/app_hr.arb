@@ -1169,6 +1169,13 @@
   "unitHubTitle": "Smještajne Jedinice",
   "unitHubShowAllUnits": "Prikaži sve jedinice",
   "unitHubPropertiesAndUnits": "Objekti i Jedinice",
+  "unitHubPropertiesUnitsSubtitle": "{propertyCount} objekata · {unitCount} jedinica",
+  "@unitHubPropertiesUnitsSubtitle": {
+    "placeholders": {
+      "propertyCount": {"type": "int"},
+      "unitCount": {"type": "int"}
+    }
+  },
   "unitHubAddProperty": "Dodaj novi objekt",
   "unitHubSearch": "Pretraži...",
   "unitHubLoadingError": "Greška pri učitavanju",

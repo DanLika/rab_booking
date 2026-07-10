@@ -3048,6 +3048,11 @@ class AppLocalizationsHr extends AppLocalizations {
   String get unitHubPropertiesAndUnits => 'Objekti i Jedinice';
 
   @override
+  String unitHubPropertiesUnitsSubtitle(int propertyCount, int unitCount) {
+    return '$propertyCount objekata · $unitCount jedinica';
+  }
+
+  @override
   String get unitHubAddProperty => 'Dodaj novi objekt';
 
   @override

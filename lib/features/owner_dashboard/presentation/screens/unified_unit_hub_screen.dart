@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/design/tokens.dart';
-import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -35,6 +34,12 @@ import '../widgets/units/units_premium_header.dart';
 /// Master panel width for desktop sidebar + mobile/tablet endDrawer
 const double _kMasterPanelWidth = 280.0;
 
+// Master-panel fidelity consts (handoff units.jsx PropertyTree / UnitTreeItem).
+const double _kMasterBadgeSize = 32.0; // header apartment tint badge
+const double _kMasterBadgeRadius = 10.0;
+const double _kMasterRowRadius = 12.0; // --bb-radius-sm
+const double _kMasterSelectedBar = 3.0; // selected unit left accent
+
 /// Breakpoint for desktop layout (CLAUDE.md: Desktop ≥1200px). At/above this
 /// the master panel is a persistent sidebar; below it lives in the endDrawer.
 const double _kDesktopBreakpoint = 1200.0;
@@ -49,10 +54,6 @@ const double _kMobileBreakpoint = 600.0;
 Color _availableColor(ThemeData theme) => theme.brightness == Brightness.dark
     ? BBColor.successDarkMode
     : BBColor.success;
-
-/// Unavailable status color (handoff `--bb-error`, dark lift in dark mode)
-Color _unavailableColor(ThemeData theme) =>
-    theme.brightness == Brightness.dark ? BBColor.errorDarkMode : BBColor.error;
 
 // ============================================================================
 
@@ -330,6 +331,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }) {
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
     final l10n = AppLocalizations.of(context);
+    final bb = BBColor.of(context);
+    final propertyCount = propertiesAsync.asData?.value.length ?? 0;
+    final unitCount = ref.watch(ownerUnitsProvider).asData?.value.length ?? 0;
 
     return Column(
       children: [
@@ -360,19 +364,45 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.home_work_outlined,
-                    color: theme.colorScheme.primary,
+                  // Handoff: 32px primary-tint badge around apartment icon.
+                  Container(
+                    width: _kMasterBadgeSize,
+                    height: _kMasterBadgeSize,
+                    decoration: BoxDecoration(
+                      color: bb.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(_kMasterBadgeRadius),
+                    ),
+                    child: Icon(Icons.apartment, color: bb.primary, size: 18),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      l10n.unitHubPropertiesAndUnits,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.unitHubPropertiesAndUnits,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          l10n.unitHubPropertiesUnitsSubtitle(
+                            propertyCount,
+                            unitCount,
+                          ),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: bb.textTertiary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
+                  const SizedBox(width: 4),
                   // Add Property button
                   IconButton(
                     icon: const Icon(Icons.add_business, size: 22),
@@ -633,12 +663,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }) {
     final l10n = AppLocalizations.of(context);
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
+        // Handoff PropertyTree: property groups are flat rows inside the panel
+        // card, not individually-elevated cards. Keep a hairline border for
+        // grouping without the heavy shadow.
         color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
-        boxShadow: AppShadows.getElevation(2, isDark: isDark),
+        borderRadius: BorderRadius.circular(_kMasterRowRadius),
+        border: Border.all(color: context.gradients.sectionBorder),
       ),
       child: Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
@@ -974,20 +1006,22 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     required bool isSelected,
     VoidCallback? onUnitSelected,
   }) {
+    final bb = BBColor.of(context);
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
+      margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
+        // Handoff UnitTreeItem: selected = primary-tint bg + 3px left accent;
+        // unselected = flat/transparent (no card border/shadow).
         color: isSelected
-            ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt())
-            : context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isSelected
-              ? theme.colorScheme.primary
-              : context.gradients.sectionBorder,
-          width: isSelected ? 2 : 1.5,
+            ? bb.primary.withValues(alpha: 0.12)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(_kMasterRowRadius),
+        border: Border(
+          left: BorderSide(
+            color: isSelected ? bb.primary : Colors.transparent,
+            width: _kMasterSelectedBar,
+          ),
         ),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
       ),
       child: InkWell(
         onTap: () {
@@ -998,7 +1032,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           });
           onUnitSelected?.call();
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(_kMasterRowRadius),
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -1008,53 +1042,46 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               // Unit name + status + actions
               Row(
                 children: [
+                  // Handoff: leading bed icon (primary when selected).
+                  Icon(
+                    Icons.bed_rounded,
+                    size: 15,
+                    color: isSelected ? bb.primary : bb.textTertiary,
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       unit.name,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface,
+                        color: isSelected ? bb.primary : bb.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: unit.isAvailable
-                          ? _availableColor(
-                              theme,
-                            ).withAlpha((0.2 * 255).toInt())
-                          : _unavailableColor(
-                              theme,
-                            ).withAlpha((0.2 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Builder(
-                      builder: (context) {
-                        final l10n = AppLocalizations.of(context);
-                        return Text(
-                          unit.isAvailable
-                              ? l10n.unitHubAvailable
-                              : l10n.unitHubUnavailable,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: unit.isAvailable
-                                ? _availableColor(theme)
-                                : _unavailableColor(theme),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 11,
-                          ),
-                        );
-                      },
-                    ),
+                  // Handoff: status as uppercase micro-label (success / tertiary),
+                  // no pill chrome.
+                  Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return Text(
+                        (unit.isAvailable
+                                ? l10n.unitHubAvailable
+                                : l10n.unitHubUnavailable)
+                            .toUpperCase(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: unit.isAvailable
+                              ? _availableColor(theme)
+                              : bb.textTertiary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                          letterSpacing: 0.4,
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(width: 4),
                   // Duplicate button
@@ -1113,69 +1140,66 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 ],
               ),
               const SizedBox(height: 3),
-              // Property name
-              Text(
-                property.name,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isSelected
-                      ? theme.colorScheme.onSurface.withAlpha(
-                          (0.7 * 255).toInt(),
-                        )
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 6),
-              // Max guests + price
-              Row(
-                children: [
-                  Icon(
-                    Icons.people_rounded,
-                    size: 18,
-                    color: isSelected
-                        ? theme.colorScheme.primary.withAlpha(
-                            (0.8 * 255).toInt(),
-                          )
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${unit.maxGuests}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isSelected
-                          ? theme.colorScheme.onSurface
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
+              // Handoff meta row indent aligns under the unit name (past the
+              // 15px bed icon + 8px gap).
+              Padding(
+                padding: const EdgeInsets.only(left: 23),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Property name
+                    Text(
+                      property.name,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: bb.textTertiary,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Icon(
-                    Icons.euro_rounded,
-                    size: 18,
-                    color: isSelected
-                        ? theme.colorScheme.primary.withAlpha(
-                            (0.8 * 255).toInt(),
-                          )
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Builder(
-                    builder: (context) {
-                      final l10n = AppLocalizations.of(context);
-                      return Text(
-                        '${unit.pricePerNight.toStringAsFixed(0)}${l10n.unitHubPerNight}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: isSelected
-                              ? theme.colorScheme.onSurface
-                              : theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                    const SizedBox(height: 6),
+                    // Max guests + price
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.group_rounded,
+                          size: 15,
+                          color: bb.textTertiary,
                         ),
-                      );
-                    },
-                  ),
-                ],
+                        const SizedBox(width: 4),
+                        Text(
+                          '${unit.maxGuests}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: bb.textTertiary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Icon(
+                          Icons.euro_rounded,
+                          size: 15,
+                          color: bb.textTertiary,
+                        ),
+                        const SizedBox(width: 2),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context);
+                            return Text(
+                              '${unit.pricePerNight.toStringAsFixed(0)}${l10n.unitHubPerNight}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: bb.textTertiary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

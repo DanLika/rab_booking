@@ -168,3 +168,31 @@ Added `subscriptionFeatureAiAssistant` (en "Unlimited AI assistant" / hr "AI asi
 
 ### Deferred
 - Trial-progress bar (needs `trialEndsAt` on UserModel — feature, not fidelity).
+## Iteration 6 — owner Units MASTER PANEL fidelity (`unified_unit_hub_screen.dart` sidebar/endDrawer) vs `units.jsx`
+
+Continuation of audit/134, which shipped the Osnovno tab + header (main `7301e77b`) but **deferred the master panel**. This closes that gap. Handoff spec = `units.jsx` `PropertyTree` + `UnitTreeItem`.
+
+### Sections changed (master panel / list chrome ONLY)
+- **Header (`_buildMasterPanel`):** bare `home_work_outlined` icon → handoff **32×32 primary-tint badge** (radius 10, alpha 0.12) around `apartment` glyph; title gains a **tertiary subtitle caption** `N objekata · N jedinica` (new l10n `unitHubPropertiesUnitsSubtitle`, counts read from `ownerPropertiesProvider`/`ownerUnitsProvider`). Both lines ellipsize.
+- **Property section (`_buildPropertySection`):** individually-elevated card (1.5px border + `AppShadows.getElevation(2)`) → handoff flat grouping — hairline border, **shadow removed**, radius → `_kMasterRowRadius` (12 = `--bb-radius-sm`), margin 12→8. ExpansionTile function + all action buttons preserved.
+- **Unit tile (`_buildUnitListTile`):** rebuilt to handoff `UnitTreeItem` — selected = **primary-tint bg + 3px left accent bar** (was 2px full border + tint + shadow); unselected = **flat/transparent** (card border + `getElevation(1)` shadow dropped). Added **leading `bed_rounded` icon** (primary when selected). Status **pill → uppercase micro-label** (10px w700, letterSpacing 0.4; `success` / `textTertiary` per handoff, not error-red). Meta row (`group` + capacity, `€`price/noć) **indented 23px** under the name, all `textTertiary`. Duplicate/delete action buttons kept.
+- **Token migration:** the whole tile/header moved off `theme.colorScheme.*` (onSurface/onSurfaceVariant/primary) → `BBColor.of(context)` (primary/textPrimary/textTertiary) + `context.gradients.*`; `withAlpha((k*255).toInt())` → `withValues(alpha:)`. Orphaned `_unavailableColor` helper + `app_shadows.dart` import removed (both dead after the change).
+
+### Named consts
+`_kMasterBadgeSize`(32), `_kMasterBadgeRadius`(10), `_kMasterRowRadius`(12), `_kMasterSelectedBar`(3).
+
+### FROZEN fence honored (0 touch)
+Cjenovnik tab content / `price_list_calendar_widget` / `_buildSaveButton` purple / Wizard `_publishUnit` 2-doc serial write / all `context.push`/`Navigator.push` entries. Data honesty: no Vidljivost/Polog field added (audit/134 ruling). Only the master-panel/list chrome restyled; zero logic/nav/selection edits.
+
+### Verify
+- `dart format` clean; `flutter analyze` (touched file) **No issues** (0 net-new; removed 1 self-orphaned helper + 1 dead import).
+- `flutter test` full suite **1673 passed, 0 failed** (no test references the hub master panel → nothing re-pointed).
+- `--tags golden` **52 passed** — no baseline regressed (master panel not in any golden seam; all owner-UI dark goldens green ⇒ dark ladder intact).
+- `flutter build web --no-tree-shake-icons` clean.
+- **Live web eyeball** `:8096` (bookbed-dev, chrome-devtools, real login `bookbed-test@bookbed.io`): **desktop sidebar ✓** + **mobile endDrawer ✓** — tint badge + `N objekata · N jedinica` subtitle + search; selected unit tile shows 3px accent bar + tint bg + leading bed icon + **uppercase green DOSTUPNO label** + indented `4 · € 120/noć` meta, faithful to `units.jsx`. Dark = green goldens + audit/127 ladder (all colors via `BBColor.of`/`context.gradients`).
+
+### Deferred
+- Property-header title vertical-wrap under the 3-icon action cluster (pre-existing width constraint, not introduced here) — a fuller `PropertyTree` flat-row rework (drop per-property card, single panel card) would fix it but is a larger structural change.
+- Dark-mode live capture (web app follows in-app theme, not OS colorScheme; covered by dark goldens).
+
+**NEXT page recommendation:** widget-*.jsx guest surface (widget-calendar / guest-form / pricing / confirmation / error) — `.claude/rules/widget.md` applies (App Check OFF, subdomain slugs, snackbar colors). Then admin-*.jsx console, then dialogs/states/variants.

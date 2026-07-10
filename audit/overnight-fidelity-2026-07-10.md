@@ -729,3 +729,51 @@ gesture-driven state a synthetic web pointer can't reach; forms render staticall
 A device pass is nice-to-have only for keyboard-inset behaviour on the two form
 screens (edit_profile, change_password) but no defect is suspected — keyboard-fix
 mixin already applied per `.claude/rules/keyboard-fix.md`.
+
+---
+
+## Admin Users screen — pagination + mobile cards (design/admin-users-pagination-cards)
+
+Two real, data-honest handoff gaps built into `users_list_screen.dart` vs
+`design_handoff/source/admin-users.jsx`. Admin is EN, dark console
+(`BbAdminDarkTokens`); no logic/provider/rule/callable edits; #765
+LayoutBuilder horizontal-scroll overflow fix preserved.
+
+**GAP 1 — Numbered pagination (`_UsersPagination` = handoff `AUPagination`).**
+The prior table view had NO numbered pager (cursor-based "Load more" only).
+Added a prev / `1 2 3 … 25` / next bar with a "Showing X–Y of N" range label,
+32×32 radius-8 page buttons, primary fill on the active page, ellipsis
+collapse for long runs (first + window-around-current + last). **Data honesty:**
+it windows the *already-loaded + filtered* owner rows client-side (`_rowsPerPage
+= 8`); "of N" is the real loaded/filtered count, NOT a fabricated server total
+like the handoff's static `248`. "Load more" still pulls the next Firestore
+page into the loaded set (extending what the pager can window). Page index
+resets to 0 on any search/filter/sort/date change and is clamped against the
+current row count.
+
+**GAP 2 — Mobile compact cards (`_UsersList`/`_UserCard` = handoff
+`AUMobileCard`).** The compact-card breakpoint dropped 800 → **600** (handoff
+mobile). Below 600 the squeezed 5-col DataTable is replaced by per-owner cards
+(avatar initials, name, email, account-type badge, created date, trailing
+chevron). At ≥600 the DataTable renders with the #765 fix intact. Only
+UserModel-backed fields rendered — no props/bookings/GMV/last-active (handoff
+mock-only), no export/invite/bulk buttons (no backend).
+
+**Verification.**
+- `dart format` clean; `flutter analyze` 0 net-new (screen file: No issues).
+- Full suite **1710 green**; `--tags golden` **56 green** (no admin-users
+  golden baseline exists → nothing to re-bless).
+- Seam tests (`test/features/admin/users_list_layout_test.dart`): mobile card
+  list @390/599 (no DataTable, no overflow), table @640 (DataTable present),
+  breakpoint=600 + pageSize=8, pagination renders prev/numbered/next + range,
+  page-tap fires callback with the 0-based index, short-run (≤7) shows every
+  page w/o ellipsis. Existing #765 overflow seam (780/900/1100/1440) still green.
+- **Auth-free golden-PNG eyeball** (throwaway seam harness, deleted before
+  commit; CanvasKit post-login MCP access blocked per admin-smoke policy):
+  mobile cards, desktop table, and the pagination bar all rendered and matched
+  `admin-users.jsx` (page 3 primary-filled, `Showing 17–24 of 200`, `1 2 3 …
+  25`). Verdict: MATCH.
+
+**Deferred:** desktop master-detail owner panel (`AUOwnerPanel`) + status
+tab-counts (`AU_TABS` counts need aggregation queries) — both are larger,
+data-backing-dependent features, out of scope for this pass.

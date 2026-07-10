@@ -1078,9 +1078,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // No subdomain in URL - this shouldn't happen for slug URLs
         if (slugResult == null) {
           if (mounted) {
+            final tr = WidgetTranslations.of(context, ref);
             setState(() {
+              // Guest-friendly, localized copy (was a dev-facing EN literal).
               _validationError =
-                  'Unable to determine property.\n\nSubdomain not found in URL.';
+                  '${tr.propertyNotFoundTitle}\n\n${tr.propertyNotFoundExplanation}';
             });
           }
           return;
@@ -1145,9 +1147,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Check if both property and unit IDs are provided
       if (_propertyId == null || _propertyId!.isEmpty) {
         if (mounted) {
+          final tr = WidgetTranslations.of(context, ref);
           setState(() {
-            _validationError =
-                'Missing property parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
+            _validationError = tr.missingPropertyParameter;
           });
         }
         return;

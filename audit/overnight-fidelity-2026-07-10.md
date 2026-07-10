@@ -26,6 +26,17 @@ dimensions, publish flow, Navigator.push confirmation, widget snackbar colors) u
 | 10 | **(this)** | **dialogs/states sweep — 5 owner AlertDialog → BbDialog** | **dialogs.jsx** |
 
 ### Consolidated deferred backlog (carried out of iterations 1-10)
+- ✅ **Units property-header title vertical-wrap** — CLOSED iter 11 (#850). `title`/`subtitle`
+  `Text` in `_buildPropertySection`'s `ExpansionTile` gained `maxLines:1`+ellipsis so a long
+  property name no longer wraps under the fixed 3-icon action cluster. RED→GREEN overflow gate.
+- ✅ **iCal FeedCard direction badge (Uvoz/Izvoz)** — CLOSED iter 11. Data-honest `DirectionBadge`
+  keyed on `IcalFeed.importEnabled` (import=primary+download / export-only=tertiary+upload) added
+  to the feed-row title. New l10n `icalDirectionImport`/`icalDirectionExport` (en+hr). Platform
+  name wrapped in `Flexible`+ellipsis so the badge never overflows the row.
+- ✅ **Admin topbar env pill** — CLOSED iter 11. `_AdminEnvPill` in `_AdminHeader` reads the REAL
+  `Firebase.app().options.projectId` (never fabricated): green "Production" for `rab-booking-248fc`,
+  amber "Development"/"Staging" otherwise; hides on uninitialised Firebase. Admin = web-only English,
+  env identifiers not user copy → no l10n.
 - **Widget guest-form live eyeball** — selection-fill / in-range / glow + guest-count/payment
   quick-wins (#847) need a real date-selection; synthetic web pointer can't drive Flutter's
   gesture arena (`flutter-web-scroll-not-automatable`) → Marionette / real device.
@@ -393,3 +404,53 @@ non-destructive->primary variant. Seam-covers the primitive the 5 sites now depe
   value byte-for-byte.
 
 **PR:** #849 (squash-merged). Dev-only, no deploy.
+
+---
+
+## Iteration 11 — deferred-backlog mop-up (design/deferred-mopup)
+
+Final sweep: picked 3 cheap, safe, data-honest wins off the consolidated backlog. No
+structural / FROZEN-adjacent work (calendar painters, VerifyCard, master-detail all skipped).
+
+### SHIPPED
+1. **Units property-header title wrap** (`unified_unit_hub_screen.dart` `_buildPropertySection`)
+   — `title`+`subtitle` `Text` in the `ExpansionTile` gained `maxLines:1`+`ellipsis`. Long
+   property names were wrapping vertically under the fixed 3-icon (edit/delete/add) + expand
+   trailing cluster (pre-existing width bug, deferred iter 6). Pure text-constraint; layout,
+   actions, nav untouched.
+2. **iCal FeedCard direction badge** (`ical_sync_settings_screen.dart` `_buildFeedRow`) — new
+   `@visibleForTesting DirectionBadge` in the row title, keyed on the real
+   `IcalFeed.importEnabled` field: import → primary-tint pill + `download`; export-only →
+   tertiary-tint pill + `upload`. Platform name wrapped in `Flexible`+ellipsis so the badge
+   never overflows. New l10n `icalDirectionImport`/`icalDirectionExport` (en "Import"/"Export",
+   hr "Uvoz"/"Izvoz"). Data-honest — no invented field.
+3. **Admin topbar env pill** (`admin_shell_screen.dart` `_AdminHeader`) — `_AdminEnvPill` reads
+   the live `Firebase.app().options.projectId` (same source as the boot asserts). Green
+   "Production" for `rab-booking-248fc`, amber "Development"/"Staging" otherwise; `SizedBox.shrink`
+   when Firebase uninitialised (isolated tests). Admin is web-only English; env names are
+   identifiers, not user copy → no l10n. Added `firebase_core` import.
+
+### SKIPPED (with reason)
+- **Subscription mobile Pro-card** (truncation/footnote/shadow/tablet cap) — inspected
+  `subscription_screen.dart`: the Pro card already renders all 6 features (no truncation), the
+  `purpleSm` featured shadow, the "Preporučeno" badge, and the yearly footnote. The backlog's
+  "4-feature truncation + 2-col grid" item was the **profile-hub** `_ProProBenefits`, already
+  closed iter 3. Remaining profile-hub work = heavy 1503-LOC screen → stays deferred.
+- Widget guest-form live eyeball, field/card radius, counter circle, BbDialog custom-body — as
+  carried (Marionette / global-theme / primitive-extension decisions).
+
+### Verify
+- `dart format` clean; `flutter analyze` (3 changed files + new test) **No issues found** (0
+  net-new; full-tree pre-existing info baseline unchanged).
+- Full `flutter test` **1686 green** (1682 baseline + 4 new). `--tags golden` **56 green** — no
+  baseline moved (env pill / ical row / hub title touch no golden seam surface).
+- New `test/features/owner_dashboard/ical_direction_badge_test.dart` (4 cells): DirectionBadge
+  Import/Export label (en) + Uvoz (hr) + **RED→GREEN one-line overflow gate** mirroring the fixed
+  ExpansionTile title pattern (long name + fixed trailing cluster @ 300px stays single-line,
+  `maxLines==1`, ellipsis).
+- Eyeball: temp golden of both DirectionBadge variants rendered @light — Import (primary tint +
+  download) / Export (tertiary tint + upload) faithful to `ical.jsx`; temp file removed. Env pill
+  + hub title are code-path + test verified (behind owner/admin auth; CanvasKit auth eyeball not
+  automatable — `canvaskit-tier3`). iOS plist untouched (prod).
+
+**PR:** #850 (squash-merged). Dev-only, no deploy. FROZEN: 0 touch.

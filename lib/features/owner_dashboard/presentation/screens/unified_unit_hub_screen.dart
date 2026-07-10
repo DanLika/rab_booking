@@ -695,14 +695,21 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               size: 20,
             ),
           ),
+          // maxLines:1 + ellipsis so a long property name stays on one row and
+          // does not wrap vertically under the fixed 3-icon action cluster in
+          // `trailing` (pre-existing width-constraint bug, deferred audit iter 6).
           title: Text(
             property.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           subtitle: Text(
             l10n.unitHubUnitsCount(units.length),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

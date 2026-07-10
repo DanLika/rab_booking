@@ -12132,6 +12132,18 @@ abstract class AppLocalizations {
   /// **'Import is disabled for this feed'**
   String get icalImportDisabledWarning;
 
+  /// Direction badge shown on an iCal feed that imports events (importEnabled=true)
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get icalDirectionImport;
+
+  /// Direction badge shown on an iCal feed that only exports (importEnabled=false)
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get icalDirectionExport;
+
   /// No description provided for @icalEchoStatusActive.
   ///
   /// In en, this message translates to:

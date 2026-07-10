@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -758,6 +759,68 @@ class _AdminHeader extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const Spacer(),
+          // Handoff AdminTopbar: environment pill. Reads the REAL runtime
+          // Firebase project id — never fabricated. Green when the app is
+          // wired to Production, amber otherwise (dev/staging).
+          const _AdminEnvPill(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Data-honest environment badge for the admin topbar. Resolves the label from
+/// the live `Firebase.app().options.projectId` (same source the boot asserts
+/// use in the env-specific entry points). PROD project = `rab-booking-248fc`.
+class _AdminEnvPill extends StatelessWidget {
+  const _AdminEnvPill();
+
+  static const String _prodProjectId = 'rab-booking-248fc';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    String projectId;
+    try {
+      projectId = Firebase.app().options.projectId;
+    } catch (_) {
+      // Firebase not initialised (e.g. isolated widget test) → hide the pill.
+      return const SizedBox.shrink();
+    }
+
+    final bool isProd = projectId == _prodProjectId;
+    final String label = isProd
+        ? 'Production'
+        : projectId.contains('staging')
+        ? 'Staging'
+        : 'Development';
+    // Green = prod (BB success), amber = non-prod (BB warning).
+    final Color tone = isProd ? BBColor.success : BBColor.warning;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: tone.withValues(alpha: 0.32)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: tone, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: tone,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
         ],
       ),
     );

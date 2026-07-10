@@ -6688,6 +6688,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get icalImportDisabledWarning => 'Uvoz je onemogućen za ovaj feed';
 
   @override
+  String get icalDirectionImport => 'Uvoz';
+
+  @override
+  String get icalDirectionExport => 'Izvoz';
+
+  @override
   String get icalEchoStatusActive => 'Aktivno';
 
   @override

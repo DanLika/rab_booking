@@ -283,38 +283,28 @@ class MinimalistTheme {
             : MinimalistColors.backgroundSecondary,
         contentPadding: const EdgeInsets.all(BBSpace.sm),
         border: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(
-            Radius.circular(BBRadiusBridges.medium),
-          ),
+          borderRadius: BBRadius.smAll,
           borderSide: BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(
-            Radius.circular(BBRadiusBridges.medium),
-          ),
+          borderRadius: BBRadius.smAll,
           borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(
-            Radius.circular(BBRadiusBridges.medium),
-          ),
+          borderRadius: BBRadius.smAll,
           borderSide: BorderSide(
             color: isDark ? MinimalistColorsDark.borderStrong : primaryColor,
             width: BBBorderWidth.medium,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(
-            Radius.circular(BBRadiusBridges.medium),
-          ),
+          borderRadius: BBRadius.smAll,
           borderSide: BorderSide(
             color: isDark ? MinimalistColorsDark.error : MinimalistColors.error,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(
-            Radius.circular(BBRadiusBridges.medium),
-          ),
+          borderRadius: BBRadius.smAll,
           borderSide: BorderSide(
             color: isDark ? MinimalistColorsDark.error : MinimalistColors.error,
             width: BBBorderWidth.medium,

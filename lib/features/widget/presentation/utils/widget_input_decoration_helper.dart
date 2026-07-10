@@ -36,33 +36,23 @@ class WidgetInputDecorationHelper {
       isDense: isDense,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(
-          Radius.circular(BBRadiusBridges.medium),
-        ),
+        borderRadius: BBRadius.smAll,
         borderSide: BorderSide(color: colors.textSecondary),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(
-          Radius.circular(BBRadiusBridges.medium),
-        ),
+        borderRadius: BBRadius.smAll,
         borderSide: BorderSide(color: colors.textSecondary),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(
-          Radius.circular(BBRadiusBridges.medium),
-        ),
+        borderRadius: BBRadius.smAll,
         borderSide: BorderSide(color: colors.textPrimary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(
-          Radius.circular(BBRadiusBridges.medium),
-        ),
+        borderRadius: BBRadius.smAll,
         borderSide: BorderSide(color: colors.error, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(
-          Radius.circular(BBRadiusBridges.medium),
-        ),
+        borderRadius: BBRadius.smAll,
         borderSide: BorderSide(color: colors.error, width: 2),
       ),
       errorStyle: TextStyle(color: colors.error, fontSize: 12, height: 1.0),

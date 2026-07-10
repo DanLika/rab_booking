@@ -1,6 +1,6 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
-import {createHash, randomInt} from "crypto";
+import {createHash, randomInt, randomUUID} from "crypto";
 import {logError, logSuccess, logOperation, logWarn} from "./logger";
 import {sendEmailVerificationCode as sendVerificationEmail} from "./emailService";
 import {validateEmail} from "./utils/emailValidation";
@@ -116,7 +116,7 @@ export const sendEmailVerificationCode = onCall(
 
       // Generate session ID for tracking (SHA-256 of timestamp + email + random)
       const sessionId = createHash("sha256")
-        .update(`${Date.now()}-${emailLower}-${Math.random()}`)
+        .update(`${Date.now()}-${emailLower}-${randomUUID()}`)
         .digest("hex");
 
       // Extract device fingerprint from request headers

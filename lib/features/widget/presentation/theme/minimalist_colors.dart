@@ -69,6 +69,14 @@ class MinimalistColors {
   /// Available date - teal text
   static const Color statusAvailableText = Color(0xFF83e6bf); // #83e6bf
 
+  // ---- Mint selection ladder (handoff widget-calendar.jsx) ----
+  /// Selected day fill / range endpoint — mint (#3DD9B0)
+  static const Color mint = Color(0xFF3DD9B0); // W_MINT
+  /// Today border / selected emphasis — mint-deep (#1FAF87)
+  static const Color mintDeep = Color(0xFF1FAF87); // W_MINT_DEEP
+  /// In-range tint — mint-light (#A8EFD9)
+  static const Color mintLight = Color(0xFFA8EFD9); // W_MINT_LIGHT
+
   /// Booked date - pink/red background
   static const Color statusBookedBackground = Color(0xFFfba9aa); // #fba9aa
 
@@ -238,6 +246,16 @@ class MinimalistColorsDark {
 
   /// Available date - teal text
   static const Color statusAvailableText = Color(0xFF15b8a6); // #15b8a6
+
+  // ---- Mint selection ladder (dark) ----
+  /// Selected day fill / range endpoint — mint (#3DD9B0)
+  static const Color mint = Color(0xFF3DD9B0);
+
+  /// Today border / selected emphasis — mint-deep (brightened for dark bg)
+  static const Color mintDeep = Color(0xFF3DD9B0);
+
+  /// In-range tint — muted mint for dark bg
+  static const Color mintLight = Color(0xFF1F6B57);
 
   /// Booked date - red background
   static const Color statusBookedBackground = Color(0xFFef4444); // #ef4444
@@ -668,9 +686,26 @@ class MinimalistColorSchemeAdapter implements WidgetColorScheme {
       dark ? MinimalistColorsDark.borderMedium : MinimalistColors.borderMedium;
 
   @override
-  Color get statusTodayBorder => dark
-      ? MinimalistColorsDark.statusAvailableBorder
-      : MinimalistColors.statusAvailableBorder;
+  Color get statusTodayBorder =>
+      dark ? MinimalistColorsDark.mintDeep : MinimalistColors.mintDeep;
+
+  // ---- Mint selection ladder (handoff widget-calendar.jsx) ----
+  @override
+  Color get statusSelectedRangeBorder =>
+      dark ? MinimalistColorsDark.mint : MinimalistColors.mint;
+
+  @override
+  Color get statusInRangeBackground =>
+      dark ? MinimalistColorsDark.mintLight : MinimalistColors.mintLight;
+
+  @override
+  List<BoxShadow> get selectedGlowShadow => [
+    BoxShadow(
+      color: MinimalistColors.mint.withValues(alpha: 0.45),
+      blurRadius: 14,
+      offset: const Offset(0, 4),
+    ),
+  ];
 
   @override
   Color get statusDisabledBackground => dark

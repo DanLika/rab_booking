@@ -20,6 +20,9 @@ import '../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../shared/models/unit_model.dart';
 import 'calendar/month_calendar_skeleton.dart';
 
+/// Handoff weekend-price coral (design_handoff/source/widget-calendar.jsx --err).
+const Color _kWeekendPriceColor = Color(0xFFFF7A6B);
+
 class MonthCalendarWidget extends ConsumerStatefulWidget {
   final String propertyId;
   final String unitId;
@@ -554,9 +557,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             decoration: BoxDecoration(
               border: Border.all(
                 color: isRangeStart || isRangeEnd
-                    ? colors.textPrimary
+                    ? colors.statusSelectedRangeBorder
                     : isToday
-                    ? colors.textPrimary
+                    ? colors.statusTodayBorder
                     : isHovered
                     ? colors.borderStrong
                     : _getBorderColorForDate(dateInfo.status, colors),
@@ -566,7 +569,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                     : BorderTokens.widthMedium,
               ),
               borderRadius: BorderTokens.calendarCell,
-              boxShadow: isHovered ? ShadowTokens.hover : ShadowTokens.light,
+              boxShadow: (isRangeStart || isRangeEnd)
+                  ? colors.selectedGlowShadow
+                  : isHovered
+                  ? ShadowTokens.hover
+                  : ShadowTokens.light,
             ),
             child: Stack(
               children: [
@@ -870,7 +877,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       case DateStatus.available:
       case DateStatus.partialCheckIn:
       case DateStatus.partialCheckOut:
-        return colors.statusAvailableBorder;
+        // Handoff: neutral border on white available cells (light);
+        // dark keeps the teal border with its teal fill.
+        return colors.backgroundPrimary.computeLuminance() > 0.5
+            ? colors.borderDefault
+            : colors.statusAvailableBorder;
       case DateStatus.booked:
       case DateStatus.partialBoth:
         return colors.statusBookedBorder;
@@ -935,6 +946,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
           // Price (if available)
           // Price (better visibility in dark mode - use textPrimary instead of textSecondary)
+          // Weekend nights use the handoff coral (widget-calendar.jsx #FF7A6B)
+          // so pricier Fri/Sat rates read at a glance.
           if (displayPrice != null)
             Text(
               '€${displayPrice.toStringAsFixed(0)}',
@@ -943,6 +956,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 fontWeight: TypographyTokens.semiBold,
                 color: isPast
                     ? colors.textPrimary.withValues(alpha: 0.5)
+                    : isWeekend
+                    ? _kWeekendPriceColor
                     : colors.textPrimary.withValues(alpha: 0.85),
               ),
             ),

@@ -56,36 +56,41 @@ class _WidgetPlatformInstallSectionState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          // 1. Platform tabs.
-          Row(
-            children: <Widget>[
-              BbChip(
-                label: l10n.widgetSettingsInstallHtml,
-                iconLeft: 'code',
-                selected: _tab == 0,
-                onTap: () => setState(() => _tab = 0),
-                size: BbChipSize.sm,
-                variant: BbChipVariant.tab,
-              ),
-              const SizedBox(width: BBSpace.xs),
-              BbChip(
-                label: l10n.widgetSettingsInstallWordpress,
-                iconLeft: 'web',
-                selected: _tab == 1,
-                onTap: () => setState(() => _tab = 1),
-                size: BbChipSize.sm,
-                variant: BbChipVariant.tab,
-              ),
-              const SizedBox(width: BBSpace.xs),
-              BbChip(
-                label: l10n.widgetSettingsInstallWix,
-                iconLeft: 'widgets',
-                selected: _tab == 2,
-                onTap: () => setState(() => _tab = 2),
-                size: BbChipSize.sm,
-                variant: BbChipVariant.tab,
-              ),
-            ],
+          // 1. Platform tabs — horizontally scrollable (the 3 chips overflow
+          // the ~300px hub panel by ~9px otherwise; same pattern as the
+          // Rezervacije filter tabs, #857).
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: <Widget>[
+                BbChip(
+                  label: l10n.widgetSettingsInstallHtml,
+                  iconLeft: 'code',
+                  selected: _tab == 0,
+                  onTap: () => setState(() => _tab = 0),
+                  size: BbChipSize.sm,
+                  variant: BbChipVariant.tab,
+                ),
+                const SizedBox(width: BBSpace.xs),
+                BbChip(
+                  label: l10n.widgetSettingsInstallWordpress,
+                  iconLeft: 'web',
+                  selected: _tab == 1,
+                  onTap: () => setState(() => _tab = 1),
+                  size: BbChipSize.sm,
+                  variant: BbChipVariant.tab,
+                ),
+                const SizedBox(width: BBSpace.xs),
+                BbChip(
+                  label: l10n.widgetSettingsInstallWix,
+                  iconLeft: 'widgets',
+                  selected: _tab == 2,
+                  onTap: () => setState(() => _tab = 2),
+                  size: BbChipSize.sm,
+                  variant: BbChipVariant.tab,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: BBSpace.md),
           // 2. Numbered steps for the active tab.

@@ -22,6 +22,7 @@ import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../shared/widgets/redesign.dart';
 import '../../../../core/design/responsive.dart';
 import '../../../../core/design/tokens.dart';
+import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -39,6 +40,13 @@ import '../widgets/bookings/bookings_ledger.dart';
 const double _kSectionPadLg = 20; // desktop section padding (== BbCard default)
 const double _kIconTextGap = 12; // icon → label gap
 const double _kFaqAnswerGap = 6; // question → answer gap
+// Mobile console panel (handoff RezervacijePremiumMobile `<main>`): 16px
+// horizontal gutter, 16/16/24 inner padding, 14px inter-section gap, radius 24.
+const double _kMobileGutter = 12; // outer shell gutter (handoff `0 12px`)
+const double _kMobilePanelPadH = 16; // panel horizontal inner padding
+const double _kMobilePanelPadTop = 16; // panel top inner padding
+const double _kMobilePanelPadBottom = 24; // panel bottom inner padding
+const double _kMobilePanelGap = 14; // gap between panel sections
 
 /// Owner bookings screen with filters and booking management
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
@@ -586,82 +594,102 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
                   physics: PlatformScrollPhysics.adaptive,
                   slivers: [
-                    // Premium header (audit/117 §B2) — KPI strip + AI nudge +
-                    // pending priority queue. Hidden when any filter is active
-                    // so filtered views aren't double-rendered.
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          context.horizontalPadding,
-                          isMobile ? BBSpace.sm : _kSectionPadLg,
-                          context.horizontalPadding,
-                          0,
-                        ),
-                        child: BookingsPremiumHeader(
-                          hasActiveFilter:
-                              filters.hasActiveFilters ||
-                              filters.showImportedOnly,
-                          padding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ),
-                    // Premium ledger section header (audit/117 §B2-Δb) —
-                    // eyebrow + count above the tabs/list. Bridges the
-                    // premium hero to the existing list/table.
-                    SliverToBoxAdapter(
-                      child: BookingsPremiumLedgerHeader(
-                        hasActiveFilter:
-                            filters.hasActiveFilters ||
-                            filters.showImportedOnly,
-                        padding: EdgeInsets.fromLTRB(
-                          context.horizontalPadding,
-                          isMobile ? _kIconTextGap : BBSpace.sm,
-                          context.horizontalPadding,
-                          0,
-                        ),
-                      ),
-                    ),
-                    // Overbooking conflict banner — preserved from the old
-                    // filters card; tap scrolls to / opens the conflicted
-                    // booking (audit/67 F-67-01 surface).
-                    if (conflictCount > 0)
+                    // Primary bookings content (premium header + ledger header +
+                    // conflict banner + lean ledger). On MOBILE these are wrapped
+                    // in ONE elevated console panel (handoff RezervacijePremium-
+                    // Mobile `<main>`: PV_PANEL_BG, radius 24, 1px panel border,
+                    // PV_PANEL_SHADOW, 16/16/24 padding, gap 14) so the content
+                    // no longer dumps loosely on the shell bg. On tablet/desktop
+                    // the existing loose-sliver layout is preserved.
+                    if (isMobile)
                       SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            context.horizontalPadding,
-                            isMobile ? BBSpace.sm : _kSectionPadLg,
-                            context.horizontalPadding,
-                            0,
-                          ),
-                          child: _OverbookingBanner(
-                            label: _formatConflictLabel(conflictCount),
-                            onTap: () => _handleOverbookingBadgeTap(ref),
-                          ),
-                        ),
-                      ),
-
-                    // Lean premium ledger (handoff RZPLedger): tabs + Filteri
-                    // header, read-only rows (tap → detail), count footer.
-                    // Replaces the old filters card + tab bar + view toggle +
-                    // separate footer. Actions live in the pending queue
-                    // (above) + the detail screen.
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          context.horizontalPadding,
-                          isMobile ? BBSpace.sm : _kSectionPadLg,
-                          context.horizontalPadding,
-                          0,
-                        ),
-                        child: _buildLeanLedger(
+                        child: _buildMobilePanel(
                           context,
                           filters,
                           windowedState,
                           bookings,
+                          conflictCount,
                           l10n,
                         ),
+                      )
+                    else ...[
+                      // Premium header (audit/117 §B2) — KPI strip + AI nudge +
+                      // pending priority queue. Hidden when any filter is active
+                      // so filtered views aren't double-rendered.
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            context.horizontalPadding,
+                            _kSectionPadLg,
+                            context.horizontalPadding,
+                            0,
+                          ),
+                          child: BookingsPremiumHeader(
+                            hasActiveFilter:
+                                filters.hasActiveFilters ||
+                                filters.showImportedOnly,
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
                       ),
-                    ),
+                      // Premium ledger section header (audit/117 §B2-Δb) —
+                      // eyebrow + count above the tabs/list. Bridges the
+                      // premium hero to the existing list/table.
+                      SliverToBoxAdapter(
+                        child: BookingsPremiumLedgerHeader(
+                          hasActiveFilter:
+                              filters.hasActiveFilters ||
+                              filters.showImportedOnly,
+                          padding: EdgeInsets.fromLTRB(
+                            context.horizontalPadding,
+                            BBSpace.sm,
+                            context.horizontalPadding,
+                            0,
+                          ),
+                        ),
+                      ),
+                      // Overbooking conflict banner — preserved from the old
+                      // filters card; tap scrolls to / opens the conflicted
+                      // booking (audit/67 F-67-01 surface).
+                      if (conflictCount > 0)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              context.horizontalPadding,
+                              _kSectionPadLg,
+                              context.horizontalPadding,
+                              0,
+                            ),
+                            child: _OverbookingBanner(
+                              label: _formatConflictLabel(conflictCount),
+                              onTap: () => _handleOverbookingBadgeTap(ref),
+                            ),
+                          ),
+                        ),
+
+                      // Lean premium ledger (handoff RZPLedger): tabs + Filteri
+                      // header, read-only rows (tap → detail), count footer.
+                      // Replaces the old filters card + tab bar + view toggle +
+                      // separate footer. Actions live in the pending queue
+                      // (above) + the detail screen.
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            context.horizontalPadding,
+                            _kSectionPadLg,
+                            context.horizontalPadding,
+                            0,
+                          ),
+                          child: _buildLeanLedger(
+                            context,
+                            filters,
+                            windowedState,
+                            bookings,
+                            l10n,
+                          ),
+                        ),
+                      ),
+                    ],
 
                     // (Ledger body — loading / empty / error / imported and
                     // the footer count — all render inside the lean ledger
@@ -872,6 +900,78 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       form = 'konflikata';
     }
     return '$n $form';
+  }
+
+  /// Mobile-only: wrap the primary bookings content (premium header + ledger
+  /// section header + conflict banner + lean ledger) in ONE elevated console
+  /// panel per the handoff (`RezervacijePremiumMobile` `<main>`). Fixes the
+  /// "loose cards on the shell bg" ugliness the operator flagged on device.
+  ///
+  /// Data honesty is unchanged: [BookingsPremiumHeader] renders the KPI strip /
+  /// AI nudge / pending queue only from real providers (queue only when real
+  /// pending bookings exist; AI nudge gated behind the `PREGLED_AI_INSIGHT`
+  /// flag + kDebugMode). The ledger body still resolves to the real empty state
+  /// on a 0-booking account.
+  Widget _buildMobilePanel(
+    BuildContext context,
+    BookingsFilters filters,
+    WindowedBookingsState windowedState,
+    List<OwnerBooking> bookings,
+    int conflictCount,
+    AppLocalizations l10n,
+  ) {
+    final rd = BbRedesignTokens.of(context);
+    final bool hasActiveFilter =
+        filters.hasActiveFilters || filters.showImportedOnly;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        _kMobileGutter,
+        BBSpace.sm,
+        _kMobileGutter,
+        0,
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: rd.panelBg,
+          borderRadius: BorderRadius.circular(BBRadius.lg),
+          border: Border.all(color: rd.panelBorder),
+          boxShadow: rd.panelShadow,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            _kMobilePanelPadH,
+            _kMobilePanelPadTop,
+            _kMobilePanelPadH,
+            _kMobilePanelPadBottom,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              // Header + KPI strip + AI nudge + pending queue (real providers).
+              BookingsPremiumHeader(
+                hasActiveFilter: hasActiveFilter,
+                padding: EdgeInsets.zero,
+              ),
+              // Ledger section header (eyebrow + count).
+              BookingsPremiumLedgerHeader(
+                hasActiveFilter: hasActiveFilter,
+                padding: const EdgeInsets.only(bottom: _kMobilePanelGap),
+              ),
+              if (conflictCount > 0) ...<Widget>[
+                _OverbookingBanner(
+                  label: _formatConflictLabel(conflictCount),
+                  onTap: () => _handleOverbookingBadgeTap(ref),
+                ),
+                const SizedBox(height: _kMobilePanelGap),
+              ],
+              // Lean ledger (tabs + rows + count; real data / empty state).
+              _buildLeanLedger(context, filters, windowedState, bookings, l10n),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   /// Build the lean premium ledger card for the active tab/state. Normalizes

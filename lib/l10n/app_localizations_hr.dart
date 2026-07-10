@@ -715,6 +715,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get changePassword => 'Promijeni lozinku';
 
   @override
+  String get changePasswordSecurityEyebrow => 'SIGURNOST RAČUNA';
+
+  @override
   String get showPassword => 'Prikaži lozinku';
 
   @override
@@ -2642,6 +2645,49 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerProfileTitle => 'Profil';
 
   @override
+  String get ownerProfileEyebrow => 'Račun · Vlasnik';
+
+  @override
+  String get ownerProfileHostBadge => 'Domaćin';
+
+  @override
+  String ownerProfileMemberSince(int year) {
+    return 'Član od $year';
+  }
+
+  @override
+  String get ownerProfileEmailVerified => 'Email potvrđen';
+
+  @override
+  String get ownerProfilePhoneAdded => 'Telefon dodan';
+
+  @override
+  String get ownerProfilePhoneMissing => 'Telefon nedostaje';
+
+  @override
+  String get ownerProfileCompleteHeading => 'Dovršite profil';
+
+  @override
+  String ownerProfileCompleteRemaining(int steps) {
+    return 'Još $steps koraka do 100%.';
+  }
+
+  @override
+  String get ownerProfileCompleteCta => 'Dovrši';
+
+  @override
+  String get ownerProfileCompleteFilledLabel => 'ispunjeno';
+
+  @override
+  String get ownerProfileGroupApp => 'Aplikacija';
+
+  @override
+  String get ownerProfileGroupLegal => 'Pravno';
+
+  @override
+  String get ownerProfileTrialBadge => 'Probni period';
+
+  @override
   String get ownerProfileThemeLight => 'Svijetla';
 
   @override
@@ -2803,6 +2849,13 @@ class AppLocalizationsHr extends AppLocalizations {
   String get editProfilePhone => 'Telefon';
 
   @override
+  String get editProfileEmailVerified => 'Potvrđeno';
+
+  @override
+  String get editProfilePhoneHelper =>
+      'Vidljivo gostima nakon potvrde rezervacije';
+
+  @override
   String get editProfileAddress => 'Adresa';
 
   @override
@@ -2927,6 +2980,9 @@ class AppLocalizationsHr extends AppLocalizations {
       'Opcionalni emailovi o plaćanjima. Početne Stripe potvrde plaćanja se uvijek šalju.';
 
   @override
+  String get notificationSettingsChannelsEyebrow => 'KANALI · EMAIL + PUSH';
+
+  @override
   String get notificationSettingsCalendar => 'Sinkronizacija kalendara';
 
   @override
@@ -2960,6 +3016,31 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get notificationSettingsSmsChannelDesc =>
       'Primajte obavijesti putem SMS-a';
+
+  @override
+  String get quietHoursTitle => 'Tihi sati';
+
+  @override
+  String get quietHoursEnable => 'Uključi tihe sate';
+
+  @override
+  String get quietHoursSubtitle =>
+      'Utišajte push obavijesti tijekom određenog vremenskog razdoblja';
+
+  @override
+  String get quietHoursStart => 'Početak';
+
+  @override
+  String get quietHoursEnd => 'Kraj';
+
+  @override
+  String get quietHoursInfo =>
+      'Tijekom tihih sati push obavijesti se zadržavaju — i dalje ćete primati e-poštu i vidjeti sve kada otvorite aplikaciju.';
+
+  @override
+  String quietHoursCrossMidnight(String start, String end) {
+    return 'Ovo razdoblje traje preko noći, od $start do $end sljedećeg jutra.';
+  }
 
   @override
   String get notificationSettingsLoadError => 'Greška pri učitavanju postavki';
@@ -3046,6 +3127,11 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get unitHubPropertiesAndUnits => 'Objekti i Jedinice';
+
+  @override
+  String unitHubPropertiesUnitsSubtitle(int propertyCount, int unitCount) {
+    return '$propertyCount objekata · $unitCount jedinica';
+  }
 
   @override
   String get unitHubAddProperty => 'Dodaj novi objekt';
@@ -3367,6 +3453,14 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get bankAccountBankDetailsSubtitle => 'Podaci za primanje uplata';
+
+  @override
+  String get bankAccountActiveBadge => 'Aktivan';
+
+  @override
+  String bankAccountHolderLabel(String holder) {
+    return 'Vlasnik: $holder · EUR';
+  }
 
   @override
   String get bankAccountIban => 'IBAN';
@@ -6683,6 +6777,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get icalImportDisabledWarning => 'Uvoz je onemogućen za ovaj feed';
 
   @override
+  String get icalDirectionImport => 'Uvoz';
+
+  @override
+  String get icalDirectionExport => 'Izvoz';
+
+  @override
   String get icalEchoStatusActive => 'Aktivno';
 
   @override
@@ -8209,6 +8309,24 @@ class AppLocalizationsHr extends AppLocalizations {
   }
 
   @override
+  String get subscriptionTrialEyebrow => 'VAŠ PLAN';
+
+  @override
+  String subscriptionTrialDaysRemaining(int daysLeft, int totalDays) {
+    return '$daysLeft od $totalDays dana preostalo';
+  }
+
+  @override
+  String subscriptionTrialEndsShort(String date) {
+    return 'do $date';
+  }
+
+  @override
+  String subscriptionTrialEndsInline(String date) {
+    return 'Uživate sve Pro mogućnosti. Završava $date.';
+  }
+
+  @override
   String get subscriptionFreeTrial => 'Besplatan probni period';
 
   @override
@@ -8245,6 +8363,9 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get subscriptionFeatureAdvancedAnalytics => 'Napredna analitika';
+
+  @override
+  String get subscriptionFeatureAiAssistant => 'AI asistent bez ograničenja';
 
   @override
   String get subscriptionFeaturePrioritySupport => 'Prioritetna podrška';
@@ -8292,6 +8413,13 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get subscriptionFaqDataSafeAnswer =>
       'Apsolutno. Vaši podaci su sigurno pohranjeni i nikada neće biti obrisani, čak i ako vaš probni period istekne ili otkažete pretplatu.';
+
+  @override
+  String get subscriptionUpgradeComingSoonTitle => 'Nadogradi na Pro';
+
+  @override
+  String get subscriptionUpgradeComingSoonBody =>
+      'Pro pretplata uskoro stiže. Integriramo Stripe plaćanja kako biste otključali neograničen broj objekata i premium značajke. Ostanite s nama!';
 
   @override
   String get subscriptionComingSoon => 'Upravljaj na Webu';

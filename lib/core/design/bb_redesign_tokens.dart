@@ -39,7 +39,8 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
     required this.softBg,
   });
 
-  /// Outer console background (`--bb-shell-bg`). Light `#F0F1F5` / dark `#000000`.
+  /// Outer console background (`--bb-shell-bg`). Light `#FAFAFB` (near-white,
+  /// minimalist pass 1) / dark `#000000`.
   final Color shellBg;
 
   /// Floating panel surface (`--bb-panel-bg`). Light `#FBFBFD` / dark `#0B0B0D`.
@@ -91,7 +92,7 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
   // ----- Theme presets -------------------------------------------------------
 
   static const BbRedesignTokens light = BbRedesignTokens(
-    shellBg: Color(0xFFF0F1F5),
+    shellBg: Color(0xFFFAFAFB), // minimalist pass 1: near-white shell
     panelBg: Color(0xFFFBFBFD),
     panelBorder: Color(0x0D14182D), // rgba(20,24,45,.05)
     panelShadow: AppShadows.panelLight,

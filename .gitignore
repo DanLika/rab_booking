@@ -120,8 +120,9 @@ jest_dx/
 .tmp/
 functions/.tmp/
 
-# In-repo Obsidian audit vault (working-tree only, not committed)
+# Personal notes vault (local only)
 obsidian-vault/
+test/golden/**/failures/
 
 # Claude Code file-history backups (may contain edited .env content)
 .claude/file_history/

@@ -182,27 +182,21 @@ class _StripeConnectSetupScreenState
 
   Future<void> _confirmDisconnect(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.stripeDisconnectTitle),
-        content: Text(l10n.stripeDisconnectMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-              foregroundColor: theme.colorScheme.onError,
-            ),
-            child: Text(l10n.stripeDisconnectConfirm),
-          ),
-        ],
+      builder: (context) => BbDialog(
+        title: l10n.stripeDisconnectTitle,
+        body: l10n.stripeDisconnectMessage,
+        destructive: true,
+        secondary: BbDialogAction(
+          label: l10n.cancel,
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+        primary: BbDialogAction(
+          label: l10n.stripeDisconnectConfirm,
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
       ),
     );
 

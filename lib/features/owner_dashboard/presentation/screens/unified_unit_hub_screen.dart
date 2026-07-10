@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/design/tokens.dart';
-import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -35,6 +34,12 @@ import '../widgets/units/units_premium_header.dart';
 /// Master panel width for desktop sidebar + mobile/tablet endDrawer
 const double _kMasterPanelWidth = 280.0;
 
+// Master-panel fidelity consts (handoff units.jsx PropertyTree / UnitTreeItem).
+const double _kMasterBadgeSize = 32.0; // header apartment tint badge
+const double _kMasterBadgeRadius = 10.0;
+const double _kMasterRowRadius = 12.0; // --bb-radius-sm
+const double _kMasterSelectedBar = 3.0; // selected unit left accent
+
 /// Breakpoint for desktop layout (CLAUDE.md: Desktop ≥1200px). At/above this
 /// the master panel is a persistent sidebar; below it lives in the endDrawer.
 const double _kDesktopBreakpoint = 1200.0;
@@ -45,14 +50,20 @@ const double _kTabletBreakpoint = 800.0;
 /// Breakpoint for mobile layout
 const double _kMobileBreakpoint = 600.0;
 
+/// Osnovno-tab vertical rhythm between major cards (gallery / header /
+/// info+capacity / price / services). Minimalist: uniform generous
+/// breathing room on the 8px scale (was a 20/16 mix).
+const double _kOsnovnoSectionGap = BBSpace.md; // 24
+
+/// 12px gap (off the 8px scale, but the deliberate handoff value between the
+/// price grid and its extras/hint rows). Named local const because BBSpace.xs2
+/// is deprecated-on-use.
+const double _kPriceExtrasGap = 12;
+
 /// Available status color (handoff `--bb-success`, dark lift in dark mode)
 Color _availableColor(ThemeData theme) => theme.brightness == Brightness.dark
     ? BBColor.successDarkMode
     : BBColor.success;
-
-/// Unavailable status color (handoff `--bb-error`, dark lift in dark mode)
-Color _unavailableColor(ThemeData theme) =>
-    theme.brightness == Brightness.dark ? BBColor.errorDarkMode : BBColor.error;
 
 // ============================================================================
 
@@ -330,6 +341,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }) {
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
     final l10n = AppLocalizations.of(context);
+    final bb = BBColor.of(context);
+    final propertyCount = propertiesAsync.asData?.value.length ?? 0;
+    final unitCount = ref.watch(ownerUnitsProvider).asData?.value.length ?? 0;
 
     return Column(
       children: [
@@ -360,19 +374,45 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.home_work_outlined,
-                    color: theme.colorScheme.primary,
+                  // Handoff: 32px primary-tint badge around apartment icon.
+                  Container(
+                    width: _kMasterBadgeSize,
+                    height: _kMasterBadgeSize,
+                    decoration: BoxDecoration(
+                      color: bb.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(_kMasterBadgeRadius),
+                    ),
+                    child: Icon(Icons.apartment, color: bb.primary, size: 18),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      l10n.unitHubPropertiesAndUnits,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.unitHubPropertiesAndUnits,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          l10n.unitHubPropertiesUnitsSubtitle(
+                            propertyCount,
+                            unitCount,
+                          ),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: bb.textTertiary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
+                  const SizedBox(width: 4),
                   // Add Property button
                   IconButton(
                     icon: const Icon(Icons.add_business, size: 22),
@@ -623,7 +663,17 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
   }
 
-  /// Property section with expandable units
+  /// Property section with expandable units.
+  ///
+  /// Handoff units.jsx `PropertyTree`: the property header is a FLAT toggle row
+  /// (`[chevron][domain icon][name (flex:1)][count][actions]`), NOT an
+  /// `ExpansionTile`. The old ExpansionTile packed the name into a fixed `title`
+  /// slot competing with a `trailing` 3-icon action cluster, so a long name had
+  /// no room and wrapped (band-aided with ellipsis in iter 6/#850). Restructured
+  /// to a real `Row` where the name gets true `Expanded` priority and the action
+  /// cluster is fixed-width trailing — the name shrinks/ellipsizes cleanly, no
+  /// vertical wrap at any width. Expand/collapse, actions, and selection wiring
+  /// are unchanged.
   Widget _buildPropertySection(
     ThemeData theme,
     bool isDark, {
@@ -633,160 +683,89 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }) {
     final l10n = AppLocalizations.of(context);
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
+        // Handoff PropertyTree: property groups are flat rows inside the panel
+        // card, not individually-elevated cards. Keep a hairline border for
+        // grouping without the heavy shadow.
         color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
-        boxShadow: AppShadows.getElevation(2, isDark: isDark),
+        borderRadius: BorderRadius.circular(_kMasterRowRadius),
+        border: Border.all(color: context.gradients.sectionBorder),
       ),
-      child: Theme(
-        data: theme.copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          initiallyExpanded: true,
-          iconColor: theme.colorScheme.primary,
-          collapsedIconColor: theme.colorScheme.primary,
-          tilePadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
-          ), // Consistent sidebar padding
-          childrenPadding: const EdgeInsets.only(bottom: 8),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.apartment,
-              color: theme.colorScheme.primary,
-              size: 20,
-            ),
+      child: _PropertyTreeSection(
+        header: (expanded, onToggle) => PropertyTreeHeader(
+          theme: theme,
+          propertyName: property.name,
+          canDelete: units.isEmpty,
+          expanded: expanded,
+          onToggle: onToggle,
+          editTooltip: l10n.unitHubEditProperty,
+          addTooltip: l10n.unitHubAddUnit,
+          deleteTooltip: units.isEmpty
+              ? l10n.unitHubDeleteProperty
+              : l10n.unitHubDeleteAllUnitsFirst,
+          // Handoff PropertyTree count = bare tnum number (not "N jedinica"): the
+          // verbose label crushed the Expanded name to ~22px on the narrow mobile
+          // panel (edit/delete/add cluster already claims 84px). Total is in the
+          // panel subtitle; units are listed directly below.
+          unitsCountLabel: '${units.length}',
+          onEdit: () => context.push(
+            OwnerRoutes.propertyEdit.replaceAll(':id', property.id),
           ),
-          title: Text(
-            property.name,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+          onDelete: () =>
+              _confirmDeleteProperty(context, property, units.length),
+          onAdd: () => context.push(
+            '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
           ),
-          subtitle: Text(
-            l10n.unitHubUnitsCount(units.length),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Horizontal row of action buttons (more compact)
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 16),
-                  onPressed: () {
-                    context.push(
-                      OwnerRoutes.propertyEdit.replaceAll(':id', property.id),
-                    );
-                  },
-                  tooltip: l10n.unitHubEditProperty,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+        ),
+        children: [
+          if (units.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ),
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: IconButton(
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: 16,
-                    color: units.isEmpty
-                        ? theme.colorScheme.error
-                        : theme.colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.5,
-                          ),
-                  ),
-                  onPressed: () =>
-                      _confirmDeleteProperty(context, property, units.length),
-                  tooltip: units.isEmpty
-                      ? l10n.unitHubDeleteProperty
-                      : l10n.unitHubDeleteAllUnitsFirst,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ),
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: IconButton(
-                  icon: const Icon(Icons.add_circle_outline, size: 16),
-                  onPressed: () {
-                    context.push(
-                      '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
-                    );
-                  },
-                  tooltip: l10n.unitHubAddUnit,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.expand_more, size: 20),
-            ],
-          ),
-          children: [
-            if (units.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          l10n.unitHubNoUnitsInProperty,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.unitHubNoUnitsInProperty,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      BbButton(
-                        label: l10n.unitHubAdd,
-                        size: BbButtonSize.sm,
-                        onPressed: () {
-                          context.push(
-                            '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                    ),
+                    BbButton(
+                      label: l10n.unitHubAdd,
+                      size: BbButtonSize.sm,
+                      onPressed: () {
+                        context.push(
+                          '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
+                        );
+                      },
+                    ),
+                  ],
                 ),
-              )
-            else
-              _buildReorderableUnitList(
-                theme,
-                isDark,
-                units: units,
-                property: property,
-                onUnitSelected: onUnitSelected,
               ),
-          ],
-        ),
+            )
+          else
+            _buildReorderableUnitList(
+              theme,
+              isDark,
+              units: units,
+              property: property,
+              onUnitSelected: onUnitSelected,
+            ),
+        ],
       ),
     );
   }
@@ -974,20 +953,22 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     required bool isSelected,
     VoidCallback? onUnitSelected,
   }) {
+    final bb = BBColor.of(context);
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
+      margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
+        // Handoff UnitTreeItem: selected = primary-tint bg + 3px left accent;
+        // unselected = flat/transparent (no card border/shadow).
         color: isSelected
-            ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt())
-            : context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isSelected
-              ? theme.colorScheme.primary
-              : context.gradients.sectionBorder,
-          width: isSelected ? 2 : 1.5,
+            ? bb.primary.withValues(alpha: 0.12)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(_kMasterRowRadius),
+        border: Border(
+          left: BorderSide(
+            color: isSelected ? bb.primary : Colors.transparent,
+            width: _kMasterSelectedBar,
+          ),
         ),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
       ),
       child: InkWell(
         onTap: () {
@@ -998,7 +979,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           });
           onUnitSelected?.call();
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(_kMasterRowRadius),
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -1008,53 +989,46 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               // Unit name + status + actions
               Row(
                 children: [
+                  // Handoff: leading bed icon (primary when selected).
+                  Icon(
+                    Icons.bed_rounded,
+                    size: 15,
+                    color: isSelected ? bb.primary : bb.textTertiary,
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       unit.name,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface,
+                        color: isSelected ? bb.primary : bb.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: unit.isAvailable
-                          ? _availableColor(
-                              theme,
-                            ).withAlpha((0.2 * 255).toInt())
-                          : _unavailableColor(
-                              theme,
-                            ).withAlpha((0.2 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Builder(
-                      builder: (context) {
-                        final l10n = AppLocalizations.of(context);
-                        return Text(
-                          unit.isAvailable
-                              ? l10n.unitHubAvailable
-                              : l10n.unitHubUnavailable,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: unit.isAvailable
-                                ? _availableColor(theme)
-                                : _unavailableColor(theme),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 11,
-                          ),
-                        );
-                      },
-                    ),
+                  // Handoff: status as uppercase micro-label (success / tertiary),
+                  // no pill chrome.
+                  Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return Text(
+                        (unit.isAvailable
+                                ? l10n.unitHubAvailable
+                                : l10n.unitHubUnavailable)
+                            .toUpperCase(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: unit.isAvailable
+                              ? _availableColor(theme)
+                              : bb.textTertiary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                          letterSpacing: 0.4,
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(width: 4),
                   // Duplicate button
@@ -1113,69 +1087,70 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 ],
               ),
               const SizedBox(height: 3),
-              // Property name
-              Text(
-                property.name,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isSelected
-                      ? theme.colorScheme.onSurface.withAlpha(
-                          (0.7 * 255).toInt(),
-                        )
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 6),
-              // Max guests + price
-              Row(
-                children: [
-                  Icon(
-                    Icons.people_rounded,
-                    size: 18,
-                    color: isSelected
-                        ? theme.colorScheme.primary.withAlpha(
-                            (0.8 * 255).toInt(),
-                          )
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${unit.maxGuests}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isSelected
-                          ? theme.colorScheme.onSurface
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
+              // Handoff meta row indent aligns under the unit name (past the
+              // 15px bed icon + 8px gap).
+              Padding(
+                padding: const EdgeInsets.only(left: 23),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Property name
+                    Text(
+                      property.name,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: bb.textTertiary,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Icon(
-                    Icons.euro_rounded,
-                    size: 18,
-                    color: isSelected
-                        ? theme.colorScheme.primary.withAlpha(
-                            (0.8 * 255).toInt(),
-                          )
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Builder(
-                    builder: (context) {
-                      final l10n = AppLocalizations.of(context);
-                      return Text(
-                        '${unit.pricePerNight.toStringAsFixed(0)}${l10n.unitHubPerNight}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: isSelected
-                              ? theme.colorScheme.onSurface
-                              : theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                    const SizedBox(height: 6),
+                    // Max guests + price
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.group_rounded,
+                          size: 15,
+                          color: bb.textTertiary,
                         ),
-                      );
-                    },
-                  ),
-                ],
+                        const SizedBox(width: 4),
+                        Text(
+                          '${unit.maxGuests}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: bb.textTertiary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(width: BBSpace.sm),
+                        Icon(
+                          Icons.euro_rounded,
+                          size: 15,
+                          color: bb.textTertiary,
+                        ),
+                        const SizedBox(width: 2),
+                        Flexible(
+                          child: Builder(
+                            builder: (context) {
+                              final l10n = AppLocalizations.of(context);
+                              return Text(
+                                '${unit.pricePerNight.toStringAsFixed(0)}${l10n.unitHubPerNight}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: bb.textTertiary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -1374,12 +1349,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         // Gallery (desktop only, when the unit carries photos) — handoff cover + 2×2
         if (isDesktop && unit.images.isNotEmpty) ...[
           _buildUnitGallery(c, unit.images),
-          const SizedBox(height: 20),
+          const SizedBox(height: _kOsnovnoSectionGap),
         ],
 
         // Header: title + subtitle, Kopiraj (duplicate) + Uredi (edit)
         _buildOsnovnoHeader(theme, c, l10n, unit, isMobile),
-        const SizedBox(height: 20),
+        const SizedBox(height: _kOsnovnoSectionGap),
 
         // 2-col cards: Informacije + Kapacitet (stack on mobile)
         if (isDesktop || isTablet)
@@ -1393,14 +1368,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           )
         else ...[
           informacijeCard,
-          const SizedBox(height: 16),
+          const SizedBox(height: BBSpace.sm),
           kapacitetCard,
         ],
-        const SizedBox(height: 16),
+        const SizedBox(height: _kOsnovnoSectionGap),
 
         // Cijena card: PriceTile grid + extra fees + Cjenovnik cross-reference banner
         _buildCijenaCard(c, l10n, unit),
-        const SizedBox(height: 16),
+        const SizedBox(height: _kOsnovnoSectionGap),
 
         // Additional services (loaded from Firestore)
         _buildServicesCard(),
@@ -1806,7 +1781,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             },
           ),
           if (extras.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: _kPriceExtrasGap),
             for (int i = 0; i < extras.length; i++)
               _kvRow(
                 c,
@@ -1815,7 +1790,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 isLast: i == extras.length - 1,
               ),
           ],
-          const SizedBox(height: 14),
+          const SizedBox(height: BBSpace.sm),
           _buildCjenovnikHint(c, l10n),
         ],
       ),
@@ -1829,7 +1804,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     bool emphasis = false,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: emphasis ? c.primary.withValues(alpha: 0.10) : c.surfaceVariant,
         borderRadius: BorderRadius.circular(12),
@@ -1903,6 +1878,198 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+// ============================================================================
+// PROPERTY TREE (handoff units.jsx PropertyTree flat-row layout)
+// ============================================================================
+
+/// Collapsible property group. Owns expand/collapse state (default expanded,
+/// matching the old `ExpansionTile(initiallyExpanded: true)`) and renders the
+/// flat [PropertyTreeHeader] toggle row above its animated children.
+class _PropertyTreeSection extends StatefulWidget {
+  const _PropertyTreeSection({required this.header, required this.children});
+
+  /// Builds the header given the current expanded state + a toggle callback.
+  final Widget Function(bool expanded, VoidCallback onToggle) header;
+  final List<Widget> children;
+
+  @override
+  State<_PropertyTreeSection> createState() => _PropertyTreeSectionState();
+}
+
+class _PropertyTreeSectionState extends State<_PropertyTreeSection> {
+  bool _expanded = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        widget.header(_expanded, () => setState(() => _expanded = !_expanded)),
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 200),
+          firstCurve: Curves.easeInOut,
+          secondCurve: Curves.easeInOut,
+          sizeCurve: Curves.easeInOut,
+          crossFadeState: _expanded
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
+          firstChild: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: widget.children,
+            ),
+          ),
+          secondChild: const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
+  }
+}
+
+/// Flat property-header row per handoff units.jsx `PropertyTree`.
+///
+/// `[chevron][domain icon][name (Expanded)][count][edit][delete][add]`. The
+/// name gets true `Expanded` priority so it shrinks/ellipsizes cleanly instead
+/// of wrapping vertically under the fixed-width trailing action cluster — this
+/// is the structural fix for the wrap bug band-aided with ellipsis in
+/// iter 6/#850. Tapping anywhere on the name/chevron region toggles expand.
+@visibleForTesting
+class PropertyTreeHeader extends StatelessWidget {
+  const PropertyTreeHeader({
+    super.key,
+    required this.theme,
+    required this.propertyName,
+    required this.canDelete,
+    required this.expanded,
+    required this.onToggle,
+    required this.editTooltip,
+    required this.deleteTooltip,
+    required this.addTooltip,
+    required this.unitsCountLabel,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onAdd,
+  });
+
+  final ThemeData theme;
+  final String propertyName;
+  final bool canDelete;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final String editTooltip;
+  final String deleteTooltip;
+  final String addTooltip;
+  final String unitsCountLabel;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = theme.colorScheme;
+    return Row(
+      children: [
+        // Toggle region: chevron + domain icon + name. Expanded so the name
+        // owns all slack width and never competes with the action cluster.
+        Expanded(
+          child: InkWell(
+            onTap: onToggle,
+            borderRadius: BorderRadius.circular(_kMasterRowRadius),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+              child: Row(
+                children: [
+                  AnimatedRotation(
+                    duration: const Duration(milliseconds: 200),
+                    turns: expanded ? 0 : -0.25,
+                    child: Icon(
+                      Icons.expand_more,
+                      size: 18,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(Icons.domain, size: 16, color: cs.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      propertyName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  // Handoff count badge (bb-tnum). Fixed intrinsic width.
+                  Text(
+                    unitsCountLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // Fixed-width action cluster — never steals width from the name.
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  onPressed: onEdit,
+                  tooltip: editTooltip,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: 16,
+                    color: canDelete
+                        ? cs.error
+                        : cs.onSurfaceVariant.withValues(alpha: 0.5),
+                  ),
+                  onPressed: onDelete,
+                  tooltip: deleteTooltip,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: IconButton(
+                  icon: const Icon(Icons.add_circle_outline, size: 16),
+                  onPressed: onAdd,
+                  tooltip: addTooltip,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

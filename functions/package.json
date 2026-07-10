@@ -25,7 +25,7 @@
     "node-ical": "^0.26.1",
     "resend": "^6.12.4",
     "rrule": "^2.8.1",
-    "stripe": "^22.2.0"
+    "stripe": "^22.2.3"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.1",

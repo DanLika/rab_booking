@@ -137,11 +137,15 @@ class _Tile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
-    // Handoff per-tone tile tints (calendar-month.jsx): primary uses the
-    // soft primary-tint-bg (6%), tertiary 16%, success/info 12%.
-    final double tintAlpha = tone == c.primary
-        ? 0.06
-        : (tone == c.tertiary ? 0.16 : 0.12);
+    // Minimalist pass 3: light collapses to a single primary tile+glyph; dark
+    // keeps the caller tone + handoff per-tone tint (calendar-month.jsx).
+    final tone = BBColor.monoKpiTone(context, this.tone);
+    final bool isMono = tone != this.tone; // true only in light (retoned)
+    // Dark: handoff per-tone tints (primary 6% / tertiary 16% / else 12%).
+    // Light mono: uniform 10% so every purple tile reads equally.
+    final double tintAlpha = isMono
+        ? 0.10
+        : (tone == c.primary ? 0.06 : (tone == c.tertiary ? 0.16 : 0.12));
     return BbCard(
       padding: EdgeInsets.all(isMobile ? 12 : 16),
       child: Row(

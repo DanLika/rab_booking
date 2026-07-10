@@ -60,8 +60,11 @@
   --bb-divider: #EDF2F7;
 
   /* Premium console shell — layered: shell (L1) → floating panel (L2) → cards (L3).
-     Calm, low-chroma cool neutral (not an obvious tint). */
-  --bb-shell-bg: #F0F1F5;
+     MINIMALIST DIRECTION 2026-07-10 (operator): shell moved to near-white for a
+     calmer, lower-contrast surface. Elevation now reads from a SUBTLE shadow +
+     hairline border, not a bg step. Flat chrome (no gradients). See obsidian
+     06-Ops/Minimalist Light Theme 2026-07-10 + audit/overnight-fidelity-2026-07-10. */
+  --bb-shell-bg: #FAFAFB;
   --bb-panel-bg: #FBFBFD;
   --bb-panel-border: rgba(20, 24, 45, 0.05);
   --bb-panel-shadow: 0 1px 3px rgba(16,24,40,0.03), 0 2px 8px -2px rgba(16,24,40,0.04), 0 16px 36px -16px rgba(16,24,40,0.10);

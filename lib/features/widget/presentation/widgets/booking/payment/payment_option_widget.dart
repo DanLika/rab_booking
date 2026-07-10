@@ -70,7 +70,10 @@ class PaymentOptionWidget extends StatelessWidget {
           padding: const EdgeInsets.all(BBSpace.sm),
           decoration: BoxDecoration(
             border: Border.all(
-              color: isSelected ? colors.borderFocus : colors.borderDefault,
+              // Selected → mint-deep (handoff widget-calendar.jsx accent).
+              color: isSelected
+                  ? colors.statusTodayBorder
+                  : colors.borderDefault,
               width: isSelected ? BBBorderWidth.medium : BBBorderWidth.thin,
             ),
             borderRadius: const BorderRadius.all(
@@ -178,7 +181,7 @@ class _RadioIndicator extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: isSelected ? colors.borderFocus : colors.textSecondary,
+          color: isSelected ? colors.statusTodayBorder : colors.textSecondary,
           width: PaymentOptionWidget._radioBorderWidth,
         ),
       ),
@@ -189,7 +192,7 @@ class _RadioIndicator extends StatelessWidget {
                 height: PaymentOptionWidget._radioInnerSize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: colors.buttonPrimary,
+                  color: colors.statusTodayBorder,
                 ),
               ),
             )

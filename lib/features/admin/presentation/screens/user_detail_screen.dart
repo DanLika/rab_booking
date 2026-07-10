@@ -20,7 +20,23 @@ const double _mobileBreakpoint = 900.0;
 class UserDetailScreen extends ConsumerStatefulWidget {
   final String userId;
 
-  const UserDetailScreen({super.key, required this.userId});
+  /// When true, the screen renders as an inline master-detail panel (handoff
+  /// `admin-users.jsx` `AUOwnerPanel`) embedded beside the Users table instead
+  /// of a routed full page. In embedded mode the header's leading control is a
+  /// `close` button (wired to [onClose]) rather than a `back`-to-`/users`
+  /// navigation — selecting another row swaps [userId] in place.
+  final bool embedded;
+
+  /// Close callback for embedded mode (clears the selection). Ignored when
+  /// [embedded] is false.
+  final VoidCallback? onClose;
+
+  const UserDetailScreen({
+    super.key,
+    required this.userId,
+    this.embedded = false,
+    this.onClose,
+  });
 
   @override
   ConsumerState<UserDetailScreen> createState() => _UserDetailScreenState();
@@ -222,10 +238,14 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
             children: [
               BbButton(
                 asIcon: true,
-                iconLeft: 'arrow_back',
+                iconLeft: widget.embedded ? 'close' : 'arrow_back',
                 variant: BbButtonVariant.tertiary,
-                semanticLabel: 'Back to users',
-                onPressed: () => context.go('/users'),
+                semanticLabel: widget.embedded
+                    ? 'Close details'
+                    : 'Back to users',
+                onPressed: widget.embedded
+                    ? (widget.onClose ?? () {})
+                    : () => context.go('/users'),
               ),
               const SizedBox(width: BBSpace.sm),
               BbAvatar(name: displayName),

@@ -320,7 +320,7 @@ class _NotificationSettingsScreenState
                           Padding(
                             padding: const EdgeInsets.only(top: BBSpace.xs),
                             child: Text(
-                              'KANALI · EMAIL + PUSH',
+                              l10n.notificationSettingsChannelsEyebrow,
                               style: BBType.eyebrow(
                                 context,
                               ).copyWith(color: c.textTertiary, fontSize: 10),

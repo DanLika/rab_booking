@@ -158,10 +158,12 @@ class _WidgetAdvancedSettingsScreenState
     }
   }
 
-  /// Page-shell wash (`context.gradients.pageBackground`, TIP 1 diagonal,
-  /// fade ends at 30%). Applied to the standalone Scaffold body only — when
-  /// embedded in the unit hub (showAppBar == false) the hub paints the page
-  /// gradient itself, so we don't double-wash there.
+  /// Page-shell background (`context.gradients.pageBackground`). Flat solid
+  /// fill since 2026-06-16 (CHANGELOG 7.23) — the `pageBackground` "gradient"
+  /// now renders as a single solid tone (API kept for call-site stability).
+  /// Applied to the standalone Scaffold body only — when embedded in the unit
+  /// hub (showAppBar == false) the hub paints the page background itself, so we
+  /// don't double-wash there.
   Widget _withPageBackground(Widget child) {
     return Container(
       decoration: BoxDecoration(gradient: context.gradients.pageBackground),

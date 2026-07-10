@@ -257,6 +257,7 @@
 
   "editProfile": "Edit Profile",
   "changePassword": "Change Password",
+  "changePasswordSecurityEyebrow": "ACCOUNT SECURITY",
   "showPassword": "Show password",
   "hidePassword": "Hide password",
   "currentPassword": "Current Password",
@@ -1107,6 +1108,8 @@
   "editProfileFullName": "Full Name",
   "editProfileEmail": "Email",
   "editProfilePhone": "Phone",
+  "editProfileEmailVerified": "Verified",
+  "editProfilePhoneHelper": "Visible to guests after booking confirmation",
   "editProfileAddress": "Address",
   "editProfileAddressSubtitle": "Your physical address",
   "editProfileCountry": "Country",
@@ -1145,6 +1148,7 @@
   "notificationSettingsBookingsDesc": "Emails when guests make instant bookings. Pending bookings requiring your approval are always sent.",
   "notificationSettingsPayments": "Payment Reminders",
   "notificationSettingsPaymentsDesc": "Optional payment notification emails. Initial Stripe payment confirmations are always sent.",
+  "notificationSettingsChannelsEyebrow": "CHANNELS · EMAIL + PUSH",
   "notificationSettingsCalendar": "Calendar Sync",
   "notificationSettingsCalendarDesc": "iCal sync alerts and calendar conflict warnings.",
   "notificationSettingsMarketing": "Marketing & Updates",
@@ -1388,6 +1392,13 @@
   "bankAccountTitle": "Bank Account",
   "bankAccountBankDetails": "Bank Details",
   "bankAccountBankDetailsSubtitle": "Data for receiving payments",
+  "bankAccountActiveBadge": "Active",
+  "bankAccountHolderLabel": "Owner: {holder} · EUR",
+  "@bankAccountHolderLabel": {
+    "placeholders": {
+      "holder": {"type": "String"}
+    }
+  },
   "bankAccountIban": "IBAN",
   "bankAccountSwift": "SWIFT/BIC",
   "bankAccountBankName": "Bank Name",

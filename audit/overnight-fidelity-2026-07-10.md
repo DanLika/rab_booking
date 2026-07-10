@@ -950,3 +950,43 @@ handoff; `?lang=de` flips chip to **"DE"** + localizes UI, confirming
 `_getLanguageCode` + provider + URL persistence live. Dark trigger inferred
 from unchanged `textPrimary` token wiring (Flutter-web synthetic pointer
 can't drive the moon toggle; golden dark variants green).
+
+---
+
+## §settings-l10n-residue — settings-cluster l10n + stale-docstring cleanup (chore/settings-l10n-residue)
+
+Follow-up to the settings fidelity pass (PR #859 notes). Pure l10n/comment
+refactor — **zero behavior/layout change, HR output byte-identical** (golden
+suite 56/56 green, nothing moved). No provider/logic edits; keyboard mixins
+untouched.
+
+**6 hardcoded HR literals → ARB** (8 new keys; EN proper English, HR
+byte-identical to the retired literals):
+- `change_password_screen.dart` L314 eyebrow `SIGURNOST RAČUNA` → `changePasswordSecurityEyebrow`
+- `notification_settings_screen.dart` L323 eyebrow `KANALI · EMAIL + PUSH` → `notificationSettingsChannelsEyebrow`
+- `bank_account_screen.dart` L213 status badge `Aktivan` → `bankAccountActiveBadge` (dropped `const` on `BbStatusBadge`)
+- `bank_account_screen.dart` L258 `Vlasnik: $holder · EUR` → `bankAccountHolderLabel(holder)` (String placeholder)
+- `edit_profile_screen.dart` L398 verified chip `Potvrđeno` → `editProfileEmailVerified`
+- `edit_profile_screen.dart` L419 phone helper `Vidljivo gostima nakon potvrde rezervacije` → `editProfilePhoneHelper`
+
+**Skipped (data-honesty):** `profile_screen.dart` `_ProfilStat` static list
+(`OCJENA DOMAĆINA` / `STOPA ODGOVORA` / `VRIJEME ODGOVORA` / `ZAVRŠENE
+REZERVACIJE` + sub) — `const` mock/placeholder KPI data gated behind
+`bool.fromEnvironment('PROFILE_HOST_STATS')` / `kDebugMode`, no backend source,
+never renders in production. Not user-facing debt; localizing would force a
+const→runtime-context rewrite of dummy values. Left as-is.
+
+**Docstring fix:** `widget_advanced_settings_screen.dart` L161 `_withPageBackground`
+— stale "TIP 1 diagonal, fade ends at 30%" comment corrected to note the flat
+solid fill since CHANGELOG 7.23 (#842), API kept for call-site stability. Nearby
+raw `8.0`/`16.0`/`24` spacers left untouched (conditional layout values — would
+churn layout, out of scope).
+
+**Ratchet:** `hardcoded_strings_guard_test` baseline SHRANK (2 of the migrated
+`Text(...)` literals it matched are gone; regex doesn't see the `label:`/`helper:`
+ones). No allowlist entries orphaned.
+
+**Verify:** `dart format` clean; `flutter analyze` (changed dirs) 0 issues;
+`flutter gen-l10n` + `build_runner` clean; l10n suite 8/8 (completeness +
+placeholder parity + ratchet); `--tags golden` 56/56 (no baseline moved →
+HR byte-identical confirmed); full suite 1665 passed. Dev-only, no deploy.

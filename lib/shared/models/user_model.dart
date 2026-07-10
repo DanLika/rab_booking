@@ -159,6 +159,13 @@ class UserModel with _$UserModel {
     @Default(AccountType.trial)
     AccountType accountType,
 
+    /// Raw lifecycle status from Firestore: 'trial' | 'active' |
+    /// 'trial_expired' | 'suspended'. Distinct from [accountType] (billing
+    /// tier). Read-only here — admin status tabs/filter (users_list_screen)
+    /// read this. Kept as a raw String (not an enum) so an unrecognised value
+    /// is displayed verbatim rather than silently coerced. Missing → null.
+    @JsonKey(name: 'accountStatus') String? accountStatus,
+
     /// Email verification status
     @Default(false) bool emailVerified,
 

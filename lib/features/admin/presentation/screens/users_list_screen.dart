@@ -37,6 +37,83 @@ const int _rowsPerPage = 8;
 /// Sort fields available for user list
 enum _SortField { name, email, createdAt }
 
+/// Status tabs shown above the users table/cards (handoff `admin-users.jsx`
+/// `AU_TABS`: All / Active / Trial / Suspended). Each carries a live count
+/// badge sourced from real `.count()` aggregates ([ownerStatusCountsProvider]).
+/// Selecting a tab filters the loaded list by the owner's raw `accountStatus`.
+///
+/// `trial` folds `accountStatus == 'trial_expired'` in with `'trial'` — the
+/// count badge sums both keys and the filter matches both — because the
+/// handoff exposes no separate expired tab and both are "in the trial phase".
+enum _StatusTab {
+  all,
+  active,
+  trial,
+  suspended;
+
+  String get label => switch (this) {
+    _StatusTab.all => 'All',
+    _StatusTab.active => 'Active',
+    _StatusTab.trial => 'Trial',
+    _StatusTab.suspended => 'Suspended',
+  };
+
+  /// Raw `accountStatus` values this tab matches (empty ⇒ matches everything).
+  Set<String> get statuses => switch (this) {
+    _StatusTab.all => const <String>{},
+    _StatusTab.active => const {'active'},
+    _StatusTab.trial => const {'trial', 'trial_expired'},
+    _StatusTab.suspended => const {'suspended'},
+  };
+
+  /// `ownerStatusCountsProvider` keys summed for this tab's badge (empty for
+  /// `all`, which reads the `'all'` key directly).
+  List<String> get countKeys => switch (this) {
+    _StatusTab.all => const ['all'],
+    _StatusTab.active => const ['active'],
+    _StatusTab.trial => const ['trial', 'trial_expired'],
+    _StatusTab.suspended => const ['suspended'],
+  };
+
+  /// Whether [status] belongs in this tab. `all` always matches. A missing
+  /// status keeps the row visible ONLY in `all`.
+  bool matches(String? status) {
+    if (this == _StatusTab.all) return true;
+    return status != null && statuses.contains(status);
+  }
+}
+
+/// Resolve a status tab's badge count from the aggregate map. Returns null
+/// (⇒ no badge) when the needed key(s) are absent (aggregate failed / not yet
+/// loaded) — never a fabricated 0.
+int? _statusTabCount(_StatusTab tab, Map<String, int> counts) {
+  int? total;
+  for (final key in tab.countKeys) {
+    final v = counts[key];
+    if (v != null) total = (total ?? 0) + v;
+  }
+  return total;
+}
+
+/// Test seam: badge count for a tab addressed by its enum name
+/// (`all`/`active`/`trial`/`suspended`). Mirrors [_statusTabCount] so a test
+/// can assert the count-summing (incl. Trial folding in `trial_expired`)
+/// without reaching the private enum. Returns null when keys are absent.
+@visibleForTesting
+int? statusTabBadgeCountForTest(String tabName, Map<String, int> counts) {
+  final tab = _StatusTab.values.firstWhere((t) => t.name == tabName);
+  return _statusTabCount(tab, counts);
+}
+
+/// Test seam: does a raw `accountStatus` belong in the named tab's filter?
+/// Mirrors [_StatusTab.matches] (incl. Trial folding in `trial_expired` and
+/// null ⇒ visible only under `all`).
+@visibleForTesting
+bool statusTabMatchesForTest(String tabName, String? accountStatus) {
+  final tab = _StatusTab.values.firstWhere((t) => t.name == tabName);
+  return tab.matches(accountStatus);
+}
+
 /// Users list screen with responsive layout and modern styling
 class UsersListScreen extends ConsumerStatefulWidget {
   const UsersListScreen({super.key});
@@ -48,6 +125,10 @@ class UsersListScreen extends ConsumerStatefulWidget {
 class _UsersListScreenState extends ConsumerState<UsersListScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+
+  // Status tab (navigational; 'all' = no status filter). Distinct from the
+  // AccountType chips below — this is the handoff `AU_TABS` lifecycle filter.
+  _StatusTab _selectedStatus = _StatusTab.all;
 
   // Filters
   final Set<AccountType> _selectedAccountTypes = {};
@@ -92,6 +173,13 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       }).toList();
     }
 
+    // Status tab filter (lifecycle accountStatus). 'all' matches everything.
+    if (_selectedStatus != _StatusTab.all) {
+      result = result
+          .where((user) => _selectedStatus.matches(user.accountStatus))
+          .toList();
+    }
+
     // Account type filter
     if (_selectedAccountTypes.isNotEmpty) {
       result = result
@@ -133,6 +221,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
   bool get _hasActiveFilters =>
       _searchQuery.isNotEmpty ||
+      _selectedStatus != _StatusTab.all ||
       _selectedAccountTypes.isNotEmpty ||
       _dateRange != null;
 
@@ -140,6 +229,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     _searchController.clear();
     setState(() {
       _searchQuery = '';
+      _selectedStatus = _StatusTab.all;
       _selectedAccountTypes.clear();
       _dateRange = null;
       _page = 0;
@@ -286,6 +376,16 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                     onPressed: notifier.loadInitial,
                   ),
                 ],
+              ),
+              const SizedBox(height: BBSpace.sm),
+              // Status tabs (handoff `AU_TABS`): live count badges from real
+              // `.count()` aggregates; selecting one filters by accountStatus.
+              _StatusTabs(
+                selected: _selectedStatus,
+                onSelected: (tab) => setState(() {
+                  _selectedStatus = tab;
+                  _page = 0;
+                }),
               ),
               const SizedBox(height: BBSpace.sm),
               BbInput(
@@ -451,6 +551,44 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Horizontal row of lifecycle status tabs with live count badges.
+///
+/// Counts come from [ownerStatusCountsProvider] (real `.count()` aggregates).
+/// While the aggregate is loading or a status errored, that tab shows NO badge
+/// (never a fabricated 0). Uses `BbChipVariant.tab` + dark console tokens.
+class _StatusTabs extends ConsumerWidget {
+  const _StatusTabs({required this.selected, required this.onSelected});
+
+  final _StatusTab selected;
+  final ValueChanged<_StatusTab> onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final countsAsync = ref.watch(ownerStatusCountsProvider);
+    final counts = countsAsync.valueOrNull ?? const <String, int>{};
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final tab in _StatusTab.values)
+            Padding(
+              padding: const EdgeInsets.only(right: BBSpace.xs),
+              child: BbChip(
+                label: tab.label,
+                count: _statusTabCount(tab, counts),
+                selected: tab == selected,
+                variant: BbChipVariant.tab,
+                size: BbChipSize.sm,
+                onTap: () => onSelected(tab),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -1256,3 +1394,29 @@ const double usersListMobileBreakpoint = _mobileBreakpoint;
 /// Rows per numbered-pagination page, exposed for tests.
 @visibleForTesting
 const int usersListRowsPerPage = _rowsPerPage;
+
+/// Renders the lifecycle status tabs (`_StatusTabs`) in isolation with an
+/// injected counts map (bypasses Firebase). Reports the selected tab's enum
+/// name via [onSelectedName]. See
+/// `test/features/admin/users_list_status_tabs_test.dart`.
+@visibleForTesting
+Widget buildStatusTabsForTest({
+  required Map<String, int> counts,
+  String selectedName = 'all',
+  ValueChanged<String>? onSelectedName,
+}) {
+  final selected = _StatusTab.values.firstWhere((t) => t.name == selectedName);
+  return ProviderScope(
+    overrides: [ownerStatusCountsProvider.overrideWith((ref) async => counts)],
+    child: _StatusTabs(
+      selected: selected,
+      onSelected: (tab) => onSelectedName?.call(tab.name),
+    ),
+  );
+}
+
+/// The status-tab enum names in render order (`all`/`active`/`trial`/
+/// `suspended`), exposed for tests to assert the handoff tab set.
+@visibleForTesting
+List<String> get statusTabNamesForTest =>
+    _StatusTab.values.map((t) => t.name).toList();

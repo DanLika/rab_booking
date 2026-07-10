@@ -2,7 +2,30 @@
 
 All version history from v4.6 to v7.37.
 
-**Last Updated**: 2026-07-10 | **Version**: 7.39
+**Last Updated**: 2026-07-10 | **Version**: 7.40
+
+---
+
+**Changelog 7.40** (2026-07-10):
+
+### Admin Users status TAB-COUNTS — data-honest omit built end-to-end (audit/admin-users-tabcounts)
+The handoff `admin-users.jsx` `AU_TABS` status tabs (All / Active / Trial /
+Suspended) with live count badges were omitted by #860/#864 (needed aggregation).
+Now real, DEV-ONLY (bookbed-dev), no PROD, no callable/rules change:
+- **Counts:** new `AdminUsersRepository.getStatusCounts()` — 5 Firestore `.count()`
+  aggregates (same proven pattern as `getDashboardStats`) over the whole `users`
+  collection, NOT a partial page count; a failed query drops its key (no fabricated
+  0). New `ownerStatusCountsProvider`.
+- **Model:** `UserModel.accountStatus` (`String?`, raw — no enum coercion) added so
+  the loaded list can filter by lifecycle status; regenerated freezed/g (one field).
+- **UI:** `_StatusTabs` row above the search input (BbChip `tab` variant + count
+  badge, dark console tokens), single-select nav tab (default All) wired into the
+  existing filter/clear state. `trial_expired` folds into the Trial tab (badge sums
+  both, filter matches both). Preserves #860 pagination/cards, #862 search, #864
+  master-detail, #765 overflow.
+- **Verify:** analyze 0; new `users_list_status_tabs_test` 12 cells; admin suite 33
+  green; full `flutter test` +1769 green; seam-golden eyeball renders All 248 /
+  Active 210 / Trial 26 / Suspended 12. No golden baselines touch this screen.
 
 ---
 

@@ -207,11 +207,11 @@ class SplitDayCalendarPainter extends CustomPainter {
         break;
     }
 
-    // Draw range overlay with reduced opacity if date is in selected range
+    // Draw range overlay if date is in selected range (mint-light tint).
     if (isInRange) {
       final overlayPaint = Paint()
         ..style = PaintingStyle.fill
-        ..color = colors.buttonPrimary.withValues(alpha: 0.2);
+        ..color = colors.statusInRangeBackground.withValues(alpha: 0.55);
       canvas.drawRect(
         Rect.fromLTWH(0, 0, size.width, size.height),
         overlayPaint,

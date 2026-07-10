@@ -8,6 +8,7 @@ import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/user_model.dart';
 import '../../data/admin_users_repository.dart';
+import '../../providers/admin_providers.dart';
 import 'admin_shell_screen.dart';
 
 /// Responsive breakpoint for the compact per-user card layout. Below this
@@ -46,6 +47,19 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
   // Numbered-pagination page index (0-based) over the filtered table rows.
   int _page = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Seed the local text filter from the topbar's shared owners-search query
+    // (set when the admin submits the topbar search and routes here). Reuses
+    // the existing filter — no separate search backend.
+    final seeded = ref.read(adminOwnersSearchQueryProvider);
+    if (seeded.isNotEmpty) {
+      _searchQuery = seeded;
+      _searchController.text = seeded;
+    }
+  }
 
   @override
   void dispose() {
@@ -143,6 +157,17 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Keep the local filter in sync when the topbar search is submitted while
+    // this screen is already mounted (initState only runs on first mount).
+    ref.listen<String>(adminOwnersSearchQueryProvider, (prev, next) {
+      if (next != _searchQuery) {
+        setState(() {
+          _searchQuery = next;
+          _searchController.text = next;
+          _page = 0;
+        });
+      }
+    });
     final ownersAsync = ref.watch(ownersListProvider);
     final notifier = ref.read(ownersListProvider.notifier);
     final palette = _UsersListPalette.of(context, ref);

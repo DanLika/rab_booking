@@ -8,6 +8,8 @@ import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/redesign.dart';
+import '../../providers/admin_providers.dart';
 
 const _kAdminDarkModeKey = 'admin_dark_mode';
 
@@ -713,14 +715,49 @@ class _NavIconTile extends StatelessWidget {
   }
 }
 
-class _AdminHeader extends StatelessWidget {
+class _AdminHeader extends ConsumerStatefulWidget {
   final bool showMenuButton;
 
   const _AdminHeader({this.showMenuButton = true});
 
   @override
+  ConsumerState<_AdminHeader> createState() => _AdminHeaderState();
+}
+
+class _AdminHeaderState extends ConsumerState<_AdminHeader> {
+  final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Reflect any existing query (e.g. set from the Users screen filter) so the
+    // topbar and the list stay in sync when navigating back to a shell that
+    // rebuilds the header.
+    _searchController.text = ref.read(adminOwnersSearchQueryProvider);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  /// Publishes the query to the shared provider and routes to the Users screen,
+  /// which seeds its local filter from the same provider. OWNERS-ONLY: reuses
+  /// the existing owners list + filter — no new search backend.
+  void _submit(String query) {
+    ref.read(adminOwnersSearchQueryProvider.notifier).state = query.trim();
+    if (!GoRouterState.of(context).matchedLocation.startsWith('/users')) {
+      context.go('/users');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Handoff AdminTopbar (admin-shell.jsx:121): the search field is present on
+    // desktop + tablet, hidden on mobile — same gate as the hamburger button.
+    final bool showSearch = !widget.showMenuButton;
 
     return Container(
       height: 64,
@@ -733,7 +770,7 @@ class _AdminHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (showMenuButton) ...[
+          if (widget.showMenuButton) ...[
             IconButton(
               icon: const Icon(Icons.menu),
               tooltip: 'Menu',
@@ -758,7 +795,25 @@ class _AdminHeader extends StatelessWidget {
             'Admin',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
-          const Spacer(),
+          if (showSearch) ...[
+            const SizedBox(width: 16),
+            // maxWidth 420 + marginLeft 12 per handoff admin-shell.jsx:122.
+            Expanded(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: BbInput(
+                  key: const Key('admin_topbar_search'),
+                  controller: _searchController,
+                  placeholder: 'Search owners…',
+                  iconLeft: 'search',
+                  size: BbInputSize.sm,
+                  onSubmitted: _submit,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+          ] else
+            const Spacer(),
           // Handoff AdminTopbar: environment pill. Reads the REAL runtime
           // Firebase project id — never fabricated. Green when the app is
           // wired to Production, amber otherwise (dev/staging).
@@ -865,3 +920,11 @@ Widget buildAdminNavChromeForTest() {
     ],
   );
 }
+
+/// Renders the admin topbar in isolation for the search seam test. `_AdminEnvPill`
+/// self-hides when Firebase is uninitialised, so this pumps without Firebase/auth.
+/// `showMenuButton` toggles the mobile gate (mobile → no search). Not for
+/// production use — see `test/features/admin/admin_topbar_search_test.dart`.
+@visibleForTesting
+Widget buildAdminTopbarForTest({bool showMenuButton = false}) =>
+    _AdminHeader(showMenuButton: showMenuButton);

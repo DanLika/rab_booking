@@ -1178,3 +1178,18 @@ can pivot to neutral-gray by editing the light branch of `monoKpiTone`).
 ### Follow-up (separate task, NOT this PR)
 - Units 390px 39px RenderFlex overflow on `unified_unit_hub_screen` — pre-existing,
   layout not color; needs its own responsive fix.
+
+### Addendum — Units hub stat grid mono flip (2026-07-10, branch `design/units-hub-mono-tiles`)
+The #871 pass mis-assessed the Units hub stat grid (Objekti/Jedinice/Dostupne/
+Kapacitet) as already primary-only. Device-confirmed it still rendered polychrome
+icon tiles (primary/info/success/tertiary). The 4-tone `_Tile` in
+`units_premium_header.dart` never routed through the helper.
+
+Fix: `_Tile.build` now `final tone = BBColor.monoKpiTone(context, this.tone);`
+— identical adoption to `_PregledKpiCard` / `_RezStatTile` / `_Tile` (Kalendar) /
+`_ProfilStatTile`. LIGHT → single primary tint (tile backplate + glyph); DARK keeps
+the caller tone. Status pills/dots (Dostupan = green) unchanged — they route hue
+directly. FROZEN Cjenovnik content untouched.
+
+dart format clean, analyze 0 net-new, `--tags golden` all-pass (no baseline moved —
+units header has no golden), full suite green. Dev-only, no deploy. REVERSIBLE.

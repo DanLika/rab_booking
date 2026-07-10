@@ -196,3 +196,29 @@ Cjenovnik tab content / `price_list_calendar_widget` / `_buildSaveButton` purple
 - Dark-mode live capture (web app follows in-app theme, not OS colorScheme; covered by dark goldens).
 
 **NEXT page recommendation:** widget-*.jsx guest surface (widget-calendar / guest-form / pricing / confirmation / error) — `.claude/rules/widget.md` applies (App Check OFF, subdomain slugs, snackbar colors). Then admin-*.jsx console, then dialogs/states/variants.
+
+---
+
+## Iteration 7 — guest booking widget (mint accent fidelity)
+
+**Branch:** `design/widget-guest-fidelity` | anchor `a5a663d1`. Widget mint accent `#3DD9B0` / deep `#1FAF87` (handoff WC_MINT/WP_MINT). UI-visual only; zero booking-logic edits; no FROZEN painter touched.
+
+Scoped to the two highest-value, lowest-risk gaps (pure-presentation widgets, no calendar painter, no App Check surface):
+
+### Sections changed
+- **Confirmation — success mark** (`confirmation_header.dart`): replaced the flat monochrome `Icons.check_circle` (was `colors.textPrimary`) with the handoff layered success mark for the genuinely-confirmed states (`stripe`, `pay_on_arrival`, default): two soft mint rings (`rgba(#3DD9B0,.14)` / `.22`) + mint→mint-deep gradient core disc (135°, `boxShadow rgba(31,175,135,.40)`) + white `check_rounded` glyph. `pending` / `bank_transfer` keep their neutral schedule/pending glyphs (data honesty — not "success"). File-local named consts (`_kWcMint` etc.) with note that `#3DD9B0` == `BbRedesignTokens.mintWidget`.
+- **Pricing — deposit band** (`price_breakdown_widget.dart`): replaced the plain secondary-text deposit line with the handoff `WPDepositBand`: mint-tinted panel (`bg rgba(#3DD9B0,.10)` / `border rgba(#3DD9B0,.32)`, radius 12) with mint-deep bold label + `task_alt_rounded` mint-deep icon. Same content (`depositWithPercentage`) — no new l10n string.
+
+### Verification
+- `dart format` clean; `flutter analyze` 0 net-new (only pre-existing `medium`-radius deprecation on unchanged line 106).
+- `price_breakdown_widget_test` 8/8 green (incl. "renders deposit info" — text preserved).
+- l10n gates green (hardcoded-strings ratchet + WidgetTranslations 4-lang coverage + ARB completeness) — no new user-facing string.
+- `--tags golden` 56/56 green (changed widgets not in a golden seam; no baseline moved).
+- Live web eyeball skipped: deterministic color/shape presentation, covered by unit + golden suite.
+
+### Deferred (widget cluster, next iteration)
+- **Calendar** day-cell mint palette (selected fill → mint, today border → mint-deep `#1FAF87`, in-range tint → mint-light `#A8EFD9`, selected mint-glow shadow). Highest visible impact but touches `split_day_calendar_painter` / `month_calendar_widget` — FROZEN-adjacent per `.claude/rules/calendar.md`; needs new `BbRedesignTokens` mint-ladder fields (ThemeExtension class+copyWith+lerp surface) and a live eyeball. Own careful task.
+- **Guest form** field radius 20→12, guest-counter buttons → true circle, payment-option selected-card mint-deep border.
+- **Confirmation summary card** radius 20→24, deposit sub-band mint tint; **error** ring opacity 12%→16%.
+
+**NEXT page recommendation:** finish the widget calendar mint-ladder (add `BbRedesignTokens` mint fields + apply in painters, with live web eyeball via `widget_main_dev.dart`) as a dedicated FROZEN-adjacent task — biggest remaining visible widget gap. Then guest-form radii, then admin-*.jsx console.

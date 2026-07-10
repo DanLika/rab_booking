@@ -21,6 +21,14 @@ import '../../l10n/widget_translations.dart';
 /// ```
 ///
 /// Uses flutter_animate for scale animation on the icon.
+// Widget mint accent (handoff widget-confirmation.jsx WC_MINT / WC_MINT_DEEP).
+// Canonical widget mint == BbRedesignTokens.mintWidget (#3DD9B0); the deep
+// stop and tint rings are handoff-only, kept as file-local named consts.
+const Color _kWcMint = Color(0xFF3DD9B0);
+const Color _kWcMintDeep = Color(0xFF1FAF87);
+const Color _kWcRingSoft = Color(0x243DD9B0); // rgba(61,217,176,.14)
+const Color _kWcRingMedium = Color(0x383DD9B0); // rgba(61,217,176,.22)
+
 class ConfirmationHeader extends ConsumerWidget {
   /// Payment method: 'stripe', 'bank_transfer', 'pay_on_arrival', 'pending'
   final String paymentMethod;
@@ -53,14 +61,72 @@ class ConfirmationHeader extends ConsumerWidget {
     }
   }
 
+  /// Handoff success mark (widget-confirmation.jsx): mint→mint-deep gradient
+  /// disc with two soft mint rings and a white check glyph. Used only for the
+  /// genuinely-confirmed states; pending/bank-transfer keep neutral glyphs.
+  Widget _buildSuccessMark(double iconSize) {
+    // Handoff: outer soft ring inset -10, medium ring inset 0, core disc
+    // size-20. Scale those constants off the icon size for parity across bp.
+    final double disc = iconSize + 24; // core disc diameter
+    final double ring = disc + 20; // medium ring diameter
+    return SizedBox(
+      width: ring + 20,
+      height: ring + 20,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Outer soft ring (rgba .14)
+          Container(
+            width: ring + 20,
+            height: ring + 20,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: _kWcRingSoft,
+            ),
+          ),
+          // Medium ring (rgba .22)
+          Container(
+            width: ring,
+            height: ring,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: _kWcRingMedium,
+            ),
+          ),
+          // Core gradient disc + white check
+          Container(
+            width: disc,
+            height: disc,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [_kWcMint, _kWcMintDeep],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x661FAF87), // rgba(31,175,135,.40)
+                  blurRadius: 24,
+                  offset: Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.check_rounded,
+              size: disc * 0.46,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _getConfirmationIcon(double iconSize) {
     switch (paymentMethod) {
       case 'stripe':
-        return Icon(
-          Icons.check_circle,
-          size: iconSize,
-          color: colors.textPrimary,
-        );
+        return _buildSuccessMark(iconSize);
       case 'bank_transfer':
         return Icon(
           Icons.schedule,
@@ -68,15 +134,11 @@ class ConfirmationHeader extends ConsumerWidget {
           color: colors.textSecondary,
         );
       case 'pay_on_arrival':
-        return Icon(Icons.hotel, size: iconSize, color: colors.textPrimary);
+        return _buildSuccessMark(iconSize);
       case 'pending':
         return Icon(Icons.pending, size: iconSize, color: colors.textSecondary);
       default:
-        return Icon(
-          Icons.check_circle,
-          size: iconSize,
-          color: colors.textPrimary,
-        );
+        return _buildSuccessMark(iconSize);
     }
   }
 

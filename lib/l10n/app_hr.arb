@@ -2669,6 +2669,8 @@
   "icalImportEnabledDescription": "Uvozi rezervacije iz ovog kalendara u BookBed",
   "icalImportDisabledNote": "Samo izvoz - vaše rezervacije su vidljive ovoj platformi, ali se njihovi događaji neće uvoziti. Koristite za platforme koje re-exportaju uvezene podatke (sprječava echo loop).",
   "icalImportDisabledWarning": "Uvoz je onemogućen za ovaj feed",
+  "icalDirectionImport": "Uvoz",
+  "icalDirectionExport": "Izvoz",
   "icalEchoStatusActive": "Aktivno",
   "icalEchoStatusNeedsReview": "Potrebna provjera",
   "icalEchoStatusConfirmedEcho": "Potvrđeni echo",

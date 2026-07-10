@@ -513,12 +513,21 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           ),
           title: Row(
             children: [
-              Text(
-                feed.platformDisplayName,
-                style: BBType.body(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w600),
+              Flexible(
+                child: Text(
+                  feed.platformDisplayName,
+                  style: BBType.body(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 6),
+              // Handoff ical.jsx FeedCard direction badge. Data-honest: keyed
+              // on the real `importEnabled` field — import feeds pull events in,
+              // export-only feeds just publish our bookings out.
+              DirectionBadge(importEnabled: feed.importEnabled),
               const SizedBox(width: BBSpace.xs),
               Container(
                 width: 8,
@@ -1626,5 +1635,52 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         ),
       );
     }
+  }
+}
+
+/// Compact Uvoz/Izvoz (Import/Export) direction pill for an iCal feed row.
+/// Data-honest — reflects the real `IcalFeed.importEnabled` field.
+@visibleForTesting
+class DirectionBadge extends StatelessWidget {
+  const DirectionBadge({super.key, required this.importEnabled});
+
+  final bool importEnabled;
+
+  static const double _kBadgeRadius = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final l10n = AppLocalizations.of(context);
+    // Import = pulls events in (primary tone); export-only = publishes out
+    // (tertiary tone, calmer — it's the passive direction).
+    final Color tone = importEnabled ? c.primary : c.textTertiary;
+    final String label = importEnabled
+        ? l10n.icalDirectionImport
+        : l10n.icalDirectionExport;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(_kBadgeRadius),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          BbIcon(
+            name: importEnabled ? 'download' : 'upload',
+            size: 12,
+            color: tone,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: BBType.caption(
+              context,
+            ).copyWith(color: tone, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
   }
 }

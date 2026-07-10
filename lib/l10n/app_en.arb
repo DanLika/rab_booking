@@ -2669,6 +2669,14 @@
   "icalImportEnabledDescription": "Import reservations from this calendar into BookBed",
   "icalImportDisabledNote": "Export only mode - your bookings are visible to this platform, but their events won't be imported. Use this for platforms that re-export imported data (prevents echo loops).",
   "icalImportDisabledWarning": "Import is disabled for this feed",
+  "icalDirectionImport": "Import",
+  "@icalDirectionImport": {
+    "description": "Direction badge shown on an iCal feed that imports events (importEnabled=true)"
+  },
+  "icalDirectionExport": "Export",
+  "@icalDirectionExport": {
+    "description": "Direction badge shown on an iCal feed that only exports (importEnabled=false)"
+  },
   "icalEchoStatusActive": "Active",
   "icalEchoStatusNeedsReview": "Needs review",
   "icalEchoStatusConfirmedEcho": "Confirmed echo",

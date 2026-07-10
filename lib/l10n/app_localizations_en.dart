@@ -6638,6 +6638,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get icalImportDisabledWarning => 'Import is disabled for this feed';
 
   @override
+  String get icalDirectionImport => 'Import';
+
+  @override
+  String get icalDirectionExport => 'Export';
+
+  @override
   String get icalEchoStatusActive => 'Active';
 
   @override

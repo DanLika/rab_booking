@@ -753,6 +753,14 @@ mixin _$UserModel {
   @JsonKey(fromJson: AccountType.fromJson)
   AccountType get accountType => throw _privateConstructorUsedError;
 
+  /// Raw lifecycle status from Firestore: 'trial' | 'active' |
+  /// 'trial_expired' | 'suspended'. Distinct from [accountType] (billing
+  /// tier). Read-only here — admin status tabs/filter (users_list_screen)
+  /// read this. Kept as a raw String (not an enum) so an unrecognised value
+  /// is displayed verbatim rather than silently coerced. Missing → null.
+  @JsonKey(name: 'accountStatus')
+  String? get accountStatus => throw _privateConstructorUsedError;
+
   /// Email verification status
   bool get emailVerified => throw _privateConstructorUsedError;
 
@@ -874,6 +882,7 @@ abstract class $UserModelCopyWith<$Res> {
     @JsonKey(name: 'last_name') String lastName,
     UserRole role,
     @JsonKey(fromJson: AccountType.fromJson) AccountType accountType,
+    @JsonKey(name: 'accountStatus') String? accountStatus,
     bool emailVerified,
     String? phone,
     @JsonKey(name: 'avatar_url') String? avatarUrl,
@@ -937,6 +946,7 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? lastName = null,
     Object? role = null,
     Object? accountType = null,
+    Object? accountStatus = freezed,
     Object? emailVerified = null,
     Object? phone = freezed,
     Object? avatarUrl = freezed,
@@ -986,6 +996,10 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
                 ? _value.accountType
                 : accountType // ignore: cast_nullable_to_non_nullable
                       as AccountType,
+            accountStatus: freezed == accountStatus
+                ? _value.accountStatus
+                : accountStatus // ignore: cast_nullable_to_non_nullable
+                      as String?,
             emailVerified: null == emailVerified
                 ? _value.emailVerified
                 : emailVerified // ignore: cast_nullable_to_non_nullable
@@ -1110,6 +1124,7 @@ abstract class _$$UserModelImplCopyWith<$Res>
     @JsonKey(name: 'last_name') String lastName,
     UserRole role,
     @JsonKey(fromJson: AccountType.fromJson) AccountType accountType,
+    @JsonKey(name: 'accountStatus') String? accountStatus,
     bool emailVerified,
     String? phone,
     @JsonKey(name: 'avatar_url') String? avatarUrl,
@@ -1173,6 +1188,7 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? lastName = null,
     Object? role = null,
     Object? accountType = null,
+    Object? accountStatus = freezed,
     Object? emailVerified = null,
     Object? phone = freezed,
     Object? avatarUrl = freezed,
@@ -1222,6 +1238,10 @@ class __$$UserModelImplCopyWithImpl<$Res>
             ? _value.accountType
             : accountType // ignore: cast_nullable_to_non_nullable
                   as AccountType,
+        accountStatus: freezed == accountStatus
+            ? _value.accountStatus
+            : accountStatus // ignore: cast_nullable_to_non_nullable
+                  as String?,
         emailVerified: null == emailVerified
             ? _value.emailVerified
             : emailVerified // ignore: cast_nullable_to_non_nullable
@@ -1326,6 +1346,7 @@ class _$UserModelImpl extends _UserModel {
     required this.role,
     @JsonKey(fromJson: AccountType.fromJson)
     this.accountType = AccountType.trial,
+    @JsonKey(name: 'accountStatus') this.accountStatus,
     this.emailVerified = false,
     this.phone,
     @JsonKey(name: 'avatar_url') this.avatarUrl,
@@ -1399,6 +1420,15 @@ class _$UserModelImpl extends _UserModel {
   @override
   @JsonKey(fromJson: AccountType.fromJson)
   final AccountType accountType;
+
+  /// Raw lifecycle status from Firestore: 'trial' | 'active' |
+  /// 'trial_expired' | 'suspended'. Distinct from [accountType] (billing
+  /// tier). Read-only here — admin status tabs/filter (users_list_screen)
+  /// read this. Kept as a raw String (not an enum) so an unrecognised value
+  /// is displayed verbatim rather than silently coerced. Missing → null.
+  @override
+  @JsonKey(name: 'accountStatus')
+  final String? accountStatus;
 
   /// Email verification status
   @override
@@ -1549,7 +1579,7 @@ class _$UserModelImpl extends _UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents, hideSubscription: $hideSubscription, adminOverrideAccountType: $adminOverrideAccountType, featureFlags: $featureFlags, profileCompleted: $profileCompleted, lastProvider: $lastProvider, lifetimeLicenseGrantedAt: $lifetimeLicenseGrantedAt, lifetimeLicenseGrantedBy: $lifetimeLicenseGrantedBy)';
+    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, accountStatus: $accountStatus, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents, hideSubscription: $hideSubscription, adminOverrideAccountType: $adminOverrideAccountType, featureFlags: $featureFlags, profileCompleted: $profileCompleted, lastProvider: $lastProvider, lifetimeLicenseGrantedAt: $lifetimeLicenseGrantedAt, lifetimeLicenseGrantedBy: $lifetimeLicenseGrantedBy)';
   }
 
   @override
@@ -1566,6 +1596,8 @@ class _$UserModelImpl extends _UserModel {
             (identical(other.role, role) || other.role == role) &&
             (identical(other.accountType, accountType) ||
                 other.accountType == accountType) &&
+            (identical(other.accountStatus, accountStatus) ||
+                other.accountStatus == accountStatus) &&
             (identical(other.emailVerified, emailVerified) ||
                 other.emailVerified == emailVerified) &&
             (identical(other.phone, phone) || other.phone == phone) &&
@@ -1633,6 +1665,7 @@ class _$UserModelImpl extends _UserModel {
     lastName,
     role,
     accountType,
+    accountStatus,
     emailVerified,
     phone,
     avatarUrl,
@@ -1679,6 +1712,7 @@ abstract class _UserModel extends UserModel {
     @JsonKey(name: 'last_name') final String lastName,
     required final UserRole role,
     @JsonKey(fromJson: AccountType.fromJson) final AccountType accountType,
+    @JsonKey(name: 'accountStatus') final String? accountStatus,
     final bool emailVerified,
     final String? phone,
     @JsonKey(name: 'avatar_url') final String? avatarUrl,
@@ -1754,6 +1788,15 @@ abstract class _UserModel extends UserModel {
   @override
   @JsonKey(fromJson: AccountType.fromJson)
   AccountType get accountType;
+
+  /// Raw lifecycle status from Firestore: 'trial' | 'active' |
+  /// 'trial_expired' | 'suspended'. Distinct from [accountType] (billing
+  /// tier). Read-only here — admin status tabs/filter (users_list_screen)
+  /// read this. Kept as a raw String (not an enum) so an unrecognised value
+  /// is displayed verbatim rather than silently coerced. Missing → null.
+  @override
+  @JsonKey(name: 'accountStatus')
+  String? get accountStatus;
 
   /// Email verification status
   @override

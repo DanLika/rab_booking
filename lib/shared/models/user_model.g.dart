@@ -87,6 +87,7 @@ _$UserModelImpl _$$UserModelImplFromJson(
   accountType: json['accountType'] == null
       ? AccountType.trial
       : AccountType.fromJson(json['accountType']),
+  accountStatus: json['accountStatus'] as String?,
   emailVerified: json['emailVerified'] as bool? ?? false,
   phone: json['phone'] as String?,
   avatarUrl: json['avatar_url'] as String?,
@@ -144,6 +145,7 @@ Map<String, dynamic> _$$UserModelImplToJson(
   'last_name': instance.lastName,
   'role': _$UserRoleEnumMap[instance.role]!,
   'accountType': _$AccountTypeEnumMap[instance.accountType]!,
+  'accountStatus': instance.accountStatus,
   'emailVerified': instance.emailVerified,
   'phone': instance.phone,
   'avatar_url': instance.avatarUrl,

@@ -91,6 +91,54 @@ class AdminUsersRepository {
     };
   }
 
+  /// Get owner counts grouped by lifecycle `accountStatus`, plus the total.
+  ///
+  /// Uses Firestore `.count()` aggregation queries (same proven pattern as
+  /// [getDashboardStats]) so each figure is a REAL server-side aggregate over
+  /// the whole `users` collection — NOT a partial count of the loaded page.
+  /// Statuses mirror the handoff `admin-users.jsx` `AU_TABS` (All / Active /
+  /// Trial / Suspended) plus `trial_expired` (a real status value emitted by
+  /// `updateUserStatus`), which the screen folds into the Trial tab.
+  ///
+  /// Keys: `all`, `active`, `trial`, `trial_expired`, `suspended`.
+  /// Any query error → that key is omitted (data honesty: no fabricated 0).
+  Future<Map<String, int>> getStatusCounts() async {
+    final base = _firestore
+        .collection('users')
+        .where('role', isEqualTo: 'owner');
+
+    Future<int?> countFor(String? status) async {
+      try {
+        final query = status == null
+            ? base
+            : base.where('accountStatus', isEqualTo: status);
+        final snap = await query.count().get();
+        return snap.count ?? 0;
+      } catch (e, st) {
+        await LoggingService.logError(
+          'getStatusCounts: count() failed for status=${status ?? 'all'}',
+          e,
+          st,
+        );
+        return null;
+      }
+    }
+
+    final entries = <String, int?>{
+      'all': await countFor(null),
+      'active': await countFor('active'),
+      'trial': await countFor('trial'),
+      'trial_expired': await countFor('trial_expired'),
+      'suspended': await countFor('suspended'),
+    };
+
+    // Drop any status whose aggregate failed rather than reporting a fake 0.
+    return {
+      for (final e in entries.entries)
+        if (e.value != null) e.key: e.value!,
+    };
+  }
+
   /// Get user's properties count
   Future<int> getUserPropertiesCount(String userId) async {
     final snapshot = await _firestore
@@ -327,6 +375,14 @@ final ownersListProvider =
 final dashboardStatsProvider = FutureProvider<Map<String, int>>((ref) async {
   final repo = ref.watch(adminUsersRepositoryProvider);
   return repo.getDashboardStats();
+});
+
+/// Provider for owner counts per lifecycle status (drives the Users-screen
+/// status tabs' live count badges). Real `.count()` aggregates — see
+/// [AdminUsersRepository.getStatusCounts].
+final ownerStatusCountsProvider = FutureProvider<Map<String, int>>((ref) async {
+  final repo = ref.watch(adminUsersRepositoryProvider);
+  return repo.getStatusCounts();
 });
 
 /// Provider for single user

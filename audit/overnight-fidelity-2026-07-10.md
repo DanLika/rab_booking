@@ -581,3 +581,57 @@ clip / dark-invisible fill:
 All 11 campaign deliverables render correctly and match their handoffs across the
 verified cells. Campaign CLOSED-verified. Ship = this ledger append (doc-only).
 Dev-only, no deploy. iOS plist untouched.
+
+---
+
+## Iteration 14 — Widget guest-form input radius → 12px (handoff) (2026-07-10)
+
+**Task (operator-approved theme decision):** deferred from iteration 8 (ledger
+"deferred" §, "Widget guest-form field radius 20→12"). Land the embeddable
+booking-widget text-input radius on the handoff value.
+
+**Premise correction:** the iteration-8 note said "20→12", but the code truth is
+that ALL widget form inputs already routed through `BBRadiusBridges.medium` = **8px**
+(not 20). Handoff ground truth confirmed: `design_handoff/source/widget-guest-form.jsx`
+`radius="12"` (one secondary field `radius="10"`); `tokens.css --bb-radius-md: 20px`
+is scoped to **cards**, not inputs. Target therefore = **12px** (`BBRadius.sm` /
+`BBRadius.smAll` — the documented mandate value).
+
+**Where radius was defined + what changed** (theme/helper level, NOT per-field):
+- `widget_input_decoration_helper.dart` — `WidgetInputDecorationHelper.buildDecoration()`
+  is the single source for guest-form fields (name/email/phone/notes all call it).
+  5 `OutlineInputBorder` radii (border/enabled/focused/error/focusedError)
+  `Radius.circular(BBRadiusBridges.medium)` (8) → `BBRadius.smAll` (12).
+- `minimalist_theme.dart` — widget-theme `inputDecorationTheme` fallback: same 5
+  borders 8→`BBRadius.smAll`. Card/button/menu `.medium` shapes (lines 176/207/253)
+  deliberately LEFT (out of scope — not inputs).
+- `country_code_dropdown.dart` — phone country-code field container (sits beside the
+  phone input) 8→`BBRadius.smAll` for field-row consistency.
+
+**Deliberately NOT changed:** shared `BBRadiusBridges.medium` const (8) — used by
+cards too, changing it globally would shrink card corners (off-scope). Fix applied at
+input call-sites only. Email verify-button + success-badge (24×24 tiles) left — they
+are buttons/badges, not form fields. Counter buttons already true circles (glyph
+IconButtons per #847) — nothing to do. No promo/search fields exist in the widget.
+
+**Owner-app inputs:** untouched (already 12px `InputDecorationHelper` standard).
+
+### Gates
+- `dart format`: 3 files, 0 changed.
+- `flutter analyze` (widget tree): 0 errors; net-new lints = 0 (the swap REMOVED 6
+  `medium`-deprecation infos; remaining infos are pre-existing on unchanged lines).
+- Guest-form widget tests: 35/35 green.
+- `--tags golden`: 56/56 green — no widget golden exists (all owner-side); zero
+  collateral (nothing to re-bless).
+
+### Visual proof (real pixels, warm Inter fonts)
+Flutter-web guest form is behind calendar→date-pick and CanvasKit text-input is not
+automatable (`flutter-web-scroll-not-automatable`). Verified instead via a throwaway
+focused golden rendering the REAL `buildDecoration()` at mobile+tablet × light+dark;
+read PNGs back → both TextFields show clean **12px rounded corners** (light: white fill
+/ hairline outline; dark: black fill), Inter glyphs correct (no tofu). Matches handoff
+`widget-guest-form.jsx radius="12"`. Temp test + baselines deleted (not committed).
+
+### Outcome
+Dev-only, no deploy. iOS plist untouched. 3 files changed, all input-radius token
+swaps at the helper/theme level.

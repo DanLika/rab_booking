@@ -420,7 +420,11 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       if (checkIn == null) continue; // Skip invalid
       // Get week number (ISO week)
       final weekStart = checkIn.subtract(Duration(days: checkIn.weekday - 1));
-      final weekKey = DateTime.utc(weekStart.year, weekStart.month, weekStart.day);
+      final weekKey = DateTime.utc(
+        weekStart.year,
+        weekStart.month,
+        weekStart.day,
+      );
       final revenue = (booking['total_price'] as num?)?.toDouble() ?? 0.0;
       weeklyRevenue[weekKey] = (weeklyRevenue[weekKey] ?? 0.0) + revenue;
     }
@@ -502,7 +506,11 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
       final weekStart = checkIn.subtract(Duration(days: checkIn.weekday - 1));
-      final weekKey = DateTime.utc(weekStart.year, weekStart.month, weekStart.day);
+      final weekKey = DateTime.utc(
+        weekStart.year,
+        weekStart.month,
+        weekStart.day,
+      );
       weeklyBookings[weekKey] = (weeklyBookings[weekKey] ?? 0) + 1;
     }
 

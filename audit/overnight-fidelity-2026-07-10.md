@@ -659,3 +659,22 @@ swaps at the helper/theme level.
 - Live web eyeball (`flutter run -d chrome` main_dev, :8099, logged in): desktop sidebar renders the flat PropertyTree row — chevron-left toggle + domain icon + ellipsized name + right-aligned edit/delete/add cluster, single row, no vertical wrap. Matches units.jsx. **Verdict: PASS.** (Mobile 320/390 covered by seam test; CanvasKit resize-protocol blocks live mobile resize per known memory.)
 
 **Defects: 0.** Dev-only, no deploy. FROZEN (Cjenovnik grid, publish flow) untouched. iOS plist untouched.
+
+---
+
+## Rezervacije — MOBILE console-panel redesign (design/rezervacije-mobile-redesign)
+
+**Problem:** operator eyeballed mobile Rezervacije on a real device → "very ugly" vs handoff. Filter-tabs vertical-stack already fixed (#857). Root remaining gap: on mobile the primary content (premium header + KPI tiles + ledger) dumped **loosely on the shell bg** — no wrapping panel — where the handoff (`rezervacije-premium.jsx` → `RezervacijePremiumMobile`) wraps ALL content in ONE elevated console `<main>` panel (PV_PANEL_BG, radius 24, 1px panel border, PV_PANEL_SHADOW, 16/16/24 padding, 14px gap).
+
+**Fix (presentation-only, MOBILE branch <600 only):**
+- `owner_bookings_screen.dart`: split the sliver list — mobile (`isMobile`) now emits ONE `SliverToBoxAdapter` → `_buildMobilePanel(...)`: a `DecoratedBox` (`rd.panelBg` / `rd.panelBorder` / `rd.panelShadow`, `BBRadius.lg`=24) wrapping a `Column` of the existing `BookingsPremiumHeader` + `BookingsPremiumLedgerHeader` + conflict banner + `_buildLeanLedger`. Tablet/desktop keep the pre-existing loose-sliver layout verbatim (guarded by `else [...]`).
+- Panel tokens sourced from `BbRedesignTokens.of(context)` — same layer the Pregled panel uses (`dashboard_overview_tab.dart`).
+- New named consts (`_kMobileGutter`=12, panel pad 16/16/24, gap 14) — no raw layout literals.
+
+**Data honesty (unchanged, verified):** `BookingsPremiumHeader` renders KPI strip / AI nudge / pending queue from REAL providers only — pending queue renders **only when real pending bookings exist**, AI nudge gated behind `PREGLED_AI_INSIGHT` flag + `kDebugMode` (like `_ProfilStatStrip`). Ledger resolves to the real `RevenueGuideEmptyState` on 0 bookings. No mock cards/KPIs shipped. FROZEN preserved: lean ledger + `detailActionVisibility` gate + `Navigator.push` confirmation + stat providers all untouched (the panel only re-parents the same widgets).
+
+**Verify:** `dart format` clean; `flutter analyze` on the file = 0 issues; full suite **1703 passed**; `--tags golden` **56 passed** (no re-bless — no golden covers the live Rezervacije screen; change didn't move any baseline). New RED→GREEN seam `rezervacije_mobile_panel_overflow_test.dart` — reconstructs the real panel shell (tokens + 16px pad within 12px gutter) + long fact chip + long guest/property, at **320/360/390 × light/dark (6 cells)**, asserts no RenderFlex overflow; **6/6 green**. Live web eyeball (`flutter run -d chrome` main_dev :5599, chrome-devtools mobile emulation 390×844, logged-in populated account): **PASS** — single elevated panel wraps eyebrow+H1+2×2 KPI grid+ledger-header+horizontal-scroll tabs+premium rows; no loose cards on shell bg; matches `RezervacijePremiumMobile`. (Pending queue + AI nudge absent = account has 0 pending = data-honest.)
+
+**Left for device eyeball:** in-panel vertical scroll past the fold (CanvasKit synthetic-scroll not automatable — `flutter-web-scroll-not-automatable`); the seam covers overflow at the 3 tight widths so this is cosmetic-confirm only.
+
+**Defects: 0.** Dev-only, no deploy. iOS plist untouched.

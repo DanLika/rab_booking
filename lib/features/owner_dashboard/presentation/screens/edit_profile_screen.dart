@@ -667,20 +667,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
         if (!didPop && _isDirty) {
           final shouldPop = await showDialog<bool>(
             context: context,
-            builder: (dialogContext) => AlertDialog(
-              title: Text(l10n.editProfileDiscardTitle),
-              content: Text(l10n.editProfileDiscardMessage),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, false),
-                  child: Text(l10n.cancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, true),
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
-                  child: Text(l10n.editProfileDiscard),
-                ),
-              ],
+            builder: (dialogContext) => BbDialog(
+              title: l10n.editProfileDiscardTitle,
+              body: l10n.editProfileDiscardMessage,
+              destructive: true,
+              secondary: BbDialogAction(
+                label: l10n.cancel,
+                onPressed: () => Navigator.pop(dialogContext, false),
+              ),
+              primary: BbDialogAction(
+                label: l10n.editProfileDiscard,
+                onPressed: () => Navigator.pop(dialogContext, true),
+              ),
             ),
           );
           if (shouldPop == true && context.mounted) {

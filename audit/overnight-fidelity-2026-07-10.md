@@ -223,6 +223,33 @@ Scoped to the two highest-value, lowest-risk gaps (pure-presentation widgets, no
 
 **NEXT page recommendation:** finish the widget calendar mint-ladder (add `BbRedesignTokens` mint fields + apply in painters, with live web eyeball via `widget_main_dev.dart`) as a dedicated FROZEN-adjacent task — biggest remaining visible widget gap. Then guest-form radii, then admin-*.jsx console.
 
+## Iteration 8 — Widget calendar mint ladder + guest-form quick wins (design/widget-calendar-mint)
+
+**Handoff:** `widget-calendar.jsx` (W_MINT `#3DD9B0`, W_MINT_DEEP `#1FAF87`, W_MINT_LIGHT `#A8EFD9`).
+
+### SHIPPED (values-only, zero structural painter edits)
+- **Mint selection ladder** on the active widget scheme (`MinimalistColorSchemeAdapter` — NOT BbRedesignTokens; that's the owner theme, the widget uses `WidgetColorScheme`):
+  - Added `MinimalistColors.mint/mintDeep/mintLight` (+ dark variants) constants.
+  - Added 3 members to `WidgetColorScheme` (abstract) + all 3 impls (Light/Dark map to existing selected tokens; adapter → mint): `statusSelectedRangeBorder` (#3DD9B0), `statusInRangeBackground` (#A8EFD9), `selectedGlowShadow` (mint 0.45 / blur 14 / y+4).
+  - `statusTodayBorder` re-pointed to `mintDeep` (was `statusAvailableBorder`).
+  - `month_calendar_widget.dart`: selected-endpoint border `textPrimary`→`statusSelectedRangeBorder`; today border `textPrimary`→`statusTodayBorder`; selected cell `boxShadow`→`selectedGlowShadow`. **No geometry / z-order / availability-logic touched.**
+  - `split_day_calendar_painter.dart`: in-range fill `buttonPrimary@0.2`→`statusInRangeBackground@0.55` (single Paint color swap; paint order/paths untouched).
+- **Guest-form / payment quick wins:**
+  - `payment_option_widget.dart`: selected card border + radio ring + radio dot `borderFocus`/`buttonPrimary`→`statusTodayBorder` (mint-deep).
+  - `guest_count_picker.dart`: capacity-warning error ring `error@0.10`→`error@0.16`.
+
+### DEFERRED (handoff numbers didn't map to Flutter reality)
+- **Guest-form field radius 20→12** — fields already use `BBRadiusBridges.medium`(8) via the shared widget theme, not 20; changing there is global-theme-wide → out of scope for a quick win.
+- **Confirmation summary-card radius 20→24** — real value is `medium`(8), uniform across ALL confirmation cards; bumping one card to 24 breaks sibling consistency (handoff assumed a 20 base that doesn't exist).
+- **Counter buttons → true circle** — current `add/remove_circle_outline` IconButtons are already circular glyphs; a filled-bordered circle is a structural layout rework → deferred to keep the batch low-risk.
+
+### Verify
+- `dart format` clean; `flutter analyze` 0 net-new (only pre-existing `deprecated_member_use` infos).
+- Full `flutter test` **1677 green**; widget subset 757 green; `--tags golden` 56 green (widget calendar not in golden seam set → no baseline moved).
+- **Live web eyeball** (`flutter run -d chrome --target lib/widget_main_dev.dart`, seeded bookbed-dev `--test-owner` fixture, `?subdomain=bookbed-test&property=…&unit=…`, desktop 1280 + mobile 390): calendar renders identically to pre-change **plus** today-cell (10 Jul) now carries the **mint-deep ring** (was black). **No regression** — layout/geometry/z-order/available-cell color all unchanged. Selection-fill / in-range / glow are code-path + test verified (synthetic pointer events can't drive Flutter's gesture arena → cannot live-click a date; documented limitation `flutter-web-scroll-not-automatable`). Guest-form/payment quick-wins unreachable without a date selection but covered by the green suite.
+
+**NEXT page recommendation:** admin-*.jsx console (`.claude/rules/admin.md`), then dialogs/states/variants. Widget guest surface remaining: the guest-form/payment/confirmation quick-wins that need a live date-selection to eyeball (drive via a real device/Marionette, not synthetic web taps).
+
 ---
 
 ## Iteration 9 — admin console shell + users (dark deep-purple, English)
@@ -244,3 +271,29 @@ Scoped to the two highest-value, lowest-risk gaps (pure-presentation widgets, no
 **Deferred:** desktop sidebar section grouping (handoff Platform/Operations/System groups — current flat 3-item nav; grouping = adding invented Analytics/Owners/Properties/Payments/Sync/Support destinations that don't route → NOT data-honest without those screens). Topbar global-search + Production env pill + notifications bell (handoff `AdminTopbar`) — current `_AdminHeader` is minimal; search needs a real backing query surface. Users owners-CRM master-detail = needs data model.
 
 **NEXT recommendation:** admin remaining screens are gated on backing data (bookings/payments/support/sync/viz consoles don't exist as routes). Best next data-honest admin pass = **topbar polish** (`_AdminHeader` → env badge from `firebase_options` project id + notifications affordance) OR pivot to the **dialogs/states/variants sweep** (BbDialog/empty-state/error-state consistency across owner+admin+widget) which has real surfaces everywhere. Recommend the dialogs/states sweep next — broadest real coverage.
+## Iteration 8 — Widget calendar mint ladder + guest-form quick wins (design/widget-calendar-mint)
+
+**Handoff:** `widget-calendar.jsx` (W_MINT `#3DD9B0`, W_MINT_DEEP `#1FAF87`, W_MINT_LIGHT `#A8EFD9`).
+
+### SHIPPED (values-only, zero structural painter edits)
+- **Mint selection ladder** on the active widget scheme (`MinimalistColorSchemeAdapter` — NOT BbRedesignTokens; that's the owner theme, the widget uses `WidgetColorScheme`):
+  - Added `MinimalistColors.mint/mintDeep/mintLight` (+ dark variants) constants.
+  - Added 3 members to `WidgetColorScheme` (abstract) + all 3 impls (Light/Dark map to existing selected tokens; adapter → mint): `statusSelectedRangeBorder` (#3DD9B0), `statusInRangeBackground` (#A8EFD9), `selectedGlowShadow` (mint 0.45 / blur 14 / y+4).
+  - `statusTodayBorder` re-pointed to `mintDeep` (was `statusAvailableBorder`).
+  - `month_calendar_widget.dart`: selected-endpoint border `textPrimary`→`statusSelectedRangeBorder`; today border `textPrimary`→`statusTodayBorder`; selected cell `boxShadow`→`selectedGlowShadow`. **No geometry / z-order / availability-logic touched.**
+  - `split_day_calendar_painter.dart`: in-range fill `buttonPrimary@0.2`→`statusInRangeBackground@0.55` (single Paint color swap; paint order/paths untouched).
+- **Guest-form / payment quick wins:**
+  - `payment_option_widget.dart`: selected card border + radio ring + radio dot `borderFocus`/`buttonPrimary`→`statusTodayBorder` (mint-deep).
+  - `guest_count_picker.dart`: capacity-warning error ring `error@0.10`→`error@0.16`.
+
+### DEFERRED (handoff numbers didn't map to Flutter reality)
+- **Guest-form field radius 20→12** — fields already use `BBRadiusBridges.medium`(8) via the shared widget theme, not 20; changing there is global-theme-wide → out of scope for a quick win.
+- **Confirmation summary-card radius 20→24** — real value is `medium`(8), uniform across ALL confirmation cards; bumping one card to 24 breaks sibling consistency (handoff assumed a 20 base that doesn't exist).
+- **Counter buttons → true circle** — current `add/remove_circle_outline` IconButtons are already circular glyphs; a filled-bordered circle is a structural layout rework → deferred to keep the batch low-risk.
+
+### Verify
+- `dart format` clean; `flutter analyze` 0 net-new (only pre-existing `deprecated_member_use` infos).
+- Full `flutter test` **1677 green**; widget subset 757 green; `--tags golden` 56 green (widget calendar not in golden seam set → no baseline moved).
+- **Live web eyeball** (`flutter run -d chrome --target lib/widget_main_dev.dart`, seeded bookbed-dev `--test-owner` fixture, `?subdomain=bookbed-test&property=…&unit=…`, desktop 1280 + mobile 390): calendar renders identically to pre-change **plus** today-cell (10 Jul) now carries the **mint-deep ring** (was black). **No regression** — layout/geometry/z-order/available-cell color all unchanged. Selection-fill / in-range / glow are code-path + test verified (synthetic pointer events can't drive Flutter's gesture arena → cannot live-click a date; documented limitation `flutter-web-scroll-not-automatable`). Guest-form/payment quick-wins unreachable without a date selection but covered by the green suite.
+
+**NEXT page recommendation:** admin-*.jsx console (`.claude/rules/admin.md`), then dialogs/states/variants. Widget guest surface remaining: the guest-form/payment/confirmation quick-wins that need a live date-selection to eyeball (drive via a real device/Marionette, not synthetic web taps).

@@ -421,22 +421,16 @@ class _TrialHero extends StatelessWidget {
   }
 
   static void _showUpgradeDialog(BuildContext context) {
-    final BBColorSet c = BBColor.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context);
     showDialog<void>(
       context: context,
-      builder: (BuildContext ctx) => AlertDialog(
-        title: Text(l10n.subscriptionUpgradeComingSoonTitle),
-        content: Text(
-          l10n.subscriptionUpgradeComingSoonBody,
-          style: TextStyle(color: c.textSecondary),
+      builder: (BuildContext ctx) => BbDialog(
+        title: l10n.subscriptionUpgradeComingSoonTitle,
+        body: l10n.subscriptionUpgradeComingSoonBody,
+        primary: BbDialogAction(
+          label: l10n.ok,
+          onPressed: () => Navigator.of(ctx).pop(),
         ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.ok),
-          ),
-        ],
       ),
     );
   }

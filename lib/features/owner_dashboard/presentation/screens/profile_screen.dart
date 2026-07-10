@@ -461,19 +461,17 @@ class ProfileScreen extends ConsumerWidget {
                 onLogout: () async {
                   final confirmed = await showDialog<bool>(
                     context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text(l10n.logoutConfirmTitle),
-                      content: Text(l10n.logoutConfirmMessage),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: Text(l10n.cancel),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: Text(l10n.logout),
-                        ),
-                      ],
+                    builder: (ctx) => BbDialog(
+                      title: l10n.logoutConfirmTitle,
+                      body: l10n.logoutConfirmMessage,
+                      secondary: BbDialogAction(
+                        label: l10n.cancel,
+                        onPressed: () => Navigator.pop(ctx, false),
+                      ),
+                      primary: BbDialogAction(
+                        label: l10n.logout,
+                        onPressed: () => Navigator.pop(ctx, true),
+                      ),
                     ),
                   );
                   if (confirmed != true) return;

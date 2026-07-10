@@ -5,6 +5,40 @@ Dev-only, worktree-per-page, flat chrome (no gradients), BB* tokens. Each entry 
 
 ---
 
+## CAMPAIGN SUMMARY (iterations 1-10)
+
+Ten overnight sweeps, each shipped as an independent squash-merged PR off `origin/main`
+in its own `/tmp/bb-*-wt` worktree. All dev-only — **no firebase deploy**. Flat chrome
+maintained (no re-introduced gradients); FROZEN surfaces (Cjenovnik grid, Timeline
+dimensions, publish flow, Navigator.push confirmation, widget snackbar colors) untouched.
+
+| # | PR | Area | Handoff |
+|---|-----|------|---------|
+| 1 | #840 | owner/149 Subscription cheap-wins (back-nav, Pro-card border, dialog l10n) | subscription |
+| 2 | #841 | iCal sync-settings hero → flat status card | ical.jsx |
+| 3 | #842 | owner/embed docstring flatten (stale TIP-1 gradient) + embed data-honesty | — |
+| 4 | #843 | auth recovery RecCard icon-tile + handoff-xl card radius | login/register/recovery |
+| 5 | #844 | profile BookBed Pro card benefits grid + price (audit/135 S3) | profile-premium |
+| 6 | #845 | owner unit-hub master-panel fidelity | units.jsx |
+| 7 | #846 | widget mint-accent success mark + deposit band | widget confirmation/deposit |
+| 8 | #847 | widget mint selection ladder on calendar + guest-form quick wins | widget-calendar.jsx |
+| 9 | #848 | admin dark-console nav chrome → BbAdminDarkTokens | admin-shell |
+| 10 | **(this)** | **dialogs/states sweep — 5 owner AlertDialog → BbDialog** | **dialogs.jsx** |
+
+### Consolidated deferred backlog (carried out of iterations 1-10)
+- **Widget guest-form live eyeball** — selection-fill / in-range / glow + guest-count/payment
+  quick-wins (#847) need a real date-selection; synthetic web pointer can't drive Flutter's
+  gesture arena (`flutter-web-scroll-not-automatable`) → Marionette / real device.
+- **Widget guest-form field radius (20→12)** and **confirmation card radius (20→24)** — handoff
+  numbers assume a base that doesn't exist in Flutter (fields already `medium`=8, uniform); a
+  real change is global-theme-wide → separate deliberate decision. (#847)
+- **Counter buttons → true filled circle** — current glyph IconButtons already circular. (#847)
+- **Owner Settings S3 profile-hub Pro benefits grid remainder** — heavy 1503-LOC screen. (#844)
+- **BbDialog custom-body limitation** — the primitive only takes plain `title`/`body` strings;
+  AlertDialogs with rich/form bodies can't migrate without extending it (see below).
+
+---
+
 ## iCal (`ical.jsx` → `ical_sync_settings_screen.dart`) — SHIPPED
 
 **Divergence found:** the sync-settings screen rendered a premium header
@@ -297,3 +331,65 @@ Scoped to the two highest-value, lowest-risk gaps (pure-presentation widgets, no
 - **Live web eyeball** (`flutter run -d chrome --target lib/widget_main_dev.dart`, seeded bookbed-dev `--test-owner` fixture, `?subdomain=bookbed-test&property=…&unit=…`, desktop 1280 + mobile 390): calendar renders identically to pre-change **plus** today-cell (10 Jul) now carries the **mint-deep ring** (was black). **No regression** — layout/geometry/z-order/available-cell color all unchanged. Selection-fill / in-range / glow are code-path + test verified (synthetic pointer events can't drive Flutter's gesture arena → cannot live-click a date; documented limitation `flutter-web-scroll-not-automatable`). Guest-form/payment quick-wins unreachable without a date selection but covered by the green suite.
 
 **NEXT page recommendation:** admin-*.jsx console (`.claude/rules/admin.md`), then dialogs/states/variants. Widget guest surface remaining: the guest-form/payment/confirmation quick-wins that need a live date-selection to eyeball (drive via a real device/Marionette, not synthetic web taps).
+
+---
+
+## Dialogs / states / variants consistency sweep — SHIPPED (iteration 10)
+
+**Handoff:** `dialogs.jsx`, `dialogs-misc.jsx`, `states.jsx`, `variants.jsx`, `filters-dialog.jsx`.
+Cross-app pass (not one screen). Continues audit/134, which converted the first 3 raw
+`AlertDialog`s (unit hub) to `BbDialog`.
+
+### CHANGED (5 owner call sites -> `BbDialog`)
+All are plain text confirmations already on l10n keys — clean 1:1 map to the `BbDialog`
+shell (`title`/`body` strings + `primary`/`secondary` `BbDialogAction`). No new strings.
+
+| File | Dialog | Variant |
+|------|--------|---------|
+| `profile_screen.dart` | logout confirm | neutral primary |
+| `bank_account_screen.dart` | discard changes (PopScope) | `destructive: true` |
+| `edit_profile_screen.dart` | discard changes (PopScope) | `destructive: true` |
+| `stripe_connect_setup_screen.dart` | disconnect Stripe | `destructive: true` |
+| `subscription_screen.dart` | upgrade coming-soon | neutral, single OK |
+
+- Destructive confirms use `BbDialog(destructive: true)` -> `BbButtonVariant.destructive`
+  (hard), matching `dialogs.jsx` (`variant: 'destructive'` for modal CTA). The soft-pink
+  precedent (audit/128 F1) is for **inline** booking-detail actions, not modal confirms —
+  intentionally NOT applied here.
+- Dead locals dropped where the dialog was their only consumer: `theme` (stripe),
+  `BBColorSet c` (subscription). Red hardcoded `TextButton.styleFrom(foregroundColor:
+  Colors.red)` on discard dialogs replaced by the token-driven destructive `BbButton`.
+
+### NEW TEST
+`test/shared/widgets/redesign/bb_dialog_test.dart` (4 cells, pumps `BbDialog` directly):
+title/body render, primary+secondary callback wiring, destructive->destructive variant,
+non-destructive->primary variant. Seam-covers the primitive the 5 sites now depend on.
+
+### SKIPPED (with reason)
+- **FROZEN Cjenovnik** `price_list_calendar_widget.dart` (3 `AlertDialog`s) — FROZEN grid.
+- **Rich/form-body dialogs** — `edit_booking_dialog`, wizard `additional_service_dialog`,
+  `multi_select_action_bar` (2), `step_2_capacity`: bodies are forms/lists, not plain text.
+  `BbDialog` only accepts `title`/`body` **strings** -> can't migrate without extending it
+  (added to deferred backlog).
+- **Core/infra dialogs** — `error_display_utils`, `error_handler`, `platform_utils`
+  (+ its `CupertinoAlertDialog` branch), `optional_update_dialog`, `force_update_dialog`:
+  framework-level error/update surfaces, not owner design-system chrome.
+- **Admin** `admin_login_screen.dart` — pre-auth login uses its own dark-token theme
+  (`BbAdminDarkTokens`, R6); `BbDialog` is owner-styled -> mismatch, skip.
+- **Widget** snackbars/toasts — FROZEN colors per `.claude/rules/widget.md`.
+- **Empty/error states** — reviewed vs `states.jsx`: owner surfaces already route through
+  `BbEmptyState` / `unit_hub_empty_state` / `revenue_guide_empty_state` (audit/134 + iter 4
+  RecCard icon-tile); no drift worth a pixel-moving change this pass.
+
+### Verify
+- `dart format` clean; `flutter analyze` on the 5 changed files + new test = **0 issues**
+  (full-tree 101 = pre-existing baseline, unchanged).
+- Full `flutter test` **1682 green** (1677 + 4 new dialog cells; a caught expected-error
+  stack print mid-run is a test's own assertion, not a failure); `--tags golden` ran inside
+  the suite green — no baseline moved (dialog swaps touch no golden seam surface).
+- Live web spot-check skipped: these confirms sit behind owner auth (logout / discard /
+  disconnect / upgrade), not reachable on `widget_main_dev`; the seam test + code-path
+  verification cover the primitive, and each site keeps its trigger + Navigator.pop return
+  value byte-for-byte.
+
+**PR:** #849 (squash-merged). Dev-only, no deploy.

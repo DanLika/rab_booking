@@ -165,6 +165,12 @@ class BBColor {
   static const Color textSecondaryLight = Color(0xFF4A5568);
   static const Color textTertiaryLight = Color(0xFF718096);
 
+  /// Softened light-theme eyebrow ink — one step quieter than
+  /// [textSecondaryLight] (#4A5568, CR 7.21) while staying AA (CR 5.23 on
+  /// #FAFAFB shell / 5.46 on white cards). Pass 5 "type restraint": eyebrows
+  /// whisper, not shout. Light-only — dark keeps [textSecondaryDark] (CR 8.17).
+  static const Color eyebrowInkLight = Color(0xFF5A6B80);
+
   // -------------------------------------------------------------------------
   // Text — dark
   // -------------------------------------------------------------------------
@@ -543,16 +549,23 @@ class BBType {
     fontFeatures: _tabular,
   );
 
-  /// 11 / 600 / 1.4 — UPPERCASE eyebrow label (`bb-eyebrow`).
-  /// Letter-spacing 0.08em ≈ 11 * 0.08 = 0.88. Pair with `.toUpperCase()`
-  /// on the displayed string — Flutter has no native text-transform.
-  static TextStyle eyebrow(BuildContext context) => GoogleFonts.inter(
-    fontSize: 11,
-    fontWeight: FontWeight.w600,
-    height: 1.4,
-    letterSpacing: 0.88,
-    color: BBColor.of(context).textSecondary,
-  );
+  /// 10.5 / 500 / 1.4 — UPPERCASE eyebrow label (`bb-eyebrow`).
+  /// Pass 5 "type restraint" (minimalist light theme): softened from
+  /// 11/w600/ls-0.88 → the eyebrow now whispers — lighter weight (w500),
+  /// marginally smaller (10.5), looser-but-calmer tracking (0.7), and a
+  /// softer light ink ([BBColor.eyebrowInkLight] #5A6B80, still AA). Dark
+  /// keeps [textSecondary] (#A0AEC0, CR 8.17 — unchanged, no golden move).
+  /// Pair with `.toUpperCase()` — Flutter has no native text-transform.
+  static TextStyle eyebrow(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GoogleFonts.inter(
+      fontSize: 10.5,
+      fontWeight: FontWeight.w500,
+      height: 1.4,
+      letterSpacing: 0.7,
+      color: isDark ? BBColor.textSecondaryDark : BBColor.eyebrowInkLight,
+    );
+  }
 
   /// 48 / 800 / 1.05 — hero display (`bb-display-lg`).
   /// Premium pages only (Pregled north-star, hero sections).

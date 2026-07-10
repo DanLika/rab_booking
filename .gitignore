@@ -123,3 +123,6 @@ functions/.tmp/
 # Personal notes vault (local only)
 obsidian-vault/
 test/golden/**/failures/
+
+# Claude Code file-history backups (may contain edited .env content)
+.claude/file_history/

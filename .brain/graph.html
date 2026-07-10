@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BookBed Brain</title>
+<style>
+  :root { --bg:#0d0f14; --panel:#151922; --line:#2a3040; --txt:#e6e9f0; --dim:#8b93a7;
+    --apps:#4fae7f; --routines:#e0b24f; --memory:#6c8cff; --skills:#c06cff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:14px/1.4 -apple-system,Segoe UI,Roboto,sans-serif; }
+  header { padding:14px 20px; border-bottom:1px solid var(--line); display:flex; gap:16px; align-items:baseline; flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; letter-spacing:.3px; }
+  header .meta { color:var(--dim); font-size:12px; }
+  #search { margin-left:auto; background:var(--panel); border:1px solid var(--line); color:var(--txt);
+    padding:6px 10px; border-radius:8px; width:280px; }
+  .wrap { display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:16px; }
+  .layer { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+  .layer h2 { margin:0 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.6px; display:flex; gap:8px; align-items:center; }
+  .dot { width:10px; height:10px; border-radius:50%; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { background:#1d2430; border:1px solid var(--line); border-radius:999px; padding:3px 9px; font-size:12px; color:var(--txt); }
+  .chip small { color:var(--dim); }
+  .depts { padding:0 16px 20px; }
+  .depts h2 { font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--dim); }
+  .deptgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
+  .dept { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+  .dept b { text-transform:capitalize; } .dept .n { color:var(--dim); font-size:12px; }
+  .bar { height:5px; border-radius:3px; margin-top:6px; background:linear-gradient(90deg,var(--memory),var(--skills)); }
+  .results { padding:0 16px 24px; }
+  .row { padding:8px 10px; border-bottom:1px solid var(--line); font-size:13px; }
+  .row .sc { color:var(--routines); font-variant-numeric:tabular-nums; }
+  .row .loc { color:var(--memory); } .row .tag { color:var(--dim); font-size:12px; }
+  footer { color:var(--dim); font-size:11px; padding:10px 20px; border-top:1px solid var(--line); }
+</style>
+</head>
+<body>
+<header>
+  <h1>🧠 BookBed Brain</h1>
+  <span class="meta" id="summary">loading…</span>
+  <input id="search" placeholder="deterministic search (e.g. stripe webhook)…" autocomplete="off" />
+</header>
+
+<div class="wrap" id="layers"></div>
+
+<div class="depts">
+  <h2>Departments</h2>
+  <div class="deptgrid" id="depts"></div>
+</div>
+
+<div class="results" id="results"></div>
+
+<footer id="footer"></footer>
+
+<script>
+const STOP = new Set("a an the of to in on for and or is are was were with how why what which when where use used using our your my we you it its per not no yes i".split(" "));
+const tok = s => (s||"").toLowerCase().replace(/[`*_#>|\[\]()~]/g," ").split(/[^a-z0-9-]+/).filter(t=>t.length>2&&!STOP.has(t));
+const LAYER_META = {
+  applications:{c:"var(--apps)",label:"Applications / MCP"},
+  routines:{c:"var(--routines)",label:"Routines (scheduled)"},
+  memory:{c:"var(--memory)",label:"Memory / context"},
+  skills:{c:"var(--skills)",label:"Skills / rules"},
+};
+let IDX = null;
+const t0 = performance.now();
+
+function scoreEntry(e, q) {
+  const T=new Set(tok(e.title)), K=new Set(e.keywords||[]), P=new Set(tok(e.file));
+  const S=new Set(tok((e.sections||[]).map(s=>s.heading).join(" ")));
+  let sc=0; for(const w of q){ let s=0; if(T.has(w))s+=3; if(K.has(w))s+=2; if(S.has(w))s+=2; if(P.has(w))s+=1; sc+=s; }
+  return sc;
+}
+function search(qs){
+  const q=[...new Set(tok(qs))]; const el=document.getElementById("results");
+  if(!q.length){ el.innerHTML=""; return; }
+  const t=performance.now();
+  const ranked=IDX.entries.map(e=>({e,s:scoreEntry(e,q)})).filter(r=>r.s>0)
+    .sort((a,b)=>b.s-a.s||a.e.bytes-b.e.bytes).slice(0,10);
+  const ms=(performance.now()-t).toFixed(1);
+  el.innerHTML=`<h2 style="color:var(--dim);font-size:13px">Results — ${ranked.length} hits, ${ms} ms, opened 0 files</h2>`+
+    ranked.map(r=>`<div class="row"><span class="sc">[${String(r.s).padStart(3)}]</span> <span class="loc">${r.e.file}</span> <span class="tag">· ${r.e.layer}/${r.e.department}</span></div>`).join("")||"<div class='row'>no match</div>";
+}
+function renderLayers(){
+  const c=IDX.counts.byLayer, host=document.getElementById("layers");
+  host.innerHTML=Object.keys(LAYER_META).map(k=>{
+    const m=LAYER_META[k];
+    let items=[];
+    if(k==="applications") items=IDX.applications||[];
+    else if(k==="routines") items=IDX.routines||[];
+    else items=IDX.entries.filter(e=>e.layer===k).map(e=>e.title);
+    const shown=items.slice(0,40);
+    return `<div class="layer"><h2><span class="dot" style="background:${m.c}"></span>${m.label} <small style="color:var(--dim)">(${c[k]||items.length})</small></h2>
+      <div class="chips">${shown.map(i=>`<span class="chip">${i.length>42?i.slice(0,40)+"…":i}</span>`).join("")}${items.length>40?`<span class="chip"><small>+${items.length-40} more</small></span>`:""}</div></div>`;
+  }).join("");
+}
+function renderDepts(){
+  const d=IDX.counts.byDept, host=document.getElementById("depts");
+  const max=Math.max(...Object.values(d));
+  host.innerHTML=Object.entries(d).sort((a,b)=>b[1]-a[1]).map(([name,n])=>
+    `<div class="dept"><b>${name}</b> <span class="n">${n}</span><div class="bar" style="width:${Math.round(n/max*100)}%"></div></div>`).join("");
+}
+fetch("brain-index.json").then(r=>r.json()).then(idx=>{
+  IDX=idx;
+  document.getElementById("summary").textContent=
+    `${idx.entries.length} nodes · ${(idx.applications||[]).length} apps · ${(idx.routines||[]).length} routines · loaded ${(performance.now()-t0).toFixed(0)} ms`;
+  renderLayers(); renderDepts();
+  document.getElementById("footer").textContent="Deterministic keyword search — no LLM, no network. Rebuild: node .brain/build-index.js";
+  document.getElementById("search").addEventListener("input",e=>search(e.target.value));
+}).catch(e=>{document.getElementById("summary").textContent="brain-index.json not found — run: node .brain/build-index.js";});
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 // audit/123 dev-deploy smoke: F-92-01 regression (feed 200/403) + F-123-07
 // (getStripeAccountStatus 30/300s per-owner rate limit). bookbed-dev ONLY.
 const path = require('path');
-const admin = require(path.resolve('/Users/duskolicanin/git/bookbed/functions/node_modules/firebase-admin'));
+const admin = require(path.resolve(__dirname, '..', '..', 'functions', 'node_modules', 'firebase-admin'));
 const projectId = 'bookbed-dev';
 admin.initializeApp({projectId, credential: admin.credential.applicationDefault()});
 const db = admin.firestore();

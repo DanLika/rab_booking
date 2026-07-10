@@ -2,6 +2,17 @@
 
 **BookBed** - Booking management platforma za property owner-e.
 
+## 🧠 Brain — retrieve BEFORE you grep
+
+This repo has a deterministic knowledge index at `.brain/`. To find where something lives, run it FIRST — it returns the right `file#section` in ~3 ms without opening any file (cheaper than a Grep/Glob sweep):
+
+```bash
+node .brain/brain.js "your question"          # e.g. "stripe webhook signature", "ical ssrf guard"
+node .brain/brain.js --dept payments "refund" # filter: auth|payments|booking|calendar|widget|admin|security|ui|infra|email|data
+```
+
+Open ONLY the top `file#section` it points to; follow `↳ pointers` if the section redirects; fall back to Grep only on no-match. After adding docs/rules/audits, rebuild: `node .brain/build-index.js`. Visual map: `open .brain/graph.html`. Details: [.brain/README.md](./.brain/README.md).
+
 **Dodatni dokumenti:**
 - [consolidated-bugs-archive.md](./docs/bugs/consolidated-bugs-archive.md) - Detaljni bug fix-evi sa code examples
 - [EMAIL_SYSTEM.md](./docs/features/email-templates/EMAIL_SYSTEM.md) - Email template-i, payment rok, reminders

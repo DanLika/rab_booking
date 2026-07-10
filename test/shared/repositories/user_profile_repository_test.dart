@@ -22,30 +22,33 @@ void main() {
       expect(profile, isNull);
     });
 
-    test('getUserProfile returns parsed UserProfile if document exists', () async {
-      final data = {
-        'displayName': 'John Doe',
-        'emailContact': 'john@example.com',
-        'propertyType': 'Villa',
-        'updatedAt': Timestamp.fromDate(DateTime(2024, 1, 1)),
-      };
+    test(
+      'getUserProfile returns parsed UserProfile if document exists',
+      () async {
+        final data = {
+          'displayName': 'John Doe',
+          'emailContact': 'john@example.com',
+          'propertyType': 'Villa',
+          'updatedAt': Timestamp.fromDate(DateTime(2024, 1, 1)),
+        };
 
-      await fakeFirestore
-          .collection('users')
-          .doc(userId)
-          .collection('data')
-          .doc('profile')
-          .set(data);
+        await fakeFirestore
+            .collection('users')
+            .doc(userId)
+            .collection('data')
+            .doc('profile')
+            .set(data);
 
-      final profile = await repository.getUserProfile(userId);
+        final profile = await repository.getUserProfile(userId);
 
-      expect(profile, isNotNull);
-      expect(profile?.userId, userId);
-      expect(profile?.displayName, 'John Doe');
-      expect(profile?.emailContact, 'john@example.com');
-      expect(profile?.propertyType, 'Villa');
-      expect(profile?.updatedAt, DateTime(2024, 1, 1));
-    });
+        expect(profile, isNotNull);
+        expect(profile?.userId, userId);
+        expect(profile?.displayName, 'John Doe');
+        expect(profile?.emailContact, 'john@example.com');
+        expect(profile?.propertyType, 'Villa');
+        expect(profile?.updatedAt, DateTime(2024, 1, 1));
+      },
+    );
 
     test('watchUserProfile emits stream of changes', () async {
       final stream = repository.watchUserProfile(userId);
@@ -59,9 +62,7 @@ void main() {
       await Future.delayed(Duration.zero);
       expect(events.first, isNull);
 
-      final data = {
-        'displayName': 'Jane Doe',
-      };
+      final data = {'displayName': 'Jane Doe'};
 
       await fakeFirestore
           .collection('users')
@@ -111,27 +112,30 @@ void main() {
       expect(company, isNull);
     });
 
-    test('getCompanyDetails returns parsed CompanyDetails if document exists', () async {
-      final data = {
-        'companyName': 'My Company LLC',
-        'taxId': '12345678',
-        'vatId': 'HR12345678901',
-      };
+    test(
+      'getCompanyDetails returns parsed CompanyDetails if document exists',
+      () async {
+        final data = {
+          'companyName': 'My Company LLC',
+          'taxId': '12345678',
+          'vatId': 'HR12345678901',
+        };
 
-      await fakeFirestore
-          .collection('users')
-          .doc(userId)
-          .collection('data')
-          .doc('company')
-          .set(data);
+        await fakeFirestore
+            .collection('users')
+            .doc(userId)
+            .collection('data')
+            .doc('company')
+            .set(data);
 
-      final company = await repository.getCompanyDetails(userId);
+        final company = await repository.getCompanyDetails(userId);
 
-      expect(company, isNotNull);
-      expect(company?.companyName, 'My Company LLC');
-      expect(company?.taxId, '12345678');
-      expect(company?.vatId, 'HR12345678901');
-    });
+        expect(company, isNotNull);
+        expect(company?.companyName, 'My Company LLC');
+        expect(company?.taxId, '12345678');
+        expect(company?.vatId, 'HR12345678901');
+      },
+    );
 
     test('updateCompanyDetails correctly saves company data', () async {
       const companyToSave = CompanyDetails(
@@ -159,63 +163,75 @@ void main() {
   });
 
   group('UserProfileRepository - NotificationPreferences', () {
-    test('getNotificationPreferences returns null if document does not exist', () async {
-      final preferences = await repository.getNotificationPreferences(userId);
-      expect(preferences, isNull);
-    });
+    test(
+      'getNotificationPreferences returns null if document does not exist',
+      () async {
+        final preferences = await repository.getNotificationPreferences(userId);
+        expect(preferences, isNull);
+      },
+    );
 
-    test('getNotificationPreferences returns parsed NotificationPreferences if document exists', () async {
-      final data = {
-        'masterEnabled': false,
-        'categories': {
-          'bookings': {'email': false, 'push': true, 'sms': false},
-        }
-      };
+    test(
+      'getNotificationPreferences returns parsed NotificationPreferences if document exists',
+      () async {
+        final data = {
+          'masterEnabled': false,
+          'categories': {
+            'bookings': {'email': false, 'push': true, 'sms': false},
+          },
+        };
 
-      await fakeFirestore
-          .collection('users')
-          .doc(userId)
-          .collection('data')
-          .doc('preferences')
-          .set(data);
+        await fakeFirestore
+            .collection('users')
+            .doc(userId)
+            .collection('data')
+            .doc('preferences')
+            .set(data);
 
-      final preferences = await repository.getNotificationPreferences(userId);
+        final preferences = await repository.getNotificationPreferences(userId);
 
-      expect(preferences, isNotNull);
-      expect(preferences?.userId, userId);
-      expect(preferences?.masterEnabled, isFalse);
-      expect(preferences?.categories.bookings.email, isFalse);
-      expect(preferences?.categories.bookings.push, isTrue);
-    });
+        expect(preferences, isNotNull);
+        expect(preferences?.userId, userId);
+        expect(preferences?.masterEnabled, isFalse);
+        expect(preferences?.categories.bookings.email, isFalse);
+        expect(preferences?.categories.bookings.push, isTrue);
+      },
+    );
 
-    test('updateNotificationPreferences correctly saves preferences data', () async {
-      const prefsToSave = NotificationPreferences(
-        userId: userId,
-        masterEnabled: false,
-      );
+    test(
+      'updateNotificationPreferences correctly saves preferences data',
+      () async {
+        const prefsToSave = NotificationPreferences(
+          userId: userId,
+          masterEnabled: false,
+        );
 
-      await repository.updateNotificationPreferences(prefsToSave);
+        await repository.updateNotificationPreferences(prefsToSave);
 
-      final snapshot = await fakeFirestore
-          .collection('users')
-          .doc(userId)
-          .collection('data')
-          .doc('preferences')
-          .get();
+        final snapshot = await fakeFirestore
+            .collection('users')
+            .doc(userId)
+            .collection('data')
+            .doc('preferences')
+            .get();
 
-      expect(snapshot.exists, isTrue);
-      final data = snapshot.data()!;
-      expect(data['masterEnabled'], isFalse);
-      expect(data.containsKey('categories'), isTrue);
-      expect(data.containsKey('updatedAt'), isTrue);
-    });
+        expect(snapshot.exists, isTrue);
+        final data = snapshot.data()!;
+        expect(data['masterEnabled'], isFalse);
+        expect(data.containsKey('categories'), isTrue);
+        expect(data.containsKey('updatedAt'), isTrue);
+      },
+    );
   });
 
   group('UserProfileRepository - Combined Data (UserData)', () {
-    test('getUserData returns null if profile document does not exist', () async {
-      final userData = await repository.getUserData(userId);
-      expect(userData, isNull);
-    });
+    test(
+      'getUserData returns null if profile document does not exist',
+      () async {
+        final userData = await repository.getUserData(userId);
+        expect(userData, isNull);
+      },
+    );
 
     test('getUserData returns combined profile and company details', () async {
       final profileData = {'displayName': 'Test User'};

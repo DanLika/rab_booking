@@ -7,7 +7,15 @@ import '../../../shared/models/user_model.dart';
 
 /// Repository for admin user management operations
 class AdminUsersRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  AdminUsersRepository({
+    FirebaseFirestore? firestore,
+    FirebaseFunctions? functions,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _functions =
+           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1');
+
+  final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
 
   /// Get all users with owner role (paginated)
   Future<List<UserModel>> getOwners({
@@ -200,9 +208,7 @@ class AdminUsersRepository {
     String? reason,
   }) async {
     try {
-      final callable = FirebaseFunctions.instanceFor(
-        region: 'europe-west1',
-      ).httpsCallable('updateUserStatus');
+      final callable = _functions.httpsCallable('updateUserStatus');
 
       final result = await callable.call<Map<String, dynamic>>({
         'userId': userId,
@@ -270,9 +276,7 @@ class AdminUsersRepository {
     required bool grant,
   }) async {
     try {
-      final callable = FirebaseFunctions.instanceFor(
-        region: 'europe-west1',
-      ).httpsCallable('setLifetimeLicense');
+      final callable = _functions.httpsCallable('setLifetimeLicense');
 
       final result = await callable.call<Map<String, dynamic>>({
         'userId': userId,

@@ -8,8 +8,11 @@ import 'package:bookbed/shared/models/booking_model.dart';
 import 'package:bookbed/core/constants/enums.dart';
 
 class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
+
 class MockHttpsCallable extends Mock implements HttpsCallable {}
-class MockHttpsCallableResult<T> extends Mock implements HttpsCallableResult<T> {}
+
+class MockHttpsCallableResult<T> extends Mock
+    implements HttpsCallableResult<T> {}
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
@@ -22,8 +25,9 @@ void main() {
     mockFunctions = MockFirebaseFunctions();
     mockCallable = MockHttpsCallable();
 
-    when(() => mockFunctions.httpsCallable('createBookingAtomic'))
-        .thenReturn(mockCallable);
+    when(
+      () => mockFunctions.httpsCallable('createBookingAtomic'),
+    ).thenReturn(mockCallable);
 
     bookingService = BookingService(
       firestore: fakeFirestore,
@@ -61,8 +65,9 @@ void main() {
         'depositAmount': 0.0,
       });
 
-      when(() => mockCallable.call<Map<String, dynamic>>(any()))
-          .thenAnswer((_) async => mockResult);
+      when(
+        () => mockCallable.call<Map<String, dynamic>>(any()),
+      ).thenAnswer((_) async => mockResult);
 
       final result = await bookingService.createBooking(
         unitId: 'unit123',
@@ -90,13 +95,12 @@ void main() {
       final mockResult = MockHttpsCallableResult<Map<String, dynamic>>();
       when(() => mockResult.data).thenReturn({
         'isStripeValidation': true,
-        'bookingData': {
-          'depositAmount': 100.0,
-        },
+        'bookingData': {'depositAmount': 100.0},
       });
 
-      when(() => mockCallable.call<Map<String, dynamic>>(any()))
-          .thenAnswer((_) async => mockResult);
+      when(
+        () => mockCallable.call<Map<String, dynamic>>(any()),
+      ).thenAnswer((_) async => mockResult);
 
       final result = await bookingService.createBooking(
         unitId: 'unit123',
@@ -119,8 +123,12 @@ void main() {
     });
 
     test('handles already-exists FirebaseFunctionsException', () async {
-      when(() => mockCallable.call<Map<String, dynamic>>(any()))
-          .thenThrow(FirebaseFunctionsException(message: 'Already exists', code: 'already-exists'));
+      when(() => mockCallable.call<Map<String, dynamic>>(any())).thenThrow(
+        FirebaseFunctionsException(
+          message: 'Already exists',
+          code: 'already-exists',
+        ),
+      );
 
       expect(
         () => bookingService.createBooking(
@@ -142,8 +150,12 @@ void main() {
     });
 
     test('handles invalid-argument FirebaseFunctionsException', () async {
-      when(() => mockCallable.call<Map<String, dynamic>>(any()))
-          .thenThrow(FirebaseFunctionsException(message: 'Invalid argument', code: 'invalid-argument'));
+      when(() => mockCallable.call<Map<String, dynamic>>(any())).thenThrow(
+        FirebaseFunctionsException(
+          message: 'Invalid argument',
+          code: 'invalid-argument',
+        ),
+      );
 
       expect(
         () => bookingService.createBooking(
@@ -187,31 +199,34 @@ void main() {
       expect(booking.unitId, 'unit123');
     });
 
-    test('finds booking via collectionGroup query if not in top-level', () async {
-      await fakeFirestore
-          .collection('properties')
-          .doc('prop1')
-          .collection('bookings')
-          .doc('nested123')
-          .set({
-        'unit_id': 'unit123',
-        'status': 'pending',
-        'check_in': Timestamp.fromDate(DateTime(2024, 8, 1)),
-        'check_out': Timestamp.fromDate(DateTime(2024, 8, 5)),
-        'guest_name': 'Jane Doe',
-        'total_price': 300.0,
-        'advance_amount': 0.0,
-        'payment_method': 'none',
-        'payment_status': 'not_required',
-        'booking_reference': 'BK-NESTED',
-        'created_at': Timestamp.fromDate(DateTime(2024, 7, 1)),
-      });
+    test(
+      'finds booking via collectionGroup query if not in top-level',
+      () async {
+        await fakeFirestore
+            .collection('properties')
+            .doc('prop1')
+            .collection('bookings')
+            .doc('nested123')
+            .set({
+              'unit_id': 'unit123',
+              'status': 'pending',
+              'check_in': Timestamp.fromDate(DateTime(2024, 8, 1)),
+              'check_out': Timestamp.fromDate(DateTime(2024, 8, 5)),
+              'guest_name': 'Jane Doe',
+              'total_price': 300.0,
+              'advance_amount': 0.0,
+              'payment_method': 'none',
+              'payment_status': 'not_required',
+              'booking_reference': 'BK-NESTED',
+              'created_at': Timestamp.fromDate(DateTime(2024, 7, 1)),
+            });
 
-      final booking = await bookingService.getBookingById('nested123');
-      expect(booking, isNotNull);
-      expect(booking!.id, 'nested123');
-      expect(booking.bookingReference, 'BK-NESTED');
-    });
+        final booking = await bookingService.getBookingById('nested123');
+        expect(booking, isNotNull);
+        expect(booking!.id, 'nested123');
+        expect(booking.bookingReference, 'BK-NESTED');
+      },
+    );
 
     test('returns null if booking not found', () async {
       final booking = await bookingService.getBookingById('nonexistent');

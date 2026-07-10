@@ -56,7 +56,11 @@ void main() {
       );
 
       expect(result, isTrue);
-      verify(() => mockGoRouter.go('/owner/calendar?unit=123&date=2024-01-01&conflict=456')).called(1);
+      verify(
+        () => mockGoRouter.go(
+          '/owner/calendar?unit=123&date=2024-01-01&conflict=456',
+        ),
+      ).called(1);
     });
 
     testWidgets('handles /owner/calendar with only unit param', (tester) async {
@@ -72,7 +76,9 @@ void main() {
       verify(() => mockGoRouter.go('/owner/calendar?unit=123')).called(1);
     });
 
-    testWidgets('does not handle /owner/calendar without unit param', (tester) async {
+    testWidgets('does not handle /owner/calendar without unit param', (
+      tester,
+    ) async {
       await pumpContext(tester);
       final result = await service.handleDeepLink(
         'bookbed:///owner/calendar',
@@ -122,7 +128,9 @@ void main() {
       verify(() => mockGoRouter.go('/owner/bookings')).called(1);
     });
 
-    testWidgets('handles /owner/platform-connections with unit param', (tester) async {
+    testWidgets('handles /owner/platform-connections with unit param', (
+      tester,
+    ) async {
       await pumpContext(tester);
       when(() => mockGoRouter.go(any())).thenReturn(null);
 
@@ -132,10 +140,14 @@ void main() {
       );
 
       expect(result, isTrue);
-      verify(() => mockGoRouter.go('/owner/platform-connections?unit=123')).called(1);
+      verify(
+        () => mockGoRouter.go('/owner/platform-connections?unit=123'),
+      ).called(1);
     });
 
-    testWidgets('handles /owner/platform-connections without unit param', (tester) async {
+    testWidgets('handles /owner/platform-connections without unit param', (
+      tester,
+    ) async {
       await pumpContext(tester);
       when(() => mockGoRouter.go(any())).thenReturn(null);
 
@@ -163,57 +175,87 @@ void main() {
   group('DeepLinkService - External Web URLs', () {
     testWidgets('handles allowed external URL (exact match)', (tester) async {
       await pumpContext(tester);
-      when(() => mockUrlLauncher.canLaunch('https://booking.com'))
-          .thenAnswer((_) async => true);
-      when(() => mockUrlLauncher.launchUrl('https://booking.com', any()))
-          .thenAnswer((_) async => true);
+      when(
+        () => mockUrlLauncher.canLaunch('https://booking.com'),
+      ).thenAnswer((_) async => true);
+      when(
+        () => mockUrlLauncher.launchUrl('https://booking.com', any()),
+      ).thenAnswer((_) async => true);
 
-      final result = await service.handleDeepLink('https://booking.com', testContext);
+      final result = await service.handleDeepLink(
+        'https://booking.com',
+        testContext,
+      );
 
       expect(result, isTrue);
-      verify(() => mockUrlLauncher.launchUrl('https://booking.com', any())).called(1);
+      verify(
+        () => mockUrlLauncher.launchUrl('https://booking.com', any()),
+      ).called(1);
     });
 
     testWidgets('handles allowed external URL (subdomain)', (tester) async {
       await pumpContext(tester);
-      when(() => mockUrlLauncher.canLaunch('https://admin.booking.com'))
-          .thenAnswer((_) async => true);
-      when(() => mockUrlLauncher.launchUrl('https://admin.booking.com', any()))
-          .thenAnswer((_) async => true);
+      when(
+        () => mockUrlLauncher.canLaunch('https://admin.booking.com'),
+      ).thenAnswer((_) async => true);
+      when(
+        () => mockUrlLauncher.launchUrl('https://admin.booking.com', any()),
+      ).thenAnswer((_) async => true);
 
-      final result = await service.handleDeepLink('https://admin.booking.com', testContext);
+      final result = await service.handleDeepLink(
+        'https://admin.booking.com',
+        testContext,
+      );
 
       expect(result, isTrue);
-      verify(() => mockUrlLauncher.launchUrl('https://admin.booking.com', any())).called(1);
+      verify(
+        () => mockUrlLauncher.launchUrl('https://admin.booking.com', any()),
+      ).called(1);
     });
 
     testWidgets('blocks disallowed external URL', (tester) async {
       await pumpContext(tester);
-      final result = await service.handleDeepLink('https://example.com', testContext);
+      final result = await service.handleDeepLink(
+        'https://example.com',
+        testContext,
+      );
 
       expect(result, isFalse);
       verifyNever(() => mockUrlLauncher.launchUrl(any(), any()));
     });
 
-    testWidgets('returns false when canLaunchUrl returns false', (tester) async {
+    testWidgets('returns false when canLaunchUrl returns false', (
+      tester,
+    ) async {
       await pumpContext(tester);
-      when(() => mockUrlLauncher.canLaunch('https://booking.com'))
-          .thenAnswer((_) async => false);
+      when(
+        () => mockUrlLauncher.canLaunch('https://booking.com'),
+      ).thenAnswer((_) async => false);
 
-      final result = await service.handleDeepLink('https://booking.com', testContext);
+      final result = await service.handleDeepLink(
+        'https://booking.com',
+        testContext,
+      );
 
       expect(result, isFalse);
       verifyNever(() => mockUrlLauncher.launchUrl(any(), any()));
     });
 
-    testWidgets('returns false when launchUrl throws exception', (tester) async {
+    testWidgets('returns false when launchUrl throws exception', (
+      tester,
+    ) async {
       await pumpContext(tester);
-      when(() => mockUrlLauncher.canLaunch('https://booking.com'))
-          .thenAnswer((_) async => true);
-      when(() => mockUrlLauncher.launchUrl('https://booking.com', any()))
-          .thenThrow(Exception('Launch failed'));
+      when(
+        () => mockUrlLauncher.canLaunch('https://booking.com'),
+      ).thenAnswer((_) async => true);
+      when(
+        () => mockUrlLauncher.launchUrl('https://booking.com', any()),
+      ).thenThrow(Exception('Launch failed'));
 
-      final result = await service.handleDeepLink('https://booking.com', testContext);
+      final result = await service.handleDeepLink(
+        'https://booking.com',
+        testContext,
+      );
 
       expect(result, isFalse);
     });
@@ -222,7 +264,10 @@ void main() {
   group('DeepLinkService - Invalid URLs', () {
     testWidgets('returns false for unknown schemes', (tester) async {
       await pumpContext(tester);
-      final result = await service.handleDeepLink('ftp://example.com', testContext);
+      final result = await service.handleDeepLink(
+        'ftp://example.com',
+        testContext,
+      );
 
       expect(result, isFalse);
     });

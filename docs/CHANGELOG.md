@@ -1,8 +1,41 @@
 # BookBed Changelog
 
-All version history from v4.6 to v7.36.
+All version history from v4.6 to v7.37.
 
-**Last Updated**: 2026-06-22 | **Version**: 7.36
+**Last Updated**: 2026-07-10 | **Version**: 7.37
+
+---
+
+**Changelog 7.37** (2026-07-10):
+
+### Overnight design-fidelity campaign — 15 iterations, owner + widget + admin (audit/overnight-fidelity-2026-07-10)
+Page-by-page handoff fidelity sweep (`BookBed Design.html` / `*-premium.jsx` / `*.jsx` as the visual TARGET, not token-hygiene), fix-as-you-go across 15 PRs (#840–#854). Every change dev-only, no deploy; FROZEN fences (Cjenovnik grid, publish flow, timeline dimensions, booking widget submit) untouched throughout.
+
+**Owner:**
+- **#840** (`da0515e0`) — Subscription (Pretplata) cheap-wins: back-nav, Pro-card border, dialog l10n (audit/149).
+- **#843** (`df9be9d5`) — auth recovery cluster: RecCard icon-tile + handoff-xl card radius (login/register/recovery).
+- **#844** (`67fe8cd3`) + **#851** (`912f1e96`) — profile hub `BookBed Pro` card benefits grid + €19 price + l10n remainder (audit/135 S3); iCal FeedCard footer bar folded into #851.
+- **#841** (`d492a332`) — iCal sync-settings hero flattened to a flat status card (flat-chrome enforcement per CHANGELOG 7.23/audit/126).
+- **#842** (`72a79fa2`) — embed/owner docstring flatten (stale TIP-1 gradient text removed) + embed guide **data-honesty** verdict (no invented feature).
+- **#845** (`a5a663d1`) + **#854** (`40cad472`) — unit-hub master panel: fidelity vs `units.jsx`, then PropertyTree **flat-row** rework (`ExpansionTile`→flat `Row` `[chevron][icon][name Expanded][count][edit][delete][add]`, closing the long-name vertical-wrap band-aid from #850).
+- **#849** (`c11c1a71`) — 5 owner `AlertDialog` confirms → `BbDialog`.
+- **#850** (`85301145`) — deferred-backlog mop-up: units title one-line, iCal Uvoz/Izvoz direction badge, admin env pill (reads REAL env).
+
+**Widget (guest-facing):**
+- **#846** (`ec71d98e`) — mint-accent success mark + deposit band fidelity (confirmation/deposit).
+- **#847** (`e96bb8f7`) — mint selection ladder on calendar + guest-form quick wins (values-only, zero structural painter edits).
+- **#853** (`eef254f3`) — guest-form input radius **8→12px** per handoff (`buildDecoration()`/theme-level; the canonical 12px input-radius standard).
+
+**Admin:**
+- **#848** (`8d4bed10`) — dark-console nav chrome wired to `BbAdminDarkTokens` (shell fidelity, deep-purple).
+
+**Key decisions:**
+- **Flat-chrome enforcement** — every hero/gradient straggler flattened to solid fills (do NOT re-add TIP-1 gradient stops).
+- **Data-honesty skips** — features with no backing field/backend (embed guide extras, live-chat, helpful-vote) omitted rather than faked.
+- **CanvasKit login unlock** — post-login programmatic access via `flt-semantics-placeholder` click enabled the iter-13 live-verification sweep (#852, `370d2e52`, doc-only attestation of #840–#851).
+- **Input radius 12** — widget guest-form corners standardized to 12px (matches owner input convention).
+
+**Verification:** full suite **1697 green** (`All tests passed!`); golden **56/56** green (no widget golden — all owner-side, zero collateral re-bless). `flutter analyze` 0 net-new, `dart format` clean, `flutter build web --no-tree-shake-icons` clean per PR. Live web eyeball on `main_dev` per fidelity iteration. Dev-only — PROD deploy batch deferred.
 
 ---
 

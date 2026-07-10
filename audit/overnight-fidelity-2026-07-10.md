@@ -1031,3 +1031,40 @@ ones). No allowlist entries orphaned.
 `flutter gen-l10n` + `build_runner` clean; l10n suite 8/8 (completeness +
 placeholder parity + ratchet); `--tags golden` 56/56 (no baseline moved →
 HR byte-identical confirmed); full suite 1665 passed. Dev-only, no deploy.
+
+---
+
+## Minimalist light-theme pass 1 — near-white shell + softer panel lift (2026-07-10)
+
+**Design-direction pass, REVERSIBLE, light-theme only** — iterating on-device after.
+Operator wants a more minimalist owner look. Token-level values only; flat chrome
+preserved (no gradient re-add); no widget restructure, no logic edits, no new deps.
+Dark (#000 OLED) + admin dark console untouched.
+
+**Changes (before → after):**
+1. **Shell / page-background `#F0F1F5` → `#FAFAFB`** (near-white). All 4 light-shell
+   source-of-truth sites migrated together:
+   - `bb_redesign_tokens.dart` `light.shellBg` `0xFFF0F1F5` → `0xFFFAFAFB` (+ docstring)
+   - `app_gradients.dart` `_lightStart`/`_lightEnd` both `0xFFF0F1F5` → `0xFFFAFAFB` (kept EQUAL = flat)
+   - `app_colors.dart` `shellBgLight` `0xFFF0F1F5` → `0xFFFAFAFB`
+   - stale comment in `owner_booking_detail_screen.dart` L142 corrected `#F0F1F5`→`#FAFAFB`
+   Dark shell values untouched.
+2. **Softer LIGHT panel shadow** (`AppShadows.panelLight`, light-only; dark uses
+   separate `panelDark`) — reduced so panels read as a gentle lift on the near-white
+   shell, not a heavy float:
+   - L1: `.03`α blur3 y1 → `.02`α blur2 y1
+   - L2: `.04`α blur8 y2 → `.03`α blur6 y2
+   - L3 (the heavy one): `.10`α blur36 y16 spread-16 → `.06`α blur24 y10 spread-14
+   3-layer structure kept; reversible.
+3. **Border:** light card/panel hairline already `#E2E8F0` (cool, 1px via `BbCard`
+   `c.border`) — present + subtle; NO change needed (constraint already satisfied).
+   `cardElevated` (BbCard resting shadow) left UNTOUCHED — it is shared with dark
+   BbCard (not theme-aware), so softening it would move dark; delineation on
+   near-white leans on the existing 1px hairline + soft 3-layer card shadow.
+
+**Verify:** `dart format` clean; `flutter analyze` (core/theme + core/design) 0 issues;
+build_runner clean; `--tags golden` → 21 LIGHT baselines re-blessed (bg moved
+everywhere), **0 dark baselines moved** (dark confirmed untouched); re-blessed PNGs
+read back = near-white shell, white cards clearly delineated (subtle shadow +
+hairline), crisp Inter (no tofu); full suite **1724 passed**. Dev-only, no deploy.
+Iterating on-device.

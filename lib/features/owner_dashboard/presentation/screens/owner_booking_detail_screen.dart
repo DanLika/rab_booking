@@ -139,7 +139,7 @@ class _BookingDetailBody extends ConsumerWidget {
         _DetailAppBar(reference: headerRef, isMobile: isMobile, l10n: l10n),
         Expanded(
           // No surface fill here: the Scaffold paints
-          // `context.gradients.pageBackground` (flat #F0F1F5 light / OLED #000
+          // `context.gradients.pageBackground` (flat #FAFAFB light / OLED #000
           // dark post-audit/127). A shellBg Container used to cover it.
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(

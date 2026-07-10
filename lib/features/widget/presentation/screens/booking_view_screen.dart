@@ -16,12 +16,18 @@ import 'booking_details_screen.dart';
 import '../widgets/common/widget_powered_by.dart';
 import '../../../../shared/widgets/redesign.dart';
 import '../../../../../core/services/logging_service.dart';
+import '../../../../../core/exceptions/app_exceptions.dart';
 
 /// Safely convert error to string, handling null and edge cases
 /// Prevents "Null check operator used on a null value" errors
 String _safeErrorToString(dynamic error) {
   if (error == null) {
     return 'Unknown error';
+  }
+  // AppException.toString() prefixes the (minified in release web) runtime
+  // type and appends "(code: …)" — show only the human message to guests.
+  if (error is AppException) {
+    return error.message;
   }
   try {
     return error.toString();

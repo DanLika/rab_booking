@@ -394,7 +394,11 @@ class ProfileScreen extends ConsumerWidget {
       ),
     ];
 
-    return _ProfilSettingsGroup(icon: 'apps', title: 'Aplikacija', rows: rows);
+    return _ProfilSettingsGroup(
+      icon: 'apps',
+      title: l10n.ownerProfileGroupApp,
+      rows: rows,
+    );
   }
 
   Widget _buildLegalGroup({
@@ -426,7 +430,11 @@ class ProfileScreen extends ConsumerWidget {
       ),
     ];
 
-    return _ProfilSettingsGroup(icon: 'gavel', title: 'Pravno', rows: rows);
+    return _ProfilSettingsGroup(
+      icon: 'gavel',
+      title: l10n.ownerProfileGroupLegal,
+      rows: rows,
+    );
   }
 
   Widget _buildDangerGroup({
@@ -445,7 +453,7 @@ class ProfileScreen extends ConsumerWidget {
               const BbIcon(name: 'warning', size: 16, color: AppColors.error),
               const SizedBox(width: 8),
               Text(
-                'OPASNA ZONA',
+                l10n.dangerZone.toUpperCase(),
                 style: BBType.eyebrow(context).copyWith(color: AppColors.error),
               ),
             ],
@@ -536,7 +544,7 @@ class _ProfilHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'RAČUN · VLASNIK',
+                l10n.ownerProfileEyebrow.toUpperCase(),
                 style: BBType.eyebrow(context).copyWith(color: c.primary),
               ),
               const SizedBox(height: 6),
@@ -610,6 +618,7 @@ class _ProfilIdentityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final rd = BbRedesignTokens.of(context);
     final c = BBColor.of(context);
+    final l10n = AppLocalizations.of(context);
     final location = _locationLabel();
 
     final identity = Row(
@@ -671,7 +680,7 @@ class _ProfilIdentityCard extends StatelessWidget {
                           BbIcon(name: 'verified', size: 14, color: c.primary),
                           const SizedBox(width: 4),
                           Text(
-                            'Domaćin',
+                            l10n.ownerProfileHostBadge,
                             style: BBType.caption(context).copyWith(
                               color: c.primary,
                               fontWeight: FontWeight.w700,
@@ -692,7 +701,7 @@ class _ProfilIdentityCard extends StatelessWidget {
                   if (memberSinceYear != null)
                     _MetaItem(
                       icon: 'calendar_month',
-                      label: 'Član od $memberSinceYear',
+                      label: l10n.ownerProfileMemberSince(memberSinceYear!),
                     ),
                 ],
               ),
@@ -704,15 +713,15 @@ class _ProfilIdentityCard extends StatelessWidget {
                   runSpacing: 6,
                   children: [
                     _VerifyChip(
-                      label: 'Email potvrđen',
+                      label: l10n.ownerProfileEmailVerified,
                       state: emailVerified
                           ? _VerifyState.done
                           : _VerifyState.pending,
                     ),
                     _VerifyChip(
                       label: phoneFilled
-                          ? 'Telefon dodan'
-                          : 'Telefon nedostaje',
+                          ? l10n.ownerProfilePhoneAdded
+                          : l10n.ownerProfilePhoneMissing,
                       state: phoneFilled
                           ? _VerifyState.done
                           : _VerifyState.pending,
@@ -890,7 +899,7 @@ class _CompletionPanel extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Dovršite profil',
+                l10n.ownerProfileCompleteHeading,
                 style: BBType.h3(context).copyWith(color: c.textPrimary),
               ),
               const SizedBox(height: 4),
@@ -899,7 +908,7 @@ class _CompletionPanel extends StatelessWidget {
                 child: Text(
                   stepsLeft == 0
                       ? l10n.ownerProfileSuggestionPhone
-                      : 'Još $stepsLeft koraka do 100%.',
+                      : l10n.ownerProfileCompleteRemaining(stepsLeft),
                   style: BBType.caption(
                     context,
                   ).copyWith(color: c.textSecondary),
@@ -913,7 +922,7 @@ class _CompletionPanel extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: () => context.push(OwnerRoutes.profileEdit),
                   icon: const Icon(Icons.arrow_forward, size: 16),
-                  label: const Text('Dovrši'),
+                  label: Text(l10n.ownerProfileCompleteCta),
                   style: FilledButton.styleFrom(
                     backgroundColor: c.primary,
                     foregroundColor: Colors.white,
@@ -980,7 +989,7 @@ class _RadialGauge extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'ispunjeno',
+                AppLocalizations.of(context).ownerProfileCompleteFilledLabel,
                 style: BBType.caption(context).copyWith(color: c.textTertiary),
               ),
             ],
@@ -1126,7 +1135,7 @@ class _ProfilProCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                'Probni period',
+                                l10n.ownerProfileTrialBadge,
                                 style: BBType.caption(context).copyWith(
                                   color: rd.statusPendingDeep,
                                   fontWeight: FontWeight.w700,

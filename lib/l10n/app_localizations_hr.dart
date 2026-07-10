@@ -2642,6 +2642,49 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerProfileTitle => 'Profil';
 
   @override
+  String get ownerProfileEyebrow => 'Račun · Vlasnik';
+
+  @override
+  String get ownerProfileHostBadge => 'Domaćin';
+
+  @override
+  String ownerProfileMemberSince(int year) {
+    return 'Član od $year';
+  }
+
+  @override
+  String get ownerProfileEmailVerified => 'Email potvrđen';
+
+  @override
+  String get ownerProfilePhoneAdded => 'Telefon dodan';
+
+  @override
+  String get ownerProfilePhoneMissing => 'Telefon nedostaje';
+
+  @override
+  String get ownerProfileCompleteHeading => 'Dovršite profil';
+
+  @override
+  String ownerProfileCompleteRemaining(int steps) {
+    return 'Još $steps koraka do 100%.';
+  }
+
+  @override
+  String get ownerProfileCompleteCta => 'Dovrši';
+
+  @override
+  String get ownerProfileCompleteFilledLabel => 'ispunjeno';
+
+  @override
+  String get ownerProfileGroupApp => 'Aplikacija';
+
+  @override
+  String get ownerProfileGroupLegal => 'Pravno';
+
+  @override
+  String get ownerProfileTrialBadge => 'Probni period';
+
+  @override
   String get ownerProfileThemeLight => 'Svijetla';
 
   @override

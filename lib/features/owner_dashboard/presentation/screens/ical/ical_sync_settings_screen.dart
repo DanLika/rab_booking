@@ -581,52 +581,55 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 ),
             ],
           ),
-          trailing: PopupMenuButton<String>(
-            onSelected: (value) => _handleFeedAction(value, feed),
-            itemBuilder: (ctx) => [
-              PopupMenuItem(
-                value: 'sync',
-                child: Row(
-                  children: [
-                    const BbIcon(name: 'sync', size: 18),
-                    const SizedBox(width: 8),
-                    Text(l10n.icalSyncNow),
-                  ],
-                ),
+        ),
+        // Inline footer action bar — handoff ical.jsx FeedCard §112 (replaces
+        // the trailing PopupMenu). Tertiary "Sinkroniziraj" text button +
+        // secondary icon buttons (pause/resume, edit, delete). Pure UI swap:
+        // every button routes through the unchanged `_handleFeedAction`; no
+        // sync/callable logic touched.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            BBSpace.md,
+            0,
+            BBSpace.md,
+            BBSpace.sm,
+          ),
+          child: Row(
+            children: [
+              BbButton(
+                label: l10n.icalSyncNow,
+                iconLeft: 'sync',
+                variant: BbButtonVariant.tertiary,
+                size: BbButtonSize.sm,
+                onPressed: () => _handleFeedAction('sync', feed),
               ),
-              PopupMenuItem(
-                value: feed.isActive ? 'pause' : 'resume',
-                child: Row(
-                  children: [
-                    BbIcon(
-                      name: feed.isActive ? 'pause' : 'play_arrow',
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(feed.isActive ? l10n.icalPause : l10n.icalResume),
-                  ],
-                ),
+              const Spacer(),
+              BbButton(
+                iconLeft: feed.isActive ? 'pause' : 'play_arrow',
+                variant: BbButtonVariant.secondary,
+                size: BbButtonSize.sm,
+                asIcon: true,
+                semanticLabel: feed.isActive ? l10n.icalPause : l10n.icalResume,
+                onPressed: () =>
+                    _handleFeedAction(feed.isActive ? 'pause' : 'resume', feed),
               ),
-              PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    const BbIcon(name: 'edit', size: 18),
-                    const SizedBox(width: 8),
-                    Text(l10n.edit),
-                  ],
-                ),
+              const SizedBox(width: BBSpace.xs),
+              BbButton(
+                iconLeft: 'edit',
+                variant: BbButtonVariant.secondary,
+                size: BbButtonSize.sm,
+                asIcon: true,
+                semanticLabel: l10n.edit,
+                onPressed: () => _handleFeedAction('edit', feed),
               ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    BbIcon(name: 'delete', size: 18, color: c.error),
-                    const SizedBox(width: 8),
-                    Text(l10n.delete, style: TextStyle(color: c.error)),
-                  ],
-                ),
+              const SizedBox(width: BBSpace.xs),
+              BbButton(
+                iconLeft: 'delete',
+                variant: BbButtonVariant.destructiveSoft,
+                size: BbButtonSize.sm,
+                asIcon: true,
+                semanticLabel: l10n.delete,
+                onPressed: () => _handleFeedAction('delete', feed),
               ),
             ],
           ),

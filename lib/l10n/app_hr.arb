@@ -1036,6 +1036,25 @@
   },
 
   "ownerProfileTitle": "Profil",
+  "ownerProfileEyebrow": "Račun · Vlasnik",
+  "ownerProfileHostBadge": "Domaćin",
+  "ownerProfileMemberSince": "Član od {year}",
+  "@ownerProfileMemberSince": {
+    "placeholders": { "year": { "type": "int" } }
+  },
+  "ownerProfileEmailVerified": "Email potvrđen",
+  "ownerProfilePhoneAdded": "Telefon dodan",
+  "ownerProfilePhoneMissing": "Telefon nedostaje",
+  "ownerProfileCompleteHeading": "Dovršite profil",
+  "ownerProfileCompleteRemaining": "Još {steps} koraka do 100%.",
+  "@ownerProfileCompleteRemaining": {
+    "placeholders": { "steps": { "type": "int" } }
+  },
+  "ownerProfileCompleteCta": "Dovrši",
+  "ownerProfileCompleteFilledLabel": "ispunjeno",
+  "ownerProfileGroupApp": "Aplikacija",
+  "ownerProfileGroupLegal": "Pravno",
+  "ownerProfileTrialBadge": "Probni period",
   "ownerProfileThemeLight": "Svijetla",
   "ownerProfileThemeDark": "Tamna",
   "ownerProfileLanguageEnglish": "English",

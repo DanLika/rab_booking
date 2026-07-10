@@ -1036,6 +1036,25 @@
   },
 
   "ownerProfileTitle": "Profile",
+  "ownerProfileEyebrow": "Account · Owner",
+  "ownerProfileHostBadge": "Host",
+  "ownerProfileMemberSince": "Member since {year}",
+  "@ownerProfileMemberSince": {
+    "placeholders": { "year": { "type": "int" } }
+  },
+  "ownerProfileEmailVerified": "Email verified",
+  "ownerProfilePhoneAdded": "Phone added",
+  "ownerProfilePhoneMissing": "Phone missing",
+  "ownerProfileCompleteHeading": "Complete your profile",
+  "ownerProfileCompleteRemaining": "{steps} more steps to 100%.",
+  "@ownerProfileCompleteRemaining": {
+    "placeholders": { "steps": { "type": "int" } }
+  },
+  "ownerProfileCompleteCta": "Finish",
+  "ownerProfileCompleteFilledLabel": "filled",
+  "ownerProfileGroupApp": "Application",
+  "ownerProfileGroupLegal": "Legal",
+  "ownerProfileTrialBadge": "Trial period",
   "ownerProfileThemeLight": "Light",
   "ownerProfileThemeDark": "Dark",
   "ownerProfileLanguageEnglish": "English",

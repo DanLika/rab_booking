@@ -1424,6 +1424,12 @@ abstract class AppLocalizations {
   /// **'Change Password'**
   String get changePassword;
 
+  /// No description provided for @changePasswordSecurityEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'ACCOUNT SECURITY'**
+  String get changePasswordSecurityEyebrow;
+
   /// No description provided for @showPassword.
   ///
   /// In en, this message translates to:
@@ -4974,6 +4980,84 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get ownerProfileTitle;
 
+  /// No description provided for @ownerProfileEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Account · Owner'**
+  String get ownerProfileEyebrow;
+
+  /// No description provided for @ownerProfileHostBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get ownerProfileHostBadge;
+
+  /// No description provided for @ownerProfileMemberSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Member since {year}'**
+  String ownerProfileMemberSince(int year);
+
+  /// No description provided for @ownerProfileEmailVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Email verified'**
+  String get ownerProfileEmailVerified;
+
+  /// No description provided for @ownerProfilePhoneAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone added'**
+  String get ownerProfilePhoneAdded;
+
+  /// No description provided for @ownerProfilePhoneMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone missing'**
+  String get ownerProfilePhoneMissing;
+
+  /// No description provided for @ownerProfileCompleteHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile'**
+  String get ownerProfileCompleteHeading;
+
+  /// No description provided for @ownerProfileCompleteRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{steps} more steps to 100%.'**
+  String ownerProfileCompleteRemaining(int steps);
+
+  /// No description provided for @ownerProfileCompleteCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get ownerProfileCompleteCta;
+
+  /// No description provided for @ownerProfileCompleteFilledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'filled'**
+  String get ownerProfileCompleteFilledLabel;
+
+  /// No description provided for @ownerProfileGroupApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Application'**
+  String get ownerProfileGroupApp;
+
+  /// No description provided for @ownerProfileGroupLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get ownerProfileGroupLegal;
+
+  /// No description provided for @ownerProfileTrialBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial period'**
+  String get ownerProfileTrialBadge;
+
   /// No description provided for @ownerProfileThemeLight.
   ///
   /// In en, this message translates to:
@@ -5280,6 +5364,18 @@ abstract class AppLocalizations {
   /// **'Phone'**
   String get editProfilePhone;
 
+  /// No description provided for @editProfileEmailVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get editProfileEmailVerified;
+
+  /// No description provided for @editProfilePhoneHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible to guests after booking confirmation'**
+  String get editProfilePhoneHelper;
+
   /// No description provided for @editProfileAddress.
   ///
   /// In en, this message translates to:
@@ -5502,6 +5598,12 @@ abstract class AppLocalizations {
   /// **'Optional payment notification emails. Initial Stripe payment confirmations are always sent.'**
   String get notificationSettingsPaymentsDesc;
 
+  /// No description provided for @notificationSettingsChannelsEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'CHANNELS · EMAIL + PUSH'**
+  String get notificationSettingsChannelsEyebrow;
+
   /// No description provided for @notificationSettingsCalendar.
   ///
   /// In en, this message translates to:
@@ -5561,6 +5663,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Receive notifications via SMS'**
   String get notificationSettingsSmsChannelDesc;
+
+  /// No description provided for @quietHoursTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet Hours'**
+  String get quietHoursTitle;
+
+  /// No description provided for @quietHoursEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Quiet Hours'**
+  String get quietHoursEnable;
+
+  /// No description provided for @quietHoursSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Silence push notifications during a set time window'**
+  String get quietHoursSubtitle;
+
+  /// No description provided for @quietHoursStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get quietHoursStart;
+
+  /// No description provided for @quietHoursEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get quietHoursEnd;
+
+  /// No description provided for @quietHoursInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'During quiet hours, push notifications are held back — you\'ll still receive emails and see everything when you open the app.'**
+  String get quietHoursInfo;
+
+  /// No description provided for @quietHoursCrossMidnight.
+  ///
+  /// In en, this message translates to:
+  /// **'This window runs overnight, from {start} to {end} the next morning.'**
+  String quietHoursCrossMidnight(String start, String end);
 
   /// No description provided for @notificationSettingsLoadError.
   ///
@@ -5717,6 +5861,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Properties and Units'**
   String get unitHubPropertiesAndUnits;
+
+  /// No description provided for @unitHubPropertiesUnitsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{propertyCount} properties · {unitCount} units'**
+  String unitHubPropertiesUnitsSubtitle(int propertyCount, int unitCount);
 
   /// No description provided for @unitHubAddProperty.
   ///
@@ -6239,6 +6389,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Data for receiving payments'**
   String get bankAccountBankDetailsSubtitle;
+
+  /// No description provided for @bankAccountActiveBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get bankAccountActiveBadge;
+
+  /// No description provided for @bankAccountHolderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner: {holder} · EUR'**
+  String bankAccountHolderLabel(String holder);
 
   /// No description provided for @bankAccountIban.
   ///
@@ -12126,6 +12288,18 @@ abstract class AppLocalizations {
   /// **'Import is disabled for this feed'**
   String get icalImportDisabledWarning;
 
+  /// Direction badge shown on an iCal feed that imports events (importEnabled=true)
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get icalDirectionImport;
+
+  /// Direction badge shown on an iCal feed that only exports (importEnabled=false)
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get icalDirectionExport;
+
   /// No description provided for @icalEchoStatusActive.
   ///
   /// In en, this message translates to:
@@ -14692,6 +14866,30 @@ abstract class AppLocalizations {
   /// **'Expires: {date}'**
   String subscriptionExpires(String date);
 
+  /// No description provided for @subscriptionTrialEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR PLAN'**
+  String get subscriptionTrialEyebrow;
+
+  /// No description provided for @subscriptionTrialDaysRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{daysLeft} of {totalDays} days remaining'**
+  String subscriptionTrialDaysRemaining(int daysLeft, int totalDays);
+
+  /// No description provided for @subscriptionTrialEndsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'until {date}'**
+  String subscriptionTrialEndsShort(String date);
+
+  /// No description provided for @subscriptionTrialEndsInline.
+  ///
+  /// In en, this message translates to:
+  /// **'You enjoy all Pro features. Ends {date}.'**
+  String subscriptionTrialEndsInline(String date);
+
   /// No description provided for @subscriptionFreeTrial.
   ///
   /// In en, this message translates to:
@@ -14763,6 +14961,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Advanced analytics'**
   String get subscriptionFeatureAdvancedAnalytics;
+
+  /// No description provided for @subscriptionFeatureAiAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited AI assistant'**
+  String get subscriptionFeatureAiAssistant;
 
   /// No description provided for @subscriptionFeaturePrioritySupport.
   ///
@@ -14847,6 +15051,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.'**
   String get subscriptionFaqDataSafeAnswer;
+
+  /// No description provided for @subscriptionUpgradeComingSoonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Pro'**
+  String get subscriptionUpgradeComingSoonTitle;
+
+  /// No description provided for @subscriptionUpgradeComingSoonBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro subscription is coming soon. We\'re integrating Stripe payments so you can unlock unlimited properties and premium features. Stay tuned!'**
+  String get subscriptionUpgradeComingSoonBody;
 
   /// No description provided for @subscriptionComingSoon.
   ///

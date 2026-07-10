@@ -60,11 +60,11 @@ class AppGradients extends ThemeExtension<AppGradients> {
 
   // Page shell colors — FLAT (no gradient). Both stops = one shell tone so
   // `pageBackground` renders as a solid fill. Handoff ladder (audit/127):
-  // light shell = `--bb-shell-bg` #F0F1F5 — the convergence value (Material
-  // scaffold + rd.shellBg already use it). Raised surfaces (section/card) go
-  // white #FFFFFF.
-  static const Color _lightStart = Color(0xFFF0F1F5);
-  static const Color _lightEnd = Color(0xFFF0F1F5);
+  // light shell = near-white `#FAFAFB` (minimalist pass 1; was #F0F1F5, the
+  // audit/127 convergence value). Both stops EQUAL = solid flat fill. Raised
+  // surfaces (section/card) go white #FFFFFF.
+  static const Color _lightStart = Color(0xFFFAFAFB);
+  static const Color _lightEnd = Color(0xFFFAFAFB);
 
   // Dark shell: FLAT OLED #000 (handoff `--bb-shell-bg`/`--bb-bg`, audit/127).
   // Page is the DARKEST layer → raised surfaces (panel #141414, card #1E1E1E)

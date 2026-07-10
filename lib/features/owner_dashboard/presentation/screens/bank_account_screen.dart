@@ -208,9 +208,9 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                     style: BBType.h3(context).copyWith(color: c.textPrimary),
                   ),
                 ),
-                const BbStatusBadge(
+                BbStatusBadge(
                   status: BbBookingStatus.confirmed,
-                  label: 'Aktivan',
+                  label: l10n.bankAccountActiveBadge,
                 ),
               ],
             ),
@@ -255,7 +255,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Vlasnik: $holder · EUR',
+                        l10n.bankAccountHolderLabel(holder),
                         style: BBType.caption(
                           context,
                         ).copyWith(color: c.textTertiary),
@@ -436,20 +436,18 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
         if (!didPop && _isDirty) {
           final shouldPop = await showDialog<bool>(
             context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(l10n.bankAccountDiscardTitle),
-              content: Text(l10n.bankAccountDiscardDesc),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(l10n.cancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
-                  child: Text(l10n.bankAccountDiscard),
-                ),
-              ],
+            builder: (ctx) => BbDialog(
+              title: l10n.bankAccountDiscardTitle,
+              body: l10n.bankAccountDiscardDesc,
+              destructive: true,
+              secondary: BbDialogAction(
+                label: l10n.cancel,
+                onPressed: () => Navigator.pop(ctx, false),
+              ),
+              primary: BbDialogAction(
+                label: l10n.bankAccountDiscard,
+                onPressed: () => Navigator.pop(ctx, true),
+              ),
             ),
           );
           if (shouldPop == true && context.mounted) {

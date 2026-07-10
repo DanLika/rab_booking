@@ -32,6 +32,26 @@ class NotificationCategories with _$NotificationCategories {
       _$NotificationCategoriesFromJson(json);
 }
 
+/// Quiet Hours (Tihi sati) — a daily time window during which PUSH
+/// notifications are suppressed. Times are wall-clock "HH:mm" strings
+/// interpreted in [timezone] (IANA name, e.g. "Europe/Zagreb").
+///
+/// Enforcement lives server-side in `functions/src/notificationPreferences.ts`
+/// (`shouldSendPushNotification`). A window may cross midnight
+/// (e.g. 22:00 → 07:00). Email/DB records are NOT suppressed — only push.
+@freezed
+class QuietHours with _$QuietHours {
+  const factory QuietHours({
+    @Default(false) bool enabled,
+    @Default('22:00') String start,
+    @Default('07:00') String end,
+    @Default('Europe/Zagreb') String timezone,
+  }) = _QuietHours;
+
+  factory QuietHours.fromJson(Map<String, dynamic> json) =>
+      _$QuietHoursFromJson(json);
+}
+
 /// User notification preferences (stored in Firestore: users/{userId}/preferences)
 @freezed
 class NotificationPreferences with _$NotificationPreferences {
@@ -41,6 +61,7 @@ class NotificationPreferences with _$NotificationPreferences {
     required String userId,
     @Default(true) bool masterEnabled,
     @Default(NotificationCategories()) NotificationCategories categories,
+    @Default(QuietHours()) QuietHours quietHours,
     DateTime? updatedAt,
   }) = _NotificationPreferences;
 
@@ -59,6 +80,9 @@ class NotificationPreferences with _$NotificationPreferences {
               data['categories'] as Map<String, dynamic>,
             )
           : const NotificationCategories(),
+      quietHours: data['quietHours'] != null
+          ? QuietHours.fromJson(data['quietHours'] as Map<String, dynamic>)
+          : const QuietHours(),
       updatedAt: data['updatedAt'] != null
           ? (data['updatedAt'] as Timestamp).toDate()
           : null,
@@ -78,6 +102,7 @@ class NotificationPreferences with _$NotificationPreferences {
         'calendar': categories.calendar.toJson(),
         'marketing': categories.marketing.toJson(),
       },
+      'quietHours': quietHours.toJson(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }

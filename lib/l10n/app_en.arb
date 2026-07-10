@@ -257,6 +257,7 @@
 
   "editProfile": "Edit Profile",
   "changePassword": "Change Password",
+  "changePasswordSecurityEyebrow": "ACCOUNT SECURITY",
   "showPassword": "Show password",
   "hidePassword": "Hide password",
   "currentPassword": "Current Password",
@@ -1036,6 +1037,25 @@
   },
 
   "ownerProfileTitle": "Profile",
+  "ownerProfileEyebrow": "Account · Owner",
+  "ownerProfileHostBadge": "Host",
+  "ownerProfileMemberSince": "Member since {year}",
+  "@ownerProfileMemberSince": {
+    "placeholders": { "year": { "type": "int" } }
+  },
+  "ownerProfileEmailVerified": "Email verified",
+  "ownerProfilePhoneAdded": "Phone added",
+  "ownerProfilePhoneMissing": "Phone missing",
+  "ownerProfileCompleteHeading": "Complete your profile",
+  "ownerProfileCompleteRemaining": "{steps} more steps to 100%.",
+  "@ownerProfileCompleteRemaining": {
+    "placeholders": { "steps": { "type": "int" } }
+  },
+  "ownerProfileCompleteCta": "Finish",
+  "ownerProfileCompleteFilledLabel": "filled",
+  "ownerProfileGroupApp": "Application",
+  "ownerProfileGroupLegal": "Legal",
+  "ownerProfileTrialBadge": "Trial period",
   "ownerProfileThemeLight": "Light",
   "ownerProfileThemeDark": "Dark",
   "ownerProfileLanguageEnglish": "English",
@@ -1088,6 +1108,8 @@
   "editProfileFullName": "Full Name",
   "editProfileEmail": "Email",
   "editProfilePhone": "Phone",
+  "editProfileEmailVerified": "Verified",
+  "editProfilePhoneHelper": "Visible to guests after booking confirmation",
   "editProfileAddress": "Address",
   "editProfileAddressSubtitle": "Your physical address",
   "editProfileCountry": "Country",
@@ -1126,6 +1148,7 @@
   "notificationSettingsBookingsDesc": "Emails when guests make instant bookings. Pending bookings requiring your approval are always sent.",
   "notificationSettingsPayments": "Payment Reminders",
   "notificationSettingsPaymentsDesc": "Optional payment notification emails. Initial Stripe payment confirmations are always sent.",
+  "notificationSettingsChannelsEyebrow": "CHANNELS · EMAIL + PUSH",
   "notificationSettingsCalendar": "Calendar Sync",
   "notificationSettingsCalendarDesc": "iCal sync alerts and calendar conflict warnings.",
   "notificationSettingsMarketing": "Marketing & Updates",
@@ -1136,6 +1159,19 @@
   "notificationSettingsPushChannelDesc": "Receive push notifications on your device",
   "notificationSettingsSmsChannel": "SMS",
   "notificationSettingsSmsChannelDesc": "Receive notifications via SMS",
+  "quietHoursTitle": "Quiet Hours",
+  "quietHoursEnable": "Enable Quiet Hours",
+  "quietHoursSubtitle": "Silence push notifications during a set time window",
+  "quietHoursStart": "Start",
+  "quietHoursEnd": "End",
+  "quietHoursInfo": "During quiet hours, push notifications are held back — you'll still receive emails and see everything when you open the app.",
+  "quietHoursCrossMidnight": "This window runs overnight, from {start} to {end} the next morning.",
+  "@quietHoursCrossMidnight": {
+    "placeholders": {
+      "start": {"type": "String"},
+      "end": {"type": "String"}
+    }
+  },
   "notificationSettingsLoadError": "Error loading preferences",
   "notificationSettingsUpdated": "{category} notification preferences updated",
   "@notificationSettingsUpdated": {
@@ -1169,6 +1205,13 @@
   "unitHubTitle": "Accommodation Units",
   "unitHubShowAllUnits": "Show all units",
   "unitHubPropertiesAndUnits": "Properties and Units",
+  "unitHubPropertiesUnitsSubtitle": "{propertyCount} properties · {unitCount} units",
+  "@unitHubPropertiesUnitsSubtitle": {
+    "placeholders": {
+      "propertyCount": {"type": "int"},
+      "unitCount": {"type": "int"}
+    }
+  },
   "unitHubAddProperty": "Add new property",
   "unitHubSearch": "Search...",
   "unitHubLoadingError": "Error loading",
@@ -1362,6 +1405,13 @@
   "bankAccountTitle": "Bank Account",
   "bankAccountBankDetails": "Bank Details",
   "bankAccountBankDetailsSubtitle": "Data for receiving payments",
+  "bankAccountActiveBadge": "Active",
+  "bankAccountHolderLabel": "Owner: {holder} · EUR",
+  "@bankAccountHolderLabel": {
+    "placeholders": {
+      "holder": {"type": "String"}
+    }
+  },
   "bankAccountIban": "IBAN",
   "bankAccountSwift": "SWIFT/BIC",
   "bankAccountBankName": "Bank Name",
@@ -2662,6 +2712,14 @@
   "icalImportEnabledDescription": "Import reservations from this calendar into BookBed",
   "icalImportDisabledNote": "Export only mode - your bookings are visible to this platform, but their events won't be imported. Use this for platforms that re-export imported data (prevents echo loops).",
   "icalImportDisabledWarning": "Import is disabled for this feed",
+  "icalDirectionImport": "Import",
+  "@icalDirectionImport": {
+    "description": "Direction badge shown on an iCal feed that imports events (importEnabled=true)"
+  },
+  "icalDirectionExport": "Export",
+  "@icalDirectionExport": {
+    "description": "Direction badge shown on an iCal feed that only exports (importEnabled=false)"
+  },
   "icalEchoStatusActive": "Active",
   "icalEchoStatusNeedsReview": "Needs review",
   "icalEchoStatusConfirmedEcho": "Confirmed echo",
@@ -3387,6 +3445,26 @@
       "date": {"type": "String"}
     }
   },
+  "subscriptionTrialEyebrow": "YOUR PLAN",
+  "subscriptionTrialDaysRemaining": "{daysLeft} of {totalDays} days remaining",
+  "@subscriptionTrialDaysRemaining": {
+    "placeholders": {
+      "daysLeft": {"type": "int"},
+      "totalDays": {"type": "int"}
+    }
+  },
+  "subscriptionTrialEndsShort": "until {date}",
+  "@subscriptionTrialEndsShort": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "subscriptionTrialEndsInline": "You enjoy all Pro features. Ends {date}.",
+  "@subscriptionTrialEndsInline": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
   "subscriptionFreeTrial": "Free Trial",
   "subscriptionFreeTrialPrice": "€0",
   "subscriptionFreeTrialPeriod": "30 days",
@@ -3399,6 +3477,7 @@
   "subscriptionProPeriod": "per month",
   "subscriptionFeatureUnlimitedProperties": "Unlimited properties",
   "subscriptionFeatureAdvancedAnalytics": "Advanced analytics",
+  "subscriptionFeatureAiAssistant": "Unlimited AI assistant",
   "subscriptionFeaturePrioritySupport": "Priority support",
   "subscriptionFeatureCustomBranding": "Custom branding",
   "subscriptionFeatureApiAccess": "API access",
@@ -3413,6 +3492,8 @@
   "subscriptionFaqCancelAnswer": "Yes! You can cancel your subscription at any time. Your access will continue until the end of your billing period.",
   "subscriptionFaqDataSafeQuestion": "Is my data safe?",
   "subscriptionFaqDataSafeAnswer": "Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.",
+  "subscriptionUpgradeComingSoonTitle": "Upgrade to Pro",
+  "subscriptionUpgradeComingSoonBody": "Pro subscription is coming soon. We're integrating Stripe payments so you can unlock unlimited properties and premium features. Stay tuned!",
   "subscriptionComingSoon": "Manage on Web",
   "subscriptionComingSoonMessage": "To upgrade your subscription or manage billing, please visit our web dashboard at app.bookbed.io",
   "subscriptionVisitWebsite": "Visit Website",

@@ -31,6 +31,13 @@ class SplitDayCalendarPainter extends CustomPainter {
     this.isCheckInPending = false,
   });
 
+  /// Handoff widget-calendar.jsx: in light theme, available cells are plain
+  /// white (selection carries the mint). Dark theme keeps the teal fill —
+  /// the handoff has no dark spec and white cells would invert the OLED look.
+  Color get _availableFill => colors.backgroundPrimary.computeLuminance() > 0.5
+      ? Colors.white
+      : DateStatus.available.getColor(colors);
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
@@ -38,7 +45,7 @@ class SplitDayCalendarPainter extends CustomPainter {
     switch (status) {
       case DateStatus.available:
         // Solid available color
-        paint.color = status.getColor(colors);
+        paint.color = _availableFill;
         canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
         break;
 
@@ -102,7 +109,7 @@ class SplitDayCalendarPainter extends CustomPainter {
         canvas.drawPath(bookedPathCI, paint);
 
         // Draw top-left triangle (available - green)
-        paint.color = status.getColor(colors); // Green
+        paint.color = _availableFill; // Available half
         final Path availablePathCI = Path()
           ..moveTo(0, 0) // Top-left
           ..lineTo(size.width, 0) // Top-right
@@ -137,7 +144,7 @@ class SplitDayCalendarPainter extends CustomPainter {
         canvas.drawPath(bookedPathCO, paint);
 
         // Draw bottom-right triangle (available - green)
-        paint.color = status.getColor(colors); // Green
+        paint.color = _availableFill; // Available half
         final Path availablePathCO = Path()
           ..moveTo(0, size.height) // Bottom-left
           ..lineTo(size.width, size.height) // Bottom-right
@@ -207,11 +214,11 @@ class SplitDayCalendarPainter extends CustomPainter {
         break;
     }
 
-    // Draw range overlay with reduced opacity if date is in selected range
+    // Draw range overlay if date is in selected range (mint-light tint).
     if (isInRange) {
       final overlayPaint = Paint()
         ..style = PaintingStyle.fill
-        ..color = colors.buttonPrimary.withValues(alpha: 0.2);
+        ..color = colors.statusInRangeBackground.withValues(alpha: 0.55);
       canvas.drawRect(
         Rect.fromLTWH(0, 0, size.width, size.height),
         overlayPaint,

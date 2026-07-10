@@ -54,7 +54,9 @@ class AppColors {
 
   /// Console shell background (`tokens.css --bb-shell-bg`) — the L1 layer
   /// app bars and page gutters sit on (shell → panel → cards).
-  static const Color shellBgLight = Color(0xFFF0F1F5);
+  static const Color shellBgLight = Color(
+    0xFFFAFAFB,
+  ); // minimalist pass 1: near-white (was #F0F1F5)
   static const Color shellBgDark = Color(0xFF000000);
 
   /// Background color - Warm White

@@ -117,6 +117,31 @@ class TrialStatus {
   /// Helper getter for days remaining (uses DateTime.now())
   int get daysRemaining => getDaysRemaining();
 
+  /// Total length of the trial in whole days, DERIVED from the persisted
+  /// [trialStartDate] and [trialExpiresAt] (no separate stored field).
+  ///
+  /// Returns `null` when either bound is missing — the caller (progress bar)
+  /// must then omit the visual rather than fabricate a total. Rounds to the
+  /// nearest day to absorb sub-day clock offsets between the two Timestamps.
+  int? get totalTrialDays {
+    if (trialStartDate == null || trialExpiresAt == null) return null;
+    final hours = trialExpiresAt!.difference(trialStartDate!).inHours;
+    if (hours <= 0) return null;
+    final days = (hours / 24).round();
+    return days > 0 ? days : null;
+  }
+
+  /// Whole days elapsed since trial start, clamped to `[0, totalTrialDays]`.
+  /// Returns `null` when the total cannot be derived (see [totalTrialDays]).
+  /// Optional [now] parameter for testing.
+  int? getDaysElapsed({DateTime? now}) {
+    final total = totalTrialDays;
+    if (total == null) return null;
+    final remaining = getDaysRemaining(now: now);
+    final elapsed = total - remaining;
+    return elapsed.clamp(0, total);
+  }
+
   /// Check if trial is expiring soon (within 7 days)
   /// Optional [now] parameter for testing
   bool isExpiringSoonInternal({DateTime? now}) {

@@ -706,6 +706,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changePassword => 'Change Password';
 
   @override
+  String get changePasswordSecurityEyebrow => 'ACCOUNT SECURITY';
+
+  @override
   String get showPassword => 'Show password';
 
   @override
@@ -2622,6 +2625,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerProfileTitle => 'Profile';
 
   @override
+  String get ownerProfileEyebrow => 'Account · Owner';
+
+  @override
+  String get ownerProfileHostBadge => 'Host';
+
+  @override
+  String ownerProfileMemberSince(int year) {
+    return 'Member since $year';
+  }
+
+  @override
+  String get ownerProfileEmailVerified => 'Email verified';
+
+  @override
+  String get ownerProfilePhoneAdded => 'Phone added';
+
+  @override
+  String get ownerProfilePhoneMissing => 'Phone missing';
+
+  @override
+  String get ownerProfileCompleteHeading => 'Complete your profile';
+
+  @override
+  String ownerProfileCompleteRemaining(int steps) {
+    return '$steps more steps to 100%.';
+  }
+
+  @override
+  String get ownerProfileCompleteCta => 'Finish';
+
+  @override
+  String get ownerProfileCompleteFilledLabel => 'filled';
+
+  @override
+  String get ownerProfileGroupApp => 'Application';
+
+  @override
+  String get ownerProfileGroupLegal => 'Legal';
+
+  @override
+  String get ownerProfileTrialBadge => 'Trial period';
+
+  @override
   String get ownerProfileThemeLight => 'Light';
 
   @override
@@ -2782,6 +2828,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editProfilePhone => 'Phone';
 
   @override
+  String get editProfileEmailVerified => 'Verified';
+
+  @override
+  String get editProfilePhoneHelper =>
+      'Visible to guests after booking confirmation';
+
+  @override
   String get editProfileAddress => 'Address';
 
   @override
@@ -2905,6 +2958,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Optional payment notification emails. Initial Stripe payment confirmations are always sent.';
 
   @override
+  String get notificationSettingsChannelsEyebrow => 'CHANNELS · EMAIL + PUSH';
+
+  @override
   String get notificationSettingsCalendar => 'Calendar Sync';
 
   @override
@@ -2938,6 +2994,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationSettingsSmsChannelDesc =>
       'Receive notifications via SMS';
+
+  @override
+  String get quietHoursTitle => 'Quiet Hours';
+
+  @override
+  String get quietHoursEnable => 'Enable Quiet Hours';
+
+  @override
+  String get quietHoursSubtitle =>
+      'Silence push notifications during a set time window';
+
+  @override
+  String get quietHoursStart => 'Start';
+
+  @override
+  String get quietHoursEnd => 'End';
+
+  @override
+  String get quietHoursInfo =>
+      'During quiet hours, push notifications are held back — you\'ll still receive emails and see everything when you open the app.';
+
+  @override
+  String quietHoursCrossMidnight(String start, String end) {
+    return 'This window runs overnight, from $start to $end the next morning.';
+  }
 
   @override
   String get notificationSettingsLoadError => 'Error loading preferences';
@@ -3023,6 +3104,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unitHubPropertiesAndUnits => 'Properties and Units';
+
+  @override
+  String unitHubPropertiesUnitsSubtitle(int propertyCount, int unitCount) {
+    return '$propertyCount properties · $unitCount units';
+  }
 
   @override
   String get unitHubAddProperty => 'Add new property';
@@ -3341,6 +3427,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankAccountBankDetailsSubtitle => 'Data for receiving payments';
+
+  @override
+  String get bankAccountActiveBadge => 'Active';
+
+  @override
+  String bankAccountHolderLabel(String holder) {
+    return 'Owner: $holder · EUR';
+  }
 
   @override
   String get bankAccountIban => 'IBAN';
@@ -6633,6 +6727,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get icalImportDisabledWarning => 'Import is disabled for this feed';
 
   @override
+  String get icalDirectionImport => 'Import';
+
+  @override
+  String get icalDirectionExport => 'Export';
+
+  @override
   String get icalEchoStatusActive => 'Active';
 
   @override
@@ -8143,6 +8243,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get subscriptionTrialEyebrow => 'YOUR PLAN';
+
+  @override
+  String subscriptionTrialDaysRemaining(int daysLeft, int totalDays) {
+    return '$daysLeft of $totalDays days remaining';
+  }
+
+  @override
+  String subscriptionTrialEndsShort(String date) {
+    return 'until $date';
+  }
+
+  @override
+  String subscriptionTrialEndsInline(String date) {
+    return 'You enjoy all Pro features. Ends $date.';
+  }
+
+  @override
   String get subscriptionFreeTrial => 'Free Trial';
 
   @override
@@ -8177,6 +8295,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionFeatureAdvancedAnalytics => 'Advanced analytics';
+
+  @override
+  String get subscriptionFeatureAiAssistant => 'Unlimited AI assistant';
 
   @override
   String get subscriptionFeaturePrioritySupport => 'Priority support';
@@ -8223,6 +8344,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get subscriptionFaqDataSafeAnswer =>
       'Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.';
+
+  @override
+  String get subscriptionUpgradeComingSoonTitle => 'Upgrade to Pro';
+
+  @override
+  String get subscriptionUpgradeComingSoonBody =>
+      'Pro subscription is coming soon. We\'re integrating Stripe payments so you can unlock unlimited properties and premium features. Stay tuned!';
 
   @override
   String get subscriptionComingSoon => 'Manage on Web';

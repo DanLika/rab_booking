@@ -166,23 +166,28 @@ class AppShadows {
 
   /// Premium console panel-shadow (handoff `--bb-panel-shadow`).
   /// Outer rounded panel that floats on the shell-bg.
+  /// Minimalist pass 1 (2026-07-10, light-only): softened from the premium
+  /// ramp so panels read as a GENTLE lift on the near-white #FAFAFB shell, not
+  /// a heavy float. Structure (3 layers) kept; opacity/blur/offset reduced.
+  /// Delineation now leans on the 1px hairline border + this subtle shadow.
+  /// Reversible — restore the values below to un-minimalise.
   static const List<BoxShadow> panelLight = [
     BoxShadow(
-      color: Color(0x08101828), // rgba(16,24,40,.03)
-      blurRadius: 3,
+      color: Color(0x05101828), // rgba(16,24,40,.02) (was .03)
+      blurRadius: 2,
       offset: Offset(0, 1),
     ),
     BoxShadow(
-      color: Color(0x0A101828), // rgba(16,24,40,.04)
-      blurRadius: 8,
+      color: Color(0x08101828), // rgba(16,24,40,.03) (was .04)
+      blurRadius: 6,
       offset: Offset(0, 2),
       spreadRadius: -2,
     ),
     BoxShadow(
-      color: Color(0x1A101828), // rgba(16,24,40,.10)
-      blurRadius: 36,
-      offset: Offset(0, 16),
-      spreadRadius: -16,
+      color: Color(0x0F101828), // rgba(16,24,40,.06) (was .10)
+      blurRadius: 24, // was 36
+      offset: Offset(0, 10), // was 16
+      spreadRadius: -14, // was -16
     ),
   ];
 

@@ -222,6 +222,55 @@ Scoped to the two highest-value, lowest-risk gaps (pure-presentation widgets, no
 - **Confirmation summary card** radius 20→24, deposit sub-band mint tint; **error** ring opacity 12%→16%.
 
 **NEXT page recommendation:** finish the widget calendar mint-ladder (add `BbRedesignTokens` mint fields + apply in painters, with live web eyeball via `widget_main_dev.dart`) as a dedicated FROZEN-adjacent task — biggest remaining visible widget gap. Then guest-form radii, then admin-*.jsx console.
+
+## Iteration 8 — Widget calendar mint ladder + guest-form quick wins (design/widget-calendar-mint)
+
+**Handoff:** `widget-calendar.jsx` (W_MINT `#3DD9B0`, W_MINT_DEEP `#1FAF87`, W_MINT_LIGHT `#A8EFD9`).
+
+### SHIPPED (values-only, zero structural painter edits)
+- **Mint selection ladder** on the active widget scheme (`MinimalistColorSchemeAdapter` — NOT BbRedesignTokens; that's the owner theme, the widget uses `WidgetColorScheme`):
+  - Added `MinimalistColors.mint/mintDeep/mintLight` (+ dark variants) constants.
+  - Added 3 members to `WidgetColorScheme` (abstract) + all 3 impls (Light/Dark map to existing selected tokens; adapter → mint): `statusSelectedRangeBorder` (#3DD9B0), `statusInRangeBackground` (#A8EFD9), `selectedGlowShadow` (mint 0.45 / blur 14 / y+4).
+  - `statusTodayBorder` re-pointed to `mintDeep` (was `statusAvailableBorder`).
+  - `month_calendar_widget.dart`: selected-endpoint border `textPrimary`→`statusSelectedRangeBorder`; today border `textPrimary`→`statusTodayBorder`; selected cell `boxShadow`→`selectedGlowShadow`. **No geometry / z-order / availability-logic touched.**
+  - `split_day_calendar_painter.dart`: in-range fill `buttonPrimary@0.2`→`statusInRangeBackground@0.55` (single Paint color swap; paint order/paths untouched).
+- **Guest-form / payment quick wins:**
+  - `payment_option_widget.dart`: selected card border + radio ring + radio dot `borderFocus`/`buttonPrimary`→`statusTodayBorder` (mint-deep).
+  - `guest_count_picker.dart`: capacity-warning error ring `error@0.10`→`error@0.16`.
+
+### DEFERRED (handoff numbers didn't map to Flutter reality)
+- **Guest-form field radius 20→12** — fields already use `BBRadiusBridges.medium`(8) via the shared widget theme, not 20; changing there is global-theme-wide → out of scope for a quick win.
+- **Confirmation summary-card radius 20→24** — real value is `medium`(8), uniform across ALL confirmation cards; bumping one card to 24 breaks sibling consistency (handoff assumed a 20 base that doesn't exist).
+- **Counter buttons → true circle** — current `add/remove_circle_outline` IconButtons are already circular glyphs; a filled-bordered circle is a structural layout rework → deferred to keep the batch low-risk.
+
+### Verify
+- `dart format` clean; `flutter analyze` 0 net-new (only pre-existing `deprecated_member_use` infos).
+- Full `flutter test` **1677 green**; widget subset 757 green; `--tags golden` 56 green (widget calendar not in golden seam set → no baseline moved).
+- **Live web eyeball** (`flutter run -d chrome --target lib/widget_main_dev.dart`, seeded bookbed-dev `--test-owner` fixture, `?subdomain=bookbed-test&property=…&unit=…`, desktop 1280 + mobile 390): calendar renders identically to pre-change **plus** today-cell (10 Jul) now carries the **mint-deep ring** (was black). **No regression** — layout/geometry/z-order/available-cell color all unchanged. Selection-fill / in-range / glow are code-path + test verified (synthetic pointer events can't drive Flutter's gesture arena → cannot live-click a date; documented limitation `flutter-web-scroll-not-automatable`). Guest-form/payment quick-wins unreachable without a date selection but covered by the green suite.
+
+**NEXT page recommendation:** admin-*.jsx console (`.claude/rules/admin.md`), then dialogs/states/variants. Widget guest surface remaining: the guest-form/payment/confirmation quick-wins that need a live date-selection to eyeball (drive via a real device/Marionette, not synthetic web taps).
+
+---
+
+## Iteration 9 — admin console shell + users (dark deep-purple, English)
+
+**Handoffs:** `design_handoff/source/admin-shell.jsx` + `admin-users.jsx`. Admin = web-only dark deep-purple console (`#1E1A33` shellBg, `BbAdminDarkTokens` ThemeExtension). Login R6 done (#650), users DataTable overflow fixed (#765).
+
+**Finding:** The `BbAdminDarkTokens` preset already carried the handoff-verbatim nav tokens (`navTileIdleBg`, `navTileActiveBg`, `navTileActiveBorder`, `navIconActiveGradient` = `BBGradient.hero`, `navActiveGlow` purple glow, `adminBadgeBg/Fg`) — but the shell's `_DrawerItem`/`_RailItem`/`_AdminNavPanel` **did not consume them**, rendering generic `colorScheme.primary.withValues(alpha:0.1)` tiles with no gradient, no glow, and no ADMIN badge. The tokens existed; the rendering ignored them. This iteration wires the render to the tokens (pure fidelity, data-honest — no invented UI).
+
+**Sections changed (`admin_shell_screen.dart`, dark-console chrome only):**
+1. **Sidebar/drawer header** — added the `ADMIN` badge pill (`adminBadgeBg`/`adminBadgeFg`, radius 5, 9px/800/0.1em) beside the BookBed wordmark; added `-0.02em` letter-spacing on wordmark; wrapped title column in `Expanded` (overflow-safe).
+2. **`_DrawerItem`** — reworked to handoff spec: 44px row, radius 12, active fill `navTileActiveBg` + border `navTileActiveBorder`; icon now lives in a 28px rounded `_NavIconTile` that carries the hero gradient + purple glow when active (dark). Light mode falls back to primary tints. Became a `ConsumerWidget` to read dark-mode.
+3. **New `_NavIconTile`** — shared rounded icon tile (gradient + glow on active/dark, idle `navTileIdleBg`).
+4. **`_RailItem`** — 48px tablet-rail tile now radius 12 with hero-gradient fill + glow when active (dark), idle `navTileIdleBg`; light-mode primary-tint fallback + border. `isDark` threaded through from `_AdminRail`.
+
+**Data honesty:** the users handoff (`admin-users.jsx`) is an aspirational owners-CRM (master-detail panel, GMV/bookings columns, invite/suspend actions) with no backing data — NOT applied. Current users screen renders real `UserModel` data; left structurally intact (only inherits the shared shell chrome). No Firestore/provider/callable edits.
+
+**Verify:** `dart format` clean; `flutter analyze` 0 errors, 0 issues on changed files (101 pre-existing info-lints = baseline, unchanged). Full suite **1678 green** (incl. admin seam 780/900/1100/1440 + token isolation). `--tags golden` green (56 baselines). Live eyeball: temp nav-chrome golden rendered @3x — ADMIN pill + active hero-gradient icon-tile + purple glow + idle row all confirmed correct (temp file removed). New `admin_shell_nav_test.dart` seam (via `@visibleForTesting buildAdminNavChromeForTest`) asserts active tile = `navIconActiveGradient` + non-empty glow shadow + ADMIN text; Firebase-free (`adminDarkModeProvider` override + `SharedPreferences.setMockInitialValues`).
+
+**Deferred:** desktop sidebar section grouping (handoff Platform/Operations/System groups — current flat 3-item nav; grouping = adding invented Analytics/Owners/Properties/Payments/Sync/Support destinations that don't route → NOT data-honest without those screens). Topbar global-search + Production env pill + notifications bell (handoff `AdminTopbar`) — current `_AdminHeader` is minimal; search needs a real backing query surface. Users owners-CRM master-detail = needs data model.
+
+**NEXT recommendation:** admin remaining screens are gated on backing data (bookings/payments/support/sync/viz consoles don't exist as routes). Best next data-honest admin pass = **topbar polish** (`_AdminHeader` → env badge from `firebase_options` project id + notifications affordance) OR pivot to the **dialogs/states/variants sweep** (BbDialog/empty-state/error-state consistency across owner+admin+widget) which has real surfaces everywhere. Recommend the dialogs/states sweep next — broadest real coverage.
 ## Iteration 8 — Widget calendar mint ladder + guest-form quick wins (design/widget-calendar-mint)
 
 **Handoff:** `widget-calendar.jsx` (W_MINT `#3DD9B0`, W_MINT_DEEP `#1FAF87`, W_MINT_LIGHT `#A8EFD9`).

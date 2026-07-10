@@ -237,6 +237,7 @@ class _AdminRail extends ConsumerWidget {
                 child: _RailItem(
                   item: _navItems[i],
                   isSelected: navIndex == i,
+                  isDark: isDarkMode,
                   onTap: () => context.go(_navItems[i].path),
                 ),
               ),
@@ -251,6 +252,7 @@ class _AdminRail extends ConsumerWidget {
                 path: '',
               ),
               isSelected: false,
+              isDark: isDarkMode,
               onTap: () => ref.read(adminDarkModeProvider.notifier).toggle(),
             ),
             const SizedBox(height: 4),
@@ -290,46 +292,59 @@ class _AdminRail extends ConsumerWidget {
 class _RailItem extends StatelessWidget {
   final _NavItem item;
   final bool isSelected;
+  final bool isDark;
   final VoidCallback onTap;
 
   const _RailItem({
     required this.item,
     required this.isSelected,
+    required this.isDark,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final tokens = BbAdminDarkTokens.of(context);
     final colorScheme = Theme.of(context).colorScheme;
+    // Handoff admin-shell.jsx:27-39: 48px tile, radius 12, hero gradient +
+    // glow when active, idle fill rgba(255,255,255,0.05). Gradient/white-alpha
+    // fills are dark-console-only; light mode falls back to primary tints.
+    final bool gradientActive = isSelected && isDark;
+    final Color idleFill = isDark ? tokens.navTileIdleBg : Colors.transparent;
+    final Color selectedLightFill = colorScheme.primary.withValues(alpha: 0.1);
     return Tooltip(
       message: item.label,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           // 48x48 target (>= 44px touch minimum)
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: isSelected
-                  ? colorScheme.primary.withValues(alpha: 0.1)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isSelected
-                    ? colorScheme.primary.withValues(alpha: 0.2)
-                    : Colors.transparent,
-              ),
+              gradient: gradientActive ? tokens.navIconActiveGradient : null,
+              color: gradientActive
+                  ? null
+                  : (isSelected ? selectedLightFill : idleFill),
+              borderRadius: BorderRadius.circular(12),
+              border: isSelected && !isDark
+                  ? Border.all(
+                      color: colorScheme.primary.withValues(alpha: 0.2),
+                    )
+                  : null,
+              boxShadow: gradientActive ? tokens.navActiveGlow : null,
             ),
             child: Icon(
               isSelected ? item.activeIcon : item.icon,
               size: 22,
-              color: isSelected
-                  ? colorScheme.primary
-                  : colorScheme.onSurfaceVariant,
+              color: gradientActive
+                  ? Colors.white
+                  : (isSelected
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant),
             ),
           ),
         ),
@@ -393,27 +408,31 @@ class _AdminNavPanel extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'BookBed',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: colorScheme.onSurface,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'BookBed',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        letterSpacing: -0.02 * 18,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Admin Portal',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant,
+                    Text(
+                      'Admin Portal',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              if (isDarkMode) const _AdminBadgePill(),
             ],
           ),
         ),
@@ -541,7 +560,33 @@ class _AdminNavPanel extends ConsumerWidget {
   }
 }
 
-class _DrawerItem extends StatelessWidget {
+/// ADMIN tag pill in the dark sidebar header (handoff admin-shell.jsx:81).
+class _AdminBadgePill extends StatelessWidget {
+  const _AdminBadgePill();
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = BbAdminDarkTokens.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: tokens.adminBadgeBg,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        'ADMIN',
+        style: TextStyle(
+          color: tokens.adminBadgeFg,
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.1 * 9,
+        ),
+      ),
+    );
+  }
+}
+
+class _DrawerItem extends ConsumerWidget {
   final IconData icon;
   final IconData activeIcon;
   final String label;
@@ -557,63 +602,111 @@ class _DrawerItem extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = ref.watch(adminDarkModeProvider);
+    final tokens = BbAdminDarkTokens.of(context);
+
+    // Handoff (admin-shell.jsx:41-64): full nav row = 44px, radius 12, active
+    // fill rgba(255,255,255,0.08) + border 0.10; icon lives in a 28px rounded
+    // tile that carries the hero gradient + purple glow when active.
+    final Color rowBg = isSelected
+        ? (isDark
+              ? tokens.navTileActiveBg
+              : colorScheme.primary.withValues(alpha: 0.1))
+        : Colors.transparent;
+    final Color rowBorder = isSelected
+        ? (isDark
+              ? tokens.navTileActiveBorder
+              : colorScheme.primary.withValues(alpha: 0.2))
+        : Colors.transparent;
+    final Color labelColor = isSelected
+        ? (isDark ? tokens.textPrimary : colorScheme.primary)
+        : colorScheme.onSurfaceVariant;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.primary.withValues(alpha: 0.1)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isSelected
-                  ? colorScheme.primary.withValues(alpha: 0.2)
-                  : Colors.transparent,
-            ),
+            color: rowBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: rowBorder),
           ),
           child: Row(
             children: [
-              Icon(
-                isSelected ? activeIcon : icon,
-                size: 20,
-                color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
+              _NavIconTile(
+                icon: isSelected ? activeIcon : icon,
+                isSelected: isSelected,
+                isDark: isDark,
+                size: 28,
+                iconSize: 18,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 11),
               Expanded(
                 child: Text(
                   label,
                   style: TextStyle(
-                    color: isSelected
-                        ? colorScheme.primary
-                        : colorScheme.onSurfaceVariant,
+                    color: labelColor,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     fontSize: 14,
                   ),
                 ),
               ),
-              if (isSelected)
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Rounded icon tile shared by drawer/sidebar rows and the rail. Active =
+/// hero gradient fill + purple glow (dark) per admin-shell.jsx:51-58.
+class _NavIconTile extends StatelessWidget {
+  final IconData icon;
+  final bool isSelected;
+  final bool isDark;
+  final double size;
+  final double iconSize;
+
+  const _NavIconTile({
+    required this.icon,
+    required this.isSelected,
+    required this.isDark,
+    required this.size,
+    required this.iconSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = BbAdminDarkTokens.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final bool gradientActive = isSelected && isDark;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: gradientActive ? tokens.navIconActiveGradient : null,
+        color: gradientActive
+            ? null
+            : (isSelected
+                  ? colorScheme.primary.withValues(alpha: 0.12)
+                  : (isDark ? tokens.navTileIdleBg : Colors.transparent)),
+        borderRadius: BorderRadius.circular(size >= 40 ? 12 : 9),
+        boxShadow: gradientActive ? tokens.navActiveGlow : null,
+      ),
+      child: Icon(
+        icon,
+        size: iconSize,
+        color: gradientActive
+            ? Colors.white
+            : (isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant),
       ),
     );
   }
@@ -669,4 +762,43 @@ class _AdminHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Renders the dark-console nav chrome pieces (active + idle nav rows, ADMIN
+/// badge, rail tile) in isolation for the fidelity seam test — no Firebase /
+/// auth provider. `adminDarkModeProvider` must be overridden by the caller
+/// (both `_DrawerItem` and `_RailItem` icon-tile branch on it). Not for
+/// production use — see `test/features/admin/admin_shell_nav_test.dart`.
+@visibleForTesting
+Widget buildAdminNavChromeForTest() {
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const _AdminBadgePill(),
+      const SizedBox(height: 8),
+      _DrawerItem(
+        icon: _navItems[0].icon,
+        activeIcon: _navItems[0].activeIcon,
+        label: _navItems[0].label,
+        isSelected: true,
+        onTap: () {},
+      ),
+      const SizedBox(height: 4),
+      _DrawerItem(
+        icon: _navItems[1].icon,
+        activeIcon: _navItems[1].activeIcon,
+        label: _navItems[1].label,
+        isSelected: false,
+        onTap: () {},
+      ),
+      const SizedBox(height: 8),
+      _RailItem(
+        item: _navItems[0],
+        isSelected: true,
+        isDark: true,
+        onTap: () {},
+      ),
+    ],
+  );
 }

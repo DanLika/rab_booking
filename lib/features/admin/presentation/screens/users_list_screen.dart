@@ -10,8 +10,16 @@ import '../../../../shared/models/user_model.dart';
 import '../../data/admin_users_repository.dart';
 import 'admin_shell_screen.dart';
 
-/// Responsive breakpoint for mobile layout
-const double _mobileBreakpoint = 800.0;
+/// Responsive breakpoint for the compact per-user card layout. Below this
+/// width the squeezed 5-column table is replaced by handoff-style owner cards
+/// (`admin-users.jsx` `AUMobileCard`, mobile breakpoint). At or above it the
+/// DataTable renders (with the #765 horizontal-scroll overflow fix).
+const double _mobileBreakpoint = 600.0;
+
+/// Rows shown per page in the numbered pagination (handoff `AUPagination`).
+/// Pagination windows the already-loaded + filtered owner list — it does NOT
+/// fabricate a total; "of N" reflects the real loaded/filtered row count.
+const int _rowsPerPage = 8;
 
 /// Sort fields available for user list
 enum _SortField { name, email, createdAt }
@@ -35,6 +43,9 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
   // Sort
   _SortField _sortField = _SortField.createdAt;
   bool _sortAscending = false;
+
+  // Numbered-pagination page index (0-based) over the filtered table rows.
+  int _page = 0;
 
   @override
   void dispose() {
@@ -105,6 +116,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       _searchQuery = '';
       _selectedAccountTypes.clear();
       _dateRange = null;
+      _page = 0;
     });
   }
 
@@ -122,7 +134,10 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       ),
     );
     if (picked != null) {
-      setState(() => _dateRange = picked);
+      setState(() {
+        _dateRange = picked;
+        _page = 0;
+      });
     }
   }
 
@@ -205,11 +220,17 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                         icon: const Icon(Icons.clear, size: 18),
                         onPressed: () {
                           _searchController.clear();
-                          setState(() => _searchQuery = '');
+                          setState(() {
+                            _searchQuery = '';
+                            _page = 0;
+                          });
                         },
                       )
                     : null,
-                onChanged: (value) => setState(() => _searchQuery = value),
+                onChanged: (value) => setState(() {
+                  _searchQuery = value;
+                  _page = 0;
+                }),
               ),
               const SizedBox(height: BBSpace.sm),
               SingleChildScrollView(
@@ -230,6 +251,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                               } else {
                                 _selectedAccountTypes.add(type);
                               }
+                              _page = 0;
                             });
                           },
                         ),
@@ -259,6 +281,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                             _sortField = value;
                             _sortAscending = value != _SortField.createdAt;
                           }
+                          _page = 0;
                         });
                       },
                     ),
@@ -286,19 +309,38 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                 return const _EmptyState();
               }
               final showLoadMore = notifier.hasMore && !_hasActiveFilters;
-              return isMobile
-                  ? _UsersList(
-                      owners: filtered,
-                      hasMore: showLoadMore,
-                      onLoadMore: notifier.loadMore,
-                      palette: palette,
-                    )
-                  : _UsersTable(
-                      owners: filtered,
-                      hasMore: showLoadMore,
-                      onLoadMore: notifier.loadMore,
-                      palette: palette,
-                    );
+              if (isMobile) {
+                return _UsersList(
+                  owners: filtered,
+                  hasMore: showLoadMore,
+                  onLoadMore: notifier.loadMore,
+                  palette: palette,
+                );
+              }
+              // Numbered pagination windows the loaded+filtered rows. Clamp the
+              // page against the current row count (a filter can shrink it).
+              final pageCount = (filtered.length / _rowsPerPage).ceil().clamp(
+                1,
+                1 << 30,
+              );
+              final page = _page.clamp(0, pageCount - 1);
+              final start = page * _rowsPerPage;
+              final end = (start + _rowsPerPage).clamp(0, filtered.length);
+              final pageRows = filtered.sublist(start, end);
+              return _UsersTable(
+                owners: pageRows,
+                totalRows: filtered.length,
+                page: page,
+                pageCount: pageCount,
+                rangeStart: start + 1,
+                rangeEnd: end,
+                onPageChanged: (p) => setState(() => _page = p),
+                // "Load more" pulls the next Firestore page into the loaded set,
+                // extending what numbered pagination can window.
+                hasMore: showLoadMore,
+                onLoadMore: notifier.loadMore,
+                palette: palette,
+              );
             },
             loading: () => const Center(child: BbSpinner(size: 24)),
             error: (err, _) => Center(
@@ -411,15 +453,20 @@ class _UserCard extends StatelessWidget {
           ),
           const SizedBox(height: BBSpace.sm),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _AccountTypeBadge(type: user.accountType),
-              Text(
-                _formatDate(user.createdAt),
-                style: BBType.caption(
-                  context,
-                ).copyWith(color: palette.textTertiary),
+              const SizedBox(width: BBSpace.sm),
+              Expanded(
+                child: Text(
+                  _formatDate(user.createdAt),
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: palette.textTertiary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              Icon(Icons.chevron_right, size: 20, color: palette.textTertiary),
             ],
           ),
         ],
@@ -439,12 +486,29 @@ class _UsersTable extends StatelessWidget {
   final VoidCallback onLoadMore;
   final _UsersListPalette palette;
 
-  const _UsersTable({
+  // Numbered-pagination inputs. Defaults keep the widget usable in the
+  // `buildUsersTableForTest` seam (single page, no controls) without churn.
+  final int totalRows;
+  final int page;
+  final int pageCount;
+  final int rangeStart;
+  final int rangeEnd;
+  final ValueChanged<int>? onPageChanged;
+
+  _UsersTable({
     required this.owners,
     required this.hasMore,
     required this.onLoadMore,
     required this.palette,
-  });
+    int? totalRows,
+    this.page = 0,
+    this.pageCount = 1,
+    int? rangeStart,
+    int? rangeEnd,
+    this.onPageChanged,
+  }) : totalRows = totalRows ?? owners.length,
+       rangeStart = rangeStart ?? (owners.isEmpty ? 0 : 1),
+       rangeEnd = rangeEnd ?? owners.length;
 
   @override
   Widget build(BuildContext context) {
@@ -538,6 +602,19 @@ class _UsersTable extends StatelessWidget {
               ),
             ),
           ),
+          if (pageCount > 1 || onPageChanged != null)
+            Padding(
+              padding: const EdgeInsets.only(top: BBSpace.sm),
+              child: _UsersPagination(
+                page: page,
+                pageCount: pageCount,
+                rangeStart: rangeStart,
+                rangeEnd: rangeEnd,
+                totalRows: totalRows,
+                palette: palette,
+                onPageChanged: onPageChanged ?? (_) {},
+              ),
+            ),
           if (hasMore)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
@@ -558,6 +635,173 @@ class _UsersTable extends StatelessWidget {
   String _formatDate(DateTime? date) {
     if (date == null) return '-';
     return '${date.day}.${date.month}.${date.year}';
+  }
+}
+
+/// Numbered pagination bar (handoff `admin-users.jsx` `AUPagination`):
+/// "Showing X–Y of N" on the left, prev / numbered page buttons (with an
+/// ellipsis gap for long runs) / next on the right. Windows the loaded+filtered
+/// owner rows — the "of N" total is the real loaded/filtered count, not a
+/// fabricated server total.
+class _UsersPagination extends StatelessWidget {
+  final int page; // 0-based
+  final int pageCount;
+  final int rangeStart; // 1-based, inclusive
+  final int rangeEnd; // 1-based, inclusive
+  final int totalRows;
+  final _UsersListPalette palette;
+  final ValueChanged<int> onPageChanged;
+
+  const _UsersPagination({
+    required this.page,
+    required this.pageCount,
+    required this.rangeStart,
+    required this.rangeEnd,
+    required this.totalRows,
+    required this.palette,
+    required this.onPageChanged,
+  });
+
+  /// 1-based page numbers to show, with `null` marking an ellipsis gap.
+  /// Always shows first + last + a window around the current page.
+  List<int?> _pageItems() {
+    if (pageCount <= 7) {
+      return [for (var i = 1; i <= pageCount; i++) i];
+    }
+    final current = page + 1;
+    final items = <int>{1};
+    for (var i = current - 1; i <= current + 1; i++) {
+      if (i >= 1 && i <= pageCount) items.add(i);
+    }
+    items.add(pageCount);
+    final sorted = items.toList()..sort();
+    final out = <int?>[];
+    int? prev;
+    for (final n in sorted) {
+      if (prev != null && n - prev > 1) out.add(null);
+      out.add(n);
+      prev = n;
+    }
+    return out;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = _pageItems();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: BBSpace.xs),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        runSpacing: BBSpace.xs,
+        spacing: BBSpace.sm,
+        children: [
+          Text(
+            'Showing $rangeStart–$rangeEnd of $totalRows',
+            key: const ValueKey('users_pagination_range'),
+            style: BBType.caption(
+              context,
+            ).copyWith(color: palette.textTertiary),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              BbButton(
+                asIcon: true,
+                iconLeft: 'chevron_left',
+                variant: BbButtonVariant.secondary,
+                semanticLabel: 'Previous page',
+                onPressed: page > 0 ? () => onPageChanged(page - 1) : null,
+              ),
+              const SizedBox(width: BBSpace.xs),
+              for (final n in items) ...[
+                if (n == null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      '…',
+                      style: BBType.body(
+                        context,
+                      ).copyWith(color: palette.textTertiary),
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: _PageButton(
+                      number: n,
+                      selected: n == page + 1,
+                      palette: palette,
+                      onTap: () => onPageChanged(n - 1),
+                    ),
+                  ),
+              ],
+              const SizedBox(width: BBSpace.xs),
+              BbButton(
+                asIcon: true,
+                iconLeft: 'chevron_right',
+                variant: BbButtonVariant.secondary,
+                semanticLabel: 'Next page',
+                onPressed: page < pageCount - 1
+                    ? () => onPageChanged(page + 1)
+                    : null,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single numbered page button (handoff: 32×32, radius 8, primary fill when
+/// selected).
+class _PageButton extends StatelessWidget {
+  final int number;
+  final bool selected;
+  final _UsersListPalette palette;
+  final VoidCallback onTap;
+
+  const _PageButton({
+    required this.number,
+    required this.selected,
+    required this.palette,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = selected
+        ? AppColors.primary
+        : Theme.of(context).dividerColor;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: 'Page $number',
+      child: InkWell(
+        key: ValueKey('users_page_$number'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected
+                ? AppColors.primary
+                : Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: borderColor),
+          ),
+          child: Text(
+            '$number',
+            style: BBType.label(context).copyWith(
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : palette.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -718,18 +962,75 @@ class _UsersListPalette {
 Widget buildUsersTableForTest({required List<UserModel> owners}) {
   return Builder(
     builder: (context) {
-      final scheme = Theme.of(context).colorScheme;
       return _UsersTable(
         owners: owners,
         hasMore: false,
         onLoadMore: () {},
-        palette: _UsersListPalette(
-          textPrimary: scheme.onSurface,
-          textSecondary: scheme.onSurfaceVariant,
-          textTertiary: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-          isDark: false,
-        ),
+        palette: _neutralTestPalette(context),
       );
     },
   );
 }
+
+/// Neutral light palette derived from the ambient [Theme] for test seams
+/// (no Firebase / Riverpod).
+_UsersListPalette _neutralTestPalette(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+  return _UsersListPalette(
+    textPrimary: scheme.onSurface,
+    textSecondary: scheme.onSurfaceVariant,
+    textTertiary: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+    isDark: false,
+  );
+}
+
+/// Renders the compact mobile owner-card list (`_UsersList`) in isolation for
+/// the responsive layout regression test (mobile <600 branch). No Firebase /
+/// Riverpod — see `test/features/admin/users_list_layout_test.dart`.
+@visibleForTesting
+Widget buildUsersCardListForTest({required List<UserModel> owners}) {
+  return Builder(
+    builder: (context) => _UsersList(
+      owners: owners,
+      hasMore: false,
+      onLoadMore: () {},
+      palette: _neutralTestPalette(context),
+    ),
+  );
+}
+
+/// Renders the numbered pagination bar (`_UsersPagination`) in isolation,
+/// reporting page-change callbacks. See
+/// `test/features/admin/users_list_layout_test.dart`.
+@visibleForTesting
+Widget buildUsersPaginationForTest({
+  required int page,
+  required int pageCount,
+  required int totalRows,
+  required ValueChanged<int> onPageChanged,
+}) {
+  return Builder(
+    builder: (context) {
+      final start = page * _rowsPerPage + 1;
+      final end = ((page + 1) * _rowsPerPage).clamp(0, totalRows);
+      return _UsersPagination(
+        page: page,
+        pageCount: pageCount,
+        rangeStart: start,
+        rangeEnd: end,
+        totalRows: totalRows,
+        palette: _neutralTestPalette(context),
+        onPageChanged: onPageChanged,
+      );
+    },
+  );
+}
+
+/// The compact-card breakpoint, exposed for the responsive layout test so it
+/// asserts against the same value the screen uses.
+@visibleForTesting
+const double usersListMobileBreakpoint = _mobileBreakpoint;
+
+/// Rows per numbered-pagination page, exposed for tests.
+@visibleForTesting
+const int usersListRowsPerPage = _rowsPerPage;

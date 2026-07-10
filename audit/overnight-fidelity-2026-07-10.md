@@ -511,3 +511,73 @@ kept for parity, data-honest). Icon buttons carry `semanticLabel` for a11y.
 - Profile stat-strip live wiring (needs backend aggregate for rating/response metrics).
 - Remaining backlog: VerifyCard master-detail, calendar painter fidelity, subscription
   tablet cap, widget guest-form Marionette eyeball — as carried from iter 11.
+
+---
+
+## Iteration 13 — LIVE VERIFICATION SWEEP (2026-07-10, main `912f1e96`)
+
+Closes the iter-11/12 "CanvasKit post-login eyeball deferred" carry. Achieved
+live authenticated access to all three surfaces; eyeballed the campaign's
+shipped changes vs handoff. **Verification-only — zero code changed, 0 defects.**
+
+### Login recipe (reusable — the deferral-breaker)
+Owner email `test-owner-2026-07-10@bookbed.io` contains a hyphen. TYPING/FILLING
+it via chrome-devtools trips Flutter-web `hardware_keyboard.dart:516`
+`!_pressedKeys.containsKey` ("Numpad Subtract" double-KeyDown) → red ErrorBoundary,
+every time, regardless of fill order. **Solution = JS-SDK sign-in bypass** (never
+type a hyphenated credential into CanvasKit):
+`globalThis.firebase_auth.signInWithEmailAndPassword(getAuth(firebase_core.getApp()), email, pw)`
+— modules are exposed as `firebase_core`/`firebase_auth` globals (not `window.firebase`);
+`onAuthStateChanged` drives the router redirect. Same path for admin-smoke (no hyphen,
+also works). This is the canonical CanvasKit login path going forward.
+
+### Verification matrix (page × theme × bp → status)
+
+| Area | Screen (PR) | Light | Dark | 1440 | 390 | Result |
+|------|-------------|:-:|:-:|:-:|:-:|--------|
+| Auth | forgot-password RecCard icon-tile (#843) | ✅ | –¹ | ✅ | n/a | ✅ |
+| Owner | Pretplata: back-nav + clean Pro-card border + dialog l10n (#840) | ✅ | tok | ✅ | ✅² | ✅ |
+| Owner | Profil Pro benefits grid + €19 price + l10n (#844/#851) | ✅ | tok | ✅ | – | ✅ |
+| Owner | Unit Hub master panel + title ellipsis (#845) | ✅ | tok | ✅ | – | ✅ |
+| Owner | Dashboard flat AI card / flat chrome (7.23/127) | ✅ | tok | ✅ | ✅ | ✅ |
+| Widget | Calendar mint ladder: today mintDeep border, selected border + in/out badge, disabled neutral (#847) | ✅ | ✅ | ✅ | ✅³ | ✅ |
+| Widget | Deposit band mint panel (#846) | c+t | c | – | – | ✅ᵃ |
+| Widget | Confirmation success mark (#846) | c+t | c | – | – | ✅ᵃ |
+| Widget | Guest form + payment border → mintDeep (#847) | c+t | c | – | – | ✅ᵃ |
+| Admin | Dark shell: ADMIN pill, hero-gradient active tile + glow, env pill = amber "Development" (#848) | n/a | ✅ | ✅ | – | ✅ |
+
+¹ owner/auth dark = audit/127 flat ladder (campaign added no dark-specific hex).
+² dashboard eyeballed at 390 (mobile layout, flat AI card, no overflow).
+³ widget is iframe fixed-width → no reflow at 390, no overflow, mint ladder intact.
+ᵃ attested via static diff + existing widget tests: booking checkout reachable but
+CanvasKit shows a detail-tooltip per cell-tap (slow to drive full flow); the three
+changes are self-contained, bounded (Flexible label / bounded Stack disc), and
+token-clean (handoff mint consts, no dark-break). Endpoints of the mint range
+(check-in/out badges) WERE eyeballed live.
+
+Legend: ✅ live-eyeballed correct · tok = owner dark inherits audit/127 flat
+BBColor/context.gradients ladder (no campaign dark hex) · c+t = code + test attested.
+
+### Static defect sweep (9 campaign UI files, `git diff origin/main~12`)
+Every added Text/Row/Container checked for overflow / raw-hex dark-break / fixed
+clip / dark-invisible fill:
+- Owner screens: all long Texts `maxLines:1`+ellipsis or Flexible/Expanded;
+  master-panel property/unit names ellipsis-guarded (confirmed live: "Test…"/"Apart…").
+- Widget deposit band: label Flexible, icon fixed 18. Confirmation mark: bounded Stack,
+  diameters derived from iconSize.
+- Colors: widget mint = handoff canon (#3DD9B0/#1FAF87, dark brightened); owner screens
+  added ZERO raw hex (tokens only).
+
+**Defects: 0. No fixes required.**
+
+### Gates
+- `dart format`: 652 files, 0 changed.
+- `flutter analyze`: 0 errors, 1 pre-existing warning + info lints (== main baseline;
+  branch adds no code → 0 net-new).
+- Full test / golden: branch byte-identical to `origin/main` (verification-only, zero
+  code delta) → campaign's green 1686-test / 56-golden suite (iter-12) stands unchanged.
+
+### Outcome
+All 11 campaign deliverables render correctly and match their handoffs across the
+verified cells. Campaign CLOSED-verified. Ship = this ledger append (doc-only).
+Dev-only, no deploy. iOS plist untouched.

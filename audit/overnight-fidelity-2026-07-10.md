@@ -678,3 +678,54 @@ swaps at the helper/theme level.
 **Left for device eyeball:** in-panel vertical scroll past the fold (CanvasKit synthetic-scroll not automatable — `flutter-web-scroll-not-automatable`); the seam covers overflow at the 3 tight widths so this is cosmetic-confirm only.
 
 **Defects: 0.** Dev-only, no deploy. iOS plist untouched.
+
+---
+
+## Settings cluster (from Profil hub) — VERDICT: CLEAN (no PR)
+
+Light fidelity pass over the owner Settings sub-screens reached from the Profil
+hub, vs `design_handoff/source/settings.jsx` (3 forms) + `profile-premium.jsx`.
+Prior campaigns already migrated these to Bb* (audit/129, audit/135; hex=0).
+
+Screens reviewed (all `lib/features/owner_dashboard/presentation/screens/`):
+- `edit_profile_screen.dart`
+- `bank_account_screen.dart`
+- `notification_settings_screen.dart`
+- `change_password_screen.dart`
+- `widget_advanced_settings_screen.dart`
+
+**Result: no real visual defect found — nothing shipped (skip-render-for-neutral-hygiene).**
+
+- **No RenderFlex overflow.** All name/verified Rows are `mainAxisSize.min` in a
+  `trailingAction` slot or `Expanded`-bounded; bank IBAN owner line is `maxLines:1`
+  +ellipsis; notif eyebrow is a single short `Text`. No chip-wrap-should-scroll.
+- **No non-flat gradients.** Every page/section chrome uses flat
+  `context.gradients.pageBackground` (flat since 7.23). No `BBGradient` /
+  `LinearGradient` / `purpleGlow` in chrome. Purple icon tiles
+  (`c.primary.withValues(alpha:.10-.12)`) are handoff-correct.
+- **No wrong radius / border / shadow / margin / padding** that moves pixels.
+  `bank_account` uses a heavier `rd.panelBg`/`panelBorder`/radius-28 "floating
+  console" panel than its 3 BbCard siblings, but `rd.panelBg == pageBackground`
+  (audit/126/127) so it is visually near-neutral — a within-cluster consistency
+  note, not a handoff-cited fidelity defect.
+
+**Deliberate handoff-missing elements — NOT invented (data honesty, per audit/135):**
+- notification 7-category Email/Push table + "Tihi sati" (no backing field)
+- change_password "Odjavi me sa svih uređaja" toggle (TODO B4b, deferred; CF exists,
+  l10n-ownership rule)
+- edit_profile Ime/Prezime 2-col split (data-model + migration = feature, not fidelity)
+- identity-chip + public-profile (audit/135 ruled these data-honest omits)
+
+**Hygiene-only residue (NOT fidelity, left for a dedicated l10n pass):**
+- ~8 hardcoded HR strings (eyebrows `SIGURNOST RAČUNA` / `KANALI · EMAIL + PUSH`,
+  chips `Potvrđeno` / `Aktivan`, helpers) that should be l10n keys.
+- `widget_advanced_settings_screen.dart` L161-164 stale "TIP-1 diagonal gradient,
+  fade ends at 30%" docstring on the now-FLAT `_withPageBackground` — comment-only,
+  no pixels; same class as the embed docstring already flattened in #842.
+- `widget_advanced` raw `8.0`/`16.0`/`24` spacers vs `BBSpace` tokens.
+
+**Physical-device eyeball wanted (none blocking):** none of these screens have a
+gesture-driven state a synthetic web pointer can't reach; forms render statically.
+A device pass is nice-to-have only for keyboard-inset behaviour on the two form
+screens (edit_profile, change_password) but no defect is suspected — keyboard-fix
+mixin already applied per `.claude/rules/keyboard-fix.md`.

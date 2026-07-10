@@ -395,7 +395,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                       BbIcon(name: 'verified', size: 16, color: c.success),
                       const SizedBox(width: 4),
                       Text(
-                        'Potvrđeno',
+                        l10n.editProfileEmailVerified,
                         style: BBType.caption(context).copyWith(
                           color: c.success,
                           fontWeight: FontWeight.w600,
@@ -416,7 +416,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
             validator: ProfileValidators.validatePhone,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             // Premium helper — settings.jsx §181 phone hint
-            helper: 'Vidljivo gostima nakon potvrde rezervacije',
+            helper: l10n.editProfilePhoneHelper,
           ),
         ],
       ),

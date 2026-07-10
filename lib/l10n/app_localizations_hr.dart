@@ -715,6 +715,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get changePassword => 'Promijeni lozinku';
 
   @override
+  String get changePasswordSecurityEyebrow => 'SIGURNOST RAČUNA';
+
+  @override
   String get showPassword => 'Prikaži lozinku';
 
   @override
@@ -2846,6 +2849,13 @@ class AppLocalizationsHr extends AppLocalizations {
   String get editProfilePhone => 'Telefon';
 
   @override
+  String get editProfileEmailVerified => 'Potvrđeno';
+
+  @override
+  String get editProfilePhoneHelper =>
+      'Vidljivo gostima nakon potvrde rezervacije';
+
+  @override
   String get editProfileAddress => 'Adresa';
 
   @override
@@ -2968,6 +2978,9 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get notificationSettingsPaymentsDesc =>
       'Opcionalni emailovi o plaćanjima. Početne Stripe potvrde plaćanja se uvijek šalju.';
+
+  @override
+  String get notificationSettingsChannelsEyebrow => 'KANALI · EMAIL + PUSH';
 
   @override
   String get notificationSettingsCalendar => 'Sinkronizacija kalendara';
@@ -3415,6 +3428,14 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get bankAccountBankDetailsSubtitle => 'Podaci za primanje uplata';
+
+  @override
+  String get bankAccountActiveBadge => 'Aktivan';
+
+  @override
+  String bankAccountHolderLabel(String holder) {
+    return 'Vlasnik: $holder · EUR';
+  }
 
   @override
   String get bankAccountIban => 'IBAN';

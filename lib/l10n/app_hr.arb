@@ -257,6 +257,7 @@
 
   "editProfile": "Uredi Profil",
   "changePassword": "Promijeni lozinku",
+  "changePasswordSecurityEyebrow": "SIGURNOST RAČUNA",
   "showPassword": "Prikaži lozinku",
   "hidePassword": "Sakrij lozinku",
   "currentPassword": "Trenutna lozinka",
@@ -1107,6 +1108,8 @@
   "editProfileFullName": "Ime i Prezime",
   "editProfileEmail": "Email",
   "editProfilePhone": "Telefon",
+  "editProfileEmailVerified": "Potvrđeno",
+  "editProfilePhoneHelper": "Vidljivo gostima nakon potvrde rezervacije",
   "editProfileAddress": "Adresa",
   "editProfileAddressSubtitle": "Vaša fizička adresa",
   "editProfileCountry": "Država",
@@ -1145,6 +1148,7 @@
   "notificationSettingsBookingsDesc": "Emailovi kada gosti naprave instant rezervacije. Rezervacije na čekanju koje zahtijevaju odobrenje uvijek se šalju.",
   "notificationSettingsPayments": "Podsjetnici za plaćanje",
   "notificationSettingsPaymentsDesc": "Opcionalni emailovi o plaćanjima. Početne Stripe potvrde plaćanja se uvijek šalju.",
+  "notificationSettingsChannelsEyebrow": "KANALI · EMAIL + PUSH",
   "notificationSettingsCalendar": "Sinkronizacija kalendara",
   "notificationSettingsCalendarDesc": "Upozorenja iCal sinkronizacije i konflikti u kalendaru.",
   "notificationSettingsMarketing": "Marketing i ažuriranja",
@@ -1388,6 +1392,13 @@
   "bankAccountTitle": "Bankovni Račun",
   "bankAccountBankDetails": "Bankovni Podaci",
   "bankAccountBankDetailsSubtitle": "Podaci za primanje uplata",
+  "bankAccountActiveBadge": "Aktivan",
+  "bankAccountHolderLabel": "Vlasnik: {holder} · EUR",
+  "@bankAccountHolderLabel": {
+    "placeholders": {
+      "holder": {"type": "String"}
+    }
+  },
   "bankAccountIban": "IBAN",
   "bankAccountSwift": "SWIFT/BIC",
   "bankAccountBankName": "Naziv Banke",

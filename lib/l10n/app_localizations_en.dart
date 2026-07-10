@@ -706,6 +706,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changePassword => 'Change Password';
 
   @override
+  String get changePasswordSecurityEyebrow => 'ACCOUNT SECURITY';
+
+  @override
   String get showPassword => 'Show password';
 
   @override
@@ -2825,6 +2828,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editProfilePhone => 'Phone';
 
   @override
+  String get editProfileEmailVerified => 'Verified';
+
+  @override
+  String get editProfilePhoneHelper =>
+      'Visible to guests after booking confirmation';
+
+  @override
   String get editProfileAddress => 'Address';
 
   @override
@@ -2946,6 +2956,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationSettingsPaymentsDesc =>
       'Optional payment notification emails. Initial Stripe payment confirmations are always sent.';
+
+  @override
+  String get notificationSettingsChannelsEyebrow => 'CHANNELS · EMAIL + PUSH';
 
   @override
   String get notificationSettingsCalendar => 'Calendar Sync';
@@ -3389,6 +3402,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankAccountBankDetailsSubtitle => 'Data for receiving payments';
+
+  @override
+  String get bankAccountActiveBadge => 'Active';
+
+  @override
+  String bankAccountHolderLabel(String holder) {
+    return 'Owner: $holder · EUR';
+  }
 
   @override
   String get bankAccountIban => 'IBAN';

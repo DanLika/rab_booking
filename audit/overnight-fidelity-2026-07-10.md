@@ -864,3 +864,53 @@ routes to `/users`. Web eyeball via auth-free throwaway golden (admin dark theme
 1440w, fonts warmed): search input renders with the magnifier icon + rounded
 dark-console field between title and right chrome, maxWidth ≈420 — **matches
 admin-shell.jsx AdminTopbar**. Throwaway test/PNG deleted post-eyeball.
+
+---
+
+## admin Users desktop MASTER-DETAIL panel (handoff `admin-users.jsx` `AUOwnerPanel`)
+
+**absent-or-existed:** ABSENT. VERIFY-FIRST confirmed `users_list_screen.dart`
+navigated away via `context.go('/users/:id')` to a separate routed
+`user_detail_screen.dart` — no inline master-detail panel existed. Built.
+
+**shipped:** On admin content-width ≥ `_masterDetailBreakpoint` (1000px,
+post-260px-sidebar; a `LayoutBuilder constraints.maxWidth` reflow value, kept +
+named per the breakpoint-classification rule) the Users screen now renders a
+desktop split — owners table on the LEFT (`Expanded`) + a fixed 360px inline
+DETAIL panel on the RIGHT (handoff grid `1fr 360px`). Selecting a row sets the
+new `adminSelectedOwnerIdProvider` (StateProvider) and populates the panel IN
+PLACE (no navigation); the selected `DataRow` is highlighted (checkbox + primary
+8% tint). The panel REUSES the existing `UserDetailScreen` via a new additive
+`embedded`/`onClose` flag: in embedded mode the header's leading control becomes
+a `close` button that clears the selection (routed back-to-`/users` preserved
+for the standalone `/users/:id` route, untouched). An unselected state shows a
+`_DetailPanelPlaceholder` ("Select an owner"). Below 1000px content-width the
+plain table (tablet) / #860 card list (mobile <600) render UNCHANGED — #860
+pagination/cards, #765 h-scroll overflow fix, #862 topbar search, #848 nav
+chrome all preserved. BbAdminDarkTokens palette reused throughout.
+
+**data-honesty:** the panel renders ONLY real `UserModel`/provider-backed data
+that `user_detail_screen` already reads — avatar/initials, name, email, **User
+ID**, **Role**, **Created At**, account-status badge, Properties/Bookings counts
+(real `userPropertiesCountProvider`/`userBookingsCountProvider`), and the real
+already-wired admin actions (Activate/Suspend/Reset-to-Trial, Save
+hide-subscription, Grant/Revoke lifetime license). OMITTED every fabricated
+handoff element: GMV (lifetime), phone, location/city, "Member since" literal,
+and the "View as owner"/Message/Reset-password/Suspend-standalone actions +
+status tab-COUNTS (all need aggregation/backends that don't exist). Panel starts
+UNSELECTED (no fabricated default owner). No Firestore/rules/callable/dep edits.
+
+**verification:** `dart format` clean; `flutter analyze lib/features/admin/` 0
+issues; full `flutter test` GREEN (0 failures, incl. golden tag — no admin
+golden baseline exists so nothing to re-bless). New RED→GREEN seam
+`users_list_master_detail_test.dart` (6 cells via `buildUsersMasterDetailForTest`
+seam + injected fake panel): placeholder-before-select, select-populates,
+select-swaps-in-place, close-clears, no-overflow @1000/1100/1440, breakpoint
+const. Existing admin seams (layout/overflow/topbar/nav) still green (21 admin
+tests). **Web eyeball** — `admin_main_dev.dart` built (`--no-tree-shake-icons`)
++ served @ :8097, signed in as admin-smoke (isAdmin claim, JS-SDK bypass),
+chrome-devtools: split renders live (table left + placeholder right); clicking a
+row populated the panel with the REAL detail (TT avatar, User ID/Email/Role
+OWNER/Created At, Statistics card) + row highlight, NO navigation; close (×)
+reverted to placeholder + cleared highlight. Verdict: PASS, faithful to
+`AUOwnerPanel` structure, data-honest. Dev-only, NO deploy.

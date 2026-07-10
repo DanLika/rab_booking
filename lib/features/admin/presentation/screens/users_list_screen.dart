@@ -10,6 +10,18 @@ import '../../../../shared/models/user_model.dart';
 import '../../data/admin_users_repository.dart';
 import '../../providers/admin_providers.dart';
 import 'admin_shell_screen.dart';
+import 'user_detail_screen.dart';
+
+/// Content-width breakpoint at/above which the Users screen renders the desktop
+/// MASTER-DETAIL split (handoff `admin-users.jsx` `AdminUsersDesktop`: owners
+/// table on the left + inline `AUOwnerPanel` on the right). Below it the plain
+/// table (tablet) or card list (mobile) render, unchanged. This is a
+/// `LayoutBuilder` content-width value (post-sidebar), NOT a MediaQuery pivot —
+/// per the breakpoint-classification rule it stays a named local const.
+const double _masterDetailBreakpoint = 1000.0;
+
+/// Fixed width of the inline detail panel (handoff desktop grid `1fr 360px`).
+const double _detailPanelWidth = 360.0;
 
 /// Responsive breakpoint for the compact per-user card layout. Below this
 /// width the squeezed 5-column table is replaced by handoff-style owner cards
@@ -178,13 +190,52 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       // the adaptive shell reserves
       // 260/72px for sidebar/rail, so window width over-reports space.
       body: LayoutBuilder(
-        builder: (context, constraints) => _buildBody(
-          context,
-          ownersAsync,
-          notifier,
-          palette,
-          constraints.maxWidth < _mobileBreakpoint,
-        ),
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final isMobile = width < _mobileBreakpoint;
+          final isMasterDetail = width >= _masterDetailBreakpoint;
+          final listColumn = _buildBody(
+            context,
+            ownersAsync,
+            notifier,
+            palette,
+            isMobile,
+            isMasterDetail,
+          );
+          if (!isMasterDetail) return listColumn;
+          // Desktop master-detail split: owners list on the left, inline detail
+          // panel on the right (handoff `AdminUsersDesktop` `1fr 360px`).
+          final selectedId = ref.watch(adminSelectedOwnerIdProvider);
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: listColumn),
+              Container(
+                width: _detailPanelWidth,
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(
+                      color: Theme.of(context).dividerColor,
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                child: selectedId == null
+                    ? _DetailPanelPlaceholder(palette: palette)
+                    : UserDetailScreen(
+                        key: ValueKey('embedded_detail_$selectedId'),
+                        userId: selectedId,
+                        embedded: true,
+                        onClose: () =>
+                            ref
+                                    .read(adminSelectedOwnerIdProvider.notifier)
+                                    .state =
+                                null,
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -195,6 +246,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     OwnersListNotifier notifier,
     _UsersListPalette palette,
     bool isMobile,
+    bool isMasterDetail,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,6 +404,11 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
               final start = page * _rowsPerPage;
               final end = (start + _rowsPerPage).clamp(0, filtered.length);
               final pageRows = filtered.sublist(start, end);
+              // In the desktop master-detail split, selecting a row populates
+              // the inline panel instead of navigating to `/users/:id`.
+              final selectedId = isMasterDetail
+                  ? ref.watch(adminSelectedOwnerIdProvider)
+                  : null;
               return _UsersTable(
                 owners: pageRows,
                 totalRows: filtered.length,
@@ -365,6 +422,14 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                 hasMore: showLoadMore,
                 onLoadMore: notifier.loadMore,
                 palette: palette,
+                selectedId: selectedId,
+                onSelect: isMasterDetail
+                    ? (id) =>
+                          ref
+                                  .read(adminSelectedOwnerIdProvider.notifier)
+                                  .state =
+                              id
+                    : null,
               );
             },
             loading: () => const Center(child: BbSpinner(size: 24)),
@@ -520,6 +585,12 @@ class _UsersTable extends StatelessWidget {
   final int rangeEnd;
   final ValueChanged<int>? onPageChanged;
 
+  /// When non-null the table is in master-detail mode: a row tap calls
+  /// [onSelect] (populating the inline panel) instead of navigating to
+  /// `/users/:id`, and the matching [selectedId] row is highlighted.
+  final ValueChanged<String>? onSelect;
+  final String? selectedId;
+
   _UsersTable({
     required this.owners,
     required this.hasMore,
@@ -531,6 +602,8 @@ class _UsersTable extends StatelessWidget {
     int? rangeStart,
     int? rangeEnd,
     this.onPageChanged,
+    this.onSelect,
+    this.selectedId,
   }) : totalRows = totalRows ?? owners.length,
        rangeStart = rangeStart ?? (owners.isEmpty ? 0 : 1),
        rangeEnd = rangeEnd ?? owners.length;
@@ -573,7 +646,18 @@ class _UsersTable extends StatelessWidget {
                     ],
                     rows: owners.map((user) {
                       final displayName = user.displayName ?? user.fullName;
+                      final isSelected =
+                          onSelect != null && selectedId == user.id;
                       return DataRow(
+                        selected: isSelected,
+                        color: isSelected
+                            ? WidgetStatePropertyAll(
+                                AppColors.primary.withValues(alpha: 0.08),
+                              )
+                            : null,
+                        onSelectChanged: onSelect != null
+                            ? (_) => onSelect!(user.id)
+                            : null,
                         cells: [
                           DataCell(
                             Row(
@@ -616,7 +700,9 @@ class _UsersTable extends StatelessWidget {
                               iconLeft: 'arrow_forward_ios',
                               variant: BbButtonVariant.tertiary,
                               semanticLabel: 'View Details',
-                              onPressed: () => context.go('/users/${user.id}'),
+                              onPressed: onSelect != null
+                                  ? () => onSelect!(user.id)
+                                  : () => context.go('/users/${user.id}'),
                             ),
                           ),
                         ],
@@ -895,6 +981,48 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
+/// Empty placeholder shown in the desktop master-detail panel before an owner
+/// row is selected (handoff has an owner pre-selected; we start unselected and
+/// prompt the admin to pick a row — data-honest, no fabricated default owner).
+class _DetailPanelPlaceholder extends StatelessWidget {
+  final _UsersListPalette palette;
+
+  const _DetailPanelPlaceholder({required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(BBSpace.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.person_search_outlined,
+              size: 40,
+              color: palette.textTertiary,
+            ),
+            const SizedBox(height: BBSpace.sm),
+            Text(
+              'Select an owner',
+              textAlign: TextAlign.center,
+              style: BBType.h3(context).copyWith(color: palette.textSecondary),
+            ),
+            const SizedBox(height: BBSpace.xs),
+            Text(
+              'Choose a row to view details and admin controls.',
+              textAlign: TextAlign.center,
+              style: BBType.caption(
+                context,
+              ).copyWith(color: palette.textTertiary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SortDropdown extends StatelessWidget {
   final _SortField sortField;
   final bool sortAscending;
@@ -1008,6 +1136,75 @@ _UsersListPalette _neutralTestPalette(BuildContext context) {
     isDark: false,
   );
 }
+
+/// Renders the desktop MASTER-DETAIL split (`_UsersTable` + inline panel) in
+/// isolation for the seam test. Uses local selection state (no Riverpod /
+/// Firebase); [panelBuilder] receives the selected owner id (or `null` before
+/// any selection) so the test can inject a fake panel in place of the real
+/// provider-backed [UserDetailScreen]. Mirrors the production split: row-select
+/// swaps the panel, close clears it. See
+/// `test/features/admin/users_list_master_detail_test.dart`.
+@visibleForTesting
+Widget buildUsersMasterDetailForTest({
+  required List<UserModel> owners,
+  required Widget Function(String? selectedId, VoidCallback onClose)
+  panelBuilder,
+}) {
+  return _MasterDetailTestHarness(owners: owners, panelBuilder: panelBuilder);
+}
+
+class _MasterDetailTestHarness extends StatefulWidget {
+  final List<UserModel> owners;
+  final Widget Function(String? selectedId, VoidCallback onClose) panelBuilder;
+
+  const _MasterDetailTestHarness({
+    required this.owners,
+    required this.panelBuilder,
+  });
+
+  @override
+  State<_MasterDetailTestHarness> createState() =>
+      _MasterDetailTestHarnessState();
+}
+
+class _MasterDetailTestHarnessState extends State<_MasterDetailTestHarness> {
+  String? _selectedId;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = _neutralTestPalette(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: _UsersTable(
+              owners: widget.owners,
+              hasMore: false,
+              onLoadMore: () {},
+              palette: palette,
+              selectedId: _selectedId,
+              onSelect: (id) => setState(() => _selectedId = id),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: _detailPanelWidth,
+          child: _selectedId == null
+              ? _DetailPanelPlaceholder(palette: palette)
+              : widget.panelBuilder(
+                  _selectedId,
+                  () => setState(() => _selectedId = null),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The master-detail content-width breakpoint, exposed for tests.
+@visibleForTesting
+const double usersListMasterDetailBreakpoint = _masterDetailBreakpoint;
 
 /// Renders the compact mobile owner-card list (`_UsersList`) in isolation for
 /// the responsive layout regression test (mobile <600 branch). No Firebase /

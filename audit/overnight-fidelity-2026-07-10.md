@@ -1193,3 +1193,39 @@ directly. FROZEN Cjenovnik content untouched.
 
 dart format clean, analyze 0 net-new, `--tags golden` all-pass (no baseline moved —
 units header has no golden), full suite green. Dev-only, no deploy. REVERSIBLE.
+
+## Minimalist pass 5 — EYEBROW TYPE RESTRAINT (2026-07-10, design/eyebrow-type-restraint)
+
+Plan `Minimalist Light Theme 2026-07-10.md` Pass 5 (TYPE RESTRAINT, `typeset`):
+the UPPERCASE eyebrow labels ("PETAK · 10. SRPNJA 2026", "UKUPNA ZARADA · ZADNJIH
+7 DANA", "NA ČEKANJU", "SIGURNOST RAČUNA", stat-card labels) shouted. Make them
+whisper — ONE token-level change, shared by all 40 `BBType.eyebrow` call sites,
+zero per-site edits.
+
+### Change — single token (`BBType.eyebrow` in `lib/core/design/tokens.dart`)
+| Property | Before | After |
+|---|---|---|
+| fontWeight | `w600` | **`w500`** |
+| fontSize | `11` | **`10.5`** |
+| letterSpacing | `0.88` | **`0.7`** (calmer, not tighter) |
+| color (light) | `textSecondary` #4A5568 (CR 7.21) | **`eyebrowInkLight` #5A6B80** (CR 5.23 shell / 5.46 card) |
+| color (dark) | `textSecondary` #A0AEC0 (CR 8.17) | **unchanged** #A0AEC0 |
+
+New const `BBColor.eyebrowInkLight = #5A6B80` — one calm step softer than the light
+secondary ink while staying comfortably AA (min 5.23, well above the 4.5 floor;
+`#718096` tertiary was rejected at CR 3.85 = illegible). Color is now
+brightness-conditional inside `eyebrow(context)`: light gets the softened ink, dark
+keeps `textSecondaryDark` untouched. Size/weight/tracking apply to BOTH themes
+(intentional type restraint, not a dark-value slip — the "dark golden = mistake"
+guard is about surface/color, and dark color IS held constant).
+
+### Contrast (WCAG AA, verified)
+light #5A6B80 on #FAFAFB = **5.23**, on #FFFFFF = **5.46**; dark #A0AEC0 on #141414 =
+**8.17**. All ≥ 4.5. Not illegible.
+
+### Gates
+dart format clean · `flutter analyze` 0 net-new · full non-golden suite green ·
+`--tags golden` re-blessed the eyebrow-bearing baselines (warm Inter fonts, PNGs
+read back — both light AND dark of pregled_panel + any others render eyebrows;
+light moves color+type, dark moves type-only). Dev-only, no deploy. REVERSIBLE
+(revert the 2 token edits).

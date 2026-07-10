@@ -1,5 +1,7 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/config/environment.dart';
@@ -9,6 +11,8 @@ import '../../../core/theme/gradient_extensions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/common_app_bar.dart';
 import '../../../shared/widgets/redesign.dart';
+import '../models/trial_status.dart';
+import '../providers/trial_status_provider.dart';
 
 /// Subscription Screen
 ///
@@ -209,19 +213,82 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 // Trial hero — gradient backdrop, eyebrow + title + progress + CTA
 // =============================================================================
 
-class _TrialHero extends StatelessWidget {
+/// Immutable data the trial hero renders. Derived from [TrialStatus] at the
+/// call site; exposed for testing so the visual can be pumped without a
+/// provider / Firestore stream.
+@visibleForTesting
+class TrialBarData {
+  const TrialBarData({
+    required this.daysLeft,
+    required this.totalDays,
+    required this.endDate,
+  });
+
+  /// Whole days remaining, clamped to `[0, totalDays]`.
+  final int daysLeft;
+
+  /// Full trial length in whole days (> 0).
+  final int totalDays;
+
+  /// Pre-formatted, localized end date (e.g. `10. srpnja 2026.`).
+  final String endDate;
+
+  /// `[0.0, 1.0]` fraction of the trial ELAPSED (used for the fill width).
+  double get elapsedFraction =>
+      totalDays <= 0 ? 0 : ((totalDays - daysLeft) / totalDays).clamp(0.0, 1.0);
+
+  /// Build [TrialBarData] from a live [TrialStatus], or `null` when the bar
+  /// must honestly hide (not in trial, or trial bounds not persisted).
+  static TrialBarData? fromTrialStatus(
+    TrialStatus status,
+    String localeName, {
+    DateTime? now,
+  }) {
+    if (!status.isInTrial) return null;
+    final int? total = status.totalTrialDays;
+    final int? elapsed = status.getDaysElapsed(now: now);
+    if (total == null || elapsed == null) return null;
+    final DateTime? end = status.trialExpiresAt;
+    if (end == null) return null;
+    return TrialBarData(
+      daysLeft: (total - elapsed).clamp(0, total),
+      totalDays: total,
+      endDate: DateFormat('d. MMMM yyyy', localeName).format(end),
+    );
+  }
+}
+
+/// Renders the trial hero from resolved [TrialBarData]. Provider-free so tests
+/// can pump it directly. Returns `SizedBox.shrink()` for a null [data].
+@visibleForTesting
+Widget buildTrialHeroForTest({
+  required BuildContext context,
+  required TrialBarData? data,
+  bool compact = false,
+}) => _TrialHero._render(context, data: data, compact: compact);
+
+class _TrialHero extends ConsumerWidget {
   const _TrialHero({this.compact = false});
 
   final bool compact;
 
-  static const int _totalDays = 14;
-  static const int _daysLeft = 12;
-  static const String _endDate = '10. lipnja 2026.';
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final TrialStatus? status = ref.watch(trialStatusProvider).valueOrNull;
+    if (status == null) return const SizedBox.shrink();
+    final String localeName = AppLocalizations.of(context).localeName;
+    final TrialBarData? data = TrialBarData.fromTrialStatus(status, localeName);
+    return _render(context, data: data, compact: compact);
+  }
+
+  static Widget _render(
+    BuildContext context, {
+    required TrialBarData? data,
+    required bool compact,
+  }) {
+    if (data == null) return const SizedBox.shrink();
     final BbRedesignTokens rd = BbRedesignTokens.of(context);
-    final double progress = _daysLeft / _totalDays;
+    final double progress = data.elapsedFraction;
 
     final Widget cta = BbButton(
       label: 'Nadogradi na Pro',
@@ -265,7 +332,7 @@ class _TrialHero extends StatelessWidget {
                 ? CrossAxisAlignment.start
                 : CrossAxisAlignment.center,
             children: <Widget>[
-              Expanded(child: _buildBody(context, progress)),
+              Expanded(child: _buildBody(context, data, progress, compact)),
               SizedBox(width: compact ? 0 : 20, height: compact ? 20 : 0),
               if (compact)
                 SizedBox(width: double.infinity, child: cta)
@@ -278,13 +345,19 @@ class _TrialHero extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, double progress) {
+  static Widget _buildBody(
+    BuildContext context,
+    TrialBarData data,
+    double progress,
+    bool compact,
+  ) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Text(
-          'VAŠ PLAN',
+          l10n.subscriptionTrialEyebrow,
           style: BBType.eyebrow(
             context,
           ).copyWith(color: const Color(0xD1FFFFFF)),
@@ -324,21 +397,11 @@ class _TrialHero extends StatelessWidget {
         ),
         if (!compact) ...<Widget>[
           const SizedBox(height: 8),
-          RichText(
-            text: TextSpan(
-              style: BBType.body(
-                context,
-              ).copyWith(color: const Color(0xD1FFFFFF)),
-              children: <InlineSpan>[
-                const TextSpan(text: 'Uživate sve Pro mogućnosti. Završava '),
-                TextSpan(
-                  text: _endDate,
-                  style: BBType.body(
-                    context,
-                  ).copyWith(color: Colors.white, fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
+          Text(
+            l10n.subscriptionTrialEndsInline(data.endDate),
+            style: BBType.body(
+              context,
+            ).copyWith(color: const Color(0xD1FFFFFF)),
           ),
         ],
         SizedBox(height: compact ? 12 : 16),
@@ -353,37 +416,25 @@ class _TrialHero extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  RichText(
-                    text: TextSpan(
+                  Flexible(
+                    child: Text(
+                      l10n.subscriptionTrialDaysRemaining(
+                        data.daysLeft,
+                        data.totalDays,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                       style: BBType.caption(context).copyWith(
                         color: const Color(0xE6FFFFFF),
                         fontWeight: FontWeight.w600,
+                        fontFeatures: const <FontFeature>[
+                          FontFeature.tabularFigures(),
+                        ],
                       ),
-                      children: const <InlineSpan>[
-                        TextSpan(
-                          text: '$_daysLeft',
-                          style: TextStyle(
-                            fontFeatures: <FontFeature>[
-                              FontFeature.tabularFigures(),
-                            ],
-                          ),
-                        ),
-                        TextSpan(text: ' od '),
-                        TextSpan(
-                          text: '$_totalDays',
-                          style: TextStyle(
-                            fontFeatures: <FontFeature>[
-                              FontFeature.tabularFigures(),
-                            ],
-                          ),
-                        ),
-                        TextSpan(text: ' dana preostalo'),
-                      ],
                     ),
                   ),
                   if (compact)
                     Text(
-                      'do 10.06.',
+                      l10n.subscriptionTrialEndsShort(data.endDate),
                       style: BBType.caption(
                         context,
                       ).copyWith(color: const Color(0xC7FFFFFF)),

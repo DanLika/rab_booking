@@ -8284,6 +8284,24 @@ class AppLocalizationsHr extends AppLocalizations {
   }
 
   @override
+  String get subscriptionTrialEyebrow => 'VAŠ PLAN';
+
+  @override
+  String subscriptionTrialDaysRemaining(int daysLeft, int totalDays) {
+    return '$daysLeft od $totalDays dana preostalo';
+  }
+
+  @override
+  String subscriptionTrialEndsShort(String date) {
+    return 'do $date';
+  }
+
+  @override
+  String subscriptionTrialEndsInline(String date) {
+    return 'Uživate sve Pro mogućnosti. Završava $date.';
+  }
+
+  @override
   String get subscriptionFreeTrial => 'Besplatan probni period';
 
   @override

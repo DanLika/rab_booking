@@ -3427,6 +3427,26 @@
       "date": {"type": "String"}
     }
   },
+  "subscriptionTrialEyebrow": "VAŠ PLAN",
+  "subscriptionTrialDaysRemaining": "{daysLeft} od {totalDays} dana preostalo",
+  "@subscriptionTrialDaysRemaining": {
+    "placeholders": {
+      "daysLeft": {"type": "int"},
+      "totalDays": {"type": "int"}
+    }
+  },
+  "subscriptionTrialEndsShort": "do {date}",
+  "@subscriptionTrialEndsShort": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "subscriptionTrialEndsInline": "Uživate sve Pro mogućnosti. Završava {date}.",
+  "@subscriptionTrialEndsInline": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
   "subscriptionFreeTrial": "Besplatan probni period",
   "subscriptionFreeTrialPrice": "€0",
   "subscriptionFreeTrialPeriod": "30 dana",

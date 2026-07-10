@@ -8218,6 +8218,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get subscriptionTrialEyebrow => 'YOUR PLAN';
+
+  @override
+  String subscriptionTrialDaysRemaining(int daysLeft, int totalDays) {
+    return '$daysLeft of $totalDays days remaining';
+  }
+
+  @override
+  String subscriptionTrialEndsShort(String date) {
+    return 'until $date';
+  }
+
+  @override
+  String subscriptionTrialEndsInline(String date) {
+    return 'You enjoy all Pro features. Ends $date.';
+  }
+
+  @override
   String get subscriptionFreeTrial => 'Free Trial';
 
   @override

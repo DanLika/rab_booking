@@ -864,3 +864,39 @@ routes to `/users`. Web eyeball via auth-free throwaway golden (admin dark theme
 1440w, fonts warmed): search input renders with the magnifier icon + rounded
 dark-console field between title and right chrome, maxWidth ≈420 — **matches
 admin-shell.jsx AdminTopbar**. Throwaway test/PNG deleted post-eyeball.
+
+---
+
+## widget language control — flag → globe icon + code chip (design/widget-language-icon-restyle)
+
+**Flag-or-already-icon: FLAG.** `_LanguageSwitcherButton`
+(`calendar_combined_header_widget.dart`) rendered a **flag emoji** on the
+trigger (`_getFlagEmoji(currentLanguage)` → 🇭🇷/🇬🇧/🇩🇪/🇮🇹). Handoff
+`widget-calendar.jsx` WidgetToolbar shows a language control with a
+globe/code affordance + `expand_more`; per operator's stated target the key
+ask = **globe/translate icon + uppercase 2-letter code chip** on the trigger.
+
+**Shipped (COSMETIC only):** trigger flag → `Icons.language` (globe) +
+uppercase 2-letter code (`_getLanguageCode`, e.g. `HR`/`EN`/`DE`/`IT`) +
+kept `arrow_drop_down`. Ink = `colors.textPrimary` (theme-aware; light ≈
+handoff near-black `#1B2330`, dark tracks). `_getFlagEmoji` (trigger-only
+consumer) removed. **Menu items keep flags** — the handoff popup itself uses
+flags, and the 4 options / current-selection check / `languageProvider`
+wiring / `?lang=` URL persistence are byte-unchanged. No new strings
+(2-letter codes are language-neutral); no provider/logic/booking edits; no
+new deps.
+
+**Seam:** added `@visibleForTesting buildWidgetLanguageSwitcherForTest` +
+`widget_language_switcher_icon_test.dart` — trigger renders globe + code
+(HR/EN/DE/IT) with NO flag; popup still lists all 4 language names + shows
+the check on the current selection.
+
+**Verify:** dart format clean; `flutter analyze` 0 issues; full suite green
+(All tests passed, incl. 56 `--tags golden` — none touch this trigger, no
+re-bless); seam test 2/2. **Web eyeball** (dev widget `:8097`,
+`SEED_property_dev_01`/`SEED_unit_dev_01`, chrome-devtools): trigger shows
+**globe + "EN"** (no flag), mint theme intact, near-black ink — matches
+handoff; `?lang=de` flips chip to **"DE"** + localizes UI, confirming
+`_getLanguageCode` + provider + URL persistence live. Dark trigger inferred
+from unchanged `textPrimary` token wiring (Flutter-web synthetic pointer
+can't drive the moon toggle; golden dark variants green).

@@ -818,3 +818,49 @@ a low-value restyle, not a missing feature, deferred.
 BUILD tasks — a "confirmed real gap" is still only a candidate until the running
 screen is inspected. The eyeball caught a full pre-existing feature that
 analyze/build/tests would never have flagged.
+
+---
+
+## Admin console topbar — OWNERS-ONLY global search (SHIPPED)
+
+**Premise (VERIFY-FIRST).** Handoff `admin-shell.jsx` `AdminTopbar` (L117-123)
+carries a `BBInput placeholder="Search owners, bookings, properties…"
+iconLeft="search"` on desktop/tablet, hidden on mobile. The Flutter
+`_AdminHeader` in `admin_shell_screen.dart` had NO search input — only the
+hamburger (mobile), admin icon+title, and the `_AdminEnvPill`. Re-read the whole
+shell (sidebar/rail/drawer/nav panel) to be sure: no global/owner search
+anywhere (topbar, sidebar, hidden action). **Genuinely absent** → built.
+
+**What shipped (presentation + navigation only, no new backend).**
+- New `adminOwnersSearchQueryProvider` (`StateProvider<String>`) in
+  `admin_providers.dart` — the shared query channel between topbar and Users
+  screen. Zero Firestore/rules/callable edits.
+- `_AdminHeader` → `ConsumerStatefulWidget`; on desktop/tablet
+  (`!showMenuButton`, same gate as the hamburger) it renders a `BbInput`
+  (`size: sm`, `iconLeft: 'search'`, `maxWidth 420` per handoff L122,
+  key `admin_topbar_search`). On submit it publishes the trimmed query to the
+  provider and `context.go('/users')` (no-op nav if already there).
+- `UsersListScreen` seeds its EXISTING local `_searchQuery`/`_searchController`
+  from the provider in `initState`, and `ref.listen`s the provider in `build`
+  so a submit while already mounted re-applies the filter (resets page to 0).
+  Reuses the in-screen `_filterAndSortOwners` name/email filter — the widget
+  never adds a parallel search path.
+
+**Data honesty.** Placeholder is **"Search owners…"** (EN), NOT the handoff's
+"owners, bookings, properties…". The admin console has no bookings/payments/
+properties screens (no backing routes/data — data-honest omits), so promising
+those scopes would be a lie. Search is scoped to real `UserModel` owner data via
+the already-shipped `ownersListProvider` + filter. No fabricated scope.
+
+**FROZEN / preservation.** No FROZEN surfaces touched. #765 users overflow fix,
+#848 nav chrome, #860 pagination/cards all intact (admin test dir 16/16 green,
+incl. the 780/900/1100/1440 overflow seams).
+
+**Verification.** `dart format` clean; `flutter analyze lib/features/admin` = 0;
+full suite **1713 green**; `--tags golden` **56 green** (no re-bless — no golden
+surface touched). New RED→GREEN seam `admin_topbar_search_test.dart` (3 cells):
+search renders @desktop, HIDDEN @mobile, submit publishes trimmed query +
+routes to `/users`. Web eyeball via auth-free throwaway golden (admin dark theme,
+1440w, fonts warmed): search input renders with the magnifier icon + rounded
+dark-console field between title and right chrome, maxWidth ≈420 — **matches
+admin-shell.jsx AdminTopbar**. Throwaway test/PNG deleted post-eyeball.

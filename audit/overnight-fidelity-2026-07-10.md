@@ -777,3 +777,44 @@ mock-only), no export/invite/bulk buttons (no backend).
 **Deferred:** desktop master-detail owner panel (`AUOwnerPanel`) + status
 tab-counts (`AU_TABS` counts need aggregation queries) — both are larger,
 data-backing-dependent features, out of scope for this pass.
+
+---
+
+## Widget guest toolbar (theme + language) — FALSE GAP, no ship (data honesty)
+
+**Task premise (rejected).** Build the guest-widget toolbar theme toggle +
+language picker, asserted a "verified real, not data-honest omit" handoff gap:
+the Flutter guest widget supposedly has the backing providers (`themeProvider`,
+`languageProvider`, 4-lang `WidgetTranslations`) but **no guest-facing UI** to
+switch either — language only URL/browser-determined, theme toggle invisible.
+
+**Firsthand disproof (live + code).** The guest booking widget **already ships**
+both controls, fully wired, in `calendar_combined_header_widget.dart` (rendered
+by every month/year calendar view):
+- **Theme toggle** (L123-140): `IconButton(light_mode/dark_mode)` →
+  `ref.read(themeProvider.notifier).state = !isDarkMode`, tooltip localized.
+- **Language switcher** (`_LanguageSwitcherButton`, L170+): `PopupMenuButton`
+  with flag + all four languages (hr/en/de/it) + current-check + semantic label;
+  `_changeLanguage` sets `languageProvider.notifier` **and** rewrites the `?lang`
+  URL param via `replaceUrlState` (persistence the task spec didn't even ask for).
+
+Live proof: `flutter run -d web-server lib/widget_main_dev.dart` @8093, seeded
+`SEED_property_dev_01/SEED_unit_dev_01`, chrome-devtools screenshot (desktop
+1280×900): the top pill shows Month/Year toggle **then the moon (dark_mode)
+theme button and the 🇬🇧 flag+caret language dropdown** — the exact
+`widget-calendar.jsx §WidgetToolbar` controls, already present and live.
+
+**Verdict.** The premise is FALSE. A `WidgetToolbar` would be a **duplicate**
+theme/language control stacked above the existing one — a fidelity *regression*,
+not a fix. Per the operator's standing rule (gap/dead-code claims are
+candidates, not proof — verify before building) this pass **ships nothing to the
+widget**. Built artifacts (`widget_toolbar.dart` + seam test + 3 new
+`WidgetTranslations` toolbar getters) were reverted; only this audit note lands.
+The true residual (cosmetic-only) is that the existing header's language control
+uses a flag emoji rather than the handoff's globe-icon + language-code chip —
+a low-value restyle, not a missing feature, deferred.
+
+**Lesson reinforced:** [[deadcode-verify-before-delete]] applies symmetrically to
+BUILD tasks — a "confirmed real gap" is still only a candidate until the running
+screen is inspected. The eyeball caught a full pre-existing feature that
+analyze/build/tests would never have flagged.

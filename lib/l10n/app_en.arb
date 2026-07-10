@@ -1159,6 +1159,19 @@
   "notificationSettingsPushChannelDesc": "Receive push notifications on your device",
   "notificationSettingsSmsChannel": "SMS",
   "notificationSettingsSmsChannelDesc": "Receive notifications via SMS",
+  "quietHoursTitle": "Quiet Hours",
+  "quietHoursEnable": "Enable Quiet Hours",
+  "quietHoursSubtitle": "Silence push notifications during a set time window",
+  "quietHoursStart": "Start",
+  "quietHoursEnd": "End",
+  "quietHoursInfo": "During quiet hours, push notifications are held back — you'll still receive emails and see everything when you open the app.",
+  "quietHoursCrossMidnight": "This window runs overnight, from {start} to {end} the next morning.",
+  "@quietHoursCrossMidnight": {
+    "placeholders": {
+      "start": {"type": "String"},
+      "end": {"type": "String"}
+    }
+  },
   "notificationSettingsLoadError": "Error loading preferences",
   "notificationSettingsUpdated": "{category} notification preferences updated",
   "@notificationSettingsUpdated": {

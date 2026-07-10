@@ -2996,6 +2996,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Receive notifications via SMS';
 
   @override
+  String get quietHoursTitle => 'Quiet Hours';
+
+  @override
+  String get quietHoursEnable => 'Enable Quiet Hours';
+
+  @override
+  String get quietHoursSubtitle =>
+      'Silence push notifications during a set time window';
+
+  @override
+  String get quietHoursStart => 'Start';
+
+  @override
+  String get quietHoursEnd => 'End';
+
+  @override
+  String get quietHoursInfo =>
+      'During quiet hours, push notifications are held back — you\'ll still receive emails and see everything when you open the app.';
+
+  @override
+  String quietHoursCrossMidnight(String start, String end) {
+    return 'This window runs overnight, from $start to $end the next morning.';
+  }
+
+  @override
   String get notificationSettingsLoadError => 'Error loading preferences';
 
   @override

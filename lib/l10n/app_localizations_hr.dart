@@ -3018,6 +3018,31 @@ class AppLocalizationsHr extends AppLocalizations {
       'Primajte obavijesti putem SMS-a';
 
   @override
+  String get quietHoursTitle => 'Tihi sati';
+
+  @override
+  String get quietHoursEnable => 'Uključi tihe sate';
+
+  @override
+  String get quietHoursSubtitle =>
+      'Utišajte push obavijesti tijekom određenog vremenskog razdoblja';
+
+  @override
+  String get quietHoursStart => 'Početak';
+
+  @override
+  String get quietHoursEnd => 'Kraj';
+
+  @override
+  String get quietHoursInfo =>
+      'Tijekom tihih sati push obavijesti se zadržavaju — i dalje ćete primati e-poštu i vidjeti sve kada otvorite aplikaciju.';
+
+  @override
+  String quietHoursCrossMidnight(String start, String end) {
+    return 'Ovo razdoblje traje preko noći, od $start do $end sljedećeg jutra.';
+  }
+
+  @override
   String get notificationSettingsLoadError => 'Greška pri učitavanju postavki';
 
   @override

@@ -1159,6 +1159,19 @@
   "notificationSettingsPushChannelDesc": "Primajte push obavijesti na uređaj",
   "notificationSettingsSmsChannel": "SMS",
   "notificationSettingsSmsChannelDesc": "Primajte obavijesti putem SMS-a",
+  "quietHoursTitle": "Tihi sati",
+  "quietHoursEnable": "Uključi tihe sate",
+  "quietHoursSubtitle": "Utišajte push obavijesti tijekom određenog vremenskog razdoblja",
+  "quietHoursStart": "Početak",
+  "quietHoursEnd": "Kraj",
+  "quietHoursInfo": "Tijekom tihih sati push obavijesti se zadržavaju — i dalje ćete primati e-poštu i vidjeti sve kada otvorite aplikaciju.",
+  "quietHoursCrossMidnight": "Ovo razdoblje traje preko noći, od {start} do {end} sljedećeg jutra.",
+  "@quietHoursCrossMidnight": {
+    "placeholders": {
+      "start": {"type": "String"},
+      "end": {"type": "String"}
+    }
+  },
   "notificationSettingsLoadError": "Greška pri učitavanju postavki",
   "notificationSettingsUpdated": "Postavke obavijesti za {category} ažurirane",
   "@notificationSettingsUpdated": {

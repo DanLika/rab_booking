@@ -5718,6 +5718,12 @@ abstract class AppLocalizations {
   /// **'Properties and Units'**
   String get unitHubPropertiesAndUnits;
 
+  /// No description provided for @unitHubPropertiesUnitsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{propertyCount} properties · {unitCount} units'**
+  String unitHubPropertiesUnitsSubtitle(int propertyCount, int unitCount);
+
   /// No description provided for @unitHubAddProperty.
   ///
   /// In en, this message translates to:

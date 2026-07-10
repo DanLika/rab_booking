@@ -5,6 +5,12 @@ import '../../l10n/widget_translations.dart';
 import '../../../domain/constants/widget_constants.dart';
 import 'price_row_widget.dart';
 
+// Widget mint accent (handoff widget-pricing.jsx WP_MINT / WP_MINT_DEEP).
+// Canonical widget mint == BbRedesignTokens.mintWidget (#3DD9B0).
+const Color _kWpMint = Color(0xFF3DD9B0);
+const Color _kWpMintDeep = Color(0xFF1FAF87);
+const double _kWpBandRadius = 12; // handoff radius-sm
+
 /// Price breakdown container showing room price, services, total, and deposit.
 ///
 /// Displays a summary of booking costs including:
@@ -156,18 +162,45 @@ class PriceBreakdownWidget extends StatelessWidget {
             isBold: true,
           ),
 
-          // Deposit info (hidden in no-payment mode)
+          // Deposit band (hidden in no-payment mode).
+          // Handoff widget-pricing.jsx WPDepositBand: mint-tinted panel
+          // (bg rgba(#3DD9B0,.10) / border rgba(#3DD9B0,.32), radius 12) with
+          // mint-deep label + amount. Same content as the prior plain line.
           if (showDeposit) ...[
-            const SizedBox(height: BBSpace.xs),
-            Text(
-              translations.depositWithPercentage(
-                formattedDeposit,
-                depositPercentage,
+            const SizedBox(height: BBSpace.sm),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: BBSpace.sm,
+                vertical: BBSpace.xs,
               ),
-              style: TextStyle(
-                fontSize: BBTypeBridges.fontSizeS,
-                color: colors.textSecondary,
-                fontFamily: BBTypeBridges.primaryFont,
+              decoration: BoxDecoration(
+                color: _kWpMint.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(_kWpBandRadius),
+                border: Border.all(color: _kWpMint.withValues(alpha: 0.32)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      translations.depositWithPercentage(
+                        formattedDeposit,
+                        depositPercentage,
+                      ),
+                      style: const TextStyle(
+                        fontSize: BBTypeBridges.fontSizeS,
+                        fontWeight: BBTypeBridges.weightBold,
+                        color: _kWpMintDeep,
+                        fontFamily: BBTypeBridges.primaryFont,
+                      ),
+                    ),
+                  ),
+                  const Icon(
+                    Icons.task_alt_rounded,
+                    size: 18,
+                    color: _kWpMintDeep,
+                  ),
+                ],
               ),
             ),
           ],

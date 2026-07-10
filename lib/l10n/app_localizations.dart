@@ -4974,6 +4974,84 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get ownerProfileTitle;
 
+  /// No description provided for @ownerProfileEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Account · Owner'**
+  String get ownerProfileEyebrow;
+
+  /// No description provided for @ownerProfileHostBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get ownerProfileHostBadge;
+
+  /// No description provided for @ownerProfileMemberSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Member since {year}'**
+  String ownerProfileMemberSince(int year);
+
+  /// No description provided for @ownerProfileEmailVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Email verified'**
+  String get ownerProfileEmailVerified;
+
+  /// No description provided for @ownerProfilePhoneAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone added'**
+  String get ownerProfilePhoneAdded;
+
+  /// No description provided for @ownerProfilePhoneMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone missing'**
+  String get ownerProfilePhoneMissing;
+
+  /// No description provided for @ownerProfileCompleteHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile'**
+  String get ownerProfileCompleteHeading;
+
+  /// No description provided for @ownerProfileCompleteRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{steps} more steps to 100%.'**
+  String ownerProfileCompleteRemaining(int steps);
+
+  /// No description provided for @ownerProfileCompleteCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get ownerProfileCompleteCta;
+
+  /// No description provided for @ownerProfileCompleteFilledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'filled'**
+  String get ownerProfileCompleteFilledLabel;
+
+  /// No description provided for @ownerProfileGroupApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Application'**
+  String get ownerProfileGroupApp;
+
+  /// No description provided for @ownerProfileGroupLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get ownerProfileGroupLegal;
+
+  /// No description provided for @ownerProfileTrialBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial period'**
+  String get ownerProfileTrialBadge;
+
   /// No description provided for @ownerProfileThemeLight.
   ///
   /// In en, this message translates to:

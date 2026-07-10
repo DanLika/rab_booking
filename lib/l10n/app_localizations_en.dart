@@ -2622,6 +2622,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerProfileTitle => 'Profile';
 
   @override
+  String get ownerProfileEyebrow => 'Account · Owner';
+
+  @override
+  String get ownerProfileHostBadge => 'Host';
+
+  @override
+  String ownerProfileMemberSince(int year) {
+    return 'Member since $year';
+  }
+
+  @override
+  String get ownerProfileEmailVerified => 'Email verified';
+
+  @override
+  String get ownerProfilePhoneAdded => 'Phone added';
+
+  @override
+  String get ownerProfilePhoneMissing => 'Phone missing';
+
+  @override
+  String get ownerProfileCompleteHeading => 'Complete your profile';
+
+  @override
+  String ownerProfileCompleteRemaining(int steps) {
+    return '$steps more steps to 100%.';
+  }
+
+  @override
+  String get ownerProfileCompleteCta => 'Finish';
+
+  @override
+  String get ownerProfileCompleteFilledLabel => 'filled';
+
+  @override
+  String get ownerProfileGroupApp => 'Application';
+
+  @override
+  String get ownerProfileGroupLegal => 'Legal';
+
+  @override
+  String get ownerProfileTrialBadge => 'Trial period';
+
+  @override
   String get ownerProfileThemeLight => 'Light';
 
   @override

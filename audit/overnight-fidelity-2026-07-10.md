@@ -454,3 +454,60 @@ structural / FROZEN-adjacent work (calendar painters, VerifyCard, master-detail 
   automatable — `canvaskit-tier3`). iOS plist untouched (prod).
 
 **PR:** #850 (squash-merged). Dev-only, no deploy. FROZEN: 0 touch.
+
+## Iteration 12 — profile-hub l10n remainder + iCal FeedCard footer bar (design/profile-remainder)
+
+Two top deferred-backlog items. Worktree `design/profile-remainder` off `origin/main`
+`85301145`. UI layer only — no auth/subscription/sync logic touched.
+
+### 1. Profile-hub remainder (`profile_screen.dart`)
+Iteration 5 (#844) shipped the Pro-card benefits grid + price. Recon of the REST of the
+1622-LOC hub found the structure/tokens **already faithful** to `profile-premium.jsx`
+(identity card, hero strip, radial gauge, verified chips, stat strip, 2-col desktop
+layout — all Bb*-migrated, `context.gradients` flat bg, no `colorScheme` drift; the 9
+`theme.dividerColor` dividers resolve from `AppColors` via ThemeData = on-palette, kept).
+The real remaining gap was **l10n debt**: ~13 hardcoded Croatian literals rendered
+verbatim in the EN locale. Migrated to ARB (en+hr):
+- Header eyebrow `RAČUN · VLASNIK` → `ownerProfileEyebrow`
+- Identity: `Domaćin` badge → `ownerProfileHostBadge`; `Član od {year}` →
+  `ownerProfileMemberSince`; `Email potvrđen`/`Telefon dodan`/`Telefon nedostaje` →
+  `ownerProfileEmailVerified`/`PhoneAdded`/`PhoneMissing`
+- Completion panel: `Dovršite profil`/`Još N koraka do 100%.`/`Dovrši`/`ispunjeno` →
+  `ownerProfileCompleteHeading`/`CompleteRemaining({steps})`/`CompleteCta`/`CompleteFilledLabel`
+- Pro card `Probni period` → `ownerProfileTrialBadge`
+- Group titles `Aplikacija`/`Pravno` → `ownerProfileGroupApp`/`GroupLegal`; danger-zone
+  `OPASNA ZONA` → existing `dangerZone` key (`.toUpperCase()`)
+
+**Data honesty (audit/135 ruling):** identity-chip + public-profile stay OMITTED (no
+backing feature). Stat strip stays kDebug/env-gated (3 of 4 metrics have no backend).
+No visual change in HR locale (values byte-identical); EN locale now shows English.
+
+### 2. iCal FeedCard footer action bar (`ical_sync_settings_screen.dart`)
+`_buildFeedRow` trailing `PopupMenuButton` (sync / pause-resume / edit / delete) →
+inline footer action `Row` per `ical.jsx` FeedCard §112: tertiary `Sinkroniziraj` text
+button (left) + `Spacer` + three `BbButton(asIcon, size: sm)` — secondary pause/resume,
+secondary edit, `destructiveSoft` delete (right). **Pure UI swap** — every button routes
+through the unchanged `_handleFeedAction`; sync callable / token / RFC-5545 / repository
+logic all FROZEN + untouched. All 4 actions preserved (handoff shows 3; pause/resume
+kept for parity, data-honest). Icon buttons carry `semanticLabel` for a11y.
+
+### Verify
+- `dart format` clean (Dart files; .arb skipped — JSON not Dart).
+- `flutter analyze` **0 net-new** (touched files clean; the 1 pre-existing warning is in
+  iter-5 `profile_pro_card_golden_test.dart`, unrelated; ~100 pre-existing test info lints
+  unchanged).
+- Full `flutter test` **1686 green** (baseline unchanged — no new test; net-neutral).
+- `--tags golden` **56 green** — no baseline moved (eyebrow/badges/completion labels + iCal
+  footer touch no golden seam surface; `profile_pro_card` 8 cells still pass).
+- `hardcoded_strings_guard_test` **green** — baseline SHRUNK: pruned the now-obsolete
+  `profile_screen.dart → 'Dovrši'` allowlist entry (guard's own ratchet-shrink assertion
+  demanded it after localization).
+- Eyeball: pro-card golden (mobile/tablet × light/dark) re-confirms card fidelity. Live web
+  eyeball deferred — CanvasKit post-login access not automatable (`canvaskit-tier3`) + host
+  disk at 99% (chrome build risk); l10n + footer are code-path + guard + golden verified.
+  iOS plist untouched (prod).
+
+### Deferred (carried)
+- Profile stat-strip live wiring (needs backend aggregate for rating/response metrics).
+- Remaining backlog: VerifyCard master-detail, calendar painter fidelity, subscription
+  tablet cap, widget guest-form Marionette eyeball — as carried from iter 11.

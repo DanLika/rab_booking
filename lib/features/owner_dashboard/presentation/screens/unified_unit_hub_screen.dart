@@ -50,6 +50,16 @@ const double _kTabletBreakpoint = 800.0;
 /// Breakpoint for mobile layout
 const double _kMobileBreakpoint = 600.0;
 
+/// Osnovno-tab vertical rhythm between major cards (gallery / header /
+/// info+capacity / price / services). Minimalist: uniform generous
+/// breathing room on the 8px scale (was a 20/16 mix).
+const double _kOsnovnoSectionGap = BBSpace.md; // 24
+
+/// 12px gap (off the 8px scale, but the deliberate handoff value between the
+/// price grid and its extras/hint rows). Named local const because BBSpace.xs2
+/// is deprecated-on-use.
+const double _kPriceExtrasGap = 12;
+
 /// Available status color (handoff `--bb-success`, dark lift in dark mode)
 Color _availableColor(ThemeData theme) => theme.brightness == Brightness.dark
     ? BBColor.successDarkMode
@@ -1113,25 +1123,29 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                             fontSize: 13,
                           ),
                         ),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: BBSpace.sm),
                         Icon(
                           Icons.euro_rounded,
                           size: 15,
                           color: bb.textTertiary,
                         ),
                         const SizedBox(width: 2),
-                        Builder(
-                          builder: (context) {
-                            final l10n = AppLocalizations.of(context);
-                            return Text(
-                              '${unit.pricePerNight.toStringAsFixed(0)}${l10n.unitHubPerNight}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: bb.textTertiary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            );
-                          },
+                        Flexible(
+                          child: Builder(
+                            builder: (context) {
+                              final l10n = AppLocalizations.of(context);
+                              return Text(
+                                '${unit.pricePerNight.toStringAsFixed(0)}${l10n.unitHubPerNight}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: bb.textTertiary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
@@ -1335,12 +1349,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         // Gallery (desktop only, when the unit carries photos) — handoff cover + 2×2
         if (isDesktop && unit.images.isNotEmpty) ...[
           _buildUnitGallery(c, unit.images),
-          const SizedBox(height: 20),
+          const SizedBox(height: _kOsnovnoSectionGap),
         ],
 
         // Header: title + subtitle, Kopiraj (duplicate) + Uredi (edit)
         _buildOsnovnoHeader(theme, c, l10n, unit, isMobile),
-        const SizedBox(height: 20),
+        const SizedBox(height: _kOsnovnoSectionGap),
 
         // 2-col cards: Informacije + Kapacitet (stack on mobile)
         if (isDesktop || isTablet)
@@ -1354,14 +1368,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           )
         else ...[
           informacijeCard,
-          const SizedBox(height: 16),
+          const SizedBox(height: BBSpace.sm),
           kapacitetCard,
         ],
-        const SizedBox(height: 16),
+        const SizedBox(height: _kOsnovnoSectionGap),
 
         // Cijena card: PriceTile grid + extra fees + Cjenovnik cross-reference banner
         _buildCijenaCard(c, l10n, unit),
-        const SizedBox(height: 16),
+        const SizedBox(height: _kOsnovnoSectionGap),
 
         // Additional services (loaded from Firestore)
         _buildServicesCard(),
@@ -1767,7 +1781,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             },
           ),
           if (extras.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: _kPriceExtrasGap),
             for (int i = 0; i < extras.length; i++)
               _kvRow(
                 c,
@@ -1776,7 +1790,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 isLast: i == extras.length - 1,
               ),
           ],
-          const SizedBox(height: 14),
+          const SizedBox(height: BBSpace.sm),
           _buildCjenovnikHint(c, l10n),
         ],
       ),
@@ -1790,7 +1804,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     bool emphasis = false,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: emphasis ? c.primary.withValues(alpha: 0.10) : c.surfaceVariant,
         borderRadius: BorderRadius.circular(12),

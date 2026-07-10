@@ -1068,3 +1068,59 @@ everywhere), **0 dark baselines moved** (dark confirmed untouched); re-blessed P
 read back = near-white shell, white cards clearly delineated (subtle shadow +
 hairline), crisp Inter (no tofu); full suite **1724 passed**. Dev-only, no deploy.
 Iterating on-device.
+
+---
+
+## Pass 3 (partial) — WHITESPACE, PADDING NORMALIZE & RESPONSIVE (2026-07-10, this PR)
+
+Scope: owner LIGHT surfaces (Pregled, Rezervacije, Units hub, Profil, iCal,
+Subscription, Notifications, FAQ). `arrange` lens: normalize off-scale/cramped
+spacing to the 8px BBSpace scale + more breathing room between major sections;
+verify responsive at 320/360/390/600/768/1024/1200/1440 and fix real overflow.
+FROZEN untouched (Cjenovnik content, wizard publish, timeline dimensions).
+Dark theme untouched (except a shared-layout golden re-bless, see below).
+
+**Spacing / padding normalized**
+- `unified_unit_hub_screen.dart` Osnovno tab — inter-card section gaps were a
+  `20/16` mix → unified to a single named `_kOsnovnoSectionGap = BBSpace.md (24)`
+  for consistent generous rhythm (gallery/header/info+capacity/price/services).
+  PriceTile: `all(14)` padding → `BBSpace.sm (16)` (matches BbCard); extras gap
+  `10`→named `_kPriceExtrasGap (12)`; hint gap `14`→`BBSpace.sm`. Unit-tile meta
+  gap `14`→`BBSpace.sm`.
+- `profile_screen.dart` — the 4 repeated inter-section gaps `isMobile ? 14 : 18`
+  → `isMobile ? BBSpace.sm(16) : BBSpace.md(24)` (more air between identity /
+  stats / pro / settings). Breakpoint `screenWidth >= 1024` (drives the 2-col
+  settings reflow) named `kProfileTwoColReflow` with a comment: it is a
+  column-count reflow, NOT a padding/type pivot, and content is clamped to 1100
+  via `BBContentMaxWidth` so the canonical 1200 would never trigger the handoff's
+  2-col layout — per audit/breakpoint-decide, reflow reads stay local consts.
+- `dashboard_overview_tab.dart` — mobile 2×2 KPI grid gutter `_kGap10 (10)` →
+  `BBSpace.sm (16)`, so the mobile grid uses the same card gutter as tablet/desktop
+  (which already used `BBSpace.sm`). Audit/124 premium-rhythm named consts left as-is
+  (deliberate handoff fidelity; not churned).
+
+**Responsive defects found + fixed (RED→GREEN seam tests)**
+1. Units hub unit-list tile meta Row (`unified_unit_hub_screen.dart`): the price
+   `Text` was unbounded in a Row inside a ~280px panel → a long (5-digit) nightly
+   price **overflowed** at narrow panel widths. Fix = wrap price in `Flexible` +
+   `maxLines:1` + ellipsis. New seam `unit_hub_tile_meta_overflow_test` (120–320px
+   × light/dark). Pre-fix RED verified (overflow @120px), post-fix GREEN.
+2. iCal feed-row title Row (`ical_sync_settings_screen.dart`): the trailing status
+   label was unbounded next to a Flexible name + fixed badge + dot → overflow risk
+   at very narrow widths. Fix = wrap status label in `Flexible` + ellipsis. New seam
+   `ical_feed_row_title_overflow_test` (120–360px).
+- Reviewed but NOT changed (no real defect; Expanded/Flexible already protects):
+  Pregled desktop header Row (greeting is `Expanded`, absorbs slack; selector+CTA
+  fit ≥600). No widget restructure anywhere.
+
+**Verify:** `dart format` clean; `flutter analyze` **0 net-new** (only my new test
+had 2 const hints, fixed; 90 pre-existing baseline issues elsewhere untouched);
+full suite **1743 passed** (incl. 2 new seams + existing responsive/overflow +
+faq/notifications/subscription smokes); `--tags golden` → **only** `pregled_panel`
+light+dark re-blessed (the mobile KPI-gutter change is a SHARED layout value, so
+both themes' image *size* shifted — NOT a dark color/value change; re-blessed PNGs
+read back = correct render, real Inter, consistent 16px gutter, no overflow, OLED
+black in dark). All other goldens unmoved. Live web owner eyeball was blocked by
+port-8097 contention with a parallel admin dev instance (my `flutter run` exit 144);
+time-boxed per layout-fix-gate-and-auth-free-eyeball — shipped on seam tests +
+golden read-back. Dev-only, no deploy.

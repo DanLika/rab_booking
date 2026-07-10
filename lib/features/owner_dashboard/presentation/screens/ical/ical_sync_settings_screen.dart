@@ -538,11 +538,15 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 ),
               ),
               const SizedBox(width: 6),
-              Text(
-                _getStatusLabel(feed.status, l10n),
-                style: BBType.caption(
-                  context,
-                ).copyWith(color: statusColor, fontWeight: FontWeight.w500),
+              Flexible(
+                child: Text(
+                  _getStatusLabel(feed.status, l10n),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: statusColor, fontWeight: FontWeight.w500),
+                ),
               ),
             ],
           ),

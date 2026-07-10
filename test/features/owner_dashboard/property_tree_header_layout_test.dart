@@ -55,7 +55,9 @@ PropertyTreeHeader _header(
     editTooltip: 'edit',
     deleteTooltip: 'delete',
     addTooltip: 'add',
-    unitsCountLabel: '12 jedinica',
+    // Real call site passes a bare number (handoff bb-tnum). A verbose
+    // "N jedinica" here would crush the Expanded name to ~22px on the panel.
+    unitsCountLabel: '12',
     onEdit: onEdit ?? () {},
     onDelete: onDelete ?? () {},
     onAdd: onAdd ?? () {},
@@ -97,6 +99,16 @@ void main() {
           final nameWidget = tester.widget<Text>(nameFinder);
           expect(nameWidget.maxLines, 1);
           expect(nameWidget.overflow, TextOverflow.ellipsis);
+
+          // Crush gate: the Expanded name must keep a readable slice of the row,
+          // not get squeezed to ~22px by a verbose trailing count. On the 280px
+          // panel the name owns all slack after the chevron/icon + fixed 84px
+          // action cluster + bare-number count.
+          expect(
+            tester.getSize(nameFinder).width,
+            greaterThan(60),
+            reason: 'property name crushed by trailing count @ ${w.toInt()}px',
+          );
 
           // All three action icons present.
           expect(find.byIcon(Icons.edit_outlined), findsOneWidget);

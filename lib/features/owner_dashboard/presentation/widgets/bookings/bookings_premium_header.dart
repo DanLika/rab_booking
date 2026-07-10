@@ -385,6 +385,8 @@ class _RezStatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
+    // Minimalist pass 3: mono primary tile+glyph+spark in light; dark unchanged.
+    final tone = BBColor.monoKpiTone(context, this.tone);
     final bool hasSpark = spark != null && spark!.length >= 2;
 
     return BbCard(

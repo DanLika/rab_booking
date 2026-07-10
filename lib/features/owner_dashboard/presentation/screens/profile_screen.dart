@@ -1556,7 +1556,12 @@ class _ProfilStatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
     final rd = BbRedesignTokens.of(context);
-    final tone = _resolveTone(c, rd);
+    // Minimalist pass 3: light collapses every stat tile to a single primary
+    // tint+glyph+spark; dark keeps the per-tone (status) resolution.
+    final bool isLight = Theme.of(context).brightness != Brightness.dark;
+    final tone = isLight
+        ? (bg: c.primary.withValues(alpha: 0.10), fg: c.primary)
+        : _resolveTone(c, rd);
     final hasDelta = stat.delta != null;
     final hasSpark = stat.spark != null && stat.spark!.isNotEmpty;
 

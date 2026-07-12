@@ -1563,6 +1563,36 @@ class WidgetTranslations {
     }
   }
 
+  /// Accessible name for the calendar zoom-in control (icon-only button).
+  String get zoomIn {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Povećaj kalendar';
+      case 'de':
+        return 'Kalender vergrößern';
+      case 'it':
+        return 'Ingrandisci calendario';
+      case 'en':
+      default:
+        return 'Zoom in on calendar';
+    }
+  }
+
+  /// Accessible name for the calendar zoom-out control (icon-only button).
+  String get zoomOut {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Smanji kalendar';
+      case 'de':
+        return 'Kalender verkleinern';
+      case 'it':
+        return 'Riduci calendario';
+      case 'en':
+      default:
+        return 'Zoom out on calendar';
+    }
+  }
+
   String get close {
     switch (locale.languageCode) {
       case 'hr':

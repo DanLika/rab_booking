@@ -490,6 +490,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             borderRadius: BBRadius.smAll,
             child: Image.asset(
               _getPlatformIconPath(feed.platform),
+              // The logo IS the information (which OTA this feed belongs to);
+              // without a label a screen reader announces an unnamed image.
+              semanticLabel: feed.platform.displayName,
               width: 50,
               height: 50,
               fit: BoxFit.cover,

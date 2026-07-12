@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/design/tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -402,22 +403,26 @@ class BookingActionBottomSheet extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
+        color: BBColor.errorSurface(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.shade300, width: 1.5),
+        border: Border.all(color: BBColor.errorBorder(context), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.warning_rounded, color: Colors.red.shade700, size: 20),
+              Icon(
+                Icons.warning_rounded,
+                color: BBColor.of(context).error,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'OVERBOOKING!',
                   style: TextStyle(
-                    color: Colors.red.shade800,
+                    color: BBColor.of(context).error,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -431,7 +436,7 @@ class BookingActionBottomSheet extends ConsumerWidget {
             Text(
               l10n.tooltipConflictWith,
               style: TextStyle(
-                color: Colors.red.shade700,
+                color: BBColor.of(context).error,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -447,14 +452,14 @@ class BookingActionBottomSheet extends ConsumerWidget {
                         Icon(
                           Icons.person,
                           size: 14,
-                          color: Colors.red.shade600,
+                          color: BBColor.of(context).error,
                         ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             '${conflict.guestName ?? l10n.bookingActionUnknownGuest} (${_formatDate(conflict.checkIn)} - ${_formatDate(conflict.checkOut)})',
                             style: TextStyle(
-                              color: Colors.red.shade700,
+                              color: BBColor.of(context).error,
                               fontSize: 12,
                             ),
                             maxLines: 1,
@@ -469,14 +474,17 @@ class BookingActionBottomSheet extends ConsumerWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.red.shade100,
+                              color: BBColor.errorSurface(
+                                context,
+                                strength: 1.6,
+                              ),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               conflict.sourceDisplayName,
                               style: TextStyle(
                                 fontSize: 10,
-                                color: Colors.red.shade800,
+                                color: BBColor.of(context).error,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -489,7 +497,7 @@ class BookingActionBottomSheet extends ConsumerWidget {
               Text(
                 l10n.tooltipMoreConflicts(conflictingBookings!.length - 3),
                 style: TextStyle(
-                  color: Colors.red.shade600,
+                  color: BBColor.of(context).error,
                   fontSize: 11,
                   fontStyle: FontStyle.italic,
                 ),

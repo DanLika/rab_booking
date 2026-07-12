@@ -585,41 +585,39 @@ class _BookingWidgetScreenState extends _BookingWidgetScreenStateBase
       // Support Icon - Bottom Left FAB (Micro Size)
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       // Icon-only support button, present on every widget page. #892 gave it an
-      // accessible name (it announced nothing before).
+      // accessible name; its hit box was still 24dp — half the 48dp minimum
+      // (WCAG 2.5.5), which a live semantics dump caught.
       //
-      // Its hit box is 24dp — below the 48dp minimum (WCAG 2.5.5). Known and
-      // deliberate: it is a micro-FAB, and the two ways to grow the target both
-      // cost more than they buy. Enlarging the RawMaterialButton also enlarges
-      // what it paints (it carries the fill and border), changing the design;
-      // and swapping it for an opaque 48dp GestureDetector around a plain
-      // container was tried and REVERTED — a semantics dump of the running app
-      // showed it silently dropped the accessible name, trading a size miss for
-      // a worse one. Revisit only with a change that keeps the label.
+      // The outer SizedBox was the limiter: it clamped the button to 24dp, so no
+      // tap-target setting could grow past it. RawMaterialButton already models
+      // exactly this split — `constraints` is what it PAINTS, and
+      // `materialTapTargetSize.padded` pads the TAP TARGET out to 48dp around it.
+      // So the micro-FAB keeps its 24dp look and becomes thumb-reachable, and the
+      // button (unlike the GestureDetector swap that was tried and reverted) keeps
+      // exposing its accessible name.
       floatingActionButton: Semantics(
         button: true,
         label: WidgetTranslations.of(context, ref).contactSupport,
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: RawMaterialButton(
-            onPressed: () {
-              // Launch email client
-              launchUrl(
-                Uri.parse('mailto:dusko@book-bed.com'),
-                // mode: LaunchMode.externalApplication, // Causes "invalid address" on Safari Web
-              );
-            },
-            fillColor: minimalistColors.backgroundTertiary,
-            // Use textPrimary for automatic theme adaptation (Black in Light, White in Dark)
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: BorderSide(color: minimalistColors.borderDefault),
-            ),
-            child: Icon(
-              Icons.headset_mic,
-              size: 16,
-              color: minimalistColors.textPrimary,
-            ),
+        child: RawMaterialButton(
+          constraints: const BoxConstraints.tightFor(width: 24, height: 24),
+          materialTapTargetSize: MaterialTapTargetSize.padded,
+          onPressed: () {
+            // Launch email client
+            launchUrl(
+              Uri.parse('mailto:dusko@book-bed.com'),
+              // mode: LaunchMode.externalApplication, // Causes "invalid address" on Safari Web
+            );
+          },
+          fillColor: minimalistColors.backgroundTertiary,
+          // Use textPrimary for automatic theme adaptation (Black in Light, White in Dark)
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: minimalistColors.borderDefault),
+          ),
+          child: Icon(
+            Icons.headset_mic,
+            size: 16,
+            color: minimalistColors.textPrimary,
           ),
         ),
       ),

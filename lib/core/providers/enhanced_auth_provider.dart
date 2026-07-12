@@ -481,6 +481,12 @@ abstract class _EnhancedAuthNotifierBase
       'avatar_url': userModel.avatarUrl,
       'displayName': userModel.displayName,
       'onboardingCompleted': userModel.onboardingCompleted,
+      // Canonical schema field (snake_case, mirrors `first_name`/`avatar_url`
+      // and what [UserModel] + the admin Users list actually read). Writing only
+      // the legacy camelCase `createdAt` made every app-created owner invisible
+      // to the admin list, whose `orderBy('created_at')` silently drops docs
+      // missing the field. Both are written so nothing reading the old name breaks.
+      'created_at': FieldValue.serverTimestamp(),
       'createdAt': FieldValue.serverTimestamp(),
       'profileCompleted': userModel.profileCompleted,
       'lastProvider': userModel.lastProvider,

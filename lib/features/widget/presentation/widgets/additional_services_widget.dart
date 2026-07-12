@@ -178,6 +178,10 @@ class AdditionalServicesWidget extends ConsumerWidget {
               children: [
                 Text(
                   service.name,
+                  // Owner-entered, so arbitrarily long — cap it rather than let it
+                  // push the price out of the row.
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: BBTypeBridges.fontSizeM,
                     fontWeight: FontWeight.bold,

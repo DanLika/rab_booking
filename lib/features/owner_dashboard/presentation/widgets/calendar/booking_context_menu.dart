@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../../../../../core/design/tokens.dart';
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -48,9 +49,9 @@ class BookingContextMenu extends StatelessWidget {
             child: Container(
               width: 220,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: BBColor.of(context).surface,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: BBColor.of(context).border),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -60,7 +61,7 @@ class BookingContextMenu extends StatelessWidget {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: booking.isExternalBooking
-                          ? Colors.orange.withAlpha((0.15 * 255).toInt())
+                          ? BBColor.of(context).warning.withValues(alpha: 0.15)
                           : AppColors.authPrimary.withAlpha(
                               (0.1 * 255).toInt(),
                             ),
@@ -101,30 +102,30 @@ class BookingContextMenu extends StatelessWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.orange.withAlpha(
-                                (0.2 * 255).toInt(),
-                              ),
+                              color: BBColor.of(
+                                context,
+                              ).warning.withAlpha((0.2 * 255).toInt()),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.orange.withAlpha(
-                                  (0.5 * 255).toInt(),
-                                ),
+                                color: BBColor.of(
+                                  context,
+                                ).warning.withAlpha((0.5 * 255).toInt()),
                               ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.link,
                                   size: 12,
-                                  color: Colors.orange,
+                                  color: BBColor.of(context).warning,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   booking.sourceDisplayName,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 10,
-                                    color: Colors.orange,
+                                    color: BBColor.of(context).warning,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -145,7 +146,7 @@ class BookingContextMenu extends StatelessWidget {
                           Icon(
                             Icons.info_outline,
                             size: 16,
-                            color: Colors.grey[600],
+                            color: BBColor.of(context).textSecondary,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -153,7 +154,7 @@ class BookingContextMenu extends StatelessWidget {
                               'Imported booking - manage on ${booking.sourceDisplayName}',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey[600],
+                                color: BBColor.of(context).textSecondary,
                                 fontStyle: FontStyle.italic,
                               ),
                             ),

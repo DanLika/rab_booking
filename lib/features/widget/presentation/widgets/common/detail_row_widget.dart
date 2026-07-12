@@ -115,7 +115,16 @@ class DetailRowWidget extends StatelessWidget {
         textAlign: TextAlign.end,
       );
     } else {
-      valueWidget = SelectableText(value, style: valueStyle);
+      // The non-autoSize path had no line cap, so a long single-token value (a
+      // guest name typed without spaces) ran past its row — the email field three
+      // lines up was already hardened, this one was not. Selectable is kept: the
+      // guest copies values like the booking reference out of this card.
+      valueWidget = SelectableText(
+        value,
+        style: valueStyle,
+        maxLines: 2,
+        textAlign: TextAlign.end,
+      );
     }
 
     // Bug #46 Fix: Add Semantics widget for accessibility (screen readers)

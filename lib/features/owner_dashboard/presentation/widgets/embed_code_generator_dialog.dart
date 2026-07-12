@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/tokens.dart';
 import 'package:flutter/services.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/config/environment.dart';
@@ -258,14 +259,14 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
           children: [
             Row(
               children: [
-                Icon(icon, size: 20, color: Colors.grey.shade700),
+                Icon(icon, size: 20, color: BBColor.of(context).textSecondary),
                 const SizedBox(width: 8),
                 Text(
                   title,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
+                    color: BBColor.of(context).textSecondary,
                   ),
                 ),
               ],
@@ -348,7 +349,10 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
             const SizedBox(height: 4),
             Text(
               'Idealno za dijeljenje na društvenim mrežama, emailom ili kao direktni link',
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 11,
+                color: BBColor.of(context).textSecondary,
+              ),
             ),
             const SizedBox(height: 8),
             Row(
@@ -421,16 +425,19 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
             const SizedBox(height: 8),
             Text(
               'Zalijepi ovaj kod na svoju web stranicu',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 13,
+                color: BBColor.of(context).textSecondary,
+              ),
             ),
             const SizedBox(height: 12),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: BBColor.of(context).surfaceVariant,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: BBColor.of(context).border),
               ),
               child: _buildHighlightedEmbedCode(
                 code: code,

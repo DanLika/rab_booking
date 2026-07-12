@@ -1,4 +1,5 @@
 import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
+import type {Response as ExpressResponse} from "express";
 import {defineSecret} from "firebase-functions/params";
 import {
   sendBookingApprovedEmail,
@@ -856,6 +857,589 @@ export const createStripeCheckoutSession = onCall({
  * - Uses atomic transaction to prevent race conditions
  * - No more "ghost bookings" - only paid bookings exist
  */
+// ─────────────────────────────────────────────────────────────────────────
+// Stripe webhook event handlers (extracted verbatim from handleStripeWebhook
+// on 2026-07-11 — file split only, ZERO behavior change). The parent keeps
+// the `event.type` if/else dispatch so the discriminated-union narrowing of
+// `event.data.object` is preserved at each call site; bodies moved as-is,
+// including the SF-038 compensating `eventRef.delete()` on the 500 path.
+// ─────────────────────────────────────────────────────────────────────────
+type StripeWebhookEvent = Awaited<
+  ReturnType<ReturnType<typeof getStripeClient>["webhooks"]["constructEvent"]>
+>;
+type WebhookEventRef = FirebaseFirestore.DocumentReference;
+
+async function handleChargeRefunded(
+  event: Extract<StripeWebhookEvent, {type: "charge.refunded"}>,
+  res: ExpressResponse,
+  eventRef: WebhookEventRef
+): Promise<void> {
+  // v22: event.data.object narrows via event.type discriminant.
+  const charge = event.data.object;
+  const paymentIntentId = charge.payment_intent as string;
+  const amountRefunded = charge.amount_refunded; // In cents
+
+  logInfo(`Processing charge.refunded: ${charge.id}`, {
+    paymentIntentId,
+    amountRefunded,
+    refunded: charge.refunded,
+  });
+
+  if (!paymentIntentId) {
+    logError("Missing payment_intent_id in charge.refunded event");
+    res.status(400).send("Missing payment intent ID");
+    return;
+  }
+
+  try {
+    // Find booking by payment_intent_id
+    // NOTE: This requires payment_intent_id to be indexed for collectionGroup queries
+    const bookingsSnapshot = await db
+      .collectionGroup("bookings")
+      .where("payment_intent_id", "==", paymentIntentId)
+      .limit(1)
+      .get();
+
+    if (bookingsSnapshot.empty) {
+      logWarn(`No booking found for payment intent: ${paymentIntentId}`);
+      // This is not necessarily an error - might be a payment that wasn't linked to a booking
+      res.json({received: true, status: "no_booking_found"});
+      return;
+    }
+
+    const bookingDoc = bookingsSnapshot.docs[0];
+    const bookingId = bookingDoc.id;
+
+    // Update booking with refund info
+    // NOTE: charge.amount_refunded is the TOTAL amount refunded for the charge
+    const refundAmountEur = amountRefunded / 100;
+
+    await bookingDoc.ref.update({
+      refund_status: "processed",
+      refund_amount: refundAmountEur,
+      // If full refund, consider updating status to cancelled if not already?
+      // But let's stick to syncing refund data for now to avoid side effects.
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    logSuccess(`Booking ${bookingId} updated with refund info`, {
+      refundAmount: refundAmountEur,
+      chargeId: charge.id,
+    });
+
+    res.json({received: true, booking_id: bookingId, status: "refund_synced"});
+  } catch (error: any) {
+    logError("Error processing charge.refunded", error);
+    // SF-038: compensating delete — let Stripe retry re-enter the handler.
+    await eventRef.delete().catch(() => {});
+    res.status(500).send("Internal server error");
+  }
+}
+
+async function handleCheckoutSessionExpired(
+  event: Extract<StripeWebhookEvent, {type: "checkout.session.expired"}>,
+  res: ExpressResponse
+): Promise<void> {
+  const session = event.data.object;
+  const metadata = session.metadata;
+
+  // SUBSCRIPTION CHECKOUT EXPIRED - no action needed
+  if (session.mode === "subscription") {
+    logInfo("Subscription checkout session expired (no action needed)");
+    res.json({received: true});
+    return;
+  }
+
+  // BOOKING CHECKOUT EXPIRED - cleanup placeholder
+  const placeholderBookingId = metadata?.placeholder_booking_id;
+
+  if (!placeholderBookingId) {
+    logInfo("Session expired but no placeholder_booking_id in metadata");
+    res.json({received: true});
+    return;
+  }
+
+  logInfo(`Processing checkout.session.expired for placeholder: ${placeholderBookingId}`);
+
+  const propertyId = metadata?.property_id;
+  const unitId = metadata?.unit_id;
+
+  if (propertyId && unitId) {
+    try {
+      // Direct delete using path
+      const placeholderRef = db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("units")
+        .doc(unitId)
+        .collection("bookings")
+        .doc(placeholderBookingId);
+
+      // Check if it's still pending before deleting
+      const doc = await placeholderRef.get();
+      if (doc.exists && doc.data()?.status === "pending") {
+        await placeholderRef.delete();
+        logSuccess(`Expired placeholder booking ${placeholderBookingId} deleted`);
+      } else {
+        logInfo(`Placeholder ${placeholderBookingId} not pending or not found, skipping delete`);
+      }
+    } catch (error) {
+      logError(`Failed to delete expired placeholder ${placeholderBookingId}`, error);
+    }
+  }
+
+  res.json({received: true, status: "placeholder_cleaned"});
+}
+
+async function handleSubscriptionDeleted(
+  event: Extract<StripeWebhookEvent, {type: "customer.subscription.deleted"}>,
+  res: ExpressResponse,
+  eventRef: WebhookEventRef
+): Promise<void> {
+  // ========================================================================
+  // SUBSCRIPTION CANCELLATION
+  // ========================================================================
+  const subscription = event.data.object;
+  const subscriptionId = subscription.id;
+
+  logInfo(`Processing customer.subscription.deleted for subscription: ${subscriptionId}`);
+
+  try {
+    // Find user by stripeSubscriptionId
+    const usersSnapshot = await db
+      .collection("users")
+      .where("stripeSubscriptionId", "==", subscriptionId)
+      .limit(1)
+      .get();
+
+    if (usersSnapshot.empty) {
+      logError(`No user found with subscription ID: ${subscriptionId}`);
+      res.status(404).send("User not found");
+      return;
+    }
+
+    const userDoc = usersSnapshot.docs[0];
+    const userId = userDoc.id;
+    const userData = userDoc.data();
+
+    // SF-vibe57 H-09: belt+suspenders Connect-account correlation after H-01.
+    // H-01 deny-list prevents client-side stripeSubscriptionId squat, but if
+    // an attacker beat us to it (or webhook fires on pre-H-01 corrupt doc),
+    // verify stripeCustomerId matches subscription.customer before downgrade.
+    // Mismatch → log + skip (do NOT retry — data integrity issue, not transient).
+    const stripeCustomerId = typeof subscription.customer === "string" ?
+      subscription.customer :
+      subscription.customer?.id;
+    if (userData?.stripeCustomerId && stripeCustomerId &&
+          userData.stripeCustomerId !== stripeCustomerId) {
+      logError(
+        `[H-09] stripeCustomerId mismatch on subscription.deleted for ${userId}: ` +
+          `doc=${userData.stripeCustomerId} stripe=${stripeCustomerId} sub=${subscriptionId}`
+      );
+      res.json({received: true, status: "customer_mismatch_skipped"});
+      return;
+    }
+
+    // Lifetime grant survives Stripe sub cancel. audit/52 F-52-02.
+    if (userData?.accountType === "lifetime") {
+      await userDoc.ref.update({
+        stripeSubscriptionStatus: "canceled",
+        stripeSubscriptionId: admin.firestore.FieldValue.delete(),
+        statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
+        statusChangedBy: "system_webhook",
+        statusChangeReason: "subscription_canceled_lifetime_user_unchanged",
+      });
+      logSuccess(`Lifetime user ${userId}: entitlement preserved`);
+      res.json({received: true, status: "lifetime_user_protected"});
+      return;
+    }
+
+    await userDoc.ref.update({
+      accountStatus: "trial_expired",
+      stripeSubscriptionStatus: "canceled",
+      statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
+      statusChangedBy: "system_webhook",
+      statusChangeReason: "subscription_canceled_by_stripe",
+    });
+
+    logSuccess(`User ${userId} downgraded to trial_expired due to subscription cancellation`);
+    res.json({received: true, status: "subscription_canceled"});
+  } catch (error: any) {
+    logError("Error processing customer.subscription.deleted", error);
+    // SF-038: compensating delete — let Stripe retry re-enter the handler.
+    // Without this, a transient Firestore failure here would mark the event
+    // "duplicate" on every subsequent retry, leaving a cancelled subscriber
+    // with active accountStatus indefinitely (security-review F-PR-WEBHOOK-DEDUP-AUTHZ-LOSS).
+    await eventRef.delete().catch(() => {});
+    res.status(500).send("Internal server error");
+  }
+}
+
+async function handleInvoicePaid(
+  event: Extract<StripeWebhookEvent, {type: "invoice.paid"}>,
+  res: ExpressResponse,
+  eventRef: WebhookEventRef
+): Promise<void> {
+  // ========================================================================
+  // SUBSCRIPTION RENEWAL / PAYMENT SUCCESS
+  // ========================================================================
+  const invoice = event.data.object;
+  // Cast to any to handle potential type definition mismatches
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const subscription = (invoice as any).subscription;
+  const subscriptionId = typeof subscription === "string" ?
+    subscription :
+    subscription?.id;
+
+  // Only care if it's a subscription invoice
+  if (!subscriptionId) {
+    res.json({received: true});
+    return;
+  }
+
+  logInfo(`Processing invoice.paid for subscription: ${subscriptionId}`);
+
+  try {
+    const usersSnapshot = await db
+      .collection("users")
+      .where("stripeSubscriptionId", "==", subscriptionId)
+      .limit(1)
+      .get();
+
+    if (usersSnapshot.empty) {
+      // Might be a new subscription where checkout.session.completed hasn't fired yet
+      logWarn(`No user found for invoice.paid (sub: ${subscriptionId}) - skipping`);
+      res.json({received: true, status: "user_not_found"});
+      return;
+    }
+
+    const userDoc = usersSnapshot.docs[0];
+    const userId = userDoc.id;
+    const userData = userDoc.data();
+
+    // SF-vibe57 H-09: belt+suspenders Connect-account correlation (parallel
+    // to customer.subscription.deleted handler above). invoice.customer is
+    // the canonical Stripe customer for the invoice; cross-check with
+    // userData.stripeCustomerId to catch any H-01 pre-fix squat residue.
+    const invoiceCustomerId = typeof invoice.customer === "string" ?
+      invoice.customer :
+      invoice.customer?.id;
+    if (userData?.stripeCustomerId && invoiceCustomerId &&
+          userData.stripeCustomerId !== invoiceCustomerId) {
+      logError(
+        `[H-09] stripeCustomerId mismatch on invoice.paid for ${userId}: ` +
+          `doc=${userData.stripeCustomerId} stripe=${invoiceCustomerId} sub=${subscriptionId}`
+      );
+      res.json({received: true, status: "customer_mismatch_skipped"});
+      return;
+    }
+
+    // Ensure account is active (idempotent)
+    await userDoc.ref.update({
+      accountStatus: "active",
+      stripeSubscriptionStatus: "active",
+      lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    logSuccess(`User ${userId} subscription confirmed active via invoice.paid`);
+    res.json({received: true, status: "subscription_renewed"});
+  } catch (error: any) {
+    logError("Error processing invoice.paid", error);
+    // SF-038 compensating delete (F-NEW-01 re-apply): without this, a
+    // transient Firestore failure here strands a subscription renewal —
+    // dedup marks the event processed, retry short-circuits, lastPaymentAt
+    // never updates, and a subsequent customer.subscription.deleted
+    // downgrade looks unprovoked.
+    await eventRef.delete().catch(() => {});
+    res.status(500).send("Internal server error");
+  }
+}
+
+async function handleCheckoutSessionCompleted(
+  event: Extract<StripeWebhookEvent, {type: "checkout.session.completed"}>,
+  res: ExpressResponse,
+  eventRef: WebhookEventRef
+): Promise<void> {
+  const session = event.data.object;
+  const metadata = session.metadata;
+
+  // ========================================================================
+  // HANDLE SUBSCRIPTION CHECKOUT
+  // ========================================================================
+  if (session.mode === "subscription") {
+    logInfo(`Processing subscription checkout for session: ${session.id}`);
+
+    const userId = session.client_reference_id || metadata?.userId;
+    const customerId = session.customer as string;
+    const subscriptionId = session.subscription as string;
+
+    if (!userId) {
+      logError("Missing client_reference_id or metadata.userId in subscription session");
+      res.status(400).send("Missing user ID");
+      return;
+    }
+
+    try {
+      // Activate user subscription
+      await db.collection("users").doc(userId).update({
+        accountStatus: "active",
+        accountType: "premium",
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId,
+        stripeSubscriptionStatus: "active",
+        statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
+        statusChangedBy: "system_webhook",
+        statusChangeReason: "subscription_purchased",
+      });
+
+      logSuccess(`User ${userId} upgraded to active subscription`);
+      res.json({received: true, status: "subscription_activated"});
+      return;
+    } catch (error: any) {
+      logError("Error activating subscription", error);
+      // SF-038 compensating delete (F-NEW-01 re-apply): without this, a
+      // transient Firestore failure strands a paid subscription — user
+      // paid Stripe but never gets accountStatus=active / accountType=premium.
+      await eventRef.delete().catch(() => {});
+      res.status(500).send("Internal server error");
+      return;
+    }
+  }
+
+  // ========================================================================
+  // HANDLE BOOKING WIDGET CHECKOUT (mode="payment")
+  // ========================================================================
+
+  // Validate required metadata
+  if (!metadata?.unit_id || !metadata?.property_id || !metadata?.owner_id) {
+    logError("Missing required metadata in session", null, {
+      has_unit_id: !!metadata?.unit_id,
+      has_property_id: !!metadata?.property_id,
+      has_owner_id: !!metadata?.owner_id,
+      has_guest_email: !!metadata?.guest_email,
+      has_guest_phone: !!metadata?.guest_phone,
+    });
+    res.status(400).send("Missing required booking metadata");
+    return;
+  }
+
+  try {
+    // ========================================================================
+    // NEW FLOW: Update placeholder booking (not create new booking)
+    // ========================================================================
+    const placeholderBookingId = metadata.placeholder_booking_id;
+
+    if (!placeholderBookingId) {
+      logError("Missing placeholder_booking_id in webhook metadata");
+      res.status(400).send("Missing placeholder booking ID - outdated checkout session");
+      return;
+    }
+
+    logInfo(`Processing Stripe webhook for placeholder booking: ${placeholderBookingId}`);
+
+    // Extract property_id and unit_id from metadata to construct direct path
+    // This is more reliable than collection group query with documentId()
+    const propertyIdFromMeta = metadata.property_id;
+    const unitIdFromMeta = metadata.unit_id;
+
+    if (!propertyIdFromMeta || !unitIdFromMeta) {
+      logError("Missing property_id or unit_id in session metadata");
+      res.status(400).send("Missing property/unit ID in session metadata");
+      return;
+    }
+
+    // NEW STRUCTURE: Fetch placeholder booking using direct subcollection path
+    const placeholderBookingRef = db
+      .collection("properties")
+      .doc(propertyIdFromMeta)
+      .collection("units")
+      .doc(unitIdFromMeta)
+      .collection("bookings")
+      .doc(placeholderBookingId);
+
+    const placeholderBookingSnap = await placeholderBookingRef.get();
+
+    if (!placeholderBookingSnap.exists) {
+      logError(`Placeholder booking not found: ${placeholderBookingId}`);
+      res.status(404).send("Placeholder booking not found - may have expired");
+      return;
+    }
+
+    const placeholderData = placeholderBookingSnap.data();
+
+    // IDEMPOTENCY CHECK: Check if placeholder already updated (webhook fired twice)
+    if (placeholderData?.status === "confirmed" && placeholderData?.stripe_session_id === session.id) {
+      logInfo(`Webhook already processed - booking ${placeholderBookingId} already confirmed`);
+      res.json({
+        received: true,
+        booking_id: placeholderBookingId,
+        booking_reference: placeholderData.booking_reference,
+        status: "already_processed",
+        message: "Booking already confirmed for this session",
+      });
+      return;
+    }
+
+    // Validate placeholder is actually pending status (created before Stripe checkout)
+    if (placeholderData?.status !== "pending") {
+      logError(`Placeholder booking has invalid status: ${placeholderData?.status}`);
+      res.status(400).send(`Invalid placeholder status: ${placeholderData?.status}`);
+      return;
+    }
+
+    logInfo(`Updating placeholder booking ${placeholderBookingId} to confirmed status`);
+
+    // Update placeholder booking to confirmed
+    await placeholderBookingRef.update({
+      status: "confirmed", // Stripe payments are always confirmed (paid)
+      payment_status: "paid",
+      paid_amount: Number(placeholderData.deposit_amount),
+      // Stripe payment details
+      stripe_session_id: session.id,
+      payment_intent_id: session.payment_intent as string,
+      paid_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      // Remove placeholder expiration field (no longer needed)
+      stripe_pending_expires_at: admin.firestore.FieldValue.delete(),
+    });
+
+    logInfo(`Placeholder booking ${placeholderBookingId} confirmed after Stripe payment`);
+
+    // Extract plaintext access token from metadata (for email "View my reservation" link)
+    const accessTokenPlaintext = metadata.access_token_plaintext;
+
+    if (!accessTokenPlaintext) {
+      logWarn("Missing access_token_plaintext in metadata - email link may not work");
+    }
+
+    // Prepare result for email sending (match old structure)
+    const result = {
+      bookingId: placeholderBookingId,
+      bookingData: placeholderData,
+      accessToken: accessTokenPlaintext || "", // Plaintext token for email link
+    };
+
+    // Extract booking details for emails
+    const unitId = placeholderData.unit_id;
+    const propertyId = placeholderData.property_id;
+    const ownerId = placeholderData.owner_id;
+    const guestName = placeholderData.guest_name;
+    const guestEmail = placeholderData.guest_email;
+    const guestPhone = placeholderData.guest_phone;
+    const guestCount = placeholderData.guest_count;
+    const bookingReference = placeholderData.booking_reference;
+    const checkIn = safeToDate(placeholderData.check_in, "check_in");
+    const checkOut = safeToDate(placeholderData.check_out, "check_out");
+    const totalPrice = placeholderData.total_price;
+    const depositAmount = placeholderData.deposit_amount;
+
+    // Fetch unit and property details for emails
+    // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
+    const propertyDoc = await db.collection("properties").doc(propertyId).get();
+    const propertyData = propertyDoc.data();
+    const unitDoc = await db
+      .collection("properties")
+      .doc(propertyId)
+      .collection("units")
+      .doc(unitId)
+      .get();
+    const unitData = unitDoc.data();
+
+    // Send confirmation email to guest (with "View my reservation" button)
+    try {
+      await sendBookingApprovedEmail(
+        guestEmail,
+        guestName,
+        bookingReference,
+        checkIn,
+        checkOut,
+        propertyData?.name || "Property",
+        propertyData?.contact_email,
+        result.accessToken, // Plaintext token for email link
+        totalPrice,
+        depositAmount,
+        propertyId // For subdomain in email links
+      );
+      logInfo("Confirmation email sent to guest");
+    } catch (error) {
+      logError("Failed to send confirmation email to guest", error);
+    }
+
+    // Send notification email to owner (respect preferences)
+    try {
+      const ownerDoc = await db.collection("users").doc(ownerId).get();
+      const ownerData = ownerDoc.data();
+
+      if (ownerData?.email) {
+        await sendEmailIfAllowed(
+          ownerId,
+          "payments",
+          async () => {
+            await sendOwnerNotificationEmail(
+              ownerData.email,
+              bookingReference,
+              guestName,
+              guestEmail,
+              guestPhone || undefined,
+              propertyData?.name || "Property",
+              unitData?.name || "Unit",
+              checkIn,
+              checkOut,
+              guestCount,
+              totalPrice,
+              depositAmount
+            );
+          },
+          false // Respect preferences: owner can opt-out of payment notifications
+        );
+        logInfo(`Owner payment notification processed (sent if preferences allow): ${ownerData.email}`);
+      }
+    } catch (error) {
+      logError("Failed to send notification email to owner", error);
+    }
+
+    // Create in-app payment notification for owner
+    try {
+      await createPaymentNotification(
+        ownerId,
+        result.bookingId,
+        guestName,
+        depositAmount
+      );
+      logInfo(`In-app payment notification created for owner ${ownerId}`);
+    } catch (notificationError) {
+      logError("Failed to create in-app payment notification", notificationError);
+    }
+
+    // Send push notification for payment (non-blocking)
+    sendPaymentPushNotification(
+      ownerId,
+      result.bookingId,
+      guestName,
+      depositAmount,
+      "EUR"
+    ).catch((err) => {
+      logError("Failed to send payment push notification", err);
+    });
+
+    res.json({
+      received: true,
+      booking_id: result.bookingId,
+      booking_reference: bookingReference,
+      status: "confirmed",
+    });
+  } catch (error: any) {
+    logError("Error processing webhook", error);
+    // SF-038 compensating delete (F-NEW-01 re-apply): WORST-CASE PATH —
+    // without this, a transient Firestore failure mid-booking-confirmation
+    // strands a paid booking. Placeholder stays "pending", cleanupExpired
+    // PendingBookings deletes it 15 min later → guest paid Stripe, no
+    // booking exists, no refund automation.
+    await eventRef.delete().catch(() => {});
+    res.status(500).send("Internal server error");
+  }
+}
+
 export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeWebhookSecret, "RESEND_API_KEY"]}, async (req, res) => {
   // F-93-03 (SF-071): Stripe webhooks are POST-only per Stripe's API contract.
   // Any GET/PUT/PATCH/DELETE/OPTIONS hitting this endpoint is a probe; reject
@@ -884,7 +1468,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
   // v22 cjs entry decouples namespace types from default import; rely on
   // inferred return type from `webhooks.constructEvent`.
-  let event: Awaited<ReturnType<ReturnType<typeof getStripeClient>["webhooks"]["constructEvent"]>>;
+  let event: StripeWebhookEvent;
 
   try {
     const stripeClient = getStripeClient();
@@ -951,547 +1535,15 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
   // Handle the event
   if (event.type === "charge.refunded") {
-    // v22: event.data.object narrows via event.type discriminant.
-    const charge = event.data.object;
-    const paymentIntentId = charge.payment_intent as string;
-    const amountRefunded = charge.amount_refunded; // In cents
-
-    logInfo(`Processing charge.refunded: ${charge.id}`, {
-      paymentIntentId,
-      amountRefunded,
-      refunded: charge.refunded,
-    });
-
-    if (!paymentIntentId) {
-      logError("Missing payment_intent_id in charge.refunded event");
-      res.status(400).send("Missing payment intent ID");
-      return;
-    }
-
-    try {
-      // Find booking by payment_intent_id
-      // NOTE: This requires payment_intent_id to be indexed for collectionGroup queries
-      const bookingsSnapshot = await db
-        .collectionGroup("bookings")
-        .where("payment_intent_id", "==", paymentIntentId)
-        .limit(1)
-        .get();
-
-      if (bookingsSnapshot.empty) {
-        logWarn(`No booking found for payment intent: ${paymentIntentId}`);
-        // This is not necessarily an error - might be a payment that wasn't linked to a booking
-        res.json({received: true, status: "no_booking_found"});
-        return;
-      }
-
-      const bookingDoc = bookingsSnapshot.docs[0];
-      const bookingId = bookingDoc.id;
-
-      // Update booking with refund info
-      // NOTE: charge.amount_refunded is the TOTAL amount refunded for the charge
-      const refundAmountEur = amountRefunded / 100;
-
-      await bookingDoc.ref.update({
-        refund_status: "processed",
-        refund_amount: refundAmountEur,
-        // If full refund, consider updating status to cancelled if not already?
-        // But let's stick to syncing refund data for now to avoid side effects.
-        updated_at: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      logSuccess(`Booking ${bookingId} updated with refund info`, {
-        refundAmount: refundAmountEur,
-        chargeId: charge.id,
-      });
-
-      res.json({received: true, booking_id: bookingId, status: "refund_synced"});
-    } catch (error: any) {
-      logError("Error processing charge.refunded", error);
-      // SF-038: compensating delete — let Stripe retry re-enter the handler.
-      await eventRef.delete().catch(() => {});
-      res.status(500).send("Internal server error");
-    }
+    await handleChargeRefunded(event, res, eventRef);
   } else if (event.type === "checkout.session.expired") {
-    const session = event.data.object;
-    const metadata = session.metadata;
-
-    // SUBSCRIPTION CHECKOUT EXPIRED - no action needed
-    if (session.mode === "subscription") {
-      logInfo("Subscription checkout session expired (no action needed)");
-      res.json({received: true});
-      return;
-    }
-
-    // BOOKING CHECKOUT EXPIRED - cleanup placeholder
-    const placeholderBookingId = metadata?.placeholder_booking_id;
-
-    if (!placeholderBookingId) {
-      logInfo("Session expired but no placeholder_booking_id in metadata");
-      res.json({received: true});
-      return;
-    }
-
-    logInfo(`Processing checkout.session.expired for placeholder: ${placeholderBookingId}`);
-
-    const propertyId = metadata?.property_id;
-    const unitId = metadata?.unit_id;
-
-    if (propertyId && unitId) {
-      try {
-        // Direct delete using path
-        const placeholderRef = db
-          .collection("properties")
-          .doc(propertyId)
-          .collection("units")
-          .doc(unitId)
-          .collection("bookings")
-          .doc(placeholderBookingId);
-
-        // Check if it's still pending before deleting
-        const doc = await placeholderRef.get();
-        if (doc.exists && doc.data()?.status === "pending") {
-          await placeholderRef.delete();
-          logSuccess(`Expired placeholder booking ${placeholderBookingId} deleted`);
-        } else {
-          logInfo(`Placeholder ${placeholderBookingId} not pending or not found, skipping delete`);
-        }
-      } catch (error) {
-        logError(`Failed to delete expired placeholder ${placeholderBookingId}`, error);
-      }
-    }
-
-    res.json({received: true, status: "placeholder_cleaned"});
+    await handleCheckoutSessionExpired(event, res);
   } else if (event.type === "customer.subscription.deleted") {
-    // ========================================================================
-    // SUBSCRIPTION CANCELLATION
-    // ========================================================================
-    const subscription = event.data.object;
-    const subscriptionId = subscription.id;
-
-    logInfo(`Processing customer.subscription.deleted for subscription: ${subscriptionId}`);
-
-    try {
-      // Find user by stripeSubscriptionId
-      const usersSnapshot = await db
-        .collection("users")
-        .where("stripeSubscriptionId", "==", subscriptionId)
-        .limit(1)
-        .get();
-
-      if (usersSnapshot.empty) {
-        logError(`No user found with subscription ID: ${subscriptionId}`);
-        res.status(404).send("User not found");
-        return;
-      }
-
-      const userDoc = usersSnapshot.docs[0];
-      const userId = userDoc.id;
-      const userData = userDoc.data();
-
-      // SF-vibe57 H-09: belt+suspenders Connect-account correlation after H-01.
-      // H-01 deny-list prevents client-side stripeSubscriptionId squat, but if
-      // an attacker beat us to it (or webhook fires on pre-H-01 corrupt doc),
-      // verify stripeCustomerId matches subscription.customer before downgrade.
-      // Mismatch → log + skip (do NOT retry — data integrity issue, not transient).
-      const stripeCustomerId = typeof subscription.customer === "string" ?
-        subscription.customer :
-        subscription.customer?.id;
-      if (userData?.stripeCustomerId && stripeCustomerId &&
-          userData.stripeCustomerId !== stripeCustomerId) {
-        logError(
-          `[H-09] stripeCustomerId mismatch on subscription.deleted for ${userId}: ` +
-          `doc=${userData.stripeCustomerId} stripe=${stripeCustomerId} sub=${subscriptionId}`
-        );
-        res.json({received: true, status: "customer_mismatch_skipped"});
-        return;
-      }
-
-      // Lifetime grant survives Stripe sub cancel. audit/52 F-52-02.
-      if (userData?.accountType === "lifetime") {
-        await userDoc.ref.update({
-          stripeSubscriptionStatus: "canceled",
-          stripeSubscriptionId: admin.firestore.FieldValue.delete(),
-          statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
-          statusChangedBy: "system_webhook",
-          statusChangeReason: "subscription_canceled_lifetime_user_unchanged",
-        });
-        logSuccess(`Lifetime user ${userId}: entitlement preserved`);
-        res.json({received: true, status: "lifetime_user_protected"});
-        return;
-      }
-
-      await userDoc.ref.update({
-        accountStatus: "trial_expired",
-        stripeSubscriptionStatus: "canceled",
-        statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
-        statusChangedBy: "system_webhook",
-        statusChangeReason: "subscription_canceled_by_stripe",
-      });
-
-      logSuccess(`User ${userId} downgraded to trial_expired due to subscription cancellation`);
-      res.json({received: true, status: "subscription_canceled"});
-    } catch (error: any) {
-      logError("Error processing customer.subscription.deleted", error);
-      // SF-038: compensating delete — let Stripe retry re-enter the handler.
-      // Without this, a transient Firestore failure here would mark the event
-      // "duplicate" on every subsequent retry, leaving a cancelled subscriber
-      // with active accountStatus indefinitely (security-review F-PR-WEBHOOK-DEDUP-AUTHZ-LOSS).
-      await eventRef.delete().catch(() => {});
-      res.status(500).send("Internal server error");
-    }
+    await handleSubscriptionDeleted(event, res, eventRef);
   } else if (event.type === "invoice.paid") {
-    // ========================================================================
-    // SUBSCRIPTION RENEWAL / PAYMENT SUCCESS
-    // ========================================================================
-    const invoice = event.data.object;
-    // Cast to any to handle potential type definition mismatches
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const subscription = (invoice as any).subscription;
-    const subscriptionId = typeof subscription === "string" ?
-      subscription :
-      subscription?.id;
-
-    // Only care if it's a subscription invoice
-    if (!subscriptionId) {
-      res.json({received: true});
-      return;
-    }
-
-    logInfo(`Processing invoice.paid for subscription: ${subscriptionId}`);
-
-    try {
-      const usersSnapshot = await db
-        .collection("users")
-        .where("stripeSubscriptionId", "==", subscriptionId)
-        .limit(1)
-        .get();
-
-      if (usersSnapshot.empty) {
-        // Might be a new subscription where checkout.session.completed hasn't fired yet
-        logWarn(`No user found for invoice.paid (sub: ${subscriptionId}) - skipping`);
-        res.json({received: true, status: "user_not_found"});
-        return;
-      }
-
-      const userDoc = usersSnapshot.docs[0];
-      const userId = userDoc.id;
-      const userData = userDoc.data();
-
-      // SF-vibe57 H-09: belt+suspenders Connect-account correlation (parallel
-      // to customer.subscription.deleted handler above). invoice.customer is
-      // the canonical Stripe customer for the invoice; cross-check with
-      // userData.stripeCustomerId to catch any H-01 pre-fix squat residue.
-      const invoiceCustomerId = typeof invoice.customer === "string" ?
-        invoice.customer :
-        invoice.customer?.id;
-      if (userData?.stripeCustomerId && invoiceCustomerId &&
-          userData.stripeCustomerId !== invoiceCustomerId) {
-        logError(
-          `[H-09] stripeCustomerId mismatch on invoice.paid for ${userId}: ` +
-          `doc=${userData.stripeCustomerId} stripe=${invoiceCustomerId} sub=${subscriptionId}`
-        );
-        res.json({received: true, status: "customer_mismatch_skipped"});
-        return;
-      }
-
-      // Ensure account is active (idempotent)
-      await userDoc.ref.update({
-        accountStatus: "active",
-        stripeSubscriptionStatus: "active",
-        lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      logSuccess(`User ${userId} subscription confirmed active via invoice.paid`);
-      res.json({received: true, status: "subscription_renewed"});
-    } catch (error: any) {
-      logError("Error processing invoice.paid", error);
-      // SF-038 compensating delete (F-NEW-01 re-apply): without this, a
-      // transient Firestore failure here strands a subscription renewal —
-      // dedup marks the event processed, retry short-circuits, lastPaymentAt
-      // never updates, and a subsequent customer.subscription.deleted
-      // downgrade looks unprovoked.
-      await eventRef.delete().catch(() => {});
-      res.status(500).send("Internal server error");
-    }
+    await handleInvoicePaid(event, res, eventRef);
   } else if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-    const metadata = session.metadata;
-
-    // ========================================================================
-    // HANDLE SUBSCRIPTION CHECKOUT
-    // ========================================================================
-    if (session.mode === "subscription") {
-      logInfo(`Processing subscription checkout for session: ${session.id}`);
-
-      const userId = session.client_reference_id || metadata?.userId;
-      const customerId = session.customer as string;
-      const subscriptionId = session.subscription as string;
-
-      if (!userId) {
-        logError("Missing client_reference_id or metadata.userId in subscription session");
-        res.status(400).send("Missing user ID");
-        return;
-      }
-
-      try {
-        // Activate user subscription
-        await db.collection("users").doc(userId).update({
-          accountStatus: "active",
-          accountType: "premium",
-          stripeCustomerId: customerId,
-          stripeSubscriptionId: subscriptionId,
-          stripeSubscriptionStatus: "active",
-          statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
-          statusChangedBy: "system_webhook",
-          statusChangeReason: "subscription_purchased",
-        });
-
-        logSuccess(`User ${userId} upgraded to active subscription`);
-        res.json({received: true, status: "subscription_activated"});
-        return;
-      } catch (error: any) {
-        logError("Error activating subscription", error);
-        // SF-038 compensating delete (F-NEW-01 re-apply): without this, a
-        // transient Firestore failure strands a paid subscription — user
-        // paid Stripe but never gets accountStatus=active / accountType=premium.
-        await eventRef.delete().catch(() => {});
-        res.status(500).send("Internal server error");
-        return;
-      }
-    }
-
-    // ========================================================================
-    // HANDLE BOOKING WIDGET CHECKOUT (mode="payment")
-    // ========================================================================
-
-    // Validate required metadata
-    if (!metadata?.unit_id || !metadata?.property_id || !metadata?.owner_id) {
-      logError("Missing required metadata in session", null, {
-        has_unit_id: !!metadata?.unit_id,
-        has_property_id: !!metadata?.property_id,
-        has_owner_id: !!metadata?.owner_id,
-        has_guest_email: !!metadata?.guest_email,
-        has_guest_phone: !!metadata?.guest_phone,
-      });
-      res.status(400).send("Missing required booking metadata");
-      return;
-    }
-
-    try {
-      // ========================================================================
-      // NEW FLOW: Update placeholder booking (not create new booking)
-      // ========================================================================
-      const placeholderBookingId = metadata.placeholder_booking_id;
-
-      if (!placeholderBookingId) {
-        logError("Missing placeholder_booking_id in webhook metadata");
-        res.status(400).send("Missing placeholder booking ID - outdated checkout session");
-        return;
-      }
-
-      logInfo(`Processing Stripe webhook for placeholder booking: ${placeholderBookingId}`);
-
-      // Extract property_id and unit_id from metadata to construct direct path
-      // This is more reliable than collection group query with documentId()
-      const propertyIdFromMeta = metadata.property_id;
-      const unitIdFromMeta = metadata.unit_id;
-
-      if (!propertyIdFromMeta || !unitIdFromMeta) {
-        logError("Missing property_id or unit_id in session metadata");
-        res.status(400).send("Missing property/unit ID in session metadata");
-        return;
-      }
-
-      // NEW STRUCTURE: Fetch placeholder booking using direct subcollection path
-      const placeholderBookingRef = db
-        .collection("properties")
-        .doc(propertyIdFromMeta)
-        .collection("units")
-        .doc(unitIdFromMeta)
-        .collection("bookings")
-        .doc(placeholderBookingId);
-
-      const placeholderBookingSnap = await placeholderBookingRef.get();
-
-      if (!placeholderBookingSnap.exists) {
-        logError(`Placeholder booking not found: ${placeholderBookingId}`);
-        res.status(404).send("Placeholder booking not found - may have expired");
-        return;
-      }
-
-      const placeholderData = placeholderBookingSnap.data();
-
-      // IDEMPOTENCY CHECK: Check if placeholder already updated (webhook fired twice)
-      if (placeholderData?.status === "confirmed" && placeholderData?.stripe_session_id === session.id) {
-        logInfo(`Webhook already processed - booking ${placeholderBookingId} already confirmed`);
-        res.json({
-          received: true,
-          booking_id: placeholderBookingId,
-          booking_reference: placeholderData.booking_reference,
-          status: "already_processed",
-          message: "Booking already confirmed for this session",
-        });
-        return;
-      }
-
-      // Validate placeholder is actually pending status (created before Stripe checkout)
-      if (placeholderData?.status !== "pending") {
-        logError(`Placeholder booking has invalid status: ${placeholderData?.status}`);
-        res.status(400).send(`Invalid placeholder status: ${placeholderData?.status}`);
-        return;
-      }
-
-      logInfo(`Updating placeholder booking ${placeholderBookingId} to confirmed status`);
-
-      // Update placeholder booking to confirmed
-      await placeholderBookingRef.update({
-        status: "confirmed", // Stripe payments are always confirmed (paid)
-        payment_status: "paid",
-        paid_amount: Number(placeholderData.deposit_amount),
-        // Stripe payment details
-        stripe_session_id: session.id,
-        payment_intent_id: session.payment_intent as string,
-        paid_at: admin.firestore.FieldValue.serverTimestamp(),
-        updated_at: admin.firestore.FieldValue.serverTimestamp(),
-        // Remove placeholder expiration field (no longer needed)
-        stripe_pending_expires_at: admin.firestore.FieldValue.delete(),
-      });
-
-      logInfo(`Placeholder booking ${placeholderBookingId} confirmed after Stripe payment`);
-
-      // Extract plaintext access token from metadata (for email "View my reservation" link)
-      const accessTokenPlaintext = metadata.access_token_plaintext;
-
-      if (!accessTokenPlaintext) {
-        logWarn("Missing access_token_plaintext in metadata - email link may not work");
-      }
-
-      // Prepare result for email sending (match old structure)
-      const result = {
-        bookingId: placeholderBookingId,
-        bookingData: placeholderData,
-        accessToken: accessTokenPlaintext || "", // Plaintext token for email link
-      };
-
-      // Extract booking details for emails
-      const unitId = placeholderData.unit_id;
-      const propertyId = placeholderData.property_id;
-      const ownerId = placeholderData.owner_id;
-      const guestName = placeholderData.guest_name;
-      const guestEmail = placeholderData.guest_email;
-      const guestPhone = placeholderData.guest_phone;
-      const guestCount = placeholderData.guest_count;
-      const bookingReference = placeholderData.booking_reference;
-      const checkIn = safeToDate(placeholderData.check_in, "check_in");
-      const checkOut = safeToDate(placeholderData.check_out, "check_out");
-      const totalPrice = placeholderData.total_price;
-      const depositAmount = placeholderData.deposit_amount;
-
-      // Fetch unit and property details for emails
-      // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
-      const propertyDoc = await db.collection("properties").doc(propertyId).get();
-      const propertyData = propertyDoc.data();
-      const unitDoc = await db
-        .collection("properties")
-        .doc(propertyId)
-        .collection("units")
-        .doc(unitId)
-        .get();
-      const unitData = unitDoc.data();
-
-      // Send confirmation email to guest (with "View my reservation" button)
-      try {
-        await sendBookingApprovedEmail(
-          guestEmail,
-          guestName,
-          bookingReference,
-          checkIn,
-          checkOut,
-          propertyData?.name || "Property",
-          propertyData?.contact_email,
-          result.accessToken, // Plaintext token for email link
-          totalPrice,
-          depositAmount,
-          propertyId // For subdomain in email links
-        );
-        logInfo("Confirmation email sent to guest");
-      } catch (error) {
-        logError("Failed to send confirmation email to guest", error);
-      }
-
-      // Send notification email to owner (respect preferences)
-      try {
-        const ownerDoc = await db.collection("users").doc(ownerId).get();
-        const ownerData = ownerDoc.data();
-
-        if (ownerData?.email) {
-          await sendEmailIfAllowed(
-            ownerId,
-            "payments",
-            async () => {
-              await sendOwnerNotificationEmail(
-                ownerData.email,
-                bookingReference,
-                guestName,
-                guestEmail,
-                guestPhone || undefined,
-                propertyData?.name || "Property",
-                unitData?.name || "Unit",
-                checkIn,
-                checkOut,
-                guestCount,
-                totalPrice,
-                depositAmount
-              );
-            },
-            false // Respect preferences: owner can opt-out of payment notifications
-          );
-          logInfo(`Owner payment notification processed (sent if preferences allow): ${ownerData.email}`);
-        }
-      } catch (error) {
-        logError("Failed to send notification email to owner", error);
-      }
-
-      // Create in-app payment notification for owner
-      try {
-        await createPaymentNotification(
-          ownerId,
-          result.bookingId,
-          guestName,
-          depositAmount
-        );
-        logInfo(`In-app payment notification created for owner ${ownerId}`);
-      } catch (notificationError) {
-        logError("Failed to create in-app payment notification", notificationError);
-      }
-
-      // Send push notification for payment (non-blocking)
-      sendPaymentPushNotification(
-        ownerId,
-        result.bookingId,
-        guestName,
-        depositAmount,
-        "EUR"
-      ).catch((err) => {
-        logError("Failed to send payment push notification", err);
-      });
-
-      res.json({
-        received: true,
-        booking_id: result.bookingId,
-        booking_reference: bookingReference,
-        status: "confirmed",
-      });
-    } catch (error: any) {
-      logError("Error processing webhook", error);
-      // SF-038 compensating delete (F-NEW-01 re-apply): WORST-CASE PATH —
-      // without this, a transient Firestore failure mid-booking-confirmation
-      // strands a paid booking. Placeholder stays "pending", cleanupExpired
-      // PendingBookings deletes it 15 min later → guest paid Stripe, no
-      // booking exists, no refund automation.
-      await eventRef.delete().catch(() => {});
-      res.status(500).send("Internal server error");
-    }
+    await handleCheckoutSessionCompleted(event, res, eventRef);
   } else {
     // Unexpected event type
     logInfo(`Unhandled event type: ${event.type}`);

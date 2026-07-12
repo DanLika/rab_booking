@@ -130,6 +130,39 @@ class OwnerRoutes {
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 /// Owner app GoRouter
+/// Sanitises a `from` deep-link target taken from the URL before we redirect
+/// to it after login.
+///
+/// Only same-app paths are allowed: it must start with a single `/` (so `//evil.com`
+/// and `https://evil.com` — protocol-relative and absolute open-redirect vectors —
+/// are refused), must not carry a host, and must not point back at an auth route
+/// (which would bounce the user in a loop). Anything else falls back to the
+/// caller's default.
+@visibleForTesting
+String? safeInternalPath(String? from) => _safeInternalPath(from);
+
+String? _safeInternalPath(String? from) {
+  if (from == null || from.isEmpty) return null;
+  if (!from.startsWith('/') || from.startsWith('//')) return null;
+
+  final Uri parsed;
+  try {
+    parsed = Uri.parse(from);
+  } catch (_) {
+    return null;
+  }
+  if (parsed.hasScheme || parsed.hasAuthority) return null;
+
+  const authRoutes = <String>[
+    OwnerRoutes.login,
+    OwnerRoutes.register,
+    OwnerRoutes.forgotPassword,
+  ];
+  if (authRoutes.contains(parsed.path)) return null;
+
+  return from;
+}
+
 final ownerRouterProvider = Provider<GoRouter>((ref) {
   // OPTIMIZATION: Do not watch state directly to avoid rebuilding Router on every state change.
   // Instead, read state inside redirect() and listen to stream for updates.
@@ -263,15 +296,25 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return null; // Stay on current route
       }
 
-      // Redirect to login if not authenticated and trying to access protected routes
+      // Redirect to login if not authenticated and trying to access protected routes.
+      //
+      // Carry the requested location in `from` so it survives the bounce. On a
+      // cold boot the auth listener has not restored the session yet, so a
+      // deep link (a bookmark, or a notification/email pointing at a booking)
+      // lands here first; without `from` the destination was silently dropped
+      // and the owner was dumped on the overview once auth came back.
       if (!isAuthenticated && !isLoggingIn) {
+        final requested = state.uri.toString();
         if (kDebugMode) {
           LoggingService.log(
-            '  → Redirecting to login (not authenticated)',
+            '  → Redirecting to login (not authenticated, from: $requested)',
             tag: 'ROUTER',
           );
         }
-        return OwnerRoutes.login;
+        return Uri(
+          path: OwnerRoutes.login,
+          queryParameters: {'from': requested},
+        ).toString();
       }
 
       // SECURITY: Email verification enforcement for authenticated users
@@ -298,16 +341,19 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return OwnerRoutes.emailVerification;
       }
 
-      // Redirect to overview if authenticated and trying to access login
-      // (Only after email verification check passes)
+      // Redirect away from login once authenticated (only after the email
+      // verification check passes). If the user was bounced here from a
+      // protected deep link, send them back to it instead of the overview.
       if (isAuthenticated && isLoggingIn) {
+        final from = state.uri.queryParameters['from'];
+        final target = _safeInternalPath(from) ?? OwnerRoutes.overview;
         if (kDebugMode) {
           LoggingService.log(
-            '  → Redirecting to overview (authenticated, was on login)',
+            '  → Redirecting to $target (authenticated, was on login)',
             tag: 'ROUTER',
           );
         }
-        return OwnerRoutes.overview;
+        return target;
       }
 
       // PROFILE COMPLETION: Redirect social sign-in users to complete profile

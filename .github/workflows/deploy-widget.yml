@@ -1,12 +1,11 @@
 name: Deploy Widget to Production
 
+# Manual only. This used to fire on every push to `main` touching `lib/**`,
+# which meant an ordinary code merge shipped straight to the live guest widget
+# at view.bookbed.io with no human gate — refactor merges auto-deployed to
+# production without anyone asking for it. Production releases are now an
+# explicit act: run this workflow from the Actions tab (or `gh workflow run`).
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'lib/**'
-      - 'web/**'
-      - 'pubspec.yaml'
   workflow_dispatch:
 
 jobs:

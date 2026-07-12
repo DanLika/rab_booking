@@ -200,15 +200,22 @@ class BankTransferDetailsCard extends ConsumerWidget {
               ),
               if (copyable) ...[
                 const SizedBox(width: BBSpace.xxs),
-                InkWell(
-                  onTap: () => _copyToClipboard(context, ref, value),
-                  borderRadius: BBRadius.xsAll,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.copy,
-                      size: 16,
-                      color: colors.textSecondary,
+                // Icon-only control on the payment path: without a label a
+                // screen reader announces nothing at all, so the guest cannot
+                // find "copy the IBAN". The label names the field being copied.
+                Semantics(
+                  button: true,
+                  label: '${WidgetTranslations.of(context, ref).copy} $label',
+                  child: InkWell(
+                    onTap: () => _copyToClipboard(context, ref, value),
+                    borderRadius: BBRadius.xsAll,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.copy,
+                        size: 16,
+                        color: colors.textSecondary,
+                      ),
                     ),
                   ),
                 ),

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -12,6 +14,10 @@ import '../l10n/widget_translations.dart';
 
 /// Dialog shown when Stripe Checkout popup is blocked by browser
 /// Provides multiple options for user to proceed with payment
+/// AlertDialog's default inset padding (40dp a side) — the width the dialog
+/// can never use.
+const double _kDialogHorizontalInset = 80.0;
+
 class PopupBlockedDialog extends ConsumerWidget {
   final String checkoutUrl;
   final VoidCallback? onRetry;
@@ -33,6 +39,12 @@ class PopupBlockedDialog extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
 
     return AlertDialog(
+      // Title + body + three option cards + actions do not fit the height of a
+      // small phone (an iPhone SE overflowed by ~530px), and an AlertDialog does
+      // not scroll its content unless asked — so the guest saw the options and
+      // the Cancel action clipped off the bottom. This is the browser-blocked
+      // Stripe checkout path, which is exactly where a stuck guest cannot pay.
+      scrollable: true,
       backgroundColor: dialogBg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(BBRadiusBridges.large),
@@ -53,8 +65,16 @@ class PopupBlockedDialog extends ConsumerWidget {
           ),
         ],
       ),
+      // 400 was hard-coded here, but an AlertDialog only gets the viewport
+      // minus its inset padding (40px a side) — at 390px that is ~310px, so the
+      // content overflowed horizontally. This dialog is what a guest sees when
+      // the browser blocks the Stripe checkout popup (routine on mobile Safari),
+      // so it has to fit the narrowest phone. Clamp to what is actually available.
       content: SizedBox(
-        width: 400,
+        width: math.min(
+          400,
+          MediaQuery.sizeOf(context).width - _kDialogHorizontalInset,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

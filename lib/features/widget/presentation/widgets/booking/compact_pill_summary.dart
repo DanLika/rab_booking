@@ -130,26 +130,33 @@ class _CloseButton extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(
-            CompactPillSummary._closeButtonRadius,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(
-              CompactPillSummary._closeButtonPadding,
+        Semantics(
+          button: true,
+          // GlobalMaterialLocalizations is registered on the widget app, so this
+          // is already translated — no plumbing needed to reach WidgetTranslations
+          // from this private sub-widget.
+          label: MaterialLocalizations.of(context).closeButtonTooltip,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(
+              CompactPillSummary._closeButtonRadius,
             ),
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.white : colors.backgroundSecondary,
-              borderRadius: BorderRadius.circular(
-                CompactPillSummary._closeButtonRadius,
+            child: Container(
+              padding: const EdgeInsets.all(
+                CompactPillSummary._closeButtonPadding,
               ),
-              border: Border.all(color: colors.borderLight),
-            ),
-            child: Icon(
-              Icons.close,
-              size: CompactPillSummary._closeIconSize,
-              color: isDarkMode ? Colors.black : colors.textSecondary,
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.white : colors.backgroundSecondary,
+                borderRadius: BorderRadius.circular(
+                  CompactPillSummary._closeButtonRadius,
+                ),
+                border: Border.all(color: colors.borderLight),
+              ),
+              child: Icon(
+                Icons.close,
+                size: CompactPillSummary._closeIconSize,
+                color: isDarkMode ? Colors.black : colors.textSecondary,
+              ),
             ),
           ),
         ),

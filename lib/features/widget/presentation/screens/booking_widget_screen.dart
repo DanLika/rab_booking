@@ -584,27 +584,34 @@ class _BookingWidgetScreenState extends _BookingWidgetScreenStateBase
 
       // Support Icon - Bottom Left FAB (Micro Size)
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      floatingActionButton: SizedBox(
-        width: 24,
-        height: 24,
-        child: RawMaterialButton(
-          onPressed: () {
-            // Launch email client
-            launchUrl(
-              Uri.parse('mailto:dusko@book-bed.com'),
-              // mode: LaunchMode.externalApplication, // Causes "invalid address" on Safari Web
-            );
-          },
-          fillColor: minimalistColors.backgroundTertiary,
-          // Use textPrimary for automatic theme adaptation (Black in Light, White in Dark)
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: BorderSide(color: minimalistColors.borderDefault),
-          ),
-          child: Icon(
-            Icons.headset_mic,
-            size: 16,
-            color: minimalistColors.textPrimary,
+      // Icon-only support button, present on every widget page: it announced
+      // nothing to a screen reader. Sized to the 48dp minimum tap target while
+      // keeping the 24dp visual footprint (the button paints inside the box).
+      floatingActionButton: Semantics(
+        button: true,
+        label: WidgetTranslations.of(context, ref).contactSupport,
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: RawMaterialButton(
+            onPressed: () {
+              // Launch email client
+              launchUrl(
+                Uri.parse('mailto:dusko@book-bed.com'),
+                // mode: LaunchMode.externalApplication, // Causes "invalid address" on Safari Web
+              );
+            },
+            fillColor: minimalistColors.backgroundTertiary,
+            // Use textPrimary for automatic theme adaptation (Black in Light, White in Dark)
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: minimalistColors.borderDefault),
+            ),
+            child: Icon(
+              Icons.headset_mic,
+              size: 16,
+              color: minimalistColors.textPrimary,
+            ),
           ),
         ),
       ),

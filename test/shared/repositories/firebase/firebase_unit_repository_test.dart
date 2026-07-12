@@ -1,3 +1,7 @@
+// Hand-rolled mocktail fakes implement sealed Firestore interfaces on purpose
+// (no firestore mock package in the dev deps). Analyzer-only concern.
+// ignore_for_file: subtype_of_sealed_class
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -72,7 +76,6 @@ void main() {
           'max_guests': 2,
           'created_at': Timestamp.now(),
           'is_available': true,
-          'created_at': Timestamp.now(),
         });
 
         final result = await repository.fetchUnitByIdFresh(
@@ -122,7 +125,6 @@ void main() {
         // Mock the fallback fetchUnitById behavior
         final mockCollectionGroup = MockQuerySnapshot();
         final mockQueryDocSnapshot = MockQueryDocumentSnapshot();
-        final mockParentRef = MockDocumentReference();
         final mockGrandparentRef = MockDocumentReference();
 
         when(() => mockFirestore.collectionGroup('units')).thenReturn(

@@ -54,6 +54,11 @@ Future<void> _initializeFirebaseSafely() async {
     }
 
     if (needsInit) {
+      // Clear any persisted App Check reCAPTCHA config BEFORE Firebase init:
+      // firebase_app_check_web auto-activates from it during initializeApp,
+      // which loads the CSP-blocked recaptcha script and stalls Firestore
+      // (eternal-shimmer P0). A pre-2026-06-15 build left this in browsers.
+      purgeStaleAppCheckRecaptcha();
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );

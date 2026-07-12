@@ -215,3 +215,6 @@ void Function() listenToPwaInstallability(
 ) {
   return () {};
 }
+
+/// No-op on non-web platforms (see the web implementation for the rationale).
+void purgeStaleAppCheckRecaptcha() {}

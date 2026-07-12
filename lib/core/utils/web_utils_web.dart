@@ -935,3 +935,34 @@ void Function() listenToPwaInstallability(
     return () {};
   }
 }
+
+/// Remove any persisted Firebase App Check reCAPTCHA config from web storage.
+///
+/// The `firebase_app_check_web` plugin persists the reCAPTCHA type + site key to
+/// localStorage (`FlutterFire-[DEFAULT]-recaptcha*`) on `activate()`, and — this
+/// is the trap — its `ensurePluginInitialized` hook re-reads them during
+/// `Firebase.initializeApp()` and AUTO-ACTIVATES App Check from them, with no
+/// Dart `activate()` call of our own.
+///
+/// A pre-2026-06-15 widget build did call `AppCheckInit.activate` and wrote
+/// `recaptcha-v3` + the `placeholder-debug-only` key. Dropping that call stopped
+/// NEW writes, but every browser that ever loaded the old widget still carries
+/// the keys, so App Check keeps re-activating: `ReCaptchaV3Provider` loads the
+/// CSP-blocked `recaptcha/api.js`, the token never mints, and the SDK gates all
+/// Firestore + callable traffic for 10s → offline → the "eternal shimmer" P0.
+///
+/// The widget must NOT run App Check (`.claude/rules/widget.md`), so purging this
+/// state before Firebase init makes the plugin's hook see nothing and skip
+/// activation. Call it in `widget_main*` before `Firebase.initializeApp()`.
+void purgeStaleAppCheckRecaptcha() {
+  // App name is always `[DEFAULT]`; the plugin checks localStorage then falls
+  // back to sessionStorage, so clear both.
+  const keys = <String>[
+    'FlutterFire-[DEFAULT]-recaptchaType',
+    'FlutterFire-[DEFAULT]-recaptchaSiteKey',
+  ];
+  for (final key in keys) {
+    web.window.localStorage.removeItem(key);
+    web.window.sessionStorage.removeItem(key);
+  }
+}

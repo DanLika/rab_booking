@@ -257,6 +257,9 @@ class OwnerAppDrawer extends ConsumerWidget {
                     ? ClipOval(
                         child: Image.network(
                           authState.userModel!.avatarUrl!,
+                          // Avatar carries the user's identity; unlabelled it is
+                          // announced as an anonymous image.
+                          semanticLabel: authState.userModel?.displayName,
                           width: 48,
                           height: 48,
                           fit: BoxFit.cover,

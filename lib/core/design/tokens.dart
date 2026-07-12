@@ -268,6 +268,28 @@ class BBColor {
     return Theme.of(context).brightness == Brightness.dark ? original : primary;
   }
 
+  /// Soft error tint for warning/conflict banners, derived from the theme's
+  /// error colour so it follows dark mode.
+  ///
+  /// Banners here used to be built from the `Colors.red.shade50…shade800`
+  /// ladder, which is a light-only palette: on the OLED dark surface it rendered
+  /// a pale-pink card floating on black. Deriving the fill and the border from
+  /// [BBColorSet.error] keeps a single source and works in both themes.
+  ///
+  /// [strength] scales the fill (border uses a stronger alpha). Text and icons
+  /// on top of it should use `BBColor.of(context).error` directly.
+  static Color errorSurface(BuildContext context, {double strength = 1.0}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = of(context).error;
+    return base.withValues(alpha: (isDark ? 0.16 : 0.08) * strength);
+  }
+
+  /// Border companion to [errorSurface].
+  static Color errorBorder(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return of(context).error.withValues(alpha: isDark ? 0.55 : 0.35);
+  }
+
   // -------------------------------------------------------------------------
   // Legacy aliases (existing call-sites; keep referential)
   // -------------------------------------------------------------------------

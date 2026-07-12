@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/design/tokens.dart';
 import 'package:intl/intl.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/models/booking_model.dart';
@@ -371,9 +372,9 @@ class _ConflictWarningBanner extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(isCompact ? 8 : 12),
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
+        color: BBColor.errorSurface(context),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.shade300, width: 1.5),
+        border: Border.all(color: BBColor.errorBorder(context), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +383,7 @@ class _ConflictWarningBanner extends StatelessWidget {
             children: [
               Icon(
                 Icons.warning_rounded,
-                color: Colors.red.shade700,
+                color: BBColor.of(context).error,
                 size: isCompact ? 16 : 20,
               ),
               const SizedBox(width: 8),
@@ -390,7 +391,7 @@ class _ConflictWarningBanner extends StatelessWidget {
                 child: Text(
                   'OVERBOOKING!',
                   style: TextStyle(
-                    color: Colors.red.shade800,
+                    color: BBColor.of(context).error,
                     fontWeight: FontWeight.bold,
                     fontSize: isCompact ? 12 : 14,
                   ),
@@ -404,7 +405,7 @@ class _ConflictWarningBanner extends StatelessWidget {
             Text(
               l10n.tooltipConflictWith,
               style: TextStyle(
-                color: Colors.red.shade700,
+                color: BBColor.of(context).error,
                 fontSize: isCompact ? 10 : 11,
                 fontWeight: FontWeight.w500,
               ),
@@ -420,14 +421,14 @@ class _ConflictWarningBanner extends StatelessWidget {
                         Icon(
                           Icons.person,
                           size: isCompact ? 10 : 12,
-                          color: Colors.red.shade600,
+                          color: BBColor.of(context).error,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             '${conflict.guestName ?? l10n.tooltipGuest} (${dateFormat.format(conflict.checkIn)} - ${dateFormat.format(conflict.checkOut)})',
                             style: TextStyle(
-                              color: Colors.red.shade700,
+                              color: BBColor.of(context).error,
                               fontSize: isCompact ? 9 : 10,
                             ),
                             maxLines: 1,
@@ -442,14 +443,17 @@ class _ConflictWarningBanner extends StatelessWidget {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.red.shade100,
+                              color: BBColor.errorSurface(
+                                context,
+                                strength: 1.6,
+                              ),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               conflict.sourceDisplayName,
                               style: TextStyle(
                                 fontSize: isCompact ? 8 : 9,
-                                color: Colors.red.shade800,
+                                color: BBColor.of(context).error,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -462,7 +466,7 @@ class _ConflictWarningBanner extends StatelessWidget {
               Text(
                 l10n.tooltipMoreConflicts(conflictingBookings!.length - 3),
                 style: TextStyle(
-                  color: Colors.red.shade600,
+                  color: BBColor.of(context).error,
                   fontSize: isCompact ? 9 : 10,
                   fontStyle: FontStyle.italic,
                 ),

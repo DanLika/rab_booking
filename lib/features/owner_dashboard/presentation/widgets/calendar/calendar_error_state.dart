@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 
@@ -37,13 +38,13 @@ class CalendarErrorState extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.red.withAlpha((0.1 * 255).toInt()),
+                  color: BBColor.errorSurface(context, strength: 1.25),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.error_outline,
                   size: 64,
-                  color: Colors.red.withAlpha((0.7 * 255).toInt()),
+                  color: BBColor.of(context).error,
                 ),
               ),
 
@@ -135,7 +136,7 @@ class CalendarErrorState extends StatelessWidget {
             Icon(
               Icons.error_outline,
               size: 48,
-              color: Colors.red.withAlpha((0.6 * 255).toInt()),
+              color: BBColor.of(context).error,
             ),
             const SizedBox(height: 12),
             Text(
@@ -183,15 +184,15 @@ class CalendarErrorBanner extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red.withAlpha((0.1 * 255).toInt()),
+        color: BBColor.errorSurface(context, strength: 1.25),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.withAlpha((0.3 * 255).toInt())),
+        border: Border.all(color: BBColor.errorBorder(context)),
       ),
       child: Row(
         children: [
           Icon(
             Icons.warning_amber_rounded,
-            color: Colors.red.shade700,
+            color: BBColor.of(context).error,
             size: 24,
           ),
           const SizedBox(width: 12),
@@ -204,14 +205,17 @@ class CalendarErrorBanner extends StatelessWidget {
                   l10n.calendarErrorBannerTitle,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.red.shade900,
+                    color: BBColor.of(context).error,
                     fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   message,
-                  style: TextStyle(color: Colors.red.shade800, fontSize: 12),
+                  style: TextStyle(
+                    color: BBColor.of(context).error,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -222,7 +226,7 @@ class CalendarErrorBanner extends StatelessWidget {
               onPressed: onRetry,
               icon: const Icon(Icons.refresh, size: 20),
               tooltip: l10n.calendarErrorRetry,
-              color: Colors.red.shade700,
+              color: BBColor.of(context).error,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             ),
@@ -233,7 +237,7 @@ class CalendarErrorBanner extends StatelessWidget {
               onPressed: onDismiss,
               icon: const Icon(Icons.close, size: 18),
               tooltip: l10n.calendarErrorClose,
-              color: Colors.red.shade700,
+              color: BBColor.of(context).error,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             ),

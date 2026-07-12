@@ -240,9 +240,12 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           ),
           padding: EdgeInsets.zero,
           tooltip: '${_currentYear - 1}',
-          constraints: BoxConstraints(
-            minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
-            minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
+          // 28/32dp hit areas on the primary calendar navigation — below the
+          // 48dp minimum touch target (WCAG 2.5.5 / Material). The icon keeps its
+          // size; only the tappable box grows, so nothing moves visually.
+          constraints: const BoxConstraints(
+            minWidth: kMinInteractiveDimension,
+            minHeight: kMinInteractiveDimension,
           ),
           onPressed: () {
             setState(() {
@@ -270,9 +273,12 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           ),
           padding: EdgeInsets.zero,
           tooltip: '${_currentYear + 1}',
-          constraints: BoxConstraints(
-            minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
-            minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
+          // 28/32dp hit areas on the primary calendar navigation — below the
+          // 48dp minimum touch target (WCAG 2.5.5 / Material). The icon keeps its
+          // size; only the tappable box grows, so nothing moves visually.
+          constraints: const BoxConstraints(
+            minWidth: kMinInteractiveDimension,
+            minHeight: kMinInteractiveDimension,
           ),
           onPressed: () {
             setState(() {

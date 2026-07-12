@@ -450,13 +450,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           itemBuilder: (ctx) => [
             PopupMenuItem(
               value: 'delete_all',
+              // Raw `Colors.red` ignores the theme: on the OLED dark surface it
+              // stays a saturated pure red that fails contrast. The error token
+              // carries the dark-mode variant.
               child: Row(
                 children: [
-                  const Icon(Icons.delete_forever, color: Colors.red),
+                  Icon(Icons.delete_forever, color: BBColor.of(ctx).error),
                   const SizedBox(width: 12),
                   Text(
                     l10n.notificationsDeleteAllBtn,
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: BBColor.of(ctx).error),
                   ),
                 ],
               ),

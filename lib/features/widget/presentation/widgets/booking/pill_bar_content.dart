@@ -219,24 +219,31 @@ class _WideScreenHeader extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        InkWell(
-          onTap: onClose,
-          borderRadius: BorderRadius.circular(
-            PillBarContent._closeButtonRadius,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(PillBarContent._closeButtonPadding),
-            decoration: BoxDecoration(
-              color: colors.backgroundTertiary,
-              borderRadius: BorderRadius.circular(
-                PillBarContent._closeButtonRadius,
-              ),
-              border: Border.all(color: colors.borderLight),
+        Semantics(
+          button: true,
+          // GlobalMaterialLocalizations is registered on the widget app, so this
+          // is already translated — no plumbing needed to reach WidgetTranslations
+          // from this private sub-widget.
+          label: MaterialLocalizations.of(context).closeButtonTooltip,
+          child: InkWell(
+            onTap: onClose,
+            borderRadius: BorderRadius.circular(
+              PillBarContent._closeButtonRadius,
             ),
-            child: Icon(
-              Icons.close,
-              size: PillBarContent._closeIconSize,
-              color: colors.textSecondary,
+            child: Container(
+              padding: const EdgeInsets.all(PillBarContent._closeButtonPadding),
+              decoration: BoxDecoration(
+                color: colors.backgroundTertiary,
+                borderRadius: BorderRadius.circular(
+                  PillBarContent._closeButtonRadius,
+                ),
+                border: Border.all(color: colors.borderLight),
+              ),
+              child: Icon(
+                Icons.close,
+                size: PillBarContent._closeIconSize,
+                color: colors.textSecondary,
+              ),
             ),
           ),
         ),

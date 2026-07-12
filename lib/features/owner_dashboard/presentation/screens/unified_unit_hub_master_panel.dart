@@ -726,7 +726,9 @@ mixin _MasterPanelMixin on _UnifiedUnitHubScreenStateBase {
                                     (0.7 * 255).toInt(),
                                   ),
                           ),
-                          tooltip: l10n.unitHubEditUnit,
+                          // This is the DUPLICATE button — it announced itself as "Edit unit"
+                          // to screen readers, naming the wrong action.
+                          tooltip: l10n.unitHubCopy,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         );

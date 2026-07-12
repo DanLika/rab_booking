@@ -584,9 +584,17 @@ class _BookingWidgetScreenState extends _BookingWidgetScreenStateBase
 
       // Support Icon - Bottom Left FAB (Micro Size)
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      // Icon-only support button, present on every widget page: it announced
-      // nothing to a screen reader. Sized to the 48dp minimum tap target while
-      // keeping the 24dp visual footprint (the button paints inside the box).
+      // Icon-only support button, present on every widget page. #892 gave it an
+      // accessible name (it announced nothing before).
+      //
+      // Its hit box is 24dp — below the 48dp minimum (WCAG 2.5.5). Known and
+      // deliberate: it is a micro-FAB, and the two ways to grow the target both
+      // cost more than they buy. Enlarging the RawMaterialButton also enlarges
+      // what it paints (it carries the fill and border), changing the design;
+      // and swapping it for an opaque 48dp GestureDetector around a plain
+      // container was tried and REVERTED — a semantics dump of the running app
+      // showed it silently dropped the accessible name, trading a size miss for
+      // a worse one. Revisit only with a change that keeps the label.
       floatingActionButton: Semantics(
         button: true,
         label: WidgetTranslations.of(context, ref).contactSupport,

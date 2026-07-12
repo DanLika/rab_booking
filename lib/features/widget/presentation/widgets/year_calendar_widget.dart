@@ -592,6 +592,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                       ? colors.textPrimary
                       : isToday
                       ? colors.textPrimary
+                      // Neutral border on white available cells (light); dark
+                      // keeps the teal border — mirrors month view (f3cda726).
+                      : _isAvailableFamily(dateInfo.status) &&
+                            _lightAvailableCells(colors)
+                      ? colors.borderDefault
                       : dateInfo.status.getBorderColor(colors),
                   width: (isRangeStart || isRangeEnd || isToday)
                       ? BorderTokens.widthMedium
@@ -689,6 +694,22 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     }
   }
 
+  /// Handoff widget-calendar.jsx: light-theme available cells are plain white
+  /// (selection carries the mint); dark keeps the teal fill. Month view and the
+  /// split-day painter already follow this (f3cda726) — the year view was left
+  /// mint, so the SAME theme showed green cells in Year and white in Month.
+  bool _lightAvailableCells(WidgetColorScheme colors) =>
+      colors.backgroundPrimary.computeLuminance() > 0.5;
+
+  Color _availableFill(WidgetColorScheme colors) => _lightAvailableCells(colors)
+      ? Colors.white
+      : DateStatus.available.getColor(colors);
+
+  bool _isAvailableFamily(DateStatus status) =>
+      status == DateStatus.available ||
+      status == DateStatus.partialCheckIn ||
+      status == DateStatus.partialCheckOut;
+
   Color _getCellColor(
     CalendarDateInfo dateInfo,
     bool isInRange,
@@ -721,13 +742,16 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       return colors.statusPendingBackground;
     }
 
+    final baseColor = _isAvailableFamily(dateInfo.status)
+        ? _availableFill(colors)
+        : dateInfo.status.getColor(colors);
+
     if (isHovered && isInteractive) {
       // Lighten the color slightly on hover
-      final baseColor = dateInfo.status.getColor(colors);
       return Color.alphaBlend(Colors.white.withValues(alpha: 0.3), baseColor);
     }
 
-    return dateInfo.status.getColor(colors);
+    return baseColor;
   }
 
   Widget _buildEmptyCell(double cellSize, WidgetColorScheme colors) {

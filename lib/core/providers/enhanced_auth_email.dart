@@ -404,6 +404,8 @@ mixin _EmailAuthMixin on _EnhancedAuthNotifierBase {
           'avatar_url': userModel.avatarUrl,
           'displayName': userModel.displayName,
           'onboardingCompleted': userModel.onboardingCompleted,
+          // Canonical schema field — see _createUserProfile note.
+          'created_at': FieldValue.serverTimestamp(),
           'createdAt': FieldValue.serverTimestamp(),
           'profileCompleted': userModel.profileCompleted,
           'newsletterOptIn': newsletterOptIn,

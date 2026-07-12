@@ -217,6 +217,19 @@ void main() {
       // New signups start on the trial tier.
       expect(data['accountType'], AccountType.trial.name);
 
+      // The canonical creation timestamp MUST be written under the snake_case
+      // `created_at` — that is what [UserModel] deserializes and what the admin
+      // Users list orders by. Writing only the legacy camelCase `createdAt` made
+      // every app-created owner invisible there: Firestore's
+      // `orderBy('created_at')` silently drops documents missing the field, so
+      // the owner was excluded from the list while still counted by the `.count()`
+      // badge (PROD: 11 of 23 owners hidden). Guards that regression.
+      expect(
+        data['created_at'],
+        isNotNull,
+        reason: 'missing created_at → owner invisible in the admin Users list',
+      );
+
       // SECURITY: the payload must not carry any field the create rule rejects
       // (privilege/billing/status/Stripe linkage). Sending one would re-break
       // the whole signup write.

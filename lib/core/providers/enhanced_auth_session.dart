@@ -39,6 +39,8 @@ mixin _SessionMixin on _EnhancedAuthNotifierBase {
           'emailVerified': false,
           'displayName': 'Demo User',
           'onboardingCompleted': false,
+          // Canonical schema field — see _createUserProfile note.
+          'created_at': FieldValue.serverTimestamp(),
           'createdAt': FieldValue.serverTimestamp(),
           'profileCompleted': true,
         });

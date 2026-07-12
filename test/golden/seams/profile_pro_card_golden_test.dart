@@ -21,7 +21,7 @@ void main() {
     maxContentWidth: 1100,
     padding: const EdgeInsets.all(12),
     build: (context, v) => buildProCardForTest(
-      l10n: AppLocalizations.of(context)!,
+      l10n: AppLocalizations.of(context),
       isMobile: v.isMobile,
     ),
   );

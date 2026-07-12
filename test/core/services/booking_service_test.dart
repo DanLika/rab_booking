@@ -4,7 +4,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:bookbed/core/services/booking_service.dart';
-import 'package:bookbed/shared/models/booking_model.dart';
 import 'package:bookbed/core/constants/enums.dart';
 
 class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}

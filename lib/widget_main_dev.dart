@@ -32,6 +32,9 @@ Future<void> _initializeFirebaseSafelyDev() async {
     }
 
     if (needsInit) {
+      // See widget_main.dart — purge persisted App Check reCAPTCHA config so
+      // the web plugin does not auto-activate it during Firebase init.
+      purgeStaleAppCheckRecaptcha();
       await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
 
       // Embed-reliability hardening — mirrors lib/widget_main.dart. Forces

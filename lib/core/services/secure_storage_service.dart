@@ -16,8 +16,14 @@ class SecureStorageService {
   factory SecureStorageService() => _instance;
   SecureStorageService._internal();
 
+  // Android: `encryptedSharedPreferences` was dropped in flutter_secure_storage
+  // v10 — Jetpack Security is deprecated by Google, the plugin now uses its own
+  // ciphers and migrates existing values on first access. Passing the flag is a
+  // no-op that only trips the analyzer, so the default AndroidOptions are used.
+  // iOS: keep the Keychain item locked until the device is first unlocked after
+  // boot, so the saved email is not readable from a background launch on a
+  // locked device.
   final _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
   );
 

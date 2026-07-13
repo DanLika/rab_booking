@@ -4268,17 +4268,42 @@ class WidgetTranslations {
     }
   }
 
-  String errorCreatingBooking(String error) {
+  /// Shown when the booking call fails because the guest lost connectivity.
+  /// Their form is preserved, so the actionable advice is "retry".
+  String get errorBookingOffline {
     switch (locale.languageCode) {
       case 'hr':
-        return 'Greška pri kreiranju rezervacije: $error';
+        return 'Nema internetske veze. Provjerite vezu i pokušajte ponovno — '
+            'vaši podaci su sačuvani.';
       case 'de':
-        return 'Fehler beim Erstellen der Buchung: $error';
+        return 'Keine Internetverbindung. Bitte prüfen Sie Ihre Verbindung und '
+            'versuchen Sie es erneut — Ihre Daten bleiben erhalten.';
       case 'it':
-        return 'Errore nella creazione della prenotazione: $error';
+        return 'Nessuna connessione a Internet. Controlla la connessione e '
+            'riprova — i tuoi dati sono stati salvati.';
       case 'en':
       default:
-        return 'Error creating booking: $error';
+        return 'No internet connection. Check your connection and try again — '
+            'your details have been kept.';
+    }
+  }
+
+  /// Generic booking failure. Deliberately carries no exception text: the raw
+  /// error goes to Sentry, never to the guest.
+  String get errorBookingFailedGeneric {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Rezervacija nije uspjela. Pokušajte ponovno ili kontaktirajte '
+            'vlasnika.';
+      case 'de':
+        return 'Die Buchung ist fehlgeschlagen. Bitte versuchen Sie es erneut '
+            'oder kontaktieren Sie den Gastgeber.';
+      case 'it':
+        return 'Prenotazione non riuscita. Riprova o contatta il proprietario.';
+      case 'en':
+      default:
+        return 'Your booking could not be completed. Please try again or '
+            'contact the property owner.';
     }
   }
 

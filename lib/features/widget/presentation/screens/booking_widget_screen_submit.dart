@@ -462,12 +462,18 @@ mixin _BookingSubmitMixin on _BookingWidgetScreenStateBase, _PaymentFlowMixin {
     } catch (e) {
       unawaited(LoggingService.logError('Booking creation failed', e));
       if (mounted) {
+        // Never show the raw exception to a guest. Connectivity failures get
+        // an actionable "check your connection" (their form is preserved);
+        // everything else gets a generic retry/contact message. The real
+        // error text is already on its way to Sentry via logError above.
+        final tr = WidgetTranslations.of(context, ref);
+        final isOffline = !isBrowserOnline() || isConnectivityError(e);
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(
-            context,
-            ref,
-          ).errorCreatingBooking(safeErrorToString(e)),
+          message: isOffline
+              ? tr.errorBookingOffline
+              : tr.errorBookingFailedGeneric,
+          duration: const Duration(seconds: 7),
         );
       }
     } finally {

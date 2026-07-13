@@ -218,3 +218,7 @@ void Function() listenToPwaInstallability(
 
 /// No-op on non-web platforms (see the web implementation for the rationale).
 void purgeStaleAppCheckRecaptcha() {}
+
+/// Non-web platforms have no browser online flag; assume connected and let the
+/// error text decide (see the web implementation for the rationale).
+bool isBrowserOnline() => true;

@@ -267,6 +267,71 @@ describe("availability.getUnitAvailability (T11c)", () => {
     expect(out.windows).toEqual([]);
   });
 
+  it("excludes an EXPIRED Stripe placeholder (stripe_pending_expires_at < now)", async () => {
+    // Abandoned Stripe checkout: still status=pending, hold lapsed. The
+    // booking path already ignores it; the calendar must too, so the date
+    // frees immediately instead of waiting for the 5-min cleanup job.
+    const expiredTs = {toMillis: () => Date.now() - 60_000};
+    setSnaps(
+      {
+        empty: false,
+        docs: [{
+          data: () => ({
+            check_in: isoNow(3),
+            check_out: isoNow(5),
+            status: "pending",
+            stripe_pending_expires_at: expiredTs,
+          }),
+        }],
+      },
+      {empty: true, docs: []},
+      {empty: true, docs: []}
+    );
+    const out = await wrapped({
+      data: {propertyId: "p-1", unitId: "u-1", startDate: isoNow(0), endDate: isoNow(10)},
+    });
+    expect(out.windows).toEqual([]);
+  });
+
+  it("keeps a NON-expired Stripe placeholder (hold still active)", async () => {
+    const activeTs = {toMillis: () => Date.now() + 10 * 60_000};
+    setSnaps(
+      {
+        empty: false,
+        docs: [{
+          data: () => ({
+            check_in: isoNow(3),
+            check_out: isoNow(5),
+            status: "pending",
+            stripe_pending_expires_at: activeTs,
+          }),
+        }],
+      },
+      {empty: true, docs: []},
+      {empty: true, docs: []}
+    );
+    const out = await wrapped({
+      data: {propertyId: "p-1", unitId: "u-1", startDate: isoNow(0), endDate: isoNow(10)},
+    });
+    expect(out.windows.length).toBe(1);
+    expect(out.windows[0].source).toBe("booking");
+  });
+
+  it("keeps a plain pending booking with no expiry field (owner-approval flow)", async () => {
+    setSnaps(
+      {
+        empty: false,
+        docs: [{data: () => ({check_in: isoNow(3), check_out: isoNow(5), status: "pending"})}],
+      },
+      {empty: true, docs: []},
+      {empty: true, docs: []}
+    );
+    const out = await wrapped({
+      data: {propertyId: "p-1", unitId: "u-1", startDate: isoNow(0), endDate: isoNow(10)},
+    });
+    expect(out.windows.length).toBe(1);
+  });
+
   it("clips booking windows that start after requested end", async () => {
     setSnaps(
       {

@@ -219,9 +219,22 @@ export const getUnitAvailability = onCall<GetUnitAvailabilityInput, Promise<GetU
       }
 
       const windows: AvailabilityWindow[] = [];
+      const nowMs = Date.now();
 
       for (const doc of bookingsSnap.docs) {
         const data = doc.data();
+        // Skip EXPIRED Stripe placeholders. A placeholder blocks dates for
+        // 15 min while the guest pays; once past `stripe_pending_expires_at`
+        // the booking transaction already ignores it (stripePayment.ts), but
+        // this calendar did not — so an abandoned checkout kept the dates
+        // shown as booked until the 5-min cleanup job caught up (or forever
+        // if it failed). Mirror the booking-path filter so the calendar frees
+        // the date the moment the hold lapses.
+        const expiresAt = data.stripe_pending_expires_at as
+          | admin.firestore.Timestamp
+          | undefined;
+        if (expiresAt && expiresAt.toMillis() < nowMs) continue;
+
         const start = toIsoOrNull(data.check_in);
         const end = toIsoOrNull(data.check_out);
         if (!start || !end) continue;

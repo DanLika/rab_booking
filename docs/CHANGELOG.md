@@ -1,8 +1,66 @@
 # BookBed Changelog
 
-All version history from v4.6 to v7.37.
+All version history from v4.6 to v7.41.
 
-**Last Updated**: 2026-07-10 | **Version**: 7.40
+**Last Updated**: 2026-07-13 | **Version**: 7.41
+
+---
+
+**Changelog 7.41** (2026-07-13):
+
+### P0: owner/admin web email-password login hung forever — web App Check skip (#909, PROD)
+On `app.bookbed.io`, entering email+password and pressing Prijava showed
+"Učitavanje…" forever — `signInWithEmailAndPassword` never reached the network.
+`AppCheckInit.activate` on web used `ReCaptchaV3Provider('placeholder-debug-only')`;
+the reCAPTCHA script is CSP-blocked (no `www.google.com` in script-src), the App
+Check token never mints, and the Auth SDK holds the sign-in waiting for it.
+Isolation proof: `FIREBASE_APPCHECK_DEBUG_TOKEN=true` (debug provider, no
+reCAPTCHA) let the same login complete. App Check is enforced on NO callable +
+Firestore/Storage App Check off → placeholder web token protected nothing.
+`AppCheckInit` now SKIPS web activation when no real `APP_CHECK_RECAPTCHA_KEY`
+is set; mobile (Play Integrity / DeviceCheck) untouched. Owner+admin web
+redeployed; verified live end-to-end: real login lands on `/owner/overview` with
+no debug token. To enable web App Check later: real key + CSP allow + enforcement
+TOGETHER (Option B). Memory: `owner-login-appcheck-hang-2026-07-13.md`.
+
+### PROD outage: getUnitAvailability INTERNAL globally — Firestore index drift (same day)
+Live Firestore was missing composite indexes present in `firestore.indexes.json`
+(`bookings (unit_id,status,check_out)` collectionGroup + `ical_events
+(unit_id,end_date)`), likely sync-deleted by a stale parallel-session
+`deploy --only firestore:indexes`. FAILED_PRECONDITION was re-wrapped by the CF
+catch as INTERNAL, hiding the cause; unmasked by running the raw query via admin
+SDK in Node. Fix: redeploy indexes from source. NOT a code bug (revert proved it).
+Memory: `firestore-index-drift-outage-2026-07-13.md`.
+
+### fix(widget): /view header language selector — globe + code instead of raw flag emoji (#910, PROD)
+The My Booking header language button was a bare 🇬🇧 flag emoji — degrades to
+"GB" fallback letters on platforms without flag-emoji fonts (Windows Chrome), no
+dropdown affordance, inconsistent with the calendar toolbar. Now `Icons.language`
++ uppercase code + caret (same handoff pattern as `calendar_combined_header_widget`);
+language dialog unchanged. Live-verified desktop+mobile (SW-cache purge needed to
+see it on previously-visited browsers).
+
+### fix(owner): Rezervacije KPI strip lied — honest month/7-day windows (#911, PROD)
+"Potvrđeno (mj.)"/"Zarada (mj.)" were fed by UnifiedDashboardNotifier whose window
+is the Pregled preset (default LAST 7 days, backward-looking on check_in) — a
+booking confirmed today with a check-in later this month read 0/€0; "Nadolazeći —
+sljedećih 7 dana" was actually a 14-day query incl. pending. New
+`rezervacije_kpi_provider` computes exactly the labeled windows (calendar month
+for confirmed|completed count+revenue; [now,+7d) for confirmed|pending upcoming),
+invalidated after Odobri/Odbij; pure `computeRezKpi` + 6-cell test. Live: 1/€750/1
+where the old strip showed 0/€0/2. Sparklines remain dashboard trend data.
+
+### E2E runda 13 — full owner flow through the REAL UI (first time, post-#909)
+Widget booking (chrome-devtools a11y click/type) → pending email with view button
+(#905 ✓) → real owner UI login → Odobri → confirmed + approval email (token
+rotates) → email button → /view Confirmed → widget calendar half-day
+check-in/out cells; second booking proved TURNOVER through the UI (check-in on
+another guest's check-out day); Odbij → cancelled → /view Cancelled (pending
+token still valid — reject doesn't rotate) → calendar freed. Reported, not fixed:
+rejected email has NO links (class of #905, P3 product call); `createBookingAtomic`
+returns "Booking confirmed." message for PENDING bookings; "Na čekanju" tile counts
+from the paginated windowed list (undercount past 20 pending). Test bookings
+deleted from PROD.
 
 ---
 

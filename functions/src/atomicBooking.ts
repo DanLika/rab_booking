@@ -1308,7 +1308,11 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"], cors: ge
               propertyData?.name || "Property",
               paymentMethod,
               result.depositAmount,
-              bankDetails
+              bankDetails,
+              // Same plaintext token the confirmation email already carries —
+              // it is the guest's only route to their pending request.
+              result.accessToken,
+              propertyData
             );
           },
           "Pending Booking Request",

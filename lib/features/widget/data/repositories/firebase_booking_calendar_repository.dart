@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/daily_price_model.dart';
@@ -13,6 +14,63 @@ import '../helpers/booking_price_calculator.dart';
 import '../models/availability_window.dart';
 import '../../utils/date_key_generator.dart';
 import 'firebase_availability_repository.dart';
+
+/// Parse one `daily_prices` document into a [DailyPriceModel].
+///
+/// The four calendar streams used to hard-skip any doc missing `unit_id` and
+/// to drop any doc whose model parse threw (e.g. no `created_at`). Both paths
+/// silently discarded the doc's `available: false` flag, so an owner-blocked
+/// day rendered as AVAILABLE — the guest could pick it and only hit the wall
+/// at submit, where `atomicBooking` rejects it ("Date … is not available").
+/// That is a fail-OPEN calendar; blocks must survive a malformed doc.
+///
+/// [unitId] and [propertyId] come from the query path, so they can always
+/// backfill missing denormalized fields. Returns null only when the doc has
+/// no usable date — without a date it cannot address a cell at all.
+@visibleForTesting
+DailyPriceModel? parseDailyPriceDoc(
+  Map<String, dynamic> data,
+  String docId, {
+  required String unitId,
+}) {
+  final rawDate = data['date'];
+  if (rawDate is! Timestamp) return null;
+
+  final json = <String, dynamic>{
+    ...data,
+    'id': docId,
+    'unit_id': data['unit_id'] ?? unitId,
+    // Timestamps are bookkeeping, not calendar semantics: fall back to the
+    // day itself rather than dropping the doc (and its block) over them.
+    'created_at': data['created_at'] ?? rawDate,
+    'updated_at': data['updated_at'] ?? rawDate,
+  };
+
+  try {
+    return DailyPriceModel.fromJson(json);
+  } catch (e, stackTrace) {
+    unawaited(
+      LoggingService.logError(
+        'Error parsing daily price - doc: $docId',
+        e,
+        stackTrace,
+      ),
+    );
+    // Last resort: preserve an explicit block even if the rest is unusable.
+    if (data['available'] == false) {
+      final rawPrice = data['price'];
+      return DailyPriceModel(
+        id: docId,
+        unitId: unitId,
+        date: rawDate.toDate(),
+        price: rawPrice is num ? rawPrice.toDouble() : 0,
+        available: false,
+        createdAt: rawDate.toDate(),
+      );
+    }
+    return null;
+  }
+}
 
 /// Firebase repository for booking calendar with realtime updates and prices.
 ///
@@ -191,26 +249,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         // Parse prices
         final Map<String, DailyPriceModel> priceMap = {};
         for (final doc in pricesSnapshot.docs) {
-          final data = doc.data();
-          // Skip documents without valid date or unit_id field
-          // FIXED: Also check if date is a valid Timestamp
-          if (data['date'] == null ||
-              data['date'] is! Timestamp ||
-              data['unit_id'] == null) {
-            continue;
-          }
-
-          try {
-            final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-            final key = DateKeyGenerator.fromDate(price.date);
-            priceMap[key] = price;
-          } catch (e, stackTrace) {
-            LoggingService.logError(
-              'Error parsing daily price - doc: ${doc.reference.path}',
-              e,
-              stackTrace,
-            );
-          }
+          final price = parseDailyPriceDoc(doc.data(), doc.id, unitId: unitId);
+          if (price == null) continue;
+          priceMap[DateKeyGenerator.fromDate(price.date)] = price;
         }
 
         // Parse widget settings to get booking restrictions
@@ -308,26 +349,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         // Parse prices
         final Map<String, DailyPriceModel> priceMap = {};
         for (final doc in pricesSnapshot.docs) {
-          final data = doc.data();
-          // Skip documents without valid date or unit_id field
-          // FIXED: Also check if date is a valid Timestamp
-          if (data['date'] == null ||
-              data['date'] is! Timestamp ||
-              data['unit_id'] == null) {
-            continue;
-          }
-
-          try {
-            final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-            final key = DateKeyGenerator.fromDate(price.date);
-            priceMap[key] = price;
-          } catch (e, stackTrace) {
-            LoggingService.logError(
-              'Error parsing daily price - doc: ${doc.reference.path}',
-              e,
-              stackTrace,
-            );
-          }
+          final price = parseDailyPriceDoc(doc.data(), doc.id, unitId: unitId);
+          if (price == null) continue;
+          priceMap[DateKeyGenerator.fromDate(price.date)] = price;
         }
 
         // Parse widget settings to get booking restrictions
@@ -420,24 +444,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       // Parse prices
       final Map<String, DailyPriceModel> priceMap = {};
       for (final doc in pricesSnapshot.docs) {
-        final data = doc.data();
-        if (data['date'] == null ||
-            data['date'] is! Timestamp ||
-            data['unit_id'] == null) {
-          continue;
-        }
-
-        try {
-          final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-          final key = DateKeyGenerator.fromDate(price.date);
-          priceMap[key] = price;
-        } catch (e, stackTrace) {
-          LoggingService.logError(
-            'Error parsing daily price - doc: ${doc.reference.path}',
-            e,
-            stackTrace,
-          );
-        }
+        final price = parseDailyPriceDoc(doc.data(), doc.id, unitId: unitId);
+        if (price == null) continue;
+        priceMap[DateKeyGenerator.fromDate(price.date)] = price;
       }
 
       // Build calendar using passed settings (no fetch needed!)
@@ -515,24 +524,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       // Parse prices
       final Map<String, DailyPriceModel> priceMap = {};
       for (final doc in pricesSnapshot.docs) {
-        final data = doc.data();
-        if (data['date'] == null ||
-            data['date'] is! Timestamp ||
-            data['unit_id'] == null) {
-          continue;
-        }
-
-        try {
-          final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-          final key = DateKeyGenerator.fromDate(price.date);
-          priceMap[key] = price;
-        } catch (e, stackTrace) {
-          LoggingService.logError(
-            'Error parsing daily price - doc: ${doc.reference.path}',
-            e,
-            stackTrace,
-          );
-        }
+        final price = parseDailyPriceDoc(doc.data(), doc.id, unitId: unitId);
+        if (price == null) continue;
+        priceMap[DateKeyGenerator.fromDate(price.date)] = price;
       }
 
       // Build calendar using passed settings (no fetch needed!)

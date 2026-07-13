@@ -26,6 +26,7 @@ import {
   calculateBookingNights,
   calculateDaysInAdvance,
   assertAdvanceBookingWindow,
+  assertMaxStayNights,
 } from "./utils/dateValidation";
 import {
   calculateDepositAmount,
@@ -1049,6 +1050,14 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"], cors: ge
             `Minimum ${unitMinStayNights} nights required. You selected ${bookingNights} nights.`
           );
         }
+
+        // SECURITY: enforce the unit's max_stay_nights alongside min. The
+        // min side was already enforced here; the max side was not, so a
+        // caller could book past the owner's configured ceiling (verified
+        // live: max_stay_nights=14 accepted a 15-night booking). Per-day
+        // max_nights_on_arrival (daily_prices) only covers dates that own a
+        // doc; this is the unit-wide fallback. null/0 means "no maximum".
+        assertMaxStayNights(bookingNights, unitData?.max_stay_nights);
 
         logInfo("[AtomicBooking] Unit minStayNights validated", {
           unitId,

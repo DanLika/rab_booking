@@ -392,3 +392,41 @@ export function calculateDaysInAdvance(
 
   return daysInAdvance;
 }
+
+/**
+ * Enforce the UNIT-WIDE advance-booking window from `widget_settings`.
+ *
+ * The per-day `min_days_advance` / `max_days_advance` checks in
+ * `atomicBooking` only fire for dates that actually own a `daily_prices`
+ * document — most dates own none. A caller hitting the callable directly
+ * could therefore book same-day (or years out) on a unit whose settings
+ * demand, say, 10 days' notice. The widget UI has always refused these; the
+ * server did not. This closes that bypass.
+ *
+ * Non-numeric / non-positive settings mean "no rule" and are ignored.
+ *
+ * @param daysInAdvance - Days between today (UTC) and check-in
+ * @param settings - Raw widget_settings document data
+ */
+export function assertAdvanceBookingWindow(
+  daysInAdvance: number,
+  settings: {min_days_advance?: unknown; max_days_advance?: unknown} | undefined
+): void {
+  const min = settings?.min_days_advance;
+  if (typeof min === "number" && min > 0 && daysInAdvance < min) {
+    throw new HttpsError(
+      "failed-precondition",
+      `Must book at least ${min} days in advance. ` +
+        `You are booking ${daysInAdvance} days ahead.`
+    );
+  }
+
+  const max = settings?.max_days_advance;
+  if (typeof max === "number" && max > 0 && daysInAdvance > max) {
+    throw new HttpsError(
+      "failed-precondition",
+      `Can only book up to ${max} days in advance. ` +
+        `You are booking ${daysInAdvance} days ahead.`
+    );
+  }
+}

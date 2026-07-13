@@ -16,6 +16,7 @@ import '../../../data/firebase/firebase_owner_bookings_repository.dart'
 import '../../../domain/models/unified_dashboard_data.dart';
 import '../../../domain/models/windowed_bookings_state.dart';
 import '../../providers/owner_bookings_provider.dart';
+import '../../providers/rezervacije_kpi_provider.dart';
 import '../../providers/unified_dashboard_provider.dart';
 
 /// Premium header for the Rezervacije screen (audit/116 §7 Phase C / audit/117 §B2).
@@ -250,7 +251,14 @@ class _PremiumHeaderRow extends StatelessWidget {
 /// KPI strip. Desktop/tablet (≥600) = 4 tiles (pending / confirmed / monthly
 /// revenue / upcoming). Mobile (<600) = 2 tiles (Na čekanju + Zarada) to match
 /// handoff `RezervacijePremiumMobile`. Mirrors handoff RZPStatStrip.
-class _RezKpiStrip extends StatelessWidget {
+///
+/// Numbers come from [rezervacijeKpiProvider], which computes exactly the
+/// windows the labels claim (calendar month / next 7 days). The dashboard
+/// AsyncValue is kept only for the trend sparklines — its window is the
+/// Pregled preset (default last 7 days) and previously also fed the values,
+/// which made "Potvrđeno (mj.)" read 0 for a booking confirmed today with a
+/// check-in later this month.
+class _RezKpiStrip extends ConsumerWidget {
   final bool isMobile;
   final AsyncValue<UnifiedDashboardData> dashboard;
   final int pendingCount;
@@ -262,7 +270,7 @@ class _RezKpiStrip extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = BBColor.of(context);
     final UnifiedDashboardData data = dashboard.maybeWhen(
       data: (d) => d,
@@ -275,6 +283,9 @@ class _RezKpiStrip extends StatelessWidget {
         bookingHistory: <BookingDataPoint>[],
       ),
     );
+    final RezKpi kpi = ref
+        .watch(rezervacijeKpiProvider)
+        .maybeWhen(data: (k) => k, orElse: () => RezKpi.zero);
 
     final List<double> bookingsSpark = data.bookingHistory
         .map((p) => p.count.toDouble())
@@ -295,7 +306,7 @@ class _RezKpiStrip extends StatelessWidget {
       _RezStatTile(
         icon: 'event_available',
         label: 'Potvrđeno (mj.)',
-        value: '${data.bookings}',
+        value: '${kpi.confirmedThisMonth}',
         spark: bookingsSpark,
         tone: c.success,
         isMobile: isMobile,
@@ -303,7 +314,7 @@ class _RezKpiStrip extends StatelessWidget {
       _RezStatTile(
         icon: 'payments',
         label: 'Zarada (mj.)',
-        value: '€${data.revenue.toStringAsFixed(0)}',
+        value: '€${kpi.revenueThisMonth.toStringAsFixed(0)}',
         spark: revenueSpark,
         tone: c.primary,
         isMobile: isMobile,
@@ -311,7 +322,7 @@ class _RezKpiStrip extends StatelessWidget {
       _RezStatTile(
         icon: 'login',
         label: 'Nadolazeći',
-        value: '${data.upcomingCheckIns}',
+        value: '${kpi.upcoming7Days}',
         sub: 'sljedećih 7 dana',
         tone: c.info,
         isMobile: isMobile,
@@ -746,6 +757,9 @@ class _RezPendingCardState extends ConsumerState<_RezPendingCard> {
           '[premium-header] post-action refresh best-effort failed: $e',
         );
       }
+      // KPI strip windows (Potvrđeno/Zarada mj., Nadolazeći 7d) must reflect
+      // the status flip immediately.
+      if (mounted) ref.invalidate(rezervacijeKpiProvider);
       if (!mounted) return;
       messenger?.showSnackBar(
         SnackBar(

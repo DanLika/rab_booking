@@ -1,10 +1,15 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
+import 'core/config/environment.dart';
+import 'core/error_handling/error_filter.dart';
 import 'core/init/app_check_init.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/sentry_env.dart';
 import 'features/admin/providers/admin_providers.dart';
 // Using production Firebase project
 import 'firebase_options.dart';
@@ -22,7 +27,29 @@ void main() async {
 
   await AppCheckInit.activate(isProd: true);
 
-  runApp(const ProviderScope(child: AdminApp()));
+  // Sentry error tracking (release builds only). Admin was the only PROD
+  // surface without it — owner (main.dart) and widget (widget_main.dart)
+  // already report; same DSN, distinguished by the app_type tag.
+  final sentryDsn = EnvironmentConfig.sentryDsn;
+  if (kReleaseMode && sentryDsn != null && sentryDsn.isNotEmpty) {
+    await SentryFlutter.init((options) {
+      options.dsn = sentryDsn;
+      options.tracesSampleRate = 0.2;
+      options.environment = detectSentryEnvironment();
+      options.beforeSend = (event, hint) {
+        // Same noise gate as owner/widget entries: drop infrastructure /
+        // test-harness exceptions that no user ever sees.
+        if (!isUserFacingException(throwable: event.throwable)) {
+          return null;
+        }
+        return event.copyWith(
+          tags: {...?event.tags, 'app_type': 'admin_dashboard'},
+        );
+      };
+    }, appRunner: () => runApp(const ProviderScope(child: AdminApp())));
+  } else {
+    runApp(const ProviderScope(child: AdminApp()));
+  }
 }
 
 /// Admin Application

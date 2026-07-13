@@ -107,8 +107,15 @@ class PaymentInfoCard extends ConsumerWidget {
             const SizedBox(height: BBSpace.xxs),
             _buildPaymentRow(tr.petFees, petFees!),
           ],
-          const SizedBox(height: BBSpace.xxs),
-          _buildPaymentRow(tr.deposit, depositAmount),
+          // The percentage is derived from the actual amounts — the old label
+          // hardcoded "(20%)" regardless of the owner's configured deposit.
+          if (depositAmount > 0) ...[
+            const SizedBox(height: BBSpace.xxs),
+            _buildPaymentRow(
+              tr.deposit(((depositAmount / totalPrice) * 100).round()),
+              depositAmount,
+            ),
+          ],
           const SizedBox(height: BBSpace.xxs),
           _buildPaymentRow(tr.paid, paidAmount, color: colors.success),
           const SizedBox(height: BBSpace.xxs),

@@ -87,8 +87,17 @@ mixin _BookingFormUiMixin
                   );
                 }
               }
-            } catch (e) {
-              // Ignore errors if provider value is invalid or widget is disposed
+            } catch (e, stackTrace) {
+              // Falling back to 0 silently corrupts the displayed price —
+              // keep the fallback, but report it.
+              unawaited(
+                LoggingService.logError(
+                  '[PriceBar] Failed to read additional services total; '
+                  'falling back to 0',
+                  e,
+                  stackTrace,
+                ),
+              );
               servicesTotal = 0.0;
             }
           }
@@ -102,8 +111,16 @@ mixin _BookingFormUiMixin
             servicesTotal,
             depositPercentage,
           );
-        } catch (e) {
-          // If copyWithServices fails, return empty widget
+        } catch (e, stackTrace) {
+          // The whole price pill disappears on this path — report it so a
+          // calculation bug can't hide behind an empty widget.
+          unawaited(
+            LoggingService.logError(
+              '[PriceBar] copyWithServices failed; hiding price bar',
+              e,
+              stackTrace,
+            ),
+          );
           return const SizedBox.shrink();
         }
 

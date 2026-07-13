@@ -533,7 +533,13 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           BankTransferDetailsCard(
             bankDetails: widget.booking.bankDetails!,
             bookingReference: widget.booking.bookingReference,
-            amount: widget.booking.remainingAmount,
+            // Amount owed NOW via bank transfer: the unpaid part of the
+            // deposit while it is outstanding, the remaining balance after.
+            // Guests on a 10% deposit were being told to wire the full
+            // remaining amount (9x overpayment).
+            amount: widget.booking.paidAmount < widget.booking.depositAmount
+                ? widget.booking.depositAmount - widget.booking.paidAmount
+                : widget.booking.remainingAmount,
             colors: colors,
           ),
         ],

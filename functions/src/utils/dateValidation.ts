@@ -430,3 +430,33 @@ export function assertAdvanceBookingWindow(
     );
   }
 }
+
+/**
+ * Enforce the unit's UNIT-WIDE maximum stay (`max_stay_nights`).
+ *
+ * atomicBooking already enforced `min_stay_nights` inline but never the max,
+ * so a caller could book past the owner's configured ceiling — verified live:
+ * a unit with max_stay_nights=14 accepted a 15-night booking. The per-day
+ * `max_nights_on_arrival` (daily_prices) only covers dates that own a doc;
+ * this is the unit-wide fallback.
+ *
+ * null / undefined / 0 means "no maximum".
+ *
+ * @param bookingNights - Nights in the requested stay
+ * @param maxStayNights - Unit's configured max_stay_nights (raw)
+ */
+export function assertMaxStayNights(
+  bookingNights: number,
+  maxStayNights: unknown
+): void {
+  if (
+    typeof maxStayNights === "number" &&
+    maxStayNights > 0 &&
+    bookingNights > maxStayNights
+  ) {
+    throw new HttpsError(
+      "failed-precondition",
+      `Maximum ${maxStayNights} nights allowed. You selected ${bookingNights} nights.`
+    );
+  }
+}

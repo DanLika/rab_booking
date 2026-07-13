@@ -108,10 +108,15 @@ mixin _CrossTabMixin
               }
             }
           }
-        } catch (e) {
-          LoggingService.log(
-            '[PaymentBridge] Error handling payment result: $e',
-            tag: 'STRIPE',
+        } catch (e, stackTrace) {
+          // Payment-completion path: a swallowed failure here means a PAID
+          // booking whose confirmation never surfaces — must reach Sentry.
+          unawaited(
+            LoggingService.logError(
+              '[PaymentBridge] Error handling payment result',
+              e,
+              stackTrace,
+            ),
           );
           // On error, still reset processing state
           if (mounted) {
@@ -128,10 +133,15 @@ mixin _CrossTabMixin
         '[PaymentBridge] Listener setup complete',
         tag: 'STRIPE',
       );
-    } catch (e) {
-      LoggingService.log(
-        '[PaymentBridge] Failed to setup listener: $e',
-        tag: 'STRIPE',
+    } catch (e, stackTrace) {
+      // Without this listener popup payments are only detected via the
+      // timeout fallback — report the setup failure, don't just note it.
+      unawaited(
+        LoggingService.logError(
+          '[PaymentBridge] Failed to setup listener',
+          e,
+          stackTrace,
+        ),
       );
     }
   }

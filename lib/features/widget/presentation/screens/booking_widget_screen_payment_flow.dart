@@ -331,8 +331,14 @@ mixin _PaymentFlowMixin on _BookingWidgetScreenStateBase, _DataLoadingMixin {
           BookingUrlStateService.clearBookingParams();
         }
       }
-    } catch (e) {
-      LoggingService.log('[STRIPE_RETURN] ❌ Error: $e', tag: 'STRIPE_SESSION');
+    } catch (e, stackTrace) {
+      // Post-payment path: the guest may already be charged at this point, so
+      // a failure to surface the confirmed booking must reach Sentry.
+      await LoggingService.logError(
+        '[STRIPE_RETURN] Failed to load confirmed booking after redirect',
+        e,
+        stackTrace,
+      );
 
       if (mounted) {
         SnackBarHelper.showError(

@@ -298,17 +298,17 @@ class WidgetTranslations {
     }
   }
 
-  String get deposit {
+  String deposit(int percent) {
     switch (locale.languageCode) {
       case 'hr':
-        return 'Polog (20%)';
+        return 'Polog ($percent%)';
       case 'de':
-        return 'Anzahlung (20%)';
+        return 'Anzahlung ($percent%)';
       case 'it':
-        return 'Deposito (20%)';
+        return 'Deposito ($percent%)';
       case 'en':
       default:
-        return 'Deposit (20%)';
+        return 'Deposit ($percent%)';
     }
   }
 

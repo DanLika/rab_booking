@@ -25,6 +25,7 @@ import {
   validateOwnerBookingDates,
   calculateBookingNights,
   calculateDaysInAdvance,
+  assertAdvanceBookingWindow,
 } from "./utils/dateValidation";
 import {
   calculateDepositAmount,
@@ -820,6 +821,14 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"], cors: ge
 
       // Calculate days in advance for min/max advance booking validation
       const daysInAdvance = calculateDaysInAdvance(checkInDate);
+
+      // SECURITY: enforce the UNIT-WIDE advance-booking window from
+      // widget_settings. The per-day checks further down only fire for dates
+      // that own a daily_prices doc — most dates own none, so a caller hitting
+      // the callable directly could book same-day (or years out) on a unit
+      // whose settings demand 10 days' notice. The widget UI has always
+      // refused these; the server did not.
+      assertAdvanceBookingWindow(daysInAdvance, widgetSettings);
 
       // Query daily_prices for all dates in the booking range
       // (check-in date to check-out date - 1, as check-out is exclusive)

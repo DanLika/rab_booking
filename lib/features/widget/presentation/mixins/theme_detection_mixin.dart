@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
+import '../providers/widget_config_provider.dart';
 
 /// Mixin for detecting system theme and syncing with themeProvider.
 ///
@@ -33,13 +34,16 @@ mixin ThemeDetectionMixin<T extends ConsumerStatefulWidget>
     if (_hasDetectedSystemTheme) return;
 
     _hasDetectedSystemTheme = true;
-    final brightness = MediaQuery.of(context).platformBrightness;
-    final isSystemDark = brightness == Brightness.dark;
+    // An explicit ?theme= embed parameter wins over the system brightness.
+    final isDark = initialDarkFromConfig(
+      ref.read(widgetConfigProvider).themeMode,
+      MediaQuery.of(context).platformBrightness,
+    );
 
-    // Set theme provider to match system theme (after build frame)
+    // Set theme provider after the build frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        ref.read(themeProvider.notifier).state = isSystemDark;
+        ref.read(themeProvider.notifier).state = isDark;
       }
     });
   }

@@ -13,6 +13,7 @@ import 'core/config/router_widget.dart';
 import 'core/utils/web_utils.dart'; // For hideNativeSplash
 import 'features/widget/presentation/providers/language_provider.dart';
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
+import 'features/widget/domain/models/embed_url_params.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options_dev.dart'; // Import DEV options
@@ -95,9 +96,14 @@ void main() async {
   // Run app without Sentry for dev
   runApp(
     ProviderScope(
-      overrides: prefs != null
-          ? [sharedPreferencesProvider.overrideWithValue(prefs)]
-          : [],
+      overrides: [
+        if (prefs != null) sharedPreferencesProvider.overrideWithValue(prefs),
+        // Seed the embed config from the URL — same fix as widget_main.dart:
+        // without it every ?theme=/?primaryColor= embed parameter is a no-op.
+        widgetConfigProvider.overrideWith(
+          (ref) => EmbedUrlParams.fromUrlParameters(Uri.base),
+        ),
+      ],
       child: const BookingWidgetApp(),
     ),
   );

@@ -16,6 +16,7 @@ import 'core/utils/sentry_env.dart';
 import 'core/utils/web_utils.dart'; // For hideNativeSplash
 import 'features/widget/presentation/providers/language_provider.dart';
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
+import 'features/widget/domain/models/embed_url_params.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options.dart';
@@ -155,10 +156,17 @@ void main() async {
   // three land together, leave this OFF.
   // (Owner/admin entries still call AppCheckInit.activate — unaffected.)
 
-  // Override SharedPreferences provider if initialization succeeded
-  final overrides = prefs != null
-      ? [sharedPreferencesProvider.overrideWithValue(prefs)]
-      : <Override>[];
+  // Override SharedPreferences provider if initialization succeeded.
+  // widgetConfigProvider must be seeded from the URL here — it is a plain
+  // StateProvider whose default is an empty EmbedUrlParams, so without this
+  // override every documented embed parameter (?theme=, ?primaryColor=, …)
+  // was silently ignored.
+  final overrides = <Override>[
+    if (prefs != null) sharedPreferencesProvider.overrideWithValue(prefs),
+    widgetConfigProvider.overrideWith(
+      (ref) => EmbedUrlParams.fromUrlParameters(Uri.base),
+    ),
+  ];
 
   // Initialize Sentry for error tracking (production only)
   final sentryDsn = EnvironmentConfig.sentryDsn;

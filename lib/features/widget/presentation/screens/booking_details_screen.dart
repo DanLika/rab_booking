@@ -402,11 +402,35 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
             ),
           ),
           const SizedBox(width: BBSpace.xs),
-          // Language switcher button (right side) - shows current language flag
+          // Language switcher button (right side) — globe icon + uppercase
+          // language code, mirroring the calendar header toolbar. A raw flag
+          // emoji here renders as fallback letters ("GB") on platforms without
+          // flag-emoji fonts (e.g. Windows Chrome).
           IconButton(
-            icon: Text(
-              _getFlagEmoji(ref.watch(languageProvider)),
-              style: const TextStyle(fontSize: iconSize - 4),
+            icon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.language,
+                  size: iconSize - 6,
+                  color: colors.textPrimary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  ref.watch(languageProvider).toUpperCase(),
+                  style: TextStyle(
+                    fontSize: iconSize - 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_drop_down,
+                  size: iconSize - 6,
+                  color: colors.textPrimary,
+                ),
+              ],
             ),
             onPressed: () => _showLanguageDialog(colors),
             tooltip: tr.tooltipChangeLanguage,

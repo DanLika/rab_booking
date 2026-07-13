@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'croatian_plural.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../core/design/tokens.dart';
 import '../../../../../shared/models/booking_model.dart';
@@ -631,8 +632,10 @@ class _LedgerFooter extends StatelessWidget {
   }
 }
 
-String _nightWord(int n) => n == 1 ? 'noć' : 'noći';
-String _guestWord(int n) => n == 1 ? 'gost' : 'gosta';
+// Croatian pluralization lives in croatian_plural.dart (one / paucal / many).
+// The old n==1?few form got 5+ wrong ("5 gosta" instead of "5 gostiju").
+String _nightWord(int n) => nightWord(n);
+String _guestWord(int n) => guestWord(n);
 
 // ───────────────────────────────────────────────────────────────────────────
 // Off-grid tuned metrics (handoff-derived; named so the page stays free of

@@ -60,8 +60,10 @@ class BookingLookupService {
           case 'invalid_token':
           case 'expired_token':
             throw BookingException(
+              // No manual-lookup UI exists on /view — don't send guests
+              // chasing one; point them at the email link instead.
               'Access link is invalid or has expired. '
-              'Please try manual lookup.',
+              'Please open the link from your booking confirmation email.',
               code: 'booking/permission-denied',
             );
           default:

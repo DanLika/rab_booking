@@ -1056,7 +1056,9 @@ export async function sendPendingBookingRequestEmail(
   propertyName: string,
   paymentMethod?: string,
   depositAmount?: number,
-  bankDetails?: BankDetails
+  bankDetails?: BankDetails,
+  accessToken?: string,
+  propertyData?: PropertyData
 ): Promise<void> {
   // Input validation
   validateEmail(guestEmail, "guestEmail");
@@ -1065,6 +1067,16 @@ export async function sendPendingBookingRequestEmail(
   validateRequiredString(propertyName, "propertyName");
 
   try {
+    // Same secure link the approved email carries. A pending guest needs it
+    // even more: /view is token-gated and there is no manual-lookup screen,
+    // so without it they cannot view — or cancel — their own request.
+    const viewBookingUrl = accessToken ? generateViewBookingUrl(
+      bookingReference,
+      guestEmail,
+      accessToken,
+      propertyData
+    ) : undefined;
+
     // Build params for V2 template
     const params: PendingBookingRequestParams = {
       guestEmail,
@@ -1074,6 +1086,7 @@ export async function sendPendingBookingRequestEmail(
       paymentMethod,
       depositAmount,
       bankDetails,
+      viewBookingUrl,
     };
 
     // Send email using V2 template (OPCIJA A: Refined Premium)

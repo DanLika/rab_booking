@@ -16,6 +16,7 @@ import {
   generateIntro,
   generateCard,
   generateAlert,
+  generateButton,
   generateBankTransferCard,
   escapeHtml,
 } from "../utils/template-helpers";
@@ -38,6 +39,13 @@ export interface PendingBookingRequestParams {
   depositAmount?: number;
   /** Bank details (required if paymentMethod is 'bank_transfer') */
   bankDetails?: BankDetailsParams;
+  /**
+   * Secure "view my booking" link. Without it a guest holding a PENDING
+   * request has no way to reach their booking at all: /view needs the access
+   * token, and there is no manual-lookup screen. They could not even cancel
+   * the request they just made.
+   */
+  viewBookingUrl?: string;
 }
 
 /**
@@ -46,7 +54,15 @@ export interface PendingBookingRequestParams {
 export function generatePendingBookingRequestEmailV2(
   params: PendingBookingRequestParams
 ): string {
-  const {guestName, bookingReference, propertyName, paymentMethod, depositAmount, bankDetails} = params;
+  const {
+    guestName,
+    bookingReference,
+    propertyName,
+    paymentMethod,
+    depositAmount,
+    bankDetails,
+    viewBookingUrl,
+  } = params;
 
   // Check if this is a bank transfer booking with valid bank details
   const isBankTransfer = paymentMethod === "bank_transfer" &&
@@ -106,6 +122,14 @@ export function generatePendingBookingRequestEmailV2(
 
   const whatsNextCard = generateCard("Šta je sljedeće?", whatNextItems);
 
+  // The guest's only route to their pending request: /view needs the access
+  // token and no manual-lookup screen exists, so without this button they
+  // cannot see — or cancel — the request they just submitted.
+  const viewBookingButton = viewBookingUrl ? generateButton({
+    text: "Pregledaj moju rezervaciju",
+    url: viewBookingUrl,
+  }) : "";
+
   // Info alert
   const infoAlert = generateAlert({
     type: "info",
@@ -119,6 +143,7 @@ export function generatePendingBookingRequestEmailV2(
     ${pendingAlert}
     ${bankTransferSection}
     ${whatsNextCard}
+    ${viewBookingButton}
     ${infoAlert}
   `;
 

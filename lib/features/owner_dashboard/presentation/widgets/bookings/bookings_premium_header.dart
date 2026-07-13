@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'croatian_plural.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -868,7 +869,9 @@ class _RezPendingCardState extends ConsumerState<_RezPendingCard> {
                     _Fact(icon: Icons.event, text: p.range),
                     _Fact(
                       icon: Icons.group,
-                      text: '${p.guests} gosta · ${p.nights} noći',
+                      text:
+                          '${p.guests} ${guestWord(p.guests)} · '
+                          '${p.nights} ${nightWord(p.nights)}',
                     ),
                     if (p.source != null)
                       _Fact(icon: Icons.sell, text: p.source!),

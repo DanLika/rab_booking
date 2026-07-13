@@ -592,11 +592,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                       ? colors.textPrimary
                       : isToday
                       ? colors.textPrimary
-                      // Neutral border on white available cells (light); dark
-                      // keeps the teal border — mirrors month view (f3cda726).
-                      : _isAvailableFamily(dateInfo.status) &&
-                            _lightAvailableCells(colors)
-                      ? colors.borderDefault
                       : dateInfo.status.getBorderColor(colors),
                   width: (isRangeStart || isRangeEnd || isToday)
                       ? BorderTokens.widthMedium
@@ -694,16 +689,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     }
   }
 
-  /// Handoff widget-calendar.jsx: light-theme available cells are plain white
-  /// (selection carries the mint); dark keeps the teal fill. Month view and the
-  /// split-day painter already follow this (f3cda726) — the year view was left
-  /// mint, so the SAME theme showed green cells in Year and white in Month.
-  bool _lightAvailableCells(WidgetColorScheme colors) =>
-      colors.backgroundPrimary.computeLuminance() > 0.5;
-
-  Color _availableFill(WidgetColorScheme colors) => _lightAvailableCells(colors)
-      ? Colors.white
-      : DateStatus.available.getColor(colors);
+  /// Operator decision 2026-07-13: available cells are GREEN in both themes,
+  /// consistently across Month and Year (the white-cells handoff reading from
+  /// f3cda726 is reversed — guests scan for green = free).
+  Color _availableFill(WidgetColorScheme colors) =>
+      DateStatus.available.getColor(colors);
 
   bool _isAvailableFamily(DateStatus status) =>
       status == DateStatus.available ||

@@ -31,12 +31,10 @@ class SplitDayCalendarPainter extends CustomPainter {
     this.isCheckInPending = false,
   });
 
-  /// Handoff widget-calendar.jsx: in light theme, available cells are plain
-  /// white (selection carries the mint). Dark theme keeps the teal fill —
-  /// the handoff has no dark spec and white cells would invert the OLED look.
-  Color get _availableFill => colors.backgroundPrimary.computeLuminance() > 0.5
-      ? Colors.white
-      : DateStatus.available.getColor(colors);
+  /// Operator decision 2026-07-13: available halves are GREEN in both themes
+  /// (the white-cells handoff reading from f3cda726 is reversed — guests scan
+  /// for green = free).
+  Color get _availableFill => DateStatus.available.getColor(colors);
 
   @override
   void paint(Canvas canvas, Size size) {

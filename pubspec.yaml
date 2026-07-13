@@ -102,12 +102,12 @@ dependencies:
   graphic: ^2.7.0
 
   # Syncfusion Calendar (Month/Schedule view for mobile-friendly calendar)
-  syncfusion_flutter_calendar: ^28.1.33
+  syncfusion_flutter_calendar: ^34.1.30
 
   # Syncfusion localizations (HR day names + nav button labels in calendar header).
   # Wired in MaterialApp.localizationsDelegates via SfGlobalLocalizations.delegate
   # in main.dart + admin_main*.dart + widget_main*.dart (audit/82).
-  syncfusion_localizations: ^28.1.33
+  syncfusion_localizations: ^34.1.30
   material_symbols_icons: ^4.2928.1
 
 dev_dependencies:

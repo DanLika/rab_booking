@@ -51,3 +51,23 @@ String safeErrorToString(dynamic error) {
     return 'Error: Unable to display error details';
   }
 }
+
+/// Is this failure the guest's connectivity rather than our backend?
+///
+/// A guest who loses wifi mid-submit used to be shown
+/// "Error creating booking: BookingServiceException: Failed to create
+/// booking: internal" — developer text that tells them nothing and hides the
+/// one thing they can act on. Callables surface a dropped connection as
+/// `unavailable` / `deadline-exceeded` / a raw `SocketException`, all of which
+/// reach us wrapped in a service exception, so match on the rendered text.
+bool isConnectivityError(dynamic error) {
+  final text = safeErrorToString(error).toLowerCase();
+  return text.contains('unavailable') ||
+      text.contains('deadline-exceeded') ||
+      text.contains('deadline exceeded') ||
+      text.contains('socketexception') ||
+      text.contains('failed host lookup') ||
+      text.contains('network') ||
+      text.contains('connection') ||
+      text.contains('client is offline');
+}

@@ -966,3 +966,10 @@ void purgeStaleAppCheckRecaptcha() {
     web.window.sessionStorage.removeItem(key);
   }
 }
+
+/// Whether the browser currently believes it has a network connection.
+///
+/// Used to tell a guest who lost wifi mid-submit ("check your connection")
+/// apart from a genuine backend failure ("try again or contact the owner") —
+/// the callable reports both as an opaque `internal` error.
+bool isBrowserOnline() => web.window.navigator.onLine;

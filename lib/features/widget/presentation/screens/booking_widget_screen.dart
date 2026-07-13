@@ -21,6 +21,7 @@ import '../widgets/additional_services_widget.dart';
 import '../widgets/tax_legal_disclaimer_widget.dart';
 import '../providers/booking_price_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/widget_config_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import '../providers/owner_gate_status_provider.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
@@ -354,15 +355,18 @@ class _BookingWidgetScreenState extends _BookingWidgetScreenStateBase
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Detect system theme on first load (only once to preserve manual toggle)
+    // Detect initial theme on first load (only once to preserve manual
+    // toggle): an explicit ?theme= embed parameter wins over the system
+    // brightness.
     if (!_hasDetectedSystemTheme) {
       _hasDetectedSystemTheme = true;
-      final brightness = MediaQuery.of(context).platformBrightness;
-      final isSystemDark = brightness == Brightness.dark;
-      // Set theme provider to match system theme
+      final isDark = initialDarkFromConfig(
+        ref.read(widgetConfigProvider).themeMode,
+        MediaQuery.of(context).platformBrightness,
+      );
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          ref.read(themeProvider.notifier).state = isSystemDark;
+          ref.read(themeProvider.notifier).state = isDark;
         }
       });
     }

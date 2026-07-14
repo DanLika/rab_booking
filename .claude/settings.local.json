@@ -29,7 +29,15 @@
       "mcp__memory__search_nodes",
       "WebFetch(domain:icalendar.org)",
       "WebFetch(domain:bookbed.io)",
-      "WebFetch(domain:ical.booking.com)"
+      "WebFetch(domain:ical.booking.com)",
+      "Bash(awk '{print $4\" free\"}')",
+      "Bash(xcrun simctl *)",
+      "Bash(rm -rf ~/Library/Developer/CoreSimulator/Caches/*)",
+      "Bash(dart run *)",
+      "Bash(awk 'NR==2{print \"disk:\",$4}')",
+      "Read(//private/tmp/bb-widget-refactor-wt/lib/**)",
+      "Bash(emulator -list-avds)",
+      "Bash(adb devices *)"
     ],
     "deny": []
   }

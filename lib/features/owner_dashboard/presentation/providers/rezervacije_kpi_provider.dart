@@ -26,23 +26,35 @@ class RezKpi {
   final double revenueThisMonth;
   final int upcoming7Days;
 
+  /// Count of ALL bookings awaiting the owner's response (status == pending),
+  /// regardless of check-in date. NOT the windowed/priority-queue preview,
+  /// which caps at 4 — the "Na čekanju" tile must show the true total.
+  final int pendingTotal;
+
   const RezKpi({
     required this.confirmedThisMonth,
     required this.revenueThisMonth,
     required this.upcoming7Days,
+    required this.pendingTotal,
   });
 
   static const zero = RezKpi(
     confirmedThisMonth: 0,
     revenueThisMonth: 0,
     upcoming7Days: 0,
+    pendingTotal: 0,
   );
 }
 
 /// Pure classifier so the window logic is unit-testable without Firestore.
 /// [bookings] entries need `status` (String), `check_in` (DateTime) and
-/// `total_price` (num, optional).
-RezKpi computeRezKpi(List<Map<String, dynamic>> bookings, DateTime now) {
+/// `total_price` (num, optional). [pendingTotal] is the all-time pending
+/// count (computed separately from an aggregation), passed through verbatim.
+RezKpi computeRezKpi(
+  List<Map<String, dynamic>> bookings,
+  DateTime now, {
+  int pendingTotal = 0,
+}) {
   final monthStart = DateTime(now.year, now.month);
   final nextMonthStart = DateTime(now.year, now.month + 1);
   final upcomingEnd = now.add(const Duration(days: 7));
@@ -73,6 +85,7 @@ RezKpi computeRezKpi(List<Map<String, dynamic>> bookings, DateTime now) {
     confirmedThisMonth: confirmedThisMonth,
     revenueThisMonth: revenueThisMonth,
     upcoming7Days: upcoming7Days,
+    pendingTotal: pendingTotal,
   );
 }
 
@@ -132,7 +145,27 @@ Future<RezKpi> rezervacijeKpi(Ref ref) async {
       }
     }
 
-    return computeRezKpi(docs, now);
+    // "Na čekanju" tile = ALL pending bookings awaiting the owner's response,
+    // regardless of check-in date. The priority-queue preview caps at 4 and
+    // the windowed list caps at 20/50, so neither can feed an honest count.
+    // Pending sets are small (they need action), so a filtered get() is cheap
+    // and lets us apply the same unit-ownership filter as the rest.
+    var pendingTotal = 0;
+    try {
+      final pendingSnap = await firestore
+          .collectionGroup('bookings')
+          .where('owner_id', isEqualTo: userId)
+          .where('status', isEqualTo: 'pending')
+          .get();
+      for (final doc in pendingSnap.docs) {
+        if (unitIds.contains(doc.data()['unit_id'])) pendingTotal++;
+      }
+    } catch (e, st) {
+      await LoggingService.logError('RezKpi: failed to count pending', e, st);
+      // Graceful degradation: leave pendingTotal at 0.
+    }
+
+    return computeRezKpi(docs, now, pendingTotal: pendingTotal);
   } catch (e, st) {
     await LoggingService.logError('RezKpi: failed to compute', e, st);
     return RezKpi.zero;

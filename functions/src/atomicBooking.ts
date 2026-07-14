@@ -43,6 +43,11 @@ import {requireActiveOwner} from "./utils/requireActiveOwner";
 import {requireActiveUnitOwner} from "./utils/requireActiveUnitOwner";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
+import {
+  emailVerificationRequired,
+  hashEmailForVerification,
+  isEmailVerificationValid,
+} from "./utils/emailVerificationGuard";
 import {setUser, captureMessage} from "./sentry";
 import {invalidateIcalCache} from "./utils/icalCache";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
@@ -384,6 +389,27 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"], cors: ge
     }
 
     const widgetSettings = widgetSettingsDoc.data();
+
+    // ========================================================================
+    // STEP 1.5: Enforce owner's "require email verification" server-side.
+    // Previously a client-only gate (widget UI); a direct callable request
+    // could book with an unverified/fake email. Same class as the advance
+    // (#903) and max-stay (#906) guards.
+    // ========================================================================
+    if (emailVerificationRequired(widgetSettings)) {
+      const verifDoc = await db
+        .collection("email_verifications")
+        .doc(hashEmailForVerification(sanitizedGuestEmail))
+        .get();
+      if (!isEmailVerificationValid(verifDoc.data(), new Date())) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Email verification required. Please verify your email address " +
+            "before completing your booking."
+        );
+      }
+    }
+
     const stripeConfig = widgetSettings?.stripe_config;
     const bankTransferConfig = widgetSettings?.bank_transfer_config;
     const icalExportEnabled =

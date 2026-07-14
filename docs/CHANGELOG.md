@@ -1,8 +1,40 @@
 # BookBed Changelog
 
-All version history from v4.6 to v7.41.
+All version history from v4.6 to v7.42.
 
-**Last Updated**: 2026-07-13 | **Version**: 7.41
+**Last Updated**: 2026-07-14 | **Version**: 7.42
+
+---
+
+**Changelog 7.42** (2026-07-14):
+
+### P1: owner's require-email-verification was client-only — server enforcement (#923, PROD)
+`require_email_verification` gated only the widget form's Send button;
+`createBookingAtomic` never checked it (it loaded `widget_settings` for
+stripe/bank/ical/mode, not `email_config`). A direct callable to a verif-ON unit
+with a never-verified email booked successfully — same client-only-guard class as
+#903 (advance window) and #906 (max-stay). New pure `emailVerificationGuard.ts`
+(`hashEmailForVerification` byte-identical to `emailVerification.ts` hashEmail;
+`isEmailVerificationValid` mirrors `checkEmailVerificationStatus` =
+verified && ≤expiresAt) + guard in atomicBooking STEP 1.5 after widget_settings
+load: reads `email_verifications/{sha256(email)}`, rejects `failed-precondition`
+if not verified/fresh. 11-cell test; functions jest 503/503. Live 3-way:
+unverified verif-ON unit → REJECT, verif-OFF unit → SUCCESS (no regression),
+seeded-verified → SUCCESS. `email_verifications` rules stay `read/write:if false`.
+FROZEN 2-doc write untouched. Memory: `widget-full-e2e-2026-07-13.md` (runda 14).
+
+### fix(owner): "Na čekanju" KPI tile hard-capped at 4 pending (#924, PROD)
+The Rezervacije "Na čekanju" tile read `pendingPreview.length`, but
+`_pendingPreviews()` ends `.take(4)` (a priority-queue preview, not a count) — an
+owner with 5+ pending saw "4", silently plateaued. `rezervacijeKpiProvider` now
+counts ALL pending (`collectionGroup owner_id + status==pending`, unit-filtered,
+no date-window since pending needs action regardless of date; small sets → cheap
+filtered get()); tile shows `kpi.pendingTotal`, falling back to preview-length
+(≤4) only while the aggregate loads (never flashes 0). Priority-queue cards + AI
+nudge keep `.take(4)`. `RezKpi.pendingTotal` through computeRezKpi, +2 test cells
+(8/8), analyze clean, query live-verified (no new composite index). Live wiring
+proof: seeded 5 pending → real login → tile "NA ČEKANJU 5" (was 4). Memory:
+`widget-full-e2e-2026-07-13.md` (runda 16).
 
 ---
 

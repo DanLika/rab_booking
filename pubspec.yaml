@@ -78,7 +78,7 @@ dependencies:
   json_annotation: ^4.9.0
 
   # Utilities
-  share_plus: ^12.0.1
+  share_plus: ^12.0.2
   shared_preferences: ^2.5.5
   package_info_plus: ^8.1.2  # App version info
   flutter_secure_storage: ^10.3.1  # Secure credential storage

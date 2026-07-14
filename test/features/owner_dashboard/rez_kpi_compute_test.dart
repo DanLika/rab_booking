@@ -66,5 +66,28 @@ void main() {
       expect(kpi.confirmedThisMonth, 1);
       expect(kpi.revenueThisMonth, 0);
     });
+
+    test(
+      'pendingTotal passes through verbatim (not derived from windowed docs)',
+      () {
+        // The tile total is an all-time aggregation injected separately; it is
+        // independent of how many pending docs are in the windowed [bookings].
+        final kpi = computeRezKpi(
+          [b('pending', DateTime(2026, 7, 21), 300)],
+          now,
+          pendingTotal: 17,
+        );
+        expect(kpi.pendingTotal, 17);
+        // windowed pending still only feeds upcoming7Days, not the tile count.
+        expect(kpi.upcoming7Days, 0); // Jul 21 is >7d from Jul 13
+      },
+    );
+
+    test('pendingTotal defaults to 0 when omitted', () {
+      final kpi = computeRezKpi([
+        b('confirmed', DateTime(2026, 7, 20), 750),
+      ], now);
+      expect(kpi.pendingTotal, 0);
+    });
   });
 }

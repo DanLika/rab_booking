@@ -283,9 +283,19 @@ class _RezKpiStrip extends ConsumerWidget {
         bookingHistory: <BookingDataPoint>[],
       ),
     );
-    final RezKpi kpi = ref
-        .watch(rezervacijeKpiProvider)
-        .maybeWhen(data: (k) => k, orElse: () => RezKpi.zero);
+    final AsyncValue<RezKpi> kpiAsync = ref.watch(rezervacijeKpiProvider);
+    final RezKpi kpi = kpiAsync.maybeWhen(
+      data: (k) => k,
+      orElse: () => RezKpi.zero,
+    );
+    // "Na čekanju" shows the TRUE pending total once the KPI aggregation
+    // resolves. Until then fall back to the priority-queue preview length
+    // (≤4) so the tile is never a flash of 0 while loading. The old code used
+    // pendingCount (== preview length) directly, hard-capping the tile at 4.
+    final int pendingDisplay = kpiAsync.maybeWhen(
+      data: (k) => k.pendingTotal,
+      orElse: () => pendingCount,
+    );
 
     final List<double> bookingsSpark = data.bookingHistory
         .map((p) => p.count.toDouble())
@@ -298,8 +308,8 @@ class _RezKpiStrip extends ConsumerWidget {
       _RezStatTile(
         icon: 'pending_actions',
         label: 'Na čekanju',
-        value: '$pendingCount',
-        sub: pendingCount > 0 ? 'čeka odgovor' : null,
+        value: '$pendingDisplay',
+        sub: pendingDisplay > 0 ? 'čeka odgovor' : null,
         tone: c.tertiary,
         isMobile: isMobile,
       ),

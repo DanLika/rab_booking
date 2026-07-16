@@ -8,6 +8,49 @@ All version history from v4.6 to v7.43.
 
 **Changelog 7.43** (2026-07-16):
 
+### fix(owner): in-stay bookings offered the owner no action at all (#942)
+A guest **currently staying** fell through both lifecycle gates —
+`complete` required `isPast`, `cancel` required `isUpcoming` (via
+`canBeCancelled`) — so from check-in day to check-out there was no
+early-departure and no no-show path, only Poruka/Uredi.
+`detailActionVisibility`'s own docstring claimed it *"guarantees no confirmed
+booking is ever action-stranded (past → complete, upcoming → cancel)"*, quietly
+excluding the in-stay window it never named. Both bounds now hinge on the
+stay's own edges: `complete: confirmed && !isUpcoming` (the stay has STARTED),
+`cancel: status.canBeCancelled && !isPast` (the stay has NOT FINISHED).
+Upcoming/past behaviour unchanged.
+**Reverses a deliberate pin, on an explicit operator decision.** The old cell
+asserted "neither complete nor cancel" mid-stay, reasoning *"not stranded:
+Poruka + Uredi remain available"* — a reading of "stranded" meaning
+actions-exist rather than lifecycle-actions-exist. Cell kept and inverted, plus
+a check-in-today boundary cell for the moment the old gate flipped shut.
+RED→GREEN: 3 cells fail without the change.
+
+### fix(auth): password errors English-only, and the ARB stated the wrong rule (#943)
+`PasswordValidator` is a static utility with no `BuildContext`, so it returned
+English prose — a Croatian owner read "One uppercase letter" on register/login/
+change-password (the requirement list renders straight from it). And the string
+meant for this stated the wrong rule: `passwordTooShort` claimed "at least **6**
+characters" in both ARBs while `minLength = 8`. Dormant (zero consumers) so it
+misled nobody yet — same dormant-string class as #935/#937.
+Fixed in the shape those landed on: **the validator returns codes, the screen
+translates.** New `password_error_l10n.dart` maps `PasswordError` →
+`AppLocalizations`, with a checklist variant so `tooShort` reads "At least 8
+characters" in the strength meter and a full sentence as a field error.
+⚠ **The legacy `String?` API stays English on purpose** —
+`enhanced_auth_email.dart:327` does `throw passwordError` on a non-UI path; an
+early draft returning `code.name` there would have thrown **"tooShort"** at the
+user. Caught pre-merge; `_englishFor` keeps that path a sentence. SF-006
+sequential/repeating guards and the common-password blacklist untouched.
++11/-1 per ARB (a JSON round-trip reformatted all 780 lines — reverted, patched
+surgically). core + l10n + auth suites 339/339.
+
+### Known: 3 red cells on main (pre-existing)
+`bookings_premium_kpi_count_test.dart` fails 3 cells on clean `origin/main`
+(mobile 2-KPI, tablet/desktop 4-KPI, narrow-width overflow). Reproduced against
+untouched main during #942 — **not introduced by this campaign**, and not yet
+diagnosed.
+
 ### P1 fix(admin): Users list stranded owners behind an active filter (#939)
 Filtering/search is **client-side** over the rows loaded so far (20/page), while
 the status-tab badges are **real server-side `.count()` aggregates** over the

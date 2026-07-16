@@ -5,6 +5,13 @@ part of 'enhanced_auth_provider.dart';
 ///
 /// Extracted verbatim from EnhancedAuthNotifier on 2026-07-12 — file split
 /// only, ZERO behavior change. PII-redaction and SF-007 handling untouched.
+/// Ceiling on the pre-sign-in guards (cloud rate limit, persistence). Each one
+/// already fails open on error, so the only thing a longer wait buys is a
+/// longer hang. See #909: a Firebase call that never resolves — rather than
+/// throwing — held the login screen forever, because a `catch` can't fire on
+/// a call that never returns.
+const Duration _kAuthGuardTimeout = Duration(seconds: 5);
+
 mixin _EmailAuthMixin on _EnhancedAuthNotifierBase {
   /// Sign in with email and password (with rate limiting)
   Future<void> signInWithEmail({
@@ -28,7 +35,15 @@ mixin _EmailAuthMixin on _EnhancedAuthNotifierBase {
             region: 'europe-west1',
           );
           final callable = functions.httpsCallable('checkLoginRateLimit');
-          await callable.call({'email': email});
+          await callable.call({'email': email}).timeout(_kAuthGuardTimeout);
+        } on TimeoutException {
+          // Fail-open, same as the FirebaseFunctionsException path below.
+          // WITHOUT this, a hung callable never throws, so neither catch
+          // fires and the login screen waits forever (#909 class).
+          LoggingService.log(
+            'IP rate limit check timed out, continuing',
+            tag: 'AUTH_WARNING',
+          );
         } on FirebaseFunctionsException catch (e) {
           if (e.code == 'resource-exhausted') {
             LoggingService.log(
@@ -51,9 +66,20 @@ mixin _EmailAuthMixin on _EnhancedAuthNotifierBase {
       final localChecksFuture = Future.wait([
         _rateLimit.checkRateLimit(email),
         kIsWeb
-            ? _auth.setPersistence(
-                rememberMe ? Persistence.LOCAL : Persistence.SESSION,
-              )
+            ? _auth
+                  .setPersistence(
+                    rememberMe ? Persistence.LOCAL : Persistence.SESSION,
+                  )
+                  .timeout(
+                    _kAuthGuardTimeout,
+                    // Persistence is a preference, not a gate — a stuck call
+                    // must not cost the user their login. Worst case the
+                    // session falls back to the SDK default.
+                    onTimeout: () => LoggingService.log(
+                      'setPersistence timed out, continuing with SDK default',
+                      tag: 'AUTH_WARNING',
+                    ),
+                  )
             : Future<void>.value(),
       ]);
 

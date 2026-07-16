@@ -304,7 +304,10 @@ describe("Booking Management Functions", () => {
         "Guest",
         "REF-123",
         "Test Property",
-        "Not available"
+        "Not available",
+        undefined,         // contact_email (not set in mock data)
+        "plain-token",     // generated access token (from mock)
+        "prop-123"         // property_id
       );
     });
 
@@ -355,7 +358,10 @@ describe("Booking Management Functions", () => {
         "Guest",
         expectedRef,
         "Test Property",
-        "F-67-01 smoke reject"
+        "F-67-01 smoke reject",
+        undefined,         // contact_email (not set in mock data)
+        "plain-token",     // generated access token (from mock)
+        "prop-x"           // property_id
       );
     });
 

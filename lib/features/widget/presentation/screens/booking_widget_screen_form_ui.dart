@@ -827,6 +827,7 @@ mixin _BookingFormUiMixin
             adults: _adults,
             children: _children,
             maxGuests: _unit?.maxGuests ?? 10,
+            maxTotalCapacity: _unit?.maxTotalCapacity,
             petFee: _unit?.petFee,
             maxPets: _unit?.maxPets,
             pets: _pets,

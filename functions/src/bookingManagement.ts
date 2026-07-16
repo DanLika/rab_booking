@@ -526,6 +526,19 @@ export const onBookingStatusChange = onDocumentUpdated(
             .get();
           const propertyData = propertyDoc.data();
 
+          // Generate new access token so rejection email has a working /view link
+          const {token: rejectAccessToken, hashedToken: rejectHashedToken} =
+            generateBookingAccessToken();
+          // ponytail: if check_out missing (edge case), token still usable; expiry = 1 year
+          const rejectCheckOut = booking.check_out
+            ? safeToDate(booking.check_out, "check_out")
+            : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+          const rejectTokenExpiry = calculateTokenExpiration(rejectCheckOut);
+          await event.data?.after.ref.update({
+            access_token: rejectHashedToken,
+            token_expires_at: rejectTokenExpiry,
+          });
+
           // Send booking rejected email to guest with retry
           const providerId = await sendEmailWithRetry(
             () =>
@@ -534,7 +547,10 @@ export const onBookingStatusChange = onDocumentUpdated(
                 booking.guest_name || "Guest",
                 booking.booking_reference,
                 propertyData?.name || "Property",
-                booking.rejection_reason
+                booking.rejection_reason,
+                propertyData?.contact_email,
+                rejectAccessToken,
+                booking.property_id
               ),
             "Booking Rejected",
             booking.guest_email || ""

@@ -13,6 +13,7 @@ import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
+import '../../../../core/utils/password_error_l10n.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../shared/utils/validators/input_sanitizer.dart';
@@ -594,10 +595,13 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
               },
             ),
           ),
-          validator: (value) => PasswordValidator.validateConfirmPassword(
-            _passwordController.text,
-            value,
-          ),
+          validator: (value) {
+            final e = PasswordValidator.confirmPasswordError(
+              _passwordController.text,
+              value,
+            );
+            return e == null ? null : l10n.passwordErrorText(e);
+          },
         ),
       ],
     );

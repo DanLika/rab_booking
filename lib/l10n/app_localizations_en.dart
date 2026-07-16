@@ -444,7 +444,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordRequired => 'Please enter password';
 
   @override
-  String get passwordTooShort => 'Password must be at least 6 characters';
+  String get passwordTooShort => 'Password must be at least 8 characters';
+
+  @override
+  String get passwordTooLong => 'Password must be less than 128 characters';
+
+  @override
+  String get passwordTooCommon =>
+      'This password is too common. Please choose a stronger one.';
+
+  @override
+  String get passwordNeedsUppercase => 'One uppercase letter';
+
+  @override
+  String get passwordNeedsLowercase => 'One lowercase letter';
+
+  @override
+  String get passwordNeedsDigit => 'One number';
+
+  @override
+  String get passwordNeedsSpecial => 'One special character';
+
+  @override
+  String get passwordNoSequential =>
+      'No sequential characters (e.g. \"12345\" or \"abcde\")';
+
+  @override
+  String get passwordNoRepeating => 'No repeating characters (e.g. 11111111)';
+
+  @override
+  String get passwordConfirmRequired => 'Please confirm your password';
+
+  @override
+  String get passwordMinChars => 'At least 8 characters';
 
   @override
   String get confirmPasswordRequired => 'Please confirm password';

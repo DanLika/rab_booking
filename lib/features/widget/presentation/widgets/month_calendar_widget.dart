@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../domain/constants/widget_constants.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../l10n/widget_translations.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
@@ -828,7 +829,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
     try {
       // Check availability using backend (works across all months)
-      final isAvailable = await ref.read(
+      final result = await ref.read(
         checkDateAvailabilityProvider(
           propertyId: widget.propertyId,
           unitId: widget.unitId,
@@ -839,19 +840,22 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
       if (!mounted) return;
 
-      if (!isAvailable) {
+      if (!result.isAvailable) {
         // Reset selection and show error
         setState(() {
           _rangeStart = null;
           _rangeEnd = null;
         });
 
+        final tr = WidgetTranslations.of(context, ref);
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(
-            context,
-            ref,
-          ).errorCannotSelectBookedDates,
+          // The check fails CLOSED when the CF is unreachable. Saying "already
+          // booked" there is a lie about free dates — the guest walks away from
+          // an available unit. Only claim "booked" when we actually know.
+          message: result.errorCode == AvailabilityErrorCode.checkError
+              ? tr.errorAvailabilityCheck
+              : tr.errorCannotSelectBookedDates,
           duration: const Duration(seconds: 3),
         );
         return;

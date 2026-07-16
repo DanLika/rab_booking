@@ -1,3 +1,4 @@
+import '../../data/helpers/availability_checker.dart';
 import '../models/calendar_date_status.dart';
 
 /// Days of the week for weekend pricing (1 = Monday, 7 = Sunday).
@@ -78,6 +79,19 @@ abstract class IBookingCalendarRepository {
   /// [propertyId] is required so the iCal-check leg can call the
   /// `getUnitAvailability` CF (SF-023 lockdown).
   Future<bool> checkAvailability({
+    required String propertyId,
+    required String unitId,
+    required DateTime checkIn,
+    required DateTime checkOut,
+  });
+
+  /// Check availability, returning the conflict detail.
+  ///
+  /// Prefer this over [checkAvailability] on any path that reports the outcome
+  /// to a guest: the check fails CLOSED when the availability CF is
+  /// unreachable, and the bare bool cannot distinguish "these dates are booked"
+  /// from "we couldn't check" — which need different messages.
+  Future<AvailabilityCheckResult> checkAvailabilityDetailed({
     required String propertyId,
     required String unitId,
     required DateTime checkIn,

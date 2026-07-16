@@ -25,6 +25,18 @@ class _FakeAvailabilityRepository implements IAvailabilityRepository {
   }) async => windows;
 }
 
+/// Availability CF unreachable — the real-world shape of an outage, a cold
+/// start timeout, or a CORS/network failure.
+class _ThrowingAvailabilityRepository implements IAvailabilityRepository {
+  @override
+  Future<List<AvailabilityWindow>> fetchAvailability({
+    required String propertyId,
+    required String unitId,
+    required DateTime start,
+    required DateTime end,
+  }) async => throw Exception('getUnitAvailability unreachable');
+}
+
 void main() {
   group('AvailabilityCheckResult', () {
     group('available factory', () {
@@ -149,6 +161,37 @@ void main() {
         fakeFirestore,
         availabilityRepository: fakeRepo,
       );
+    });
+
+    // The check fails CLOSED when the CF is unreachable — correct, we must
+    // never let a booking through over a window we couldn't verify. But the
+    // result must carry checkError, NOT bookingConflict: the UI picks the
+    // guest-facing message off this code, and telling a guest "these dates are
+    // booked" when the dates are free (we just couldn't check) sends them away
+    // from an available unit. Live proof: during the 2026-07-13 index-drift
+    // outage getUnitAvailability returned INTERNAL on every call.
+    group('check - CF unreachable', () {
+      test('fails closed with checkError, not bookingConflict', () async {
+        final failingChecker = AvailabilityChecker(
+          fakeFirestore,
+          availabilityRepository: _ThrowingAvailabilityRepository(),
+        );
+
+        final result = await failingChecker.check(
+          propertyId: 'prop123',
+          unitId: 'unit123',
+          checkIn: DateTime(2024, 1, 15),
+          checkOut: DateTime(2024, 1, 20),
+        );
+
+        expect(result.isAvailable, isFalse, reason: 'must fail closed');
+        expect(
+          result.errorCode,
+          AvailabilityErrorCode.checkError,
+          reason: 'a failed check must not be reported as a booking conflict',
+        );
+        expect(result.errorCode, isNot(AvailabilityErrorCode.bookingConflict));
+      });
     });
 
     group('check - no conflicts', () {

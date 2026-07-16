@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
+import '../../data/helpers/availability_checker.dart';
 import '../../data/repositories/firebase_booking_calendar_repository.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../../domain/repositories/i_booking_calendar_repository.dart';
@@ -129,12 +130,16 @@ Stream<Map<String, CalendarDateInfo>> realtimeMonthCalendar(
       );
 }
 
-/// Check date availability
+/// Check date availability.
 ///
 /// [propertyId] is required so the iCal-check leg can call the
 /// `getUnitAvailability` CF (SF-023 lockdown).
+///
+/// Returns the DETAILED result, not a bare bool: the check fails closed when
+/// the CF is unreachable, and the caller must be able to tell "these dates are
+/// booked" from "we couldn't check" — those need different messages.
 @riverpod
-Future<bool> checkDateAvailability(
+Future<AvailabilityCheckResult> checkDateAvailability(
   Ref ref, {
   required String propertyId,
   required String unitId,
@@ -142,7 +147,7 @@ Future<bool> checkDateAvailability(
   required DateTime checkOut,
 }) {
   final repository = ref.watch(bookingCalendarRepositoryProvider);
-  return repository.checkAvailability(
+  return repository.checkAvailabilityDetailed(
     propertyId: propertyId,
     unitId: unitId,
     checkIn: checkIn,

@@ -93,7 +93,9 @@ final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
 await functions.httpsCallable('setLifetimeLicense').call(...);
 ```
 
-eu-west1 funkcije (provjeri prije dodavanja novih): `setLifetimeLicense`, `updateUserStatus`, `onUserCreate`, `checkLoginRateLimit`, `checkRegistrationRateLimit`, `scheduledIcalSync`, `syncIcalFeedNow`, `migrateTrialStatus`, `checkPasswordHistory`, `savePasswordToHistory`, `onPropertyDeleted`, `revokeAllRefreshTokens`, `checkTrialExpiration`, `sendTrialExpirationWarning`, `onUnitDeleted`, `deleteUserAccount`, + 6 funkcija u `scheduledPushNotifications.ts`.
+eu-west1 funkcije (provjeri prije dodavanja novih): `setLifetimeLicense`, `updateUserStatus`, `onUserCreate`, `checkLoginRateLimit`, `checkRegistrationRateLimit`, `scheduledIcalSync`, `migrateTrialStatus`, `checkPasswordHistory`, `savePasswordToHistory`, `onPropertyDeleted`, `revokeAllRefreshTokens`, `checkTrialExpiration`, `sendTrialExpirationWarning`, `onUnitDeleted`, `deleteUserAccount`, + 6 funkcija u `scheduledPushNotifications.ts`.
+
+⚠️ **`syncIcalFeedNow` je `us-central1`, NE eu-west1** — ova lista ga je pogrešno navodila do 2026-07-16 (verifikovano `gcloud functions describe`: eu-west1 vraća 404). Njegov eu-west1 blizanac `scheduledIcalSync` JESTE eu-west1, odatle zabuna. Dart klijent ga zove preko `FirebaseFunctions.instance` (us-central1) i **radi** — ne "popravljaj" ga na `instanceFor(region: 'europe-west1')` jer ćeš slomiti radni poziv. Ostalih 15 funkcija na listi je re-verifikovano tačno (2026-07-16).
 
 **Latency cost (P3 in audit/11)**: Stripe + booking hot-path (`createBookingAtomic`, `createStripeCheckoutSession`, `handleStripeWebhook`, `getUnitIcalFeed`, `onBookingCreated`, `onBookingStatusChange`) sve u `us-central1` → +120ms RTT za EU/HR korisnike po svakom callable pozivu. Migracija u `europe-west1` traži dual-deploy fazu (CF region je immutable) + Stripe webhook URL update. NE deploya nove funkcije u `us-central1` osim ako postoji konkretan razlog.
 

@@ -492,6 +492,13 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
         windowSize: state.windowSize,
         pageSize: state.pageSize,
       );
+
+      // The first page can filter to zero rows with the cursor still live —
+      // and an empty list cannot be scrolled, so nothing would ever ask for
+      // page 2. See [_fillEmptyFilteredWindow].
+      if (result.bookings.isEmpty && result.hasMore) {
+        await _fillEmptyFilteredWindow();
+      }
     } catch (e) {
       state = state.copyWith(
         isInitialLoad: false,
@@ -502,6 +509,33 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
   }
 
   /// Load more bookings below (scrolling down)
+  /// Keep paging while the window is empty and the bottom cursor is live.
+  ///
+  /// Property and date filters are applied CLIENT-SIDE over each page — the
+  /// Firestore query cannot express them next to `orderBy('created_at')` (an
+  /// inequality must match the first orderBy). So a page of `pageSize` rows can
+  /// filter down to zero while matches wait further down. Paging is
+  /// scroll-driven and an empty list cannot be scrolled, so without this the
+  /// owner is stranded on "no bookings" for a property that has them (#946).
+  ///
+  /// Bounded: a filter with genuinely no matches must not walk the owner's
+  /// whole history. After [_kMaxEmptyWindowFills] fetches we stop with
+  /// `hasMoreBottom` intact and normal scrolling takes over.
+  static const int _kMaxEmptyWindowFills = 5;
+
+  Future<void> _fillEmptyFilteredWindow() async {
+    var fills = 0;
+    while (state.visibleBookings.isEmpty &&
+        state.hasMoreBottom &&
+        fills < _kMaxEmptyWindowFills) {
+      fills++;
+      final before = state.bottomCursor;
+      await loadMoreBottom();
+      // Cursor did not advance — bail rather than spin.
+      if (identical(state.bottomCursor, before)) break;
+    }
+  }
+
   Future<void> loadMoreBottom() async {
     if (!state.canLoadBottom) return;
 
@@ -535,7 +569,21 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
       );
 
       if (result.bookings.isEmpty) {
-        state = state.copyWith(isLoadingBottom: false, hasMoreBottom: false);
+        // An empty page does NOT mean the end — property/date filters run
+        // client-side over each page, so a page can drop every row while
+        // matches wait further down. Trust the repository's `hasMore`
+        // (computed from the raw doc count) and advance the cursor, or the
+        // list dead-ends on "no bookings" for a property that has them (#946).
+        //
+        // No fill loop here — `_fillEmptyFilteredWindow` DRIVES this method,
+        // so calling it back would recurse. A non-empty window can always be
+        // scrolled again, which re-enters here; only the first page needs help.
+        if (result.lastDocument != null) _addToCache(result.lastDocument!);
+        state = state.copyWith(
+          isLoadingBottom: false,
+          hasMoreBottom: result.hasMore,
+          bottomCursor: result.lastDocument ?? state.bottomCursor,
+        );
         return;
       }
 

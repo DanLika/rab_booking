@@ -140,6 +140,31 @@ void main() {
     },
   );
 
+  // The "Sve" tab (status == null) routes through
+  // `_getOwnerBookingsPaginatedAllStatuses` — a SEPARATE method carrying its
+  // own copy of the same bug: it computed `hasMore` from the raw doc counts
+  // and then discarded it on `if (allBookings.isEmpty)`. Missed on the first
+  // pass: the single-status path was fixed and its twin left broken.
+  test(
+    'ALL-statuses tab: an all-filtered page keeps the cursor live',
+    () async {
+      final page1 = await repo.getOwnerBookingsPaginated(
+        ownerId: _ownerId,
+        unitIds: const ['unitA', 'unitB'],
+        propertyId: _propB,
+        status: null, // the default tab
+        limit: 20,
+      );
+
+      expect(page1.bookings, isEmpty, reason: 'rows 0-19 are all propA');
+      expect(
+        page1.hasMore,
+        isTrue,
+        reason: 'the "Sve" tab must not dead-end either',
+      );
+    },
+  );
+
   test(
     'a property with genuinely no bookings terminates instead of spinning',
     () async {

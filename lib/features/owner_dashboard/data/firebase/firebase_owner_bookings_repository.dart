@@ -1186,7 +1186,17 @@ class FirebaseOwnerBookingsRepository {
       }
 
       if (bookings.isEmpty) {
-        return const PaginatedBookingsResult(bookings: [], hasMore: false);
+        // A page whose rows all fail the CLIENT-SIDE filters above says
+        // nothing about whether later pages hold matches — the cursor is
+        // still live. Returning `hasMore: false` here threw that away and
+        // dead-ended the list: an owner filtering by a property whose
+        // bookings sit past row `limit` saw "no bookings" for a property
+        // that has them. Hand back the real cursor so the caller can page on.
+        return PaginatedBookingsResult(
+          bookings: const [],
+          lastDocument: lastDoc,
+          hasMore: hasMore,
+        );
       }
 
       // Fetch related data for this page only

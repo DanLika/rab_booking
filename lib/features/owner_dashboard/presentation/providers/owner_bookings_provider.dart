@@ -275,11 +275,45 @@ class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
         lastDocument: result.lastDocument,
         hasMore: result.hasMore,
       );
+
+      // See [_fillEmptyFilteredPage]: the first page can filter to zero rows
+      // with the cursor still live, and there is nothing to scroll to recover.
+      if (result.bookings.isEmpty && result.hasMore) {
+        await _fillEmptyFilteredPage();
+      }
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: LoggingService.safeErrorToString(e),
       );
+    }
+  }
+
+  /// Keep paging while the visible list is empty and the cursor is live.
+  ///
+  /// Property and date filters are applied CLIENT-SIDE over each page — the
+  /// Firestore query cannot express them next to `orderBy('created_at')`
+  /// (an inequality must match the first orderBy). So a page of 20 rows can
+  /// filter down to zero while matches wait on page 3. Paging is scroll-driven
+  /// and an empty list cannot be scrolled, so nothing would ever ask for the
+  /// next page.
+  ///
+  /// Bounded: an owner filtering by a property with genuinely no bookings must
+  /// not walk their whole history. After [_kMaxEmptyPageFills] fetches we stop
+  /// and leave `hasMore` true — the list renders whatever it has and normal
+  /// scrolling takes over.
+  static const int _kMaxEmptyPageFills = 5;
+
+  Future<void> _fillEmptyFilteredPage() async {
+    var fills = 0;
+    while (state.bookings.isEmpty &&
+        state.hasMore &&
+        fills < _kMaxEmptyPageFills) {
+      fills++;
+      final before = state.lastDocument;
+      await loadMore();
+      // Cursor did not advance — bail rather than spin.
+      if (identical(state.lastDocument, before)) break;
     }
   }
 
@@ -325,6 +359,8 @@ class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
         hasMore: result.hasMore,
         isLoadingMore: false,
       );
+      // NOTE: no empty-page recovery here — `_fillEmptyFilteredPage` drives
+      // THIS method in a loop, so calling it back would recurse.
     } catch (e) {
       state = state.copyWith(isLoadingMore: false, error: e.toString());
     }

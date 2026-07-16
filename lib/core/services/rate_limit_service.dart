@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
@@ -91,6 +93,10 @@ class RateLimitService {
   static const Duration lockoutDuration = Duration(minutes: 15);
   static const Duration attemptResetDuration = Duration(hours: 1);
 
+  /// Ceiling on the lockout lookup. This is an advisory guard whose miss is
+  /// already fail-open, so a slow answer is worth less than a fast login.
+  static const Duration _kLockoutLookupTimeout = Duration(seconds: 5);
+
   RateLimitService({FirebaseFunctions? functions})
     : _functions =
           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1');
@@ -117,9 +123,11 @@ class RateLimitService {
 
     try {
       final callable = _functions.httpsCallable('getLoginLockoutStatus');
-      final result = await callable.call<Map<dynamic, dynamic>>({
-        'email': email,
-      });
+      // Without a timeout the fail-open catch below is dead code against a
+      // HANG (it only fires on a throw), and login waits forever.
+      final result = await callable
+          .call<Map<dynamic, dynamic>>({'email': email})
+          .timeout(_kLockoutLookupTimeout);
       final data = result.data;
       final attempt = LoginAttempt.fromCfResponse(email, data);
 

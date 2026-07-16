@@ -8,6 +8,39 @@ All version history from v4.6 to v7.43.
 
 **Changelog 7.43** (2026-07-16):
 
+### P1 fix(widget): "already booked" shown when the availability check FAILS (#935)
+The availability check fails **closed** when `getUnitAvailability` is
+unreachable — correct, we must never let a booking through over a window we
+couldn't verify. But the guest was told *"Cannot select dates. There are already
+booked dates in this range."* That is a **lie about free dates**: the guest sees
+a fully available unit as fully booked and walks away.
+**Not hypothetical** — during the 2026-07-13 index-drift outage
+`getUnitAvailability` returned INTERNAL on every call; every guest picking dates
+that day would have been told the property was booked.
+The fix was **already 90% written and never wired**: `AvailabilityErrorCode
+.checkError` existed with zero consumers, `AvailabilityCheckResult.error()` set
+it correctly, `errorAvailabilityCheck` was translated into all 4 languages and
+never shown, and `checkAvailabilityDetailed()` had zero callers because it was
+missing from `IBookingCalendarRepository` — unreachable from the provider layer.
+The class docstring literally says "The UI layer maps error codes to localized
+messages." This finishes that wiring rather than adding anything new.
+Untouched: the local `_hasBlockedDatesInRange` path keeps the "already booked"
+message — there the claim is TRUE (it read real blocked data).
+Seam test: a throwing availability repo must yield `checkError`, never
+`bookingConflict`. analyze 0 errors · widget suite 793/793. Widget deploy needed.
+**Lesson:** dormant infrastructure (a translated string with no consumer, an
+error code with no reader, a method absent from its interface) is *unfinished
+wiring*, not dead code — find what the author intended before adding new.
+
+### Dev-first workflow (operator directive, 2026-07-16)
+Test on `bookbed-dev` **first**, PROD second. Runda 19 was the first dev-first
+round and immediately surfaced #935.
+⚠ A locally-served build (`python3 -m http.server`) pointed at the **deployed**
+dev CF is CORS-blocked by design: `corsAllowlist.ts` pushes `LOCAL_DEV_ORIGINS`
+(localhost:5000/5001/8080) **only when `isEmulator`**. Use the emulator, or
+deploy to `bookbed-widget-dev.web.app` (allowlisted). Memory:
+`dev-first-then-prod.md`.
+
 ### P1 fix(auth): login hangs forever when a pre-sign-in guard stalls (#933)
 Found during PROD booking-detail testing: a profile holding a stale session
 showed a permanent "Učitavanje…" overlay with disabled buttons and **zero**

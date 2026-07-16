@@ -8,6 +8,30 @@ All version history from v4.6 to v7.43.
 
 **Changelog 7.43** (2026-07-16):
 
+### fix(owner): #946 was half a fix — the live notifier and "Sve" tab (#948)
+Found by actually running the grep #946's own memory prescribes (`hasMore:
+false` + a client-side filter above it) instead of assuming one fix closed the
+class. It didn't:
+- **The provider half of #946 went into dead code.**
+  `PaginatedBookingsNotifier` has **zero consumers** — `owner_bookings_screen`
+  drives `WindowedBookingsNotifier`. #946's repository half is shared and did
+  help; its paging loop did nothing.
+- **The "Sve" tab — the DEFAULT view — has its own copy of the bug.**
+  `_getOwnerBookingsPaginatedAllStatuses` computes `hasMore` from the raw doc
+  counts and then discards it on `if (allBookings.isEmpty)`. The single-status
+  twin was fixed and the most-used tab left dead-ending.
+Now treated on the paths that actually run: the AllStatuses method returns the
+cursor it already computed; `WindowedBookingsNotifier.loadMoreBottom` trusts the
+repository's `hasMore` instead of forcing `hasMoreBottom: false` on an empty
+page; `loadFirstPage` gets the bounded `_fillEmptyFilteredWindow`. The loop
+lives only in `loadFirstPage` — it drives `loadMoreBottom`, so calling it there
+recurses (the same mistake #946 caught in review).
+RED→GREEN: the new "Sve" cell fails against the unfixed repository.
+owner_dashboard 269/269.
+**Lesson recorded** in `client-filter-over-paginated-page.md`: before declaring
+a bug class closed, run the grep — and check the fix sits on the path that
+actually executes (`grep -rn "<Notifier>" lib/`; zero consumers = dead code).
+
 ### P1 fix(owner): filtering bookings by property could dead-end on "no bookings" (#946)
 Found by hunting #939's pattern elsewhere. Property and date filters run
 CLIENT-SIDE over each 20-row page — Firestore cannot express them beside

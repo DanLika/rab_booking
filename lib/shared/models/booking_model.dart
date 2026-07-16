@@ -188,9 +188,14 @@ class BookingModel with _$BookingModel {
     return normalizedCheckIn.isAfter(today);
   }
 
-  /// Check if booking can be cancelled
+  /// Check if booking can be cancelled.
+  ///
+  /// Anything that has not finished yet — so [isUpcoming] OR [isCurrent].
+  /// Gating on `isUpcoming` alone stranded the in-stay case: a guest who never
+  /// showed up left the owner with no cancel path the moment check-in day
+  /// arrived. A finished stay ([isPast]) is completed, not cancelled.
   bool get canBeCancelled {
-    return status.canBeCancelled && isUpcoming;
+    return status.canBeCancelled && !isPast;
   }
 
   /// Check if this is an external/imported booking (Booking.com, Airbnb, iCal)

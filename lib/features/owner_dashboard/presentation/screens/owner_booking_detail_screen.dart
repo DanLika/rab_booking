@@ -805,14 +805,23 @@ class _BDNotesCard extends StatelessWidget {
 /// Pure gating for the detail action panel — single source of truth for which
 /// actions render, consumed by [_BDStatusActionsState.build] and asserted by
 /// `owner_booking_detail_actions_test.dart`. Guarantees no confirmed booking is
-/// ever action-stranded (past → complete, upcoming → cancel, always msg/edit).
+/// ever action-stranded (started → complete, unfinished → cancel, always
+/// msg/edit).
+///
+/// The in-stay window (`isCurrent`) used to fall through BOTH gates —
+/// `complete` required `isPast` and `cancel` required `isUpcoming` — so a guest
+/// who was currently staying offered the owner no action at all: no early
+/// departure, no no-show. The docstring claimed the guarantee the code did not
+/// keep. Both bounds now hinge on the stay's own edges.
 @visibleForTesting
 ({bool approveReject, bool complete, bool cancel, bool edit})
 detailActionVisibility(BookingModel b) {
   final bool isPending = b.status == BookingStatus.pending;
   return (
     approveReject: isPending,
-    complete: b.status == BookingStatus.confirmed && b.isPast,
+    // The stay has started (in-stay = early departure, past = normal close).
+    complete: b.status == BookingStatus.confirmed && !b.isUpcoming,
+    // The stay has not finished (upcoming, or in-stay = no-show).
     cancel: !isPending && b.canBeCancelled,
     edit: b.status != BookingStatus.cancelled,
   );

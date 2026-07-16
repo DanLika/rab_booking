@@ -58,6 +58,49 @@ void main() {
       expect(vis.edit, isTrue);
     });
 
+    // THE BITE: the in-stay window fell through BOTH gates — `complete`
+    // required isPast, `cancel` required isUpcoming — so a guest currently
+    // staying left the owner with NO action: no early departure, no no-show.
+    // The function's own docstring claimed it guaranteed the opposite.
+    test('confirmed & IN-STAY → both complete and cancel present', () {
+      final vis = detailActionVisibility(
+        _booking(
+          status: BookingStatus.confirmed,
+          checkInOffsetDays: -2,
+          checkOutOffsetDays: 3,
+        ),
+      );
+      expect(
+        vis.complete,
+        isTrue,
+        reason: 'early departure: the stay has started, owner can close it',
+      );
+      expect(
+        vis.cancel,
+        isTrue,
+        reason: 'no-show: the stay has not finished, owner can cancel it',
+      );
+      expect(vis.approveReject, isFalse);
+      expect(vis.edit, isTrue);
+    });
+
+    // Boundary: check-in is TODAY — the first moment the old gate stranded it
+    // (isUpcoming flips false at midnight, isPast is still false).
+    test('confirmed & check-in today → not stranded', () {
+      final vis = detailActionVisibility(
+        _booking(
+          status: BookingStatus.confirmed,
+          checkInOffsetDays: 0,
+          checkOutOffsetDays: 4,
+        ),
+      );
+      expect(
+        vis.complete || vis.cancel,
+        isTrue,
+        reason: 'a confirmed booking must never be action-stranded',
+      );
+    });
+
     test('confirmed & upcoming → cancel present, complete absent', () {
       final vis = detailActionVisibility(
         _booking(
@@ -72,8 +115,14 @@ void main() {
       expect(vis.edit, isTrue);
     });
 
+    // REVERSED 2026-07-16 on an explicit operator decision. This cell used to
+    // assert `complete: false, cancel: false` mid-stay, reasoning "not
+    // stranded: Poruka + Uredi remain available". That reading of "stranded"
+    // was actions-exist, not lifecycle-actions-exist — and it left an owner
+    // with no way to handle an early departure or a no-show. Same scenario,
+    // now pinning the decided behaviour.
     test(
-      'confirmed & in-progress → neither complete nor cancel (msg/edit stay)',
+      'confirmed & in-progress → complete AND cancel offered (was: neither)',
       () {
         final vis = detailActionVisibility(
           _booking(
@@ -82,10 +131,9 @@ void main() {
             checkOutOffsetDays: 2,
           ),
         );
-        expect(vis.complete, isFalse);
-        expect(vis.cancel, isFalse);
+        expect(vis.complete, isTrue, reason: 'early departure');
+        expect(vis.cancel, isTrue, reason: 'no-show');
         expect(vis.approveReject, isFalse);
-        // Not stranded: Poruka + Uredi remain available mid-stay.
         expect(vis.edit, isTrue);
       },
     );

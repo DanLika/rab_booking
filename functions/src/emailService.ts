@@ -1160,7 +1160,9 @@ export async function sendBookingRejectedEmail(
   bookingReference: string,
   propertyName: string,
   reason?: string,
-  ownerEmail?: string
+  ownerEmail?: string,
+  accessToken?: string,
+  propertyId?: string
 ): Promise<string | undefined> {
   // Input validation
   validateEmail(guestEmail, "guestEmail");
@@ -1170,6 +1172,13 @@ export async function sendBookingRejectedEmail(
   if (ownerEmail) validateEmail(ownerEmail, "ownerEmail");
 
   try {
+    const propertyData = accessToken && propertyId
+      ? await fetchPropertyData(propertyId, "booking_rejected")
+      : undefined;
+    const viewUrl = accessToken ? generateViewBookingUrl(
+      bookingReference, guestEmail, accessToken, propertyData
+    ) : undefined;
+
     // Build params for V2 template
     const params: BookingRejectedParams = {
       guestEmail,
@@ -1177,6 +1186,7 @@ export async function sendBookingRejectedEmail(
       bookingReference,
       propertyName,
       reason,
+      viewUrl,
     };
 
     const providerId = await sendBookingRejectedEmailV2(

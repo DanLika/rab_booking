@@ -16,6 +16,7 @@ import {
   generateIntro,
   generateCard,
   generateAlert,
+  generateButton,
   escapeHtml,
 } from "../utils/template-helpers";
 
@@ -25,6 +26,7 @@ export interface BookingRejectedParams {
   bookingReference: string;
   propertyName: string;
   reason?: string;
+  viewUrl?: string;
 }
 
 /**
@@ -33,7 +35,7 @@ export interface BookingRejectedParams {
 export function generateBookingRejectedEmailV2(
   params: BookingRejectedParams
 ): string {
-  const {guestName, bookingReference, propertyName, reason} = params;
+  const {guestName, bookingReference, propertyName, reason, viewUrl} = params;
 
   // Header with error icon
   const header = generateHeader({
@@ -68,11 +70,17 @@ export function generateBookingRejectedEmailV2(
     message: "Žao nam je zbog neugodnosti. Nadamo se da ćemo vam uskoro moći omogućiti boravak.",
   });
 
+  const viewButton = viewUrl ? generateButton({
+    text: "Pregledaj rezervaciju",
+    url: viewUrl,
+  }) : "";
+
   // Combine all content
   const content = `
     ${generateGreeting(escapeHtml(guestName))}
     ${generateIntro(`Nažalost, vaša rezervacija za nekretninu ${escapeHtml(propertyName)} je odbijena.`)}
     ${reasonAlert}
+    ${viewButton}
     ${whatsNextCard}
     ${apologyAlert}
   `;

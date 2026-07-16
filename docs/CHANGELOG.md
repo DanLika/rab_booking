@@ -8,6 +8,50 @@ All version history from v4.6 to v7.43.
 
 **Changelog 7.43** (2026-07-16):
 
+### P1 fix(admin): Users list stranded owners behind an active filter (#939)
+Filtering/search is **client-side** over the rows loaded so far (20/page), while
+the status-tab badges are **real server-side `.count()` aggregates** over the
+whole collection. So `showLoadMore = hasMore && !_hasActiveFilters` hid the ONLY
+control that pulls further pages exactly when it was needed — and
+`if (filtered.isEmpty) return const _EmptyState()` early-returned before the
+flag was even consulted. Live on dev: tab **"Suspended 1"** → **"No users
+found"**, no Load-more anywhere in the a11y tree. The badge told the truth; the
+rows were partial. Same class as #924, inverted.
+Fixed, plus an honest empty state: "No matches in the loaded users" + a
+Load-more action instead of a flat "No users found".
+**Review note:** the fix originally shipped behind
+`shouldShowLoadMore({hasMore, hasActiveFilters}) => hasMore` — a predicate
+ignoring half its inputs, i.e. `identity()` behind a named seam, with 4 test
+cells proving that identity returns its input. Its own PR notes recorded that
+seam going green *while the screen still dead-ended*
+(`seam-test-proves-fn-not-wiring`) — the evidence it earned nothing. Inlined to
+`notifier.hasMore` with the WHY comment at the call site; kept the `_EmptyState`
+widget test, which does bite (reverting the pre-fix body fails it). +180 → +129.
+
+### docs: admin.md claimed no DEV entry point exists — it does (#940)
+`.claude/rules/admin.md` said *"No DEV entry point exists — DEV admin reuses the
+PROD entrypoint with the dev Firebase config"*. Both halves wrong:
+`lib/admin_main_dev.dart` exists, sets `Environment.development`, and carries a
+`kDebugMode` project-ID assert. **Actively dangerous, not merely stale** —
+following it points admin at `rab-booking-248fc` and skips the assert that
+exists to catch exactly that. Same doc-drift class as #931.
+
+### Admin dashboard tile gap — dev-data artifact, NOT a live bug (P3, no fix)
+An agent reported "Total 31 vs 29+0+0 — 2 owners in no tile", which reads
+alarming. It was measuring **its own seeded dev users**. Verified firsthand:
+**PROD is clean — 23 owners, every one with a valid `accountType`, tiles sum to
+exactly 23, zero unaccounted.** Dev shows 6 owners / tiles=4 only because the
+dev DB holds seed garbage: one doc with no `accountType`, one with
+`accountType: 'active'` (a *status* value mistaken for a type). The reported
+cause (`enterprise` uncounted) is also wrong — `enterprise` is "Business tier
+(future use)" and **nothing writes it**; it exists only in the enum and the
+badge switch. So: theoretical fragility, no live impact, no fix.
+`user_model.dart:28-45` fail-open unknown→`trial` is deliberate and
+security-correct (lowest tier).
+Verified sound: every admin repository count is a real `.count()` aggregate, not
+a `.take(n)` preview — no #924 on the dashboard; `setLifetimeLicense` writes
+`accountType:'lifetime'`, matching its tile.
+
 ### fix(widget): guest-cancel snackbar showed the server's English to every locale (#937)
 `guestCancelBooking` returns an English-only `message` — it serves logs and API
 clients. The /view screen echoed it verbatim:

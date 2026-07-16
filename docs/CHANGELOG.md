@@ -8,6 +8,36 @@ All version history from v4.6 to v7.43.
 
 **Changelog 7.43** (2026-07-16):
 
+### fix(widget): guest-cancel snackbar showed the server's English to every locale (#937)
+`guestCancelBooking` returns an English-only `message` — it serves logs and API
+clients. The /view screen echoed it verbatim:
+`message: data['message'] ?? tr.bookingCancelledSuccessfully`. Since
+`data['message']` is always present, the `??` fallback **never fired** and
+`bookingCancelledSuccessfully` — translated into all 4 widget languages, a near
+word-for-word match of the CF's English — was dead. A Croatian guest cancelling
+from /view read *"Booking cancelled successfully. You will receive a
+confirmation email shortly."*
+Same on the rejection path, where the fallback was actively worse
+(`failedToCancelBooking('cancellation_disabled')` would leak a raw enum), so a
+proper `errorGuestCancelDisabled` string was added in all 4 languages.
+The CF already returns a machine-readable `reason` — that is what the client
+localizes off now. **Same shape as #935: the server sends a code AND prose; the
+client's job is to translate the code, not display the prose.** Server
+untouched — the English `message` is still right for logs/API.
+RED→GREEN seam test · widget + l10n suites 804/804. Widget deploy needed.
+
+### Sweep: guest-facing messages that lie or leak (converged)
+#935 was the 4th instance of this family (#904 raw exception to guest, #901
+message pointing at a nonexistent feature, #874 error leak), so the class got a
+deliberate sweep. It found **one** more — #937 — and cleared the rest:
+- `ical_sync_settings_screen.dart:901/1611` — **not the same bug**: the success
+  path already localizes via `l10n.icalSyncSuccess()`; the error path surfaces
+  the server's diagnostic ("URL must have a hostname") to a technical owner,
+  which is defensible.
+- `admin_users_repository.dart:220/287` — internal console, `'Status updated'`
+  is fine.
+Sweep considered closed for guest-facing surfaces.
+
 ### P1 fix(widget): "already booked" shown when the availability check FAILS (#935)
 The availability check fails **closed** when `getUnitAvailability` is
 unreachable — correct, we must never let a booking through over a window we

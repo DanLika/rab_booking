@@ -3199,6 +3199,24 @@ class WidgetTranslations {
     }
   }
 
+  /// Shown when the property has guest cancellation disabled.
+  ///
+  /// Keyed off the CF's machine-readable `reason: 'guest_cancel_disabled'`,
+  /// NOT its English `message` — the server's prose is for logs/API clients.
+  String get errorGuestCancelDisabled {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Otkazivanje putem ove stranice nije omogućeno za ovaj objekt. Molimo kontaktirajte vlasnika.';
+      case 'de':
+        return 'Die Stornierung über diese Seite ist für diese Unterkunft nicht möglich. Bitte kontaktieren Sie den Gastgeber.';
+      case 'it':
+        return 'La cancellazione tramite questa pagina non è disponibile per questa struttura. Si prega di contattare il proprietario.';
+      case 'en':
+      default:
+        return 'Cancellation through this page is not available for this property. Please contact the owner.';
+    }
+  }
+
   String failedToCancelBooking(String error) {
     switch (locale.languageCode) {
       case 'hr':

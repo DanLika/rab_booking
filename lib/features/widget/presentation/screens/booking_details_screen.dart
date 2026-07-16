@@ -204,13 +204,17 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
       // Server returns {success: false, reason, message} for expected business
       // rejections (e.g. property has guest cancellation disabled) instead of
       // throwing an HttpsError. Surface as error snackbar, no Sentry noise.
+      //
+      // Localize off the machine-readable `reason`, NOT the server's `message`:
+      // the CF's prose is English-only (it serves logs and API clients), so
+      // echoing it showed a Croatian guest an English sentence.
       if (data is Map && data['success'] == false) {
         setState(() => _isCancelling = false);
         SnackBarHelper.showError(
           context: context,
-          message:
-              data['message']?.toString() ??
-              tr.failedToCancelBooking('cancellation_disabled'),
+          message: data['reason'] == 'guest_cancel_disabled'
+              ? tr.errorGuestCancelDisabled
+              : tr.failedToCancelBooking(data['reason']?.toString() ?? ''),
           duration: const Duration(seconds: 5),
         );
         return;
@@ -218,7 +222,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
 
       SnackBarHelper.showSuccess(
         context: context,
-        message: data['message'] ?? tr.bookingCancelledSuccessfully,
+        // Deliberately NOT data['message'] — see above. This string is
+        // translated into all 4 widget languages; the server's is not.
+        message: tr.bookingCancelledSuccessfully,
         duration: const Duration(seconds: 5),
       );
 

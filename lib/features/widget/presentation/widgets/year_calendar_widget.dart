@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../domain/constants/widget_constants.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../l10n/widget_translations.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
@@ -886,7 +887,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
     try {
       // Check availability using backend
-      final isAvailable = await ref.read(
+      final result = await ref.read(
         checkDateAvailabilityProvider(
           propertyId: widget.propertyId,
           unitId: widget.unitId,
@@ -897,19 +898,21 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
       if (!mounted) return;
 
-      if (!isAvailable) {
+      if (!result.isAvailable) {
         // Reset selection and show error
         setState(() {
           _rangeStart = null;
           _rangeEnd = null;
         });
 
+        final tr = WidgetTranslations.of(context, ref);
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(
-            context,
-            ref,
-          ).errorCannotSelectBookedDates,
+          // Mirror of month_calendar_widget: a fail-closed check must not be
+          // reported to the guest as "these dates are booked".
+          message: result.errorCode == AvailabilityErrorCode.checkError
+              ? tr.errorAvailabilityCheck
+              : tr.errorCannotSelectBookedDates,
           duration: const Duration(seconds: 3),
         );
         return;

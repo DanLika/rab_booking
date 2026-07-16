@@ -1411,7 +1411,16 @@ class FirebaseOwnerBookingsRepository {
     );
 
     if (allBookings.isEmpty) {
-      return const PaginatedBookingsResult(bookings: [], hasMore: false);
+      // Twin of the single-status path (#946): `hasMore` was just computed from
+      // the RAW doc counts a few lines up, then thrown away here because the
+      // CLIENT-SIDE property/date filters emptied the page. An all-filtered
+      // page says nothing about later pages — hand back the cursor that was
+      // computed, or the "Sve" tab dead-ends exactly like the status tabs did.
+      return PaginatedBookingsResult(
+        bookings: const [],
+        lastDocument: lastDoc,
+        hasMore: hasMore,
+      );
     }
 
     // Fetch related data

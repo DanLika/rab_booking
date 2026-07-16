@@ -8,6 +8,57 @@ All version history from v4.6 to v7.43.
 
 **Changelog 7.43** (2026-07-16):
 
+### P1 fix(auth): login hangs forever when a pre-sign-in guard stalls (#933)
+Found during PROD booking-detail testing: a profile holding a stale session
+showed a permanent "Učitavanje…" overlay with disabled buttons and **zero**
+`identitytoolkit` requests — the login never even attempted. Three awaits had no
+timeout (`enhanced_auth_email.dart:31` checkLoginRateLimit, `rate_limit_service
+.dart:120` getLoginLockoutStatus, `enhanced_auth_email.dart:54` setPersistence),
+all feeding a `Future.wait` that `_handleLogin` awaits unguarded.
+**The point:** both call sites already *documented* a "fail-open" intent and
+carried a catch to implement it — but a catch only fires on a **throw**. Against
+a call that never returns, the fail-open was **dead code**. Same class as #909
+(CSP-blocked App Check token held sign-in forever). Fix = 5s ceiling per guard,
+each failing open into its existing path. `checkLoginRateLimit` needed an
+explicit `on TimeoutException` branch — its catch is typed to
+`FirebaseFunctionsException`, so a bare `.timeout()` would have escaped to the
+outer handler and shown the user an error instead of failing open.
+Not a security regression: the throw-path already failed open, the guards are
+advisory (Firebase Auth enforces server-side), and an attacker controls their own
+client anyway. RED→GREEN seam test; `test/core` 308/308.
+Memory: `fail-open-catch-is-dead-against-hang.md`.
+
+### Owner booking-detail screen — verified clean (runda 18)
+Cancel-confirmed full loop works (reason dialog + guest-email checkbox →
+`cancelled`/`cancellation_reason`/`cancelled_by=owner` persisted, action row
+collapses, activity timeline logs). `_TabletGrid` 2-col at 768 no overflow;
+desktop 1440 clean; 60-char guest name ellipsizes (audit/128 robustness holds).
+Note there is no `rejected` status — reject maps to `cancelled` +
+`rejection_reason`.
+
+### Findings left unfixed (runda 18)
+- **P2 bookings without `booking_reference` render the raw Firestore ID**
+  (`Rezervacija #9lLWi9fr…` instead of `#BK-…`) — hits manual/`source:admin`
+  bookings; the CF auto-heals a missing ref but only on the CF path.
+- **P2 "Premjesti" is not on the booking-detail screen** — reachable only via
+  long-press on the Timeline calendar (`timeline_calendar_widget.dart:1586`), an
+  invisible affordance, effectively undiscoverable on desktop web.
+- **P3 `password_validator.dart` has 10 hardcoded English strings** in a Croatian
+  UI. l10n keys already exist (`passwordRequired` = "Molimo unesite lozinku") but
+  `passwordTooShort` says "6 characters" while the validator enforces a different
+  length → needs intent + threading context through 7 call sites of a static
+  utility. Refactor, not a quick win.
+- **Cancel gate excludes in-stay guests** — `canBeCancelled = confirmed &&
+  isUpcoming` with strict `checkIn.isAfter(today)`, and `complete` needs `isPast`
+  (`booking_model.dart:184-194`), so a currently-staying guest gets neither → no
+  path for early departure / no-show. Needs intent.
+- **PROD data, not code:** both cover photos on unit `Rab apartman 1` (gMIO) are
+  developer screenshots from Dec 2025 (same session as the string-date fossils);
+  one shows a red Stripe `FAILED_PRECONDITION` banner, the dev console, and the
+  operator's own test email + phone in the form. The Storage URL serves HTTP 200
+  with no auth. It is the operator's own test account on their own test property
+  — not a customer listing. Deletion left to the operator.
+
 ### fix: reject email now carries a "Pregledaj rezervaciju" link (#929)
 Operator gave the intent on a P3 open since runda 13: a rejected guest received
 an email with **zero links** — no way to view the booking they had just been

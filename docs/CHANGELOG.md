@@ -1,8 +1,71 @@
 # BookBed Changelog
 
-All version history from v4.6 to v7.42.
+All version history from v4.6 to v7.43.
 
-**Last Updated**: 2026-07-14 | **Version**: 7.42
+**Last Updated**: 2026-07-16 | **Version**: 7.43
+
+---
+
+**Changelog 7.43** (2026-07-16):
+
+### fix: reject email now carries a "Pregledaj rezervaciju" link (#929)
+Operator gave the intent on a P3 open since runda 13: a rejected guest received
+an email with **zero links** — no way to view the booking they had just been
+refused. Same class as #905 (pending email had the same hole). The rejection
+branch of `onBookingStatusChange` now generates a fresh access token before
+sending (the plaintext token only exists at generation time), and
+`sendBookingRejectedEmail` accepts `accessToken` + `propertyId`, building the URL
+through the existing `generateViewBookingUrl` path. Approve rotates the token by
+design; reject did not, so a fresh one is minted here.
+⚠ Trap: `safeToDate` throws on `check_out: undefined`, which silently killed the
+email before it sent (2 existing bookingManagement cells failed with
+"Number of calls: 0") — guarded with a 1-year fallback expiry.
+4-cell `rejectedEmailViewLink.test.ts`; jest 507/507. CF deploy required.
+
+### fix(widget): guest picker capped at max_guests instead of max_total_capacity (#929)
+Operator intent resolved a runda-12 product question: **`max_guests` is standard
+occupancy, not a hard limit.** The widget capped guests at `max_guests` (W55g=4)
+while the unit and server accept `max_total_capacity` (=6) — guests of 5-6 could
+not book at all through the widget (lost bookings). One-liner: pass
+`maxTotalCapacity` to `GuestCountPicker`, which already had
+`maxTotalCapacity ?? maxGuests` wired internally but was never fed it. The
+extra-bed fee threshold stays at `max_guests` (that's what standard occupancy
+means). Widget deploy required.
+
+### fix(ical): import sync never invalidated the export cache (#930)
+An iCal import sync creates and deletes availability blocks but never flushed the
+export cache — the feed kept serving the pre-sync snapshot for the full 300s TTL.
+`invalidateIcalCache` was already wired into both booking paths (atomicBooking
+create, bookingManagement status change) but had **zero call sites in
+`icalSync.ts`**. One call in `syncSingleFeed` after the metadata update closes it.
+This was deferred in 2026-05 on the reasoning "OTAs poll ≥15min so the lag is
+invisible" — true for OTAs, but not for the **owner**, who syncs and immediately
+opens the export URL to check. Confirmed live on PROD.
+RED→GREEN seam test (fails without the src change); jest 508/508. CF deploy required.
+
+### docs: syncIcalFeedNow region drift — an active trap (#931)
+`.claude/rules/cloud-functions.md` listed `syncIcalFeedNow` under eu-west1. It is
+**us-central1** (`gcloud describe` on eu-west1 → 404). Its scheduled twin
+`scheduledIcalSync` *is* eu-west1, which is where the confusion came from. The
+Dart client calls it via `FirebaseFunctions.instance` (us-central1) and works —
+anyone "fixing" the client to match the doc would have broken a working call.
+All 16 functions in the list re-verified against PROD; the other 15 are correct.
+
+### Findings left unfixed (deliberate, runda 17)
+- **4/57 PROD bookings store `check_in` as an ISO string, not a Timestamp** — the
+  export's range filter never matches them (Firestore orders by type), so 3
+  confirmed bookings are invisible to the feed. Root cause is already **closed**
+  (today's `createBookingAtomic` normalizes via `validateAndConvertBookingDates`;
+  no Dart string-write path exists). All 4 are Dec-2025 `source=widget` fossils
+  predating the #578 direct-write sweep, all Jan 2026 = outside the 90-day export
+  window → **no live impact**. Backfill is optional hygiene, needs GO.
+- **Export token cannot be rotated or revoked** (P2 security, feature-sized): the
+  URL gets pasted into Airbnb/Booking/Google Calendar, is generate-once, and has
+  no regenerate UI — a leak means permanent occupancy read access; the only
+  recourse is disabling `ical_export_enabled`, which kills every channel at once.
+- Double-`@` UID on re-exported imported events (RFC 5545 tolerates it, P3);
+  in-memory per-instance export rate limit; orphan `ical_events` reachable because
+  `deleteIcalFeed` cascades client-side.
 
 ---
 

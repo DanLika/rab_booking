@@ -8,6 +8,44 @@ All version history from v4.6 to v7.43.
 
 **Changelog 7.43** (2026-07-16):
 
+### P1 fix(owner): filtering bookings by property could dead-end on "no bookings" (#946)
+Found by hunting #939's pattern elsewhere. Property and date filters run
+CLIENT-SIDE over each 20-row page — Firestore cannot express them beside
+`orderBy('created_at')` (an inequality must match the first orderBy), so that
+part is a real constraint, not laziness. The bug was the answer when a page
+filtered to nothing:
+`if (bookings.isEmpty) return PaginatedBookingsResult(bookings: [], hasMore: false);`
+A page where every row failed the filter says NOTHING about later pages — this
+threw the live cursor away and declared the set finished. An owner with two
+properties, filtering by the one whose bookings sit past row 20, saw **"no
+bookings" for a property that has them**. Worse than #939: that one hid the
+Load-more button; this one lied about `hasMore`, stopping infinite scroll dead.
+**Two halves, either alone insufficient:** the repository hands back the real
+cursor, and the provider's `_fillEmptyFilteredPage` keeps paging while the list
+is empty and the cursor is live — paging is scroll-driven and an empty list
+cannot be scrolled, so nothing would ever ask for page 2. Bounded at 5 fetches.
+⚠ The loop lives only in the provider; an early draft also called it from
+`loadMore()`, which drives it — that recursed.
+Owner's **status** filter is server-side (`:248`) and was always correct.
+RED→GREEN against the real repository via `fake_cloud_firestore`.
+owner_dashboard 268/268. Memory: `client-filter-over-paginated-page.md`.
+
+### Stripe webhook reviewed — sound, zero findings
+`handleStripeWebhook` read end to end; **no bugs**. Two hypotheses killed
+firsthand: (1) *dedup loses events on retry* — no, every handler that can 500
+carries a compensating `eventRef.delete()`, so Stripe's retry re-processes;
+(2) *a failed placeholder cleanup leaks blocked dates* — no,
+`stripe_pending_expires_at` makes the placeholder inert and BOTH readers honour
+it (`createStripeCheckoutSession:588`, `availability.ts:227`). Only finding is
+P4: `handleCheckoutSessionExpired` reports `status: "placeholder_cleaned"` even
+when the delete failed — harmless, Stripe ignores the body.
+**Dev Stripe live-testing is BLOCKED** on three fronts, all needing the
+operator: no Stripe config on any dev unit, the Connect fixture
+`acct_1Tc037PnKJAl9q6s` is stuck at hCaptcha (F-70-02 — audit/70 proved both
+CDP *and* a real human in a normal browser are defeated), and the Stripe MCP is
+unauthenticated. Don't re-attempt. Memory:
+`stripe-webhook-review-2026-07-16.md`.
+
 ### fix(owner): in-stay bookings offered the owner no action at all (#942)
 A guest **currently staying** fell through both lifecycle gates —
 `complete` required `isPast`, `cancel` required `isUpcoming` (via

@@ -452,7 +452,38 @@ class AppLocalizationsHr extends AppLocalizations {
   String get passwordRequired => 'Molimo unesite lozinku';
 
   @override
-  String get passwordTooShort => 'Lozinka mora imati najmanje 6 karaktera';
+  String get passwordTooShort => 'Lozinka mora imati najmanje 8 znakova';
+
+  @override
+  String get passwordTooLong => 'Lozinka mora imati manje od 128 znakova';
+
+  @override
+  String get passwordTooCommon => 'Ova lozinka je prečesta. Odaberite jaču.';
+
+  @override
+  String get passwordNeedsUppercase => 'Jedno veliko slovo';
+
+  @override
+  String get passwordNeedsLowercase => 'Jedno malo slovo';
+
+  @override
+  String get passwordNeedsDigit => 'Jedan broj';
+
+  @override
+  String get passwordNeedsSpecial => 'Jedan poseban znak';
+
+  @override
+  String get passwordNoSequential =>
+      'Bez uzastopnih znakova (npr. \"12345\" ili \"abcde\")';
+
+  @override
+  String get passwordNoRepeating => 'Bez ponavljajućih znakova (npr. 11111111)';
+
+  @override
+  String get passwordConfirmRequired => 'Molimo potvrdite lozinku';
+
+  @override
+  String get passwordMinChars => 'Najmanje 8 znakova';
 
   @override
   String get confirmPasswordRequired => 'Molimo potvrdite lozinku';

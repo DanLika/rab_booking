@@ -8,6 +8,7 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/async_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
+import '../../../../core/utils/password_error_l10n.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -42,7 +43,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
   bool _isLoading = false;
 
   PasswordStrength _passwordStrength = PasswordStrength.weak;
-  List<String> _missingRequirements = [];
+  List<PasswordError> _missingRequirements = [];
 
   @override
   void initState() {
@@ -62,7 +63,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
     final result = PasswordValidator.validate(_newPasswordController.text);
     setState(() {
       _passwordStrength = result.strength;
-      _missingRequirements = result.missingRequirements;
+      // Store CODES, not the validator's English prose — localized at render.
+      _missingRequirements = result.missingCodes;
     });
   }
 
@@ -415,9 +417,12 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                             return l10n
                                                 .passwordsMustBeDifferent;
                                           }
-                                          return PasswordValidator.validateSimple(
+                                          final e = PasswordValidator.validate(
                                             value,
-                                          );
+                                          ).errorCode;
+                                          return e == null
+                                              ? null
+                                              : l10n.passwordErrorText(e);
                                         },
                                       ),
 
@@ -468,10 +473,14 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                           },
                                         ),
                                         validator: (value) {
-                                          return PasswordValidator.validateConfirmPassword(
-                                            _newPasswordController.text,
-                                            value,
-                                          );
+                                          final e =
+                                              PasswordValidator.confirmPasswordError(
+                                                _newPasswordController.text,
+                                                value,
+                                              );
+                                          return e == null
+                                              ? null
+                                              : l10n.passwordErrorText(e);
                                         },
                                       ),
                                       const SizedBox(height: BBSpace.md),
@@ -561,7 +570,7 @@ class _PasswordStrengthMeter extends StatelessWidget {
   });
 
   final PasswordStrength strength;
-  final List<String> missingRequirements;
+  final List<PasswordError> missingRequirements;
   final AppLocalizations l10n;
   final BBColorSet c;
 
@@ -625,7 +634,7 @@ class _PasswordStrengthMeter extends StatelessWidget {
                   Icon(Icons.close, size: 14, color: c.error),
                   const SizedBox(width: 6),
                   Text(
-                    req,
+                    l10n.passwordRequirementText(req),
                     style: BBType.caption(context).copyWith(color: c.error),
                   ),
                 ],

@@ -911,8 +911,68 @@ abstract class AppLocalizations {
   /// No description provided for @passwordTooShort.
   ///
   /// In en, this message translates to:
-  /// **'Password must be at least 6 characters'**
+  /// **'Password must be at least 8 characters'**
   String get passwordTooShort;
+
+  /// No description provided for @passwordTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be less than 128 characters'**
+  String get passwordTooLong;
+
+  /// No description provided for @passwordTooCommon.
+  ///
+  /// In en, this message translates to:
+  /// **'This password is too common. Please choose a stronger one.'**
+  String get passwordTooCommon;
+
+  /// No description provided for @passwordNeedsUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'One uppercase letter'**
+  String get passwordNeedsUppercase;
+
+  /// No description provided for @passwordNeedsLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'One lowercase letter'**
+  String get passwordNeedsLowercase;
+
+  /// No description provided for @passwordNeedsDigit.
+  ///
+  /// In en, this message translates to:
+  /// **'One number'**
+  String get passwordNeedsDigit;
+
+  /// No description provided for @passwordNeedsSpecial.
+  ///
+  /// In en, this message translates to:
+  /// **'One special character'**
+  String get passwordNeedsSpecial;
+
+  /// No description provided for @passwordNoSequential.
+  ///
+  /// In en, this message translates to:
+  /// **'No sequential characters (e.g. \"12345\" or \"abcde\")'**
+  String get passwordNoSequential;
+
+  /// No description provided for @passwordNoRepeating.
+  ///
+  /// In en, this message translates to:
+  /// **'No repeating characters (e.g. 11111111)'**
+  String get passwordNoRepeating;
+
+  /// No description provided for @passwordConfirmRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm your password'**
+  String get passwordConfirmRequired;
+
+  /// No description provided for @passwordMinChars.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters'**
+  String get passwordMinChars;
 
   /// No description provided for @confirmPasswordRequired.
   ///

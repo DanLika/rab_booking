@@ -14,6 +14,7 @@ import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/services/secure_storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
+import '../../../../core/utils/password_error_l10n.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -601,9 +602,10 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         if (_passwordErrorFromServer != null) {
           return _passwordErrorFromServer;
         }
-        return PasswordValidator.validateLoginPassword(
+        final e = PasswordValidator.loginPasswordError(
           _passwordController.text,
         );
+        return e == null ? null : l10n.passwordErrorText(e);
       },
       trailingAction: Tooltip(
         message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,

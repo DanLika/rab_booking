@@ -1,18 +1,55 @@
 /// Password strength levels
 enum PasswordStrength { weak, medium, strong }
 
+/// Why a password was rejected, or which requirement it still misses.
+///
+/// This validator is a pure static utility with no `BuildContext`, so it cannot
+/// localize. It returns CODES and the screen maps them to `AppLocalizations`
+/// (`passwordErrorText` / `passwordRequirementText` in
+/// `password_error_l10n.dart`). Returning English prose from here is what left
+/// Croatian owners reading "One uppercase letter" on the change-password
+/// screen.
+enum PasswordError {
+  required,
+  tooShort,
+  tooLong,
+  tooCommon,
+  noUppercase,
+  noLowercase,
+  noDigit,
+  noSpecial,
+  repeating,
+  sequential,
+  confirmRequired,
+  mismatch,
+}
+
 /// Password validation result
 class PasswordValidationResult {
   final bool isValid;
+
+  /// English summary — for logs and Sentry, NOT for display. Screens render
+  /// [errorCode] / [missingCodes] through `AppLocalizations`.
   final String? errorMessage;
   final PasswordStrength strength;
+
+  /// English requirement list — same caveat as [errorMessage]; render
+  /// [missingCodes] instead.
   final List<String> missingRequirements;
+
+  /// Localizable reason the password was rejected.
+  final PasswordError? errorCode;
+
+  /// Localizable list of requirements still unmet.
+  final List<PasswordError> missingCodes;
 
   const PasswordValidationResult({
     required this.isValid,
     this.errorMessage,
     required this.strength,
     this.missingRequirements = const [],
+    this.errorCode,
+    this.missingCodes = const [],
   });
 
   factory PasswordValidationResult.valid(PasswordStrength strength) {
@@ -22,12 +59,16 @@ class PasswordValidationResult {
   factory PasswordValidationResult.invalid(
     String message, {
     List<String> missing = const [],
+    PasswordError? code,
+    List<PasswordError> missingCodes = const [],
   }) {
     return PasswordValidationResult(
       isValid: false,
       errorMessage: message,
       strength: PasswordStrength.weak,
       missingRequirements: missing,
+      errorCode: code,
+      missingCodes: missingCodes,
     );
   }
 }
@@ -74,6 +115,8 @@ class PasswordValidator {
       return PasswordValidationResult.invalid(
         'Password is required',
         missing: ['Enter a password'],
+        code: PasswordError.required,
+        missingCodes: const [PasswordError.required],
       );
     }
 
@@ -82,40 +125,50 @@ class PasswordValidator {
       return PasswordValidationResult.invalid(
         'This password is too common. Please choose a stronger password.',
         missing: ['Choose a less common password'],
+        code: PasswordError.tooCommon,
+        missingCodes: const [PasswordError.tooCommon],
       );
     }
 
     final missing = <String>[];
+    final codes = <PasswordError>[];
 
     // Check length
     if (password.length < minLength) {
       missing.add('At least $minLength characters');
+      codes.add(PasswordError.tooShort);
     }
 
     if (password.length > maxLength) {
       return PasswordValidationResult.invalid(
         'Password must be less than $maxLength characters',
+        code: PasswordError.tooLong,
+        missingCodes: const [PasswordError.tooLong],
       );
     }
 
     // Check for uppercase letter
     if (!_uppercaseRegex.hasMatch(password)) {
       missing.add('One uppercase letter');
+      codes.add(PasswordError.noUppercase);
     }
 
     // Check for lowercase letter
     if (!_lowercaseRegex.hasMatch(password)) {
       missing.add('One lowercase letter');
+      codes.add(PasswordError.noLowercase);
     }
 
     // Check for digit
     if (!_digitRegex.hasMatch(password)) {
       missing.add('One number');
+      codes.add(PasswordError.noDigit);
     }
 
     // Check for special character
     if (!_specialCharRegex.hasMatch(password)) {
       missing.add('One special character');
+      codes.add(PasswordError.noSpecial);
     }
 
     // If any requirements are missing, return invalid
@@ -123,6 +176,7 @@ class PasswordValidator {
       return PasswordValidationResult.invalid(
         'Password must contain: ${missing.join(', ')}',
         missing: missing,
+        missingCodes: codes,
       );
     }
 
@@ -131,6 +185,29 @@ class PasswordValidator {
 
     return PasswordValidationResult.valid(strength);
   }
+
+  /// English text for the legacy `String?` API.
+  ///
+  /// Kept ONLY for non-UI callers (providers that `throw` a message, logs).
+  /// Screens must localize via `passwordErrorText` instead — see
+  /// `password_error_l10n.dart`.
+  static String _englishFor(PasswordError e) => switch (e) {
+    PasswordError.required => 'Please enter your password',
+    PasswordError.tooShort => 'Password must be at least $minLength characters',
+    PasswordError.tooLong => 'Password must be less than $maxLength characters',
+    PasswordError.tooCommon =>
+      'This password is too common. Please choose a stronger password.',
+    PasswordError.noUppercase => 'One uppercase letter',
+    PasswordError.noLowercase => 'One lowercase letter',
+    PasswordError.noDigit => 'One number',
+    PasswordError.noSpecial => 'One special character',
+    PasswordError.repeating =>
+      'Password cannot be repeating characters (e.g., 11111111)',
+    PasswordError.sequential =>
+      'Password cannot contain sequential characters (e.g., "12345" or "abcde")',
+    PasswordError.confirmRequired => 'Please confirm your password',
+    PasswordError.mismatch => 'Passwords do not match',
+  };
 
   /// Calculate password strength
   static PasswordStrength _calculateStrength(String password) {
@@ -176,47 +253,36 @@ class PasswordValidator {
   /// For login, we only validate length since Firebase Auth handles the actual authentication
   /// Security checks (sequential, repeating chars) are only enforced during registration
   static String? validateLoginPassword(String? password) {
-    if (password == null || password.isEmpty) {
-      return 'Please enter your password';
-    }
+    final e = loginPasswordError(password);
+    return e == null ? null : _englishFor(e);
+  }
 
-    if (password.length < minLength) {
-      return 'Password must be at least $minLength characters';
-    }
-
-    if (password.length > maxLength) {
-      return 'Password must be less than $maxLength characters';
-    }
-
+  /// Localizable twin of [validateLoginPassword]. Screens should use this and
+  /// render via `passwordErrorText`; the String? version stays for logs.
+  static PasswordError? loginPasswordError(String? password) {
+    if (password == null || password.isEmpty) return PasswordError.required;
+    if (password.length < minLength) return PasswordError.tooShort;
+    if (password.length > maxLength) return PasswordError.tooLong;
     return null;
   }
 
   /// Minimum length validation (8+ characters only) - for registration
   /// Includes minimal validation to prevent weak passwords like "12345678" or "11111111"
   static String? validateMinimumLength(String? password) {
-    if (password == null || password.isEmpty) {
-      return 'Please enter your password';
-    }
+    final e = minimumLengthError(password);
+    return e == null ? null : _englishFor(e);
+  }
 
-    if (password.length < minLength) {
-      return 'Password must be at least $minLength characters';
-    }
-
-    if (password.length > maxLength) {
-      return 'Password must be less than $maxLength characters';
-    }
-
-    // Minimal validation: Prevent obvious weak passwords
-    // SECURITY FIX SF-006: Check for sequential characters (numbers AND letters)
-    if (_isSequentialCharacters(password)) {
-      return 'Password cannot contain sequential characters (e.g., "12345" or "abcde")';
-    }
-
-    // Check for repeating characters (11111111, aaaaaaaa)
-    if (_isRepeatingCharacters(password)) {
-      return 'Password cannot be repeating characters (e.g., 11111111)';
-    }
-
+  /// Localizable twin of [validateMinimumLength]. SF-006 sequential/repeating
+  /// guards preserved verbatim — only the return type changes.
+  static PasswordError? minimumLengthError(String? password) {
+    if (password == null || password.isEmpty) return PasswordError.required;
+    if (password.length < minLength) return PasswordError.tooShort;
+    if (password.length > maxLength) return PasswordError.tooLong;
+    // SECURITY FIX SF-006: sequential characters (numbers AND letters).
+    if (_isSequentialCharacters(password)) return PasswordError.sequential;
+    // Repeating characters (11111111, aaaaaaaa).
+    if (_isRepeatingCharacters(password)) return PasswordError.repeating;
     return null;
   }
 
@@ -264,14 +330,18 @@ class PasswordValidator {
 
   /// Check if two passwords match
   static String? validateConfirmPassword(String? password, String? confirm) {
-    if (confirm == null || confirm.isEmpty) {
-      return 'Please confirm your password';
-    }
+    final e = confirmPasswordError(password, confirm);
+    return e == null ? null : _englishFor(e);
+  }
 
-    if (password != confirm) {
-      return 'Passwords do not match';
-    }
-
+  /// Localizable twin of [validateConfirmPassword].
+  static PasswordError? confirmPasswordError(
+    String? password,
+    String? confirm,
+  ) {
+    if (confirm == null || confirm.isEmpty)
+      return PasswordError.confirmRequired;
+    if (password != confirm) return PasswordError.mismatch;
     return null;
   }
 }

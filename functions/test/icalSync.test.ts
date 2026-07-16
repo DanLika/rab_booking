@@ -85,6 +85,10 @@ jest.mock("../src/utils/echoDetection", () => ({
   }),
 }));
 
+jest.mock("../src/utils/icalCache", () => ({
+  invalidateIcalCache: jest.fn().mockResolvedValue(undefined),
+}));
+
 // Mock https for fetchIcalData
 const mockRequest = {
   on: jest.fn(),
@@ -257,6 +261,27 @@ describe("iCal Sync Functions", () => {
 
       expect(result.success).toBe(true);
       expect(https.get).toHaveBeenCalled();
+    });
+
+    // A sync changes unit availability. Without this, the export feed keeps
+    // serving the pre-sync snapshot for the full 300s TTL — the owner syncs,
+    // opens the export URL, and sees stale blocks.
+    it("invalidates the export cache after a successful sync", async () => {
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc)
+        .mockResolvedValueOnce(mockFeedDoc)
+        .mockResolvedValueOnce({ docs: [], size: 0 })
+        .mockResolvedValueOnce({ docs: [] })
+        .mockResolvedValueOnce({ docs: [], length: 0 });
+
+      const { invalidateIcalCache } = require("../src/utils/icalCache");
+      const wrapped = wrap(syncIcalFeedNow);
+      await wrapped({ data: validData, auth: mockAuth });
+
+      expect(invalidateIcalCache).toHaveBeenCalledWith(
+        validData.propertyId,
+        "unit-1"
+      );
     });
 
     // Regression: Node 18+ with autoSelectFamily calls our pinned lookup with

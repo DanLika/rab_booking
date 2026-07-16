@@ -13,6 +13,7 @@ import {analyzeEvent, ExistingBooking} from "./utils/echoDetection";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
 import {requireActiveOwner} from "./utils/requireActiveOwner";
 import {sanitizeText} from "./utils/inputSanitization";
+import {invalidateIcalCache} from "./utils/icalCache";
 
 /**
  * F-NEW-05: SSRF defence for owner-supplied iCal URLs.
@@ -606,6 +607,10 @@ async function syncSingleFeed(
       last_error: null,
       updated_at: admin.firestore.Timestamp.now(),
     });
+
+    // Imported events change unit availability, so the export feed the owner
+    // (and the OTAs) read must not keep serving the pre-sync snapshot.
+    await invalidateIcalCache(propertyId, unit_id);
 
     logSuccess("[iCal Sync] Successfully synced feed", {
       feedId,

@@ -7,7 +7,9 @@ paths:
 
 # Admin Dashboard
 
-**Entry points**: `lib/admin_main.dart` (PROD), `lib/admin_main_staging.dart` (STAGING). No DEV entry point exists — DEV admin reuses the PROD entrypoint with the dev Firebase config (see `.firebaserc` admin target mapping below).
+**Entry points**: `lib/admin_main.dart` (PROD), `lib/admin_main_staging.dart` (STAGING), **`lib/admin_main_dev.dart` (DEV)**.
+
+> ⚠️ This line claimed "No DEV entry point exists — DEV admin reuses the PROD entrypoint with the dev Firebase config" until 2026-07-16. **That was false and dangerous**: `lib/admin_main_dev.dart` exists and is the correct DEV entry, calling `EnvironmentConfig.setEnvironment(Environment.development)` plus a `kDebugMode` project-ID assert. Following the old advice — running the PROD entrypoint for dev work — points admin at **`rab-booking-248fc`** and bypasses the assert that exists to catch exactly that. Build dev admin with `--target lib/admin_main_dev.dart`. (Same doc-drift class as the `syncIcalFeedNow` region error, #931.)
 
 ## Per-environment hosting (.firebaserc)
 

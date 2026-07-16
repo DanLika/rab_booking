@@ -114,6 +114,12 @@ bool statusTabMatchesForTest(String tabName, String? accountStatus) {
   return tab.matches(accountStatus);
 }
 
+/// Test seam: the owners-list empty state, so a test can pin that an
+/// unexhausted cursor still offers the "Load more" escape hatch.
+@visibleForTesting
+Widget emptyStateForTest({required bool hasMore, VoidCallback? onLoadMore}) =>
+    _EmptyState(hasMore: hasMore, onLoadMore: onLoadMore);
+
 /// Users list screen with responsive layout and modern styling
 class UsersListScreen extends ConsumerStatefulWidget {
   const UsersListScreen({super.key});
@@ -482,10 +488,22 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
           child: ownersAsync.when(
             data: (owners) {
               final filtered = _filterAndSortOwners(owners);
+              // Deliberately NOT gated on `!_hasActiveFilters` (the historical
+              // behaviour). Filtering/search is CLIENT-SIDE over the rows
+              // loaded so far (20/page) while the tab badges are real
+              // server-side `.count()` aggregates, so gating on filters hid the
+              // ONLY control that pulls further pages exactly when it was
+              // needed: a tab could badge "Suspended 1" while the table said
+              // "No users found" and offered no way forward.
+              final showLoadMore = notifier.hasMore;
               if (filtered.isEmpty) {
-                return const _EmptyState();
+                // A filter matching none of the LOADED rows must not dead-end:
+                // keep the cursor reachable so later pages can be pulled in.
+                return _EmptyState(
+                  hasMore: showLoadMore,
+                  onLoadMore: notifier.loadMore,
+                );
               }
-              final showLoadMore = notifier.hasMore && !_hasActiveFilters;
               if (isMobile) {
                 return _UsersList(
                   owners: filtered,
@@ -1104,16 +1122,43 @@ class _AccountTypeBadge extends StatelessWidget {
   }
 }
 
+/// Empty state for the filtered owners list.
+///
+/// When the cursor still has unloaded Firestore pages ([hasMore]), "no users
+/// found" is only true of the rows loaded SO FAR — matches may well sit on a
+/// later page. Saying a flat "No users found" there is a lie the admin cannot
+/// act on, so the copy is scoped to what was actually searched and the
+/// [onLoadMore] control stays available to widen it.
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  final bool hasMore;
+  final VoidCallback? onLoadMore;
+
+  const _EmptyState({this.hasMore = false, this.onLoadMore});
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    if (!hasMore) {
+      return const Center(
+        child: BbEmptyState(
+          icon: 'people_outline',
+          title: 'No users found',
+          compact: true,
+        ),
+      );
+    }
+    return Center(
       child: BbEmptyState(
         icon: 'people_outline',
-        title: 'No users found',
+        title: 'No matches in the loaded users',
+        body:
+            'More users have not been loaded yet — load them to widen '
+            'this search.',
         compact: true,
+        primary: BbEmptyStateAction(
+          label: 'Load more',
+          iconLeft: 'refresh',
+          onPressed: onLoadMore,
+        ),
       ),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bookbed/features/owner_dashboard/presentation/providers/rezervacije_kpi_provider.dart';
 import 'package:bookbed/features/owner_dashboard/presentation/widgets/bookings/bookings_premium_header.dart';
 
 /// RED→GREEN seam: the mobile (<600) Rezervacije KPI strip renders exactly the
@@ -9,16 +11,29 @@ import 'package:bookbed/features/owner_dashboard/presentation/widgets/bookings/b
 ///
 /// Labels are rendered upper-cased by `_RezStatTile`, so finders match the
 /// upper-cased forms.
+///
+/// ProviderScope + override added 2026-07-16: #924 made `_RezKpiStrip` a
+/// consumer of the async `rezervacijeKpiProvider` (to un-cap the "Na čekanju"
+/// tile), which left this pre-existing test throwing on a bare MaterialApp —
+/// the strip rendered an error widget and every label finder came back empty.
+/// The override keeps this a pure LAYOUT seam: it pins WHICH cards render at
+/// each breakpoint, not what the aggregation computes (that is
+/// `rez_kpi_compute_test.dart`).
 void main() {
   Future<void> pump(WidgetTester tester, {required bool isMobile}) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: isMobile ? 390 : 1440,
-              child: buildRezKpiStripForTest(isMobile: isMobile),
+      ProviderScope(
+        overrides: [
+          rezervacijeKpiProvider.overrideWith((ref) async => RezKpi.zero),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: isMobile ? 390 : 1440,
+                child: buildRezKpiStripForTest(isMobile: isMobile),
+              ),
             ),
           ),
         ),
@@ -62,12 +77,17 @@ void main() {
       addTearDown(tester.view.reset);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SizedBox(
-              width: width,
-              child: SingleChildScrollView(
-                child: buildRezKpiStripForTest(isMobile: true),
+        ProviderScope(
+          overrides: [
+            rezervacijeKpiProvider.overrideWith((ref) async => RezKpi.zero),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                width: width,
+                child: SingleChildScrollView(
+                  child: buildRezKpiStripForTest(isMobile: true),
+                ),
               ),
             ),
           ),

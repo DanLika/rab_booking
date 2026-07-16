@@ -114,26 +114,8 @@ bool statusTabMatchesForTest(String tabName, String? accountStatus) {
   return tab.matches(accountStatus);
 }
 
-/// Should the "Load more" affordance be offered?
-///
-/// Filtering/search is CLIENT-SIDE over the rows loaded so far (20/page), while
-/// the status-tab badges are REAL server-side `.count()` aggregates over the
-/// whole collection. Gating this on `!hasActiveFilters` (the historical
-/// behaviour) therefore removed the ONLY control that pulls further Firestore
-/// pages at exactly the moment it was needed: with >1 page of owners, picking
-/// a tab/search whose matches live on a later page rendered "No users found"
-/// with no way forward — the matching owner was unreachable in the UI even
-/// though the badge truthfully counted it.
-///
-/// So: offer "Load more" whenever the cursor has more, filters or not.
-bool shouldShowLoadMore({
-  required bool hasMore,
-  required bool hasActiveFilters,
-}) => hasMore;
-
 /// Test seam: the owners-list empty state, so a test can pin that an
-/// unexhausted cursor still offers the "Load more" escape hatch (the call site
-/// `shouldShowLoadMore` alone does not prove).
+/// unexhausted cursor still offers the "Load more" escape hatch.
 @visibleForTesting
 Widget emptyStateForTest({required bool hasMore, VoidCallback? onLoadMore}) =>
     _EmptyState(hasMore: hasMore, onLoadMore: onLoadMore);
@@ -506,10 +488,14 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
           child: ownersAsync.when(
             data: (owners) {
               final filtered = _filterAndSortOwners(owners);
-              final showLoadMore = shouldShowLoadMore(
-                hasMore: notifier.hasMore,
-                hasActiveFilters: _hasActiveFilters,
-              );
+              // Deliberately NOT gated on `!_hasActiveFilters` (the historical
+              // behaviour). Filtering/search is CLIENT-SIDE over the rows
+              // loaded so far (20/page) while the tab badges are real
+              // server-side `.count()` aggregates, so gating on filters hid the
+              // ONLY control that pulls further pages exactly when it was
+              // needed: a tab could badge "Suspended 1" while the table said
+              // "No users found" and offered no way forward.
+              final showLoadMore = notifier.hasMore;
               if (filtered.isEmpty) {
                 // A filter matching none of the LOADED rows must not dead-end:
                 // keep the cursor reachable so later pages can be pulled in.

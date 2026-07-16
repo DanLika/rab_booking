@@ -16,11 +16,14 @@
 //
 // Pure seam — no Firebase.
 
-// NOTE ON COVERAGE: the `shouldShowLoadMore` seam below went green while the
-// SCREEN still dead-ended, because `build` early-returned `_EmptyState` before
-// ever consulting it ([[seam-test-proves-fn-not-wiring]]). The widget group
-// pins that call site: the empty state itself must carry the Load-more escape
-// hatch and must not claim a flat "No users found" while pages remain.
+// NOTE ON COVERAGE: a pure `shouldShowLoadMore(hasMore, hasActiveFilters)`
+// seam was tried first and went green while the SCREEN still dead-ended —
+// `build` early-returned `_EmptyState` before ever consulting it
+// ([[seam-test-proves-fn-not-wiring]]). It was dropped: once the filter gate
+// is gone the predicate is just `hasMore`, so testing it only proved that
+// identity returns its input. The widget group below pins the actual call
+// site: the empty state must carry the Load-more escape hatch and must not
+// claim a flat "No users found" while pages remain.
 
 import 'package:bookbed/features/admin/presentation/screens/users_list_screen.dart';
 import 'package:flutter/material.dart';
@@ -42,47 +45,7 @@ Future<void> _pumpEmpty(
 }
 
 void main() {
-  group('shouldShowLoadMore', () {
-    // THE BITE: fails under the old `hasMore && !hasActiveFilters` gate.
-    test('offers Load more while a filter is active and more pages exist', () {
-      expect(
-        shouldShowLoadMore(hasMore: true, hasActiveFilters: true),
-        isTrue,
-        reason:
-            'A filter must not hide Load more: matches may live on a later '
-            'Firestore page, and this is the only control that fetches them.',
-      );
-    });
-
-    test('offers Load more with no filters and more pages exist', () {
-      expect(
-        shouldShowLoadMore(hasMore: true, hasActiveFilters: false),
-        isTrue,
-      );
-    });
-
-    test('hides Load more once the cursor is exhausted, filtered or not', () {
-      expect(
-        shouldShowLoadMore(hasMore: false, hasActiveFilters: true),
-        isFalse,
-      );
-      expect(
-        shouldShowLoadMore(hasMore: false, hasActiveFilters: false),
-        isFalse,
-      );
-    });
-
-    test('visibility tracks hasMore alone — filters never suppress it', () {
-      for (final filtered in [true, false]) {
-        expect(
-          shouldShowLoadMore(hasMore: true, hasActiveFilters: filtered),
-          isTrue,
-        );
-      }
-    });
-  });
-
-  group('empty state (the call site the seam alone did not prove)', () {
+  group('empty state — the call site that actually strands the admin', () {
     // THE BITE: the old `_EmptyState` was a const flat "No users found" with
     // no action, so a filter matching zero LOADED rows stranded the admin.
     testWidgets('offers Load more when pages remain', (tester) async {

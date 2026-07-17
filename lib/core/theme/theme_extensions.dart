@@ -76,7 +76,8 @@ extension ThemeColors on BuildContext {
   ///
   /// Returns:
   /// - Light mode: AppColors.textTertiaryLight (0xFF718096)
-  /// - Dark mode: AppColors.textTertiaryDark (0xFF718096)
+  /// - Dark mode: AppColors.textTertiaryDark (0xFF8592A5 — lifted from
+  ///   0xFF718096 for WCAG AA against the audit/127 dark ladder)
   Color get textColorTertiary =>
       isDarkMode ? AppColors.textTertiaryDark : AppColors.textTertiaryLight;
 

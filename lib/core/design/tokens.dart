@@ -177,7 +177,10 @@ class BBColor {
 
   static const Color textPrimaryDark = Color(0xFFE2E8F0);
   static const Color textSecondaryDark = Color(0xFFA0AEC0);
-  static const Color textTertiaryDark = Color(0xFF718096);
+
+  /// Mirrors [AppColors.textTertiaryDark] — see the WCAG note there.
+  /// #718096 → #8592A5 (2026-07-17, AA fix).
+  static const Color textTertiaryDark = Color(0xFF8592A5);
 
   // -------------------------------------------------------------------------
   // Booking status (light/dark identical — semantic, not surface)

@@ -121,7 +121,18 @@ class AppColors {
   static const Color textSecondaryDark = Color(0xFFA0AEC0); // Medium light gray
 
   /// Text tertiary - Medium gray
-  static const Color textTertiaryDark = Color(0xFF718096); // Medium gray
+  /// Dark tertiary text.
+  ///
+  /// #718096 → #8592A5 (2026-07-17): audit/127 widened the dark ladder
+  /// (#0B0B0D→#141414, cards #1E1E1E, variant #2A2A2A) so panels would lift
+  /// off the shell, but the text tiers were never re-checked against the newly
+  /// LIGHTER surfaces. #718096 then measured 4.15:1 on #1E1E1E and 3.57:1 on
+  /// #2A2A2A — below the WCAG AA 4.5:1 floor for the 12px/w400 captions that
+  /// actually use it (e.g. notification_settings_screen). #8592A5 is the
+  /// MINIMUM lift along the same slate hue that clears 4.5:1 on the lightest
+  /// surface tertiary text lands on (#2A2A2A → 4.53:1). Guarded by
+  /// `dark_palette_contrast_test.dart`.
+  static const Color textTertiaryDark = Color(0xFF8592A5);
 
   /// Border color - Dark border (optimized for true black background)
   /// UPGRADED: Was 0xFF4A5568 → Now 0xFF2D3748 (better contrast with black)

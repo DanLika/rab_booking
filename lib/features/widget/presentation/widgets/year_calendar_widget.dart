@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/constants/widget_constants.dart';
 import '../../domain/models/calendar_date_status.dart';
+import '../l10n/availability_error_l10n.dart';
 import '../l10n/widget_translations.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/theme_provider.dart';
@@ -908,11 +909,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         final tr = WidgetTranslations.of(context, ref);
         SnackBarHelper.showError(
           context: context,
-          // Mirror of month_calendar_widget: a fail-closed check must not be
-          // reported to the guest as "these dates are booked".
-          message: result.errorCode == AvailabilityErrorCode.checkError
-              ? tr.errorAvailabilityCheck
-              : tr.errorCannotSelectBookedDates,
+          // Mirror of month_calendar_widget — same detailed mapping (#953).
+          message: tr.availabilityErrorText(result),
           duration: const Duration(seconds: 3),
         );
         return;

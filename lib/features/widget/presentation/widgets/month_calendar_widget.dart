@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/constants/widget_constants.dart';
 import '../../domain/models/calendar_date_status.dart';
+import '../l10n/availability_error_l10n.dart';
 import '../l10n/widget_translations.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/theme_provider.dart';
@@ -850,12 +851,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         final tr = WidgetTranslations.of(context, ref);
         SnackBarHelper.showError(
           context: context,
-          // The check fails CLOSED when the CF is unreachable. Saying "already
-          // booked" there is a lie about free dates — the guest walks away from
-          // an available unit. Only claim "booked" when we actually know.
-          message: result.errorCode == AvailabilityErrorCode.checkError
-              ? tr.errorAvailabilityCheck
-              : tr.errorCannotSelectBookedDates,
+          // Report WHY, not just "no". The checker knows whether this is an
+          // iCal clash, a blocked check-in day, or its own failure — and each
+          // has a translated string. Collapsing them into "already booked"
+          // sends a guest away from dates they could have shifted onto (#953).
+          message: tr.availabilityErrorText(result),
           duration: const Duration(seconds: 3),
         );
         return;

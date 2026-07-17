@@ -337,7 +337,13 @@ mixin _SessionMixin on _EnhancedAuthNotifierBase {
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('sendPasswordResetEmail');
 
-      await callable.call({'email': email});
+      // forgot_password_screen sets `_isLoading = true` and only clears it in
+      // its try/catch — a callable that HANGS never throws, so the spinner
+      // never clears and the user has no error and no way out. This is the
+      // auth-RECOVERY path: whoever lands here already cannot log in.
+      await callable
+          .call({'email': email})
+          .withCloudFunctionTimeout('sendPasswordResetEmail');
 
       // SENTRY: Log successful password reset request
       LoggingService.log(

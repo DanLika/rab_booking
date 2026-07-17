@@ -12,6 +12,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../core/constants/auth_feature_flags.dart';
 import '../../core/exceptions/app_exceptions.dart';
+import '../../core/utils/async_utils.dart';
 import '../../core/services/rate_limit_service.dart';
 import '../../core/services/secure_storage_service.dart';
 import '../../core/services/security_events_service.dart';

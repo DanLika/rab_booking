@@ -1,8 +1,100 @@
 # BookBed Changelog
 
-All version history from v4.6 to v7.43.
+All version history from v4.6 to v7.44.
 
-**Last Updated**: 2026-07-16 | **Version**: 7.43
+**Last Updated**: 2026-07-17 | **Version**: 7.44
+
+---
+
+**Changelog 7.44** (2026-07-17) — autonomous bug-hunt loop, 6 iterations:
+
+### P2 fix(a11y): dark tertiary text fell under WCAG AA after the audit/127 ladder (#951)
+audit/127 widened the dark ladder (#0B0B0D→#141414, cards #1E1E1E, variant
+#2A2A2A) so panels would lift off the shell — deliberate and correct. But the
+TEXT tiers were never re-measured against the newly LIGHTER surfaces, and
+`textTertiaryDark` (#718096) silently dropped to **4.15:1 on #1E1E1E** (BbCard's
+fill via `c.surface`) and **3.57:1 on #2A2A2A**, under the 4.5:1 floor for the
+12px/w400 captions that use it (live pairing: `notification_settings_screen`).
+`#718096` → `#8592A5`: the **minimum** lift along the same slate hue that clears
+4.5:1 on the lightest surface tertiary lands on. A computed constraint minimum,
+not a design opinion — trivially revertible. `#333333` excluded on purpose
+(buttonPrimaryHover + a shadow tier, not a text backdrop); light mode untouched.
+The test guards the **relationship** — every text tier × every dark surface — so
+lightening a surface again fails by name, plus a cell pinning tertiary stays
+dimmer than secondary. **20 dark goldens regenerated, ZERO light** — exactly as
+narrow as intended.
+
+### P2 fix(auth): #933 fixed the login guard and missed its registration twin (#952)
+`checkCloudRegistrationRateLimit` is the exact twin of the login guard #933
+fixed — same file, **two methods below it**, same documented "fail-open for
+availability" catch, no `.timeout()`. So the fail-open was dead code and a hung
+callable hung registration. `_kAuthGuardTimeout` was already in that file,
+added by #933 and never applied here. Mirrors the login twin including the
+explicit `on TimeoutException` branch (the catch is typed to
+`FirebaseFunctionsException`; a bare `.timeout()` would escape it and show an
+error instead of failing open).
+Also `sendPasswordResetEmail`: unbounded, while `forgot_password_screen` clears
+`_isLoading` only in its try/catch — a hang means a permanent spinner **on the
+path taken by someone who already cannot log in**. Bounded via the repo's
+existing `withCloudFunctionTimeout`.
+Test is a source scan deliberately: both methods build their own
+`FirebaseFunctions.instanceFor(...)` inline and the register harness overrides
+the method to a no-op, so no test can drive the real callable without
+refactoring the auth path. **Class now converged** — the sharp-shape grep
+returns only #933's own fix.
+
+### P1 fix(widget): the calendar knew WHY dates failed and said "booked" (#953)
+The checker already reports the reason (`errorCode` + `conflictDate` /
+`icalSource`) and `widget_translations.dart` already carries a parameterised
+string for EVERY code, in all 4 languages — all with **zero consumers**. Both
+calendars collapsed every outcome into the generic "already booked".
+Not cosmetic: *"Dolazak nije moguć na datum 20. kol"* tells a guest to **shift
+one day**; *"Već rezervirano"* tells them to **give up** — on dates the owner
+would happily sell. Wrong action, lost booking.
+#935 wired ONE code (`checkError`) and left five dormant. New
+`availability_error_l10n.dart` maps every code, consuming detail the result
+already carries; degrades to the generic line when a code arrives without its
+detail. RED→GREEN: 5 of 10 cells fail against the #935-era partial mapping.
+
+### chore(brain): rebuild .brain index for the 7.43 docs (#950)
+The index predated the 7.43 doc merges, so those sections weren't retrievable.
+⚠ `brain-index.json` is **git-tracked** — rebuilding in the shared checkout
+dirties the tree and blocks the next ff-merge. Rebuild via worktree + PR.
+
+### Verified clean — 0 findings (do NOT re-audit without new evidence)
+- **Stripe webhook** — read end to end. Two hypotheses killed firsthand: dedup
+  does NOT lose events on retry (every handler that can 500 carries a
+  compensating `eventRef.delete()`), and a failed placeholder cleanup does NOT
+  leak blocked dates (`stripe_pending_expires_at` makes it inert and BOTH
+  readers honour it). Only finding is P4: `handleCheckoutSessionExpired` reports
+  `placeholder_cleaned` even when the delete failed — Stripe ignores the body.
+  **Dev Stripe live-testing is BLOCKED** on three operator-owned fronts (no
+  Stripe config on any dev unit; Connect fixture stuck at hCaptcha F-70-02 —
+  audit/70 proved both CDP *and* a human fail; MCP unauthenticated).
+- **Notifications** — bell count is a server-side stream (audit/141).
+  **F-T3-01 re-verified and CLOSED** after 39 days as a false open: the silent
+  dismissal now surfaces a snackbar on BOTH paths, and the "3× retry" was screen
+  re-entry (now four guards), not a retry — `_findBookingById` is a 2-strategy
+  fallback chain run once. Quiet-hours is sound AND wired (`fcmService:105` →
+  `shouldSendPushNotification` → `isQuietNow`), midnight-wrap correct, 12/12.
+- **`.take(n)` as a count** (#924 class) — all 6 sites clean. `smart_booking_tooltip`
+  and `booking_action_menu` both carry an honest `tooltipMoreConflicts(length-3)`;
+  calendar dots are decoration (the tap-through agenda is the truth path).
+- **`orderBy` as a silent filter** (#889 class) — all 9 fields checked against
+  model nullability AND PROD data. `daily_prices`: **2587/2587 carry a valid
+  `date` Timestamp**. Re-confirms that `icalExport.ts:254`'s `orderBy("check_in")`
+  is the mechanism excluding the 4 string-date bookings — still no live impact.
+- **Latent, measured not guessed**: notifications list is `.limit(100)` while the
+  unread count is unlimited — but **PROD max is 83, nobody over 100**, and
+  `markAllAsRead` queries all unread so the badge always clears. Re-check when an
+  owner crosses 100.
+
+**Lesson (three instances in one campaign): a fix does not close its class.**
+#948 fixed the single-status path and left the "Sve" tab; #952 fixed login and
+left registration two methods below it; #953 wired 1 of 6 error codes. Every one
+was caught by **running the grep, not trusting memory** — and #948 additionally
+by checking the fix sat on the path that actually executes
+(`PaginatedBookingsNotifier` had zero consumers).
 
 ---
 

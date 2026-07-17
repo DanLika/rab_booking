@@ -641,7 +641,17 @@ mixin _EmailAuthMixin on _EnhancedAuthNotifierBase {
     try {
       final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
       final callable = functions.httpsCallable('checkRegistrationRateLimit');
-      await callable.call({'email': email});
+      await callable.call({'email': email}).timeout(_kAuthGuardTimeout);
+    } on TimeoutException {
+      // Fail-open, same as the FirebaseFunctionsException path below.
+      // WITHOUT this the fail-open below is dead code against a HANG: a
+      // callable that never returns never throws, so no catch fires and
+      // registration waits forever. Exact twin of the login guard above (#933)
+      // — that one was fixed and this one was missed.
+      LoggingService.log(
+        'IP registration rate limit check timed out, continuing',
+        tag: 'AUTH_WARNING',
+      );
     } on FirebaseFunctionsException catch (e) {
       if (e.code == 'resource-exhausted') {
         LoggingService.log(

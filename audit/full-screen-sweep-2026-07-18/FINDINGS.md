@@ -779,3 +779,60 @@
 - **[P2] title required String even when showTitle:false (dummy strings at 4 premium sites)** — :11,22-28 — Anti-Pattern.
 - **[P3] magic breakpoint 600 + MediaQuery.of every build** — :38 — Responsive.
 - **[P3] actions get no enforced tooltip/semantics contract (root of missing action tooltips)** — :60 — A11y.
+
+---
+## COMPONENTS batch 5 — shared widgets (2026-07-18) — more DEAD-CODE + live P0
+
+### custom_date_range_picker (shared) — 12/20 — LIVE (2 callers)
+- **[P1] GestureDetector day cells zero Semantics (date/selected/disabled)** — custom_date_range_picker.dart:453-496 — A11y.
+- **[P1] Colors.white on selected/end cells (dark-mode mismatch, use onPrimary)** — :248,483 — Theming.
+- **[P2] DateTime.now() per cell ×42/rebuild** — :432 — Perf.
+- **[P2] 7 hardcoded HR strings + ambiguous ['P','U','S','Č','P','S','N'] weekday row** — :114-367 — Anti-Pattern.
+- **[P2] "Spremi" tap target ~40px** — :240-241 — A11y.
+- **[P2] no BB tokens (mixed context.gradients + colorScheme)** — Theming.
+
+### debounced_search_field (shared) — 13/20 — DEAD (both classes 0 callers)
+- **[P3] DEAD CODE — DebouncedSearchField + CompactDebouncedSearchField 0 call sites** — debounced_search_field.dart:21,136 — Anti-Pattern.
+- **[P2] no textInputAction.search** — :100-246 — A11y.
+- **[P2] CompactDebouncedSearchField raw InputDecoration bypasses helper + hintText-only label** — :210 — Theming/A11y.
+- **[P2] hardcoded HR 'Pretraži...' defaults** — :24,139 — Anti-Pattern.
+- **[CLEAN] ValueNotifier avoids rebuilds (SF-015); Timer disposed.**
+
+### deferred_loader (shared) — 8/20 — DEAD (0 callers)
+- **[P0] DEAD CODE — 0 call sites, no deferred imports in project. Delete.** — deferred_loader.dart — Anti-Pattern.
+- **[P1] Scaffold-in-Scaffold nesting (error+loading paths)** — :48,79 — Anti-Pattern.
+- **[P2] Colors.red hardcoded + snapshot.error to user + EN strings** — :55,59,69,80 — Theming/A11y.
+
+### delete_account_dialog (shared) — 13/20 — LIVE (showDeleteAccountDialog)
+- **[P1] hardcoded EN 'Please re-authenticate first'** — delete_account_dialog.dart:133 — Anti-Pattern.
+- **[P2] raw Dialog not BbDialog (missed #849 migration)** — :179 — Anti-Pattern/Theming.
+- **[P2] raw Colors.green/white60/black54/white30 ×7** — :469-520 — Theming.
+- **[P2] destructive confirm button: loading spinner branch no Semantics label** — :367-399,384-392 — A11y.
+- **[P2] warning icon container no ExcludeSemantics** — :211-221 — A11y.
+
+### error_state_widget (shared) — 13/20 — DEAD (0 callers)
+- **[P1] message:String API invites e.toString() leak (dead now but vector)** — error_state_widget.dart:10 — A11y/Anti-Pattern.
+- **[P2] hardcoded HR 'Pokušaj ponovo' (retry/tryAgain keys exist)** — :53 — Anti-Pattern.
+- **[P2] decorative icon no ExcludeSemantics** — :33-37 — A11y.
+- **[P2] icon #FF6B6B on #F0F1F5 = 2.7:1 fails WCAG 1.4.11** — :36 — A11y.
+- **[Dead note] 0 call sites — verify barrel then delete.**
+
+### feature_highlight_widget (shared) — 15/20 — LIVE
+- **[P1] no reduced-motion guard (perpetual pulse+shimmer)** — feature_highlight_widget.dart:109-117 — A11y.
+- **[P2] .then(delay:Duration.zero) sequential not parallel (ui-ux.md trap)** — :116 — Anti-Pattern.
+- **[P2] no Semantics 'new feature' label** — :89-96 — A11y.
+- **[P2] theme.colorScheme.primary not BBColor** — :85 — Theming.
+- **[P3] tooltip waitDuration:zero intrusive** — :102 — UX.
+
+### global_navigation_loader (shared) — 10/20 — LIVE (MaterialApp builder) — P0
+- **[P0] overlay no a11y barrier — SR passes through, activates blocked widgets** — global_navigation_loader.dart:79 — A11y — add Semantics(liveRegion) + ExcludeSemantics(excluding:isLoading) on child.
+- **[P1] deprecated StateNotifier/StateNotifierProvider (Riverpod 2, removed in 3)** — :7,41 — Anti-Pattern.
+- **[P2] raw Colors.black/white scrim+card+shadow (no dark adaptation)** — :90-115 — Theming.
+- **[P2] literal dims 80/40/radius12/blur10 not tokens** — :96-105 — Theming.
+- **[P3] _LoadingOverlay missing const constructor** — :86 — Anti-Pattern.
+
+### gradient_button (shared) — 7/20 — DEAD + FLAT-CHROME P0
+- **[P0] flat-chrome VIOLATION — LinearGradient fill every render (+ BBGradient.brandPrimary fallback)** — gradient_button.dart:53,44-45 — Theming.
+- **[P0] DEAD CODE — 0 live callers (migration comment in unit_form:410 confirms), not in barrel. Delete.** — Anti-Pattern.
+- **[P1] no Semantics/button role** — :65 — A11y.
+- **[P2/P3] hardcoded TextStyle + raw BoxShadow/BorderRadius + hover-lift Matrix4** — :47-125 — Theming/Anti-Pattern.

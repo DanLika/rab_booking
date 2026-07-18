@@ -88,14 +88,14 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/shared/widgets/button.dart
 - [x] lib/shared/widgets/card.dart
 - [x] lib/shared/widgets/common_app_bar.dart
-- [ ] lib/shared/widgets/custom_date_range_picker.dart
-- [ ] lib/shared/widgets/debounced_search_field.dart
-- [ ] lib/shared/widgets/deferred_loader.dart
-- [ ] lib/shared/widgets/delete_account_dialog.dart
-- [ ] lib/shared/widgets/error_state_widget.dart
-- [ ] lib/shared/widgets/feature_highlight_widget.dart
-- [ ] lib/shared/widgets/global_navigation_loader.dart
-- [ ] lib/shared/widgets/gradient_button.dart
+- [x] lib/shared/widgets/custom_date_range_picker.dart
+- [x] lib/shared/widgets/debounced_search_field.dart
+- [x] lib/shared/widgets/deferred_loader.dart
+- [x] lib/shared/widgets/delete_account_dialog.dart
+- [x] lib/shared/widgets/error_state_widget.dart
+- [x] lib/shared/widgets/feature_highlight_widget.dart
+- [x] lib/shared/widgets/global_navigation_loader.dart
+- [x] lib/shared/widgets/gradient_button.dart
 - [ ] lib/shared/widgets/loading_overlay.dart
 - [ ] lib/shared/widgets/login_loading_overlay.dart
 - [ ] lib/shared/widgets/logout_tile.dart

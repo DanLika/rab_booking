@@ -1,8 +1,99 @@
 # BookBed Changelog
 
-All version history from v4.6 to v7.44.
+All version history from v4.6 to v7.45.
 
-**Last Updated**: 2026-07-17 | **Version**: 7.44
+**Last Updated**: 2026-07-18 | **Version**: 7.45
+
+---
+
+**Changelog 7.45** (2026-07-18) — SSR SEO for the public booking widget:
+
+### P1 feat(seo): the public widget was invisible to search engines
+The booking widget is Flutter/CanvasKit, which paints to a `<canvas>`. Crawlers
+and LLMs extract **no text** from it, so every property on every
+`*.view.bookbed.io` subdomain shared the one static title/description baked into
+the app shell — Google had a single indexable page for the entire guest-facing
+product. No amount of Flutter configuration changes this; the `html` renderer
+that could have helped was removed in Flutter 3.29.
+
+New `functions/src/ssr.ts` serves real HTML for the public routes:
+- **`ssrWidget`** resolves `{subdomain}.view.bookbed.io[/{unit-slug}]` to a
+  property (and unit) from Firestore, then emits per-page `<title>`,
+  description, canonical, OG/Twitter tags, a visible content block, and JSON-LD
+  — `LodgingBusiness` for the property root, `Product` + `Offer` +
+  `BreadcrumbList` for a unit. `AggregateRating` is emitted **only** when the
+  property actually has reviews (`review_count > 0`), never fabricated.
+- **`ssrSitemap`** serves `/sitemap.xml` across every active property and its
+  units, with `lastmod` taken from `updated_at` — Google discards sitemaps whose
+  lastmod is set to build time.
+
+**The shell is fetched, not reproduced.** `web/index.html` is ~800 lines of boot
+(firebase compat shims, payment bridge, the `_flutter` loader proxy). Copying
+that into the function would have guaranteed drift the first time the boot
+changed. Instead the function fetches the *deployed* `index.html` at runtime and
+injects into it, cached per host with last-good-wins so a transient fetch
+failure degrades to a slightly stale shell rather than a broken page. The same
+HTML is served to bots and humans — no cloaking — and the existing
+`#native-splash` overlay covers the injected block until Flutter mounts.
+
+**JSON-LD values are unicode-escaped** (`<`, `>`, `&`). `JSON.stringify` escapes
+quotes but not angle brackets, so a property named `</script><img onerror=…>`
+would have broken out of the `ld+json` block. A test covers that specific
+breakout; it failed on first run, which is how the bug was caught before merge.
+
+### P2 fix(seo): guest email was exposed to indexing (widget + owner)
+`/view?ref=…&email=…&token=…` carries the guest's email in the query string, was
+`Allow`ed in robots.txt, and inherited the shell's global `index, follow`. Any
+such URL reaching a crawlable surface would put a guest email in search results.
+
+Fixed with `X-Robots-Tag: noindex` **headers**, deliberately not a robots.txt
+`Disallow`: a disallowed URL can never be de-indexed, because the crawler is not
+permitted to fetch it and therefore never reads the noindex. The routes stay
+crawlable on purpose.
+
+The first pass covered only the widget target and **did not close the class** —
+`router_owner.dart` registers the same `/view` route with the same parameters on
+`app.bookbed.io`, which had no `X-Robots-Tag` rules at all. Found by grepping
+every router for the PII query parameters instead of assuming one surface.
+Admin registers neither route and was left alone rather than given speculative
+rules.
+
+### P2 fix(seo): the new `/*` rewrite would have 404-ed `/calendar`
+`/calendar` is a real widget route (`router_widget.dart:40`), but the broad `/*`
+SSR rewrite handed it to `ssrWidget`, which looked for a unit with that slug and
+returned 404. **The page still rendered** — Flutter routes it after boot — so a
+click-through smoke test would have passed while crawlers saw a 404 and dropped
+the page. A `RESERVED_PATHS` set in the function now mirrors the Flutter router
+and serves the shell with 200, so a future app route cannot silently start
+404-ing; the hosting rewrite also sends `/calendar` straight to the shell.
+
+### P2 feat(seo): the SSR was unverifiable on dev
+`WIDGET_HOST` was pinned to `view.bookbed.io`, so the subdomain parse only ever
+matched in production and dev silently fell through to the plain shell — the
+feature could only be checked in PROD, the opposite of the standing dev-first
+rule. Env-aware hosts alone do not fix it: the dev widget site
+(`bookbed-widget-dev.web.app`) is a plain Hosting host with **no wildcard**, so
+`sub.dev-host` can never resolve.
+
+`splitWidgetHost()` now matches a suffix list longest-first (so
+`x.staging.view.bookbed.io` is not misparsed as prod), and `resolveSubdomain()`
+accepts a `_ssrSubdomain` query override **only when `GCLOUD_PROJECT` is not the
+production project**, validated against the app's own subdomain shape. It
+renders prod canonical/OG URLs so a dev check shows exactly what prod emits. A
+test asserts the override is refused on production.
+
+Dev check after deploy:
+```bash
+curl -s '<dev-fn-url>/?_ssrSubdomain=<subdomain>' | grep -E 'og:title|ld\+json'
+```
+
+### Also
+- `Organization` JSON-LD added to the shared `web/index.html` (brand-level).
+- `robots.txt` points at the new widget sitemap.
+
+**NOT DEPLOYED.** Needs `firebase deploy --only functions,hosting:widget`
+(+ `hosting:owner` for the noindex headers). Dev first per standing rule.
+Functions suite **527 passing**, eslint clean, tsc clean.
 
 ---
 

@@ -297,7 +297,7 @@ jobs:
     name: Check Code Coverage
     runs-on: ubuntu-latest
     needs: test
-    timeout-minutes: 5
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code

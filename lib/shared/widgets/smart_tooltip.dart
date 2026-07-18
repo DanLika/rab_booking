@@ -317,8 +317,11 @@ class _TooltipPositioner extends StatelessWidget {
             child: Material(
               color: Colors.transparent,
               child: Container(
-                padding: tooltipPadding as EdgeInsets?,
-                margin: tooltipMargin as EdgeInsets?,
+                // Container takes EdgeInsetsGeometry — the old
+                // `as EdgeInsets?` cast threw on EdgeInsetsDirectional
+                // (audit F4.6).
+                padding: tooltipPadding,
+                margin: tooltipMargin,
                 decoration:
                     decoration ??
                     BoxDecoration(
@@ -364,7 +367,9 @@ class _TooltipPositioner extends StatelessWidget {
     required double tooltipHeight,
     required EdgeInsetsGeometry margin,
   }) {
-    final marginInsets = margin as EdgeInsets;
+    // Resolve instead of force-cast (audit F4.6) — the geometry math
+    // below reads .left/.right, which EdgeInsetsDirectional doesn't have.
+    final EdgeInsets marginInsets = margin.resolve(TextDirection.ltr);
     final positions = <_TooltipPosition>[];
 
     // Calculate center of target

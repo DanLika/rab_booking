@@ -72,14 +72,14 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/shared/widgets/redesign/bb_input.dart
 - [x] lib/shared/widgets/redesign/bb_logo.dart
 - [x] lib/shared/widgets/redesign/bb_radio.dart
-- [ ] lib/shared/widgets/redesign/bb_scaffold.dart
-- [ ] lib/shared/widgets/redesign/bb_section_header.dart
-- [ ] lib/shared/widgets/redesign/bb_sidebar_rail.dart
-- [ ] lib/shared/widgets/redesign/bb_sidebar.dart
-- [ ] lib/shared/widgets/redesign/bb_skeleton.dart
-- [ ] lib/shared/widgets/redesign/bb_sparkline.dart
-- [ ] lib/shared/widgets/redesign/bb_spinner.dart
-- [ ] lib/shared/widgets/redesign/bb_status_badge.dart
+- [x] lib/shared/widgets/redesign/bb_scaffold.dart
+- [x] lib/shared/widgets/redesign/bb_section_header.dart
+- [x] lib/shared/widgets/redesign/bb_sidebar_rail.dart
+- [x] lib/shared/widgets/redesign/bb_sidebar.dart
+- [x] lib/shared/widgets/redesign/bb_skeleton.dart
+- [x] lib/shared/widgets/redesign/bb_sparkline.dart
+- [x] lib/shared/widgets/redesign/bb_spinner.dart
+- [x] lib/shared/widgets/redesign/bb_status_badge.dart
 - [ ] lib/shared/widgets/redesign/bb_switch.dart
 - [ ] lib/shared/widgets/adaptive_layout.dart
 - [ ] lib/shared/widgets/app_filter_chip.dart

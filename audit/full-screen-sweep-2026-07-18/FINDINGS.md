@@ -669,3 +669,60 @@
 - **[P2] no-label dot ~24px width <48 (no minWidth)** — :108-149 — Responsive.
 - **[P2] FormField validator reads outer value not state.value** — :241 — Anti-Pattern.
 - **[P3] focus-ring raw BoxShadow spreadRadius:3** — :87 — Theming.
+
+---
+## COMPONENTS batch 3 — primitives (bb_*) (2026-07-18)
+
+### bb_scaffold (PRIMITIVE) — 17/20
+- **[P2] double BbRedesignTokens.of in _panel** — bb_scaffold.dart:100,105 — Perf.
+- **[P2] desktopBreakpoint default 1024 vs canonical 1200** — :40 — Responsive. SYSTEMIC.
+- **[P2] tablet/desktop branch bare Container not Scaffold (IME/overlay insets unhandled)** — :179-201 — Anti-Pattern.
+- **[P3] mobile Drawer no semanticLabel** — :136-149 — A11y.
+
+### bb_section_header (PRIMITIVE) — 13/20 — ROOT (A11y 0/4)
+- **[P0] title emits NO Semantics(header:true) = ROOT of missing-header systemic** — bb_section_header.dart:47-51 — A11y — legal cluster/notification_settings/about all inherit; `level` enum never forwarded. One wrap fixes all.
+- **[P1] action InkWell no Semantics(button/label) + icon not excluded** — :72-94 — A11y.
+- **[P2] raw literals 2/4** — :56,77,89 — Theming.
+- **[P3] action icon fixed 16px unscaled vs textScaler** — :85-90 — Responsive.
+
+### bb_sidebar_rail (PRIMITIVE) — 14/20
+- **[P1] _RailButton no selected: state** — bb_sidebar_rail.dart:114-116 — A11y.
+- **[P1] logout InkWell no label/tooltip** — :80-94 — A11y.
+- **[P2] no tooltips on collapsed rail items** — :68-74 — A11y/Responsive.
+- **[P2] badge Colors.white + raw type + circular(999)** — :156,161-169 — Theming.
+- **[P3] rail width 72 magic literal** — :48 — Responsive.
+
+### bb_sidebar (PRIMITIVE) — 12/20 — ROOT
+- **[P0] nav items zero Semantics(button/selected)** — bb_sidebar.dart:317-324 — A11y.
+- **[P0] sub-items height 36px <48** — :403 — A11y.
+- **[P1] section group labels no header semantics** — :200-213 — A11y.
+- **[P1] collapse chevron 28×28** — :530-543 — A11y.
+- **[P1] sidebar width hard-pinned 260 no breakpoint** — :77 — Responsive.
+- **[P2] 3 raw TextStyle + hardcoded shadow Color literals** — :204-291,265-274 — Theming.
+- **[P3] InkWell ink clipped by non-Material Container** — :317-324 — Anti-Pattern.
+
+### bb_skeleton (PRIMITIVE) — 17/20
+- **[P1] no ExcludeSemantics (10 placeholders = 10 empty SR focus stops)** — bb_skeleton.dart:52-77 — A11y.
+- **[P2] no RepaintBoundary (siblings repaint together)** — :52-77 — Perf.
+- **[P3] gradient-alignment shimmer re-allocs BoxDecoration/frame (vs ShaderMask)** — :61-65 — Perf.
+- **[CLEAN] AnimationController lifecycle correct + BBMotion.reduced guard present.**
+
+### bb_sparkline (PRIMITIVE) — 10/20 — BATCH LOW (A11y 0/4)
+- **[P0] no Semantics label (chart invisible to SR, WCAG 1.1.1)** — bb_sparkline.dart:35-49 — A11y.
+- **[P1] shouldRepaint list IDENTITY not equality (stale/over-repaint)** — :119-124 — Perf.
+- **[P1] 5 Paint() allocs inside paint() every frame** — :95-113 — Perf.
+- **[P2] no RepaintBoundary** — :35-48 — Perf.
+- **[P2] docstring 'smooth path' but lineTo straight segments** — :5-7,87-89 — Anti-Pattern.
+- **[P3] dotBg omitted from shouldRepaint** — :119-124 — Anti-Pattern.
+
+### bb_spinner (PRIMITIVE) — 15/20
+- **[P1] no Semantics/ExcludeSemantics (button spinner independently announced) = root of bb_button loading finding** — bb_spinner.dart:38-43 — A11y — add ExcludeSemantics default + opt-in semanticsLabel liveRegion.
+- **[P3] AlwaysStoppedAnimation misleading name** — :40 — Anti-Pattern.
+- **[CLEAN] CircularProgressIndicator framework-managed controller, token color.**
+
+### bb_status_badge (PRIMITIVE) — 15/20 — status-color AA (3rd instance)
+- **[P1] statusImported #4A90D9 = 3.3:1 fails AA = 3rd member of status-color-AA class** — bb_status_badge.dart:63-68 — A11y — add statusImportedDeep token (pattern already exists for confirmed/pending Deep).
+- **[P2] no Semantics role wrapper** — :80-108 — A11y.
+- **[P3] TextStyle raw literals not BBType** — :97-103 — Theming.
+- **[P3] hardcoded HR fallback strings ×5 (22 call sites, non-HR falls through)** — :41-68 — Anti-Pattern.
+- **[P3] cancelled dot uses c.textTertiary (text token) not status token** — :53 — Theming.

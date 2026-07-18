@@ -3,7 +3,7 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 
 ## F2 primitivi
 - [x] F2.1 BbInput params backport — feat/f21-bbinput-a11y-params (wt /tmp/bb-f21-bbinput-wt) — suite 1945/1945
-- [x] F2.2 BbButton — feat/f22-bbbutton-tap-targets (wt /tmp/bb-f22-bbbutton-wt) — sm/asIcon hit-area 44 (vizual netaknut), spinner ExcludeSemantics, assert, static Matrix4; 8 testova; ⚠ suite -2 FAIL — fixing
+- [x] F2.2 BbButton — feat/f22-bbbutton-tap-targets (wt /tmp/bb-f22-bbbutton-wt) — sm/asIcon hit-area 44 (vizual netaknut), spinner ExcludeSemantics, assert, static Matrix4; 8 testova; golden regen owner_about ×2 (0.64% layout, namjerno); suite FULL GREEN nakon regena
 - [ ] F2.3 BbChip: Semantics(label,button,selected), minHeight 44 hit-area, purpleGlow(context) dark, fiksna visina→minHeight
 - [ ] F2.4 BbIcon: semanticLabel param (null=ExcludeSemantics), static _resolve cache, debug assert za nepoznat glyph
 - [ ] F2.5 BbSectionHeader: Semantics(header:true) + akcija button+44px (i core varijanta dok ne umre)

@@ -295,3 +295,63 @@
 - **[P2] visibility toggle 18px — verify BbInput trailing ink ≥48px** — :364,401,462 — A11y.
 - **[P3] hardcoded 4/6 radii strength meter** — :602,616 — Theming.
 - **[P3] maxWidth:680 raw literal** — :260 — Responsive.
+
+---
+## Batch 5 — owner edit-profile + AI + guides + iCal export (2026-07-18)
+
+### edit_profile_screen — 13/20  (owner)
+- **[P1] EN-only validator strings ×9** — profile_validators.dart:9-104 — A11y. SYSTEMIC validator.
+- **[P2] no textInputAction chain (17+ fields)** — edit_profile_screen.dart:372-420 — A11y. SYSTEMIC (BbInput).
+- **[P2] error.toString() to user** — :831 — A11y/Anti-Pattern.
+- **[P2] BbAvatarUpload semanticLabel fallback EN** — bb_avatar_upload.dart:324 — A11y.
+- **[P3] double setState in onImageSelected (_markDirty nested)** — :780-785 — Anti-Pattern.
+- **[P3] pageBackground gradient wrapper redundant** — :693,696 — Theming.
+- **[CLEAN] keyboard-fix mixin present; uses BbAvatarUpload NOT ProfileImagePicker (no gradient violation here); all 17 controllers disposed.**
+
+### ai_assistant_screen — 14/20  (owner)
+- **[P1] send button no tooltip/semantics** — ai_assistant_screen.dart:1222 — A11y.
+- **[P1] hero Image.asset not excludeFromSemantics** — :1300 — A11y.
+- **[P2] ref.read(aiChatNotifierProvider) in item builder (stale selection)** — :593 — Anti-Pattern.
+- **[P2] hardcoded HR subtitle in header default params** — ai_assistant_premium_header.dart:65,111 — Theming/l10n.
+- **[P2] _kOnPrimary=Colors.white/white70 raw** — :44-45 — Theming (BBColorSet.onPrimary token gap). SYSTEMIC.
+- **[P2] Opacity+Container in typing dots forces compositing ×3 @60fps** — :1370 — Perf.
+- **[P2] AndroidKeyboardDismissFix mixin absent (composer TextField)** — :72 — A11y/Platform.
+- **[P2] no RepaintBoundary around MarkdownBody bubbles** — :797 — Perf.
+- **[P3] Dismissible no semanticsLabel** — :597 — A11y.
+- **[CLEAN] BBMotion.reduced respected; onTapLink http/https allowlist; error codes localized.**
+
+### embed_help_screen — 16/20  (owner/guide)
+- **[P1] copy button no tooltip** — embed_help_screen.dart:552-560 — A11y.
+- **[P2] test-link InkWell no semantic label** — :304-342 — A11y.
+- **[P2] breakpoint 1024 vs canonical 1200** — :78 — Responsive. SYSTEMIC.
+- **[P2] fontSize:12 override BBType.mono** — :568 — Theming.
+- **[P3] raw px literals 4/4/6/26** — :308,598,634,636 — Theming.
+
+### embed_widget_guide_screen — 13/20  (owner/guide)
+- **[P1] copy InkWell no semantic label** — embed_widget_guide_screen.dart:654,829 — A11y.
+- **[P1] close IconButton constrained 28×28** — :617-621,785-791 — A11y (<44px).
+- **[P2] raw $error to UI** — :1375,1382 — Anti-Pattern.
+- **[P2] Colors.grey.shade50 hardcoded (light branch)** — :1114,1235 — Theming.
+- **[P2] Colors.white for on-primary** — :224,1067 — Theming. SYSTEMIC.
+- **[P2] desktop breakpoint 700 vs 1200** — :270 — Responsive. SYSTEMIC.
+- **[P2] BBColor.surfaceVarDark/Light static bypasses theme extension** — :554,857,1425,1589 — Theming.
+- **[P3] icon-in-tinted-circle repeated 8+ times, no hierarchy** — Anti-Pattern.
+
+### faq_screen — 14/20  (owner/guide)
+- **[P1] BbChip no Semantics(selected:)** — bb_chip.dart:58-136 — A11y — affects ALL BbChip consumers. SYSTEMIC widget.
+- **[P2] _ClearSearchButton tap target ~26px** — faq_screen.dart:623-631 — A11y (InkResponse radius ≠ hit area).
+- **[P2] hardcoded HR strings in _FaqPremiumHeader** — :308-311 — Theming/l10n. SYSTEMIC (premium headers).
+- **[P2] Colors.white expanded icon** — :532 — Theming.
+- **[P3] MediaQuery.sizeOf vs LayoutBuilder box width** — :580 — Responsive.
+- **[P3] _getAllFAQs 24-item list rebuilt each build** — :64,232,269 — Perf.
+- **[CLEAN] no ❓ emoji prefix (unlike owner_bookings FAQ); ExpansionTile native SR state.**
+
+### ical_export_list_screen — 13/20  (owner)
+- **[P1] desktop breakpoint >900 vs canonical 1200** — ical_export_list_screen.dart:638 — Responsive. SYSTEMIC.
+- **[P2] eager .map().toList() Column not ListView.builder (unbounded units)** — :987-991 — Perf.
+- **[P2] hardcoded HR strings IcalExportPremiumHeader** — ical_export_premium_header.dart:29,35,43,48 — Anti-Pattern/l10n. SYSTEMIC.
+- **[P2] Colors.white on primary ×4** — :354,359,367,1144 — Theming. SYSTEMIC.
+- **[P2] download tooltip/semanticLabel hardcoded EN 'Download'** — :1055,1059 — A11y.
+- **[P2] decorative watermark BbIcon no ExcludeSemantics** — :755-761 — A11y.
+- **[P3] dynamic unit/property untyped** — :50,72,171,998 — Anti-Pattern.
+- **[P3] _loadUnits one-shot .future (stale on unit add/remove)** — :135-136 — Perf.

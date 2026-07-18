@@ -26,12 +26,12 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/features/owner_dashboard/presentation/screens/bank_account_screen.dart
 - [x] lib/features/owner_dashboard/presentation/screens/calendar/month_calendar_screen.dart
 - [x] lib/features/owner_dashboard/presentation/screens/change_password_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/edit_profile_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/guides/ai_assistant_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/guides/embed_help_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/guides/faq_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/edit_profile_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/guides/ai_assistant_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/guides/embed_help_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/guides/faq_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart
 - [ ] lib/features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart
 - [ ] lib/features/owner_dashboard/presentation/screens/notification_settings_screen.dart
 - [ ] lib/features/owner_dashboard/presentation/screens/notifications_screen.dart

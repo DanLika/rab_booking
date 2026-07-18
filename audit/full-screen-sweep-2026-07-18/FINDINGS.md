@@ -836,3 +836,60 @@
 - **[P0] DEAD CODE — 0 live callers (migration comment in unit_form:410 confirms), not in barrel. Delete.** — Anti-Pattern.
 - **[P1] no Semantics/button role** — :65 — A11y.
 - **[P2/P3] hardcoded TextStyle + raw BoxShadow/BorderRadius + hover-lift Matrix4** — :47-125 — Theming/Anti-Pattern.
+
+---
+## COMPONENTS batch 6 — shared widgets (2026-07-18) — premium_list_tile ROOT + dead overlays
+
+### loading_overlay (shared) — 7/20 — DEAD (0 callers)
+- **[P0] DEAD CODE — 0 call sites, duplicates UniversalLoader.overlay/LoginLoadingOverlay/_LoadingOverlay** — loading_overlay.dart:14 — Anti-Pattern.
+- **[P1] zero a11y on focus-trapping overlay (no ExcludeSemantics/liveRegion)** — :61-84 — A11y.
+- **[P2] Colors.white70/black87 message** — :75-76 — Theming.
+
+### login_loading_overlay (shared) — 8/20 — DEAD (0 callers)
+- **[P0] DEAD CODE — UniversalLoader.forAuth is live replacement (all 3 auth screens migrated)** — login_loading_overlay.dart:14 — Anti-Pattern.
+- **[P1] no overlay semantics/focus trap** — :53-101 — A11y (moot, dead).
+- **[P2] raw Colors + empty placeholder Stack** — :56-93 — Theming/Anti-Pattern.
+
+### logout_tile (shared) — 12/20 — LIVE — P0
+- **[P0] NO confirm dialog before logout (immediate destructive, no undo)** — logout_tile.dart:85 — A11y/Anti-Pattern.
+- **[P1] dense+VisualDensity(-1) tap target ~36px** — :43-48 — A11y.
+- **[P1] no Semantics/button role** — :42 — A11y.
+- **[P2] raw AppColors.error ×4 + colorScheme mix + raw radii** — :52-82 — Theming.
+- **[P3] StatefulWidget hover no platform guard** — :6,23-33 — Anti-Pattern.
+
+### message_box (shared) — 14/20
+- **[P1] no Semantics role/liveRegion + icon not ExcludeSemantics** — message_box.dart:97-153,116 — A11y.
+- **[P2] hardcoded hex 0xFF3576BC info-deep** — :171 — Theming.
+- **[P2] off-scale radii 10/8 + off-grid padding 6/12** — :102,114 — Theming.
+- **[P3] withAlpha((0.85*255).toInt()) deprecated (line 165 same file does it right)** — :136 — Anti-Pattern.
+
+### offline_indicator (shared) — 10/20 — LIVE — P0
+- **[P0] no liveRegion — offline/online transition invisible to SR** — offline_indicator.dart:41-66 — A11y.
+- **[P1] side-effects mutated in build() (no setState, fragile)** — :38-55 — Anti-Pattern.
+- **[P1] hardcoded HR 'Nema interneta'/'Ponovo povezano'** — :44,62 — A11y.
+- **[P1] all colors raw hex (0xFF333333/0xFF2E7D32/Colors.white)** — :43-104 — Theming.
+- **[P2] ConnectivityService stream subscription never cancelled (leak)** — connectivity_provider.dart:17 — Perf.
+- **[P2] Positioned returned w/o documented Stack contract (runtime throw risk)** — :74 — Anti-Pattern.
+
+### platform_icon (shared) — 11/20
+- **[P1] raw brand colors 0xFF7C3AED/Colors.grey/orange (no token, no dark)** — platform_icon.dart:174-178 — Theming.
+- **[P2] double semantic announce when showTooltip (Tooltip+Semantics)** — :127-138 — A11y.
+- **[P2] isEmoji dead code for ical/external/other (assetPath wins)** — :183-189 — Anti-Pattern.
+- **[P2] getDisplayName called ×2/build** — :129,136 — Perf.
+- **[P3] errorBuilder fallback loses circle bg** — :99-109 — A11y.
+
+### premium_list_tile (shared) — 10/20 — ROOT
+- **[P1] dense:true + VisualDensity(vertical:-1) → ~40px tap target = ROOT of profile-hub finding** — premium_list_tile.dart:64-65 — A11y — remove dense/visualDensity or minHeight:48.
+- **[P2] trailing chevron always rendered even when onTap==null (implies tappable)** — :105-109 — A11y.
+- **[P2] Opacity(0.4) disabled instead of ListTile.enabled (SR still interactive)** — :61-62 — A11y.
+- **[P2] static AppColors.primary not context-aware** — :41-43 — Theming.
+- **[P3] dynamic subtitle param + is String typecheck (type-unsafe)** — :10,92-104 — Anti-Pattern.
+
+### price_text (shared) — 10/20
+- **[P1] no Semantics label (reads "€150.00 slash night")** — price_text.dart:39,83-98 — A11y.
+- **[P1] hardcoded EN ' / night' (guests HR/DE see EN)** — :37,64 — Anti-Pattern.
+- **[P2] no NumberFormat locale grouping (toStringAsFixed → "1500.00")** — currency_service.dart:122 — Anti-Pattern.
+- **[P2] HRK/Kuna STALE — Croatia adopted EUR 2023-01-01 (wrong currency to guests)** — currency_service.dart:27 — Anti-Pattern. FACTUAL BUG.
+- **[P2] currencyServiceProvider watched inside when() callback** — :35,80 — Perf.
+- **[P2] CircularProgressIndicator no semanticsLabel** — :44,103 — A11y.
+- **[P3] dead branch in _formatWithSymbol (USD==EUR/GBP arm)** — currency_service.dart:128-130 — Anti-Pattern.

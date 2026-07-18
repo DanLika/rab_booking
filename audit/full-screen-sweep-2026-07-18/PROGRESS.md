@@ -96,14 +96,14 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/shared/widgets/feature_highlight_widget.dart
 - [x] lib/shared/widgets/global_navigation_loader.dart
 - [x] lib/shared/widgets/gradient_button.dart
-- [ ] lib/shared/widgets/loading_overlay.dart
-- [ ] lib/shared/widgets/login_loading_overlay.dart
-- [ ] lib/shared/widgets/logout_tile.dart
-- [ ] lib/shared/widgets/message_box.dart
-- [ ] lib/shared/widgets/offline_indicator.dart
-- [ ] lib/shared/widgets/platform_icon.dart
-- [ ] lib/shared/widgets/premium_list_tile.dart
-- [ ] lib/shared/widgets/price_text.dart
+- [x] lib/shared/widgets/loading_overlay.dart
+- [x] lib/shared/widgets/login_loading_overlay.dart
+- [x] lib/shared/widgets/logout_tile.dart
+- [x] lib/shared/widgets/message_box.dart
+- [x] lib/shared/widgets/offline_indicator.dart
+- [x] lib/shared/widgets/platform_icon.dart
+- [x] lib/shared/widgets/premium_list_tile.dart
+- [x] lib/shared/widgets/price_text.dart
 - [ ] lib/shared/widgets/redesign.dart
 - [ ] lib/shared/widgets/smart_tooltip.dart
 - [ ] lib/shared/widgets/universal_loader.dart

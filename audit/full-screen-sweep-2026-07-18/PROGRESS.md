@@ -64,14 +64,14 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/shared/widgets/redesign/bb_button.dart
 - [x] lib/shared/widgets/redesign/bb_card.dart
 - [x] lib/shared/widgets/redesign/bb_checkbox.dart
-- [ ] lib/shared/widgets/redesign/bb_chip.dart
-- [ ] lib/shared/widgets/redesign/bb_dialog.dart
-- [ ] lib/shared/widgets/redesign/bb_dropdown.dart
-- [ ] lib/shared/widgets/redesign/bb_empty_state.dart
-- [ ] lib/shared/widgets/redesign/bb_icon.dart
-- [ ] lib/shared/widgets/redesign/bb_input.dart
-- [ ] lib/shared/widgets/redesign/bb_logo.dart
-- [ ] lib/shared/widgets/redesign/bb_radio.dart
+- [x] lib/shared/widgets/redesign/bb_chip.dart
+- [x] lib/shared/widgets/redesign/bb_dialog.dart
+- [x] lib/shared/widgets/redesign/bb_dropdown.dart
+- [x] lib/shared/widgets/redesign/bb_empty_state.dart
+- [x] lib/shared/widgets/redesign/bb_icon.dart
+- [x] lib/shared/widgets/redesign/bb_input.dart
+- [x] lib/shared/widgets/redesign/bb_logo.dart
+- [x] lib/shared/widgets/redesign/bb_radio.dart
 - [ ] lib/shared/widgets/redesign/bb_scaffold.dart
 - [ ] lib/shared/widgets/redesign/bb_section_header.dart
 - [ ] lib/shared/widgets/redesign/bb_sidebar_rail.dart

@@ -608,3 +608,64 @@
 - **[P2] semanticLabel ?? label drops subtitle (T&C subtitle never announced)** — :227 — A11y.
 - **[P3] focus halo via spreadRadius only on 20px box not 44 target** — :176-179 — A11y.
 - **[P3] InkWell ripple clips to box corner not full row** — :151-154 — Anti-Pattern.
+
+---
+## COMPONENTS batch 2 — primitives (bb_*) (2026-07-18) — ROOT-CAUSE layer (highest value)
+
+### bb_chip (PRIMITIVE) — 11/20 — ROOT (A11y 0/4)
+- **[P0] ZERO Semantics (no selected/button/label) = ROOT of chip-semantics systemic** — bb_chip.dart:58-136 — A11y — every consumer (faq, filters) inherits the hole. Wrap InkWell in Semantics(label,button:true,selected:).
+- **[P1] tap target 32/40px <48** — :44 — A11y.
+- **[P1] Colors.white ×4 (filterSelected)** — :51,108,116 — Theming. SYSTEMIC (onPrimary gap).
+- **[P2] BorderRadius.circular(999) not BBRadius.fullAll** — :110 — Theming.
+- **[P2] no focus ring** — :60 — A11y.
+
+### bb_dialog (PRIMITIVE) — 14/20
+- **[P1] no dialog Semantics (scopesRoute/namesRoute/header); Dialog.semanticsLabel unused** — bb_dialog.dart:36-44 — A11y.
+- **[P1] barrier dismiss label absent** — :36 — A11y.
+- **[P2] raw literal 20** — :58 — Theming.
+- **[P2] no mobile inset-padding adjustment (ui-ux.md 12px)** — :38 — Responsive.
+- **[P3] body String-only (no rich content) + no icon/severity slot → callers revert to raw AlertDialog** — :16-24 — Anti-Pattern.
+
+### bb_dropdown (PRIMITIVE) — 15/20
+- **[P1] no Semantics grouping (label detached from trigger)** — bb_dropdown.dart:225-229 — A11y.
+- **[P1] disabled Opacity(0.45) no enabled:false + contrast fail** — :232-233 — A11y.
+- **[P2] off-grid spacing 14/6/10** — :236,230,255,321 — Theming.
+- **[P2] menu icon c.textTertiary on panelBg <3:1** — :294-296 — A11y.
+- **[P3] FocusNode listener in field initializer not initState** — :128 — Anti-Pattern.
+
+### bb_empty_state (PRIMITIVE) — 15/20
+- **[P1] decorative BbIcon not ExcludeSemantics (reads numeric codepoint)** — bb_empty_state.dart:74,176 — A11y.
+- **[P1] title no header:true** — :79-84 — A11y.
+- **[P2] icon-disc c.primary@0.06 <3:1 (class #951)** — :70 — A11y.
+- **[P2] raw BorderRadius.circular(12) not BBRadius.smAll + off-grid spacing** — :173,180,68 — Theming.
+- **[P3] CTA Row no wrap fallback @360px** — :98-116 — Responsive.
+
+### bb_icon (PRIMITIVE) — 13/20 — ROOT
+- **[P1] no semanticLabel/ExcludeSemantics API = ROOT of "decorative icons not excluded" systemic** — bb_icon.dart:20-58 — A11y — all icons flow through here; Icon.semanticLabel:null does NOT suppress, need ExcludeSemantics wrapper.
+- **[P2] _resolve() map lookup + IconData alloc every build (no cache)** — :36-45 — Perf.
+- **[P2] missing-glyph fallback silent (no debug assert)** — :38-39 — Anti-Pattern.
+- **[P3] fill/weight typed int (Icon wants double)** — :26-27 — Anti-Pattern.
+- **[P3] no IconTheme.of inheritance** — :48-58 — Theming.
+
+### bb_input (PRIMITIVE) — 12/20 — ROOT (biggest systemic, 3×P0)
+- **[P0] missing textInputAction param = ROOT keyboard-chain gap (every multi-field form)** — bb_input.dart:35-58 — A11y — add `TextInputAction? textInputAction` → TextField.
+- **[P0] missing focusNode param** — :108 — A11y — add `FocusNode? focusNode`, dispose only if internally created.
+- **[P0] missing autofillHints param (+ no AutofillGroup)** — :35-58 — A11y — password managers disabled on login/register/change-password.
+- **[P1] custom label not wired to InputDecoration.labelText (SR label detached)** — :210-216 — A11y.
+- **[P1] no required-field indicator param** — :35-58 — A11y.
+- **[P2] trailingAction (password toggle) tap target unenforced <48** — :282-285 — A11y.
+- **[P2] missing textCapitalization param** — :35-58 — A11y/UX.
+- **EXACT MISSING PARAMS:** textInputAction, focusNode, autofillHints, required, textCapitalization + trailingAction min-size.
+
+### bb_logo (PRIMITIVE) — 11/20
+- **[P1] useGradient=true DEFAULT = BBGradient.brandPrimary diagonal = FLAT-CHROME VIOLATION #4** — bb_logo.dart:9,20 — Theming — flip default false. FLAG (appears in nav/auth/admin chrome).
+- **[P1] docstring claims assets/images/logo.png fallback — never implemented (glyph only)** — :5-6 — Anti-Pattern.
+- **[P2] Text('b') no Semantics('BookBed')/ExcludeSemantics** — :8,25 — A11y.
+- **[P3] Colors.white hardcoded** — :28 — Theming.
+
+### bb_radio (PRIMITIVE) — sibling of bb_checkbox
+- **[P1] missing radio contract (no inMutuallyExclusiveGroup:true/checked:) — announces generic 'selected'** — bb_radio.dart:152-157 — A11y.
+- **[P2] Semantics wraps Opacity (same class as bb_checkbox)** — :152-157 — A11y/Anti-Pattern.
+- **[P2] no-label dot ~24px width <48 (no minWidth)** — :108-149 — Responsive.
+- **[P2] FormField validator reads outer value not state.value** — :241 — Anti-Pattern.
+- **[P3] focus-ring raw BoxShadow spreadRadius:3** — :87 — Theming.

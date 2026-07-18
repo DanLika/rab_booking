@@ -323,6 +323,7 @@ interface UnitDoc {
   bathrooms?: number;
   areaSqm?: number;
   images?: string[];
+  sortOrder?: number;
 }
 
 /**
@@ -368,6 +369,7 @@ function mapUnit(id: string, x: DocumentData): UnitDoc {
     bathrooms: x.bathrooms,
     areaSqm: typeof x.area_sqm === "number" ? x.area_sqm : undefined,
     images: Array.isArray(x.images) ? x.images : [],
+    sortOrder: typeof x.sort_order === "number" ? x.sort_order : 0,
   };
 }
 
@@ -393,18 +395,36 @@ async function findProperty(subdomain: string): Promise<PropertyDoc | null> {
  * @return {Promise<UnitDoc[]>} available units.
  */
 async function listUnits(propertyId: string): Promise<UnitDoc[]> {
+  // Deliberately a single unfiltered read, then filter+sort in memory.
+  // `.where(is_available).orderBy(sort_order)` needs a composite index
+  // (it failed FAILED_PRECONDITION on dev and the error was swallowed,
+  // silently emptying every property page and the sitemap), and both
+  // field filters would additionally drop documents where the field is
+  // simply absent. In-memory matches the Dart model, where a missing
+  // is_available means available.
+  // ponytail: reads every unit of one property — a handful in practice.
+  // Add paging if a property ever has hundreds of units.
   const snap = await db
     .collection("properties")
     .doc(propertyId)
     .collection("units")
-    .where("is_available", "==", true)
-    .orderBy("sort_order")
     .get()
-    .catch(() => null);
+    .catch((e) => {
+      logError("[SSR] unit list failed", e, {propertyId});
+      return null;
+    });
   if (!snap) return [];
   return snap.docs
-    .filter((d) => !d.data().deleted_at)
-    .map((d) => mapUnit(d.id, d.data()));
+    .filter((d) => {
+      const x = d.data();
+      return !x.deleted_at && x.is_available !== false;
+    })
+    .map((d) => mapUnit(d.id, d.data()))
+    .sort(
+      (a, b) =>
+        (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
+        a.name.localeCompare(b.name)
+    );
 }
 
 /**

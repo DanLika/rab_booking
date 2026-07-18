@@ -41,12 +41,12 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/features/owner_dashboard/presentation/screens/profile_screen.dart
 - [x] lib/features/owner_dashboard/presentation/screens/property_form_screen.dart
 - [x] lib/features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/unit_form_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/unit_pricing_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/widget_advanced_settings_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/widget_settings_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_form_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_pricing_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/widget_advanced_settings_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/widget_settings_screen.dart
 - [ ] lib/features/subscription/screens/subscription_screen.dart
 - [ ] lib/features/widget/presentation/screens/booking_confirmation_screen.dart
 - [ ] lib/features/widget/presentation/screens/booking_details_screen.dart

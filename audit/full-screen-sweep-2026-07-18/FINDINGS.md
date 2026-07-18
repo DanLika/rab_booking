@@ -419,3 +419,69 @@
 - **[P3] AppShadows.elevation3 not BBShadow** — :424 — Theming.
 - **[P3] ❓ emoji FAQ not ExcludeSemantics** — :815 — A11y.
 - **[P3] _StripePayoutsDashboard hardcoded HR labels (kDebugMode-gated)** — :1013-1260 — Anti-Pattern.
+
+---
+## Batch 7 — owner unit hub/form/pricing/wizard + widget settings (FROZEN cluster) (2026-07-18)
+
+### unified_unit_hub_screen — 14/20  (owner; hosts FROZEN Cjenovnik)
+- **[P2] sub-48dp tap targets unit duplicate/delete + PropertyTreeHeader (26/28px)** — unified_unit_hub_master_panel.dart:709-742,983-1020 — A11y.
+- **[P3] hardcoded HR error string** — master_panel:153 — Anti-Pattern.
+- **[P3] hardcoded HR KPI labels + _hrMonths** — units_premium_header.dart:55,87-108 — Theming/l10n. SYSTEMIC (premium header).
+- **[P3] _kTabletBreakpoint=800 dead-zone 600-799** — unified_unit_hub_screen.dart:51 — Responsive. SYSTEMIC.
+- **[P3] double sort per itemBuilder frame** — master_panel:301-324 — Perf.
+- **[P3] MediaQuery.of(.size) not sizeOf ×2** — osnovno:14, screen:342 — Perf.
+
+### unit_form_screen — 11/20  (owner, 3×P1)
+- **[P1] area double.parse crash on empty optional field (no validator)** — unit_form_screen.dart:889,914 — Anti-Pattern — use tryParse ?? null. REAL BUG.
+- **[P1] amenities never restored on edit → silent wipe on save** — :69-85 — Anti-Pattern. REAL BUG.
+- **[P1] image delete buttons 24×24 (<48)** — :779-785,830-836 — A11y.
+- **[P2] image delete no semantic label** — :774-836 — A11y.
+- **[P2] no textInputAction chain (9 fields)** — :170-368 — A11y. SYSTEMIC (BbInput).
+- **[P2] loading overlay off-token raw Card/TextStyle/Colors.black** — :491-536 — Theming.
+- **[P2] stale "TIP-1 diagonal gradient" docstring** — :548-550 — Theming/doc. SYSTEMIC doc-rot.
+- **[P2] image upload silently no-ops (TODO stub) → data loss on new images** — :867-870 — Anti-Pattern. REAL.
+- **[P3] maxHeight uses kMaxUploadWidth (1920) not kMaxUploadHeight** — :845 — Anti-Pattern.
+- **[P3] double ClipRRect nesting per image card** — :744-769 — Perf.
+
+### unit_pricing_screen — 11/20  (owner; grid FROZEN)
+- **[P1] no textInputAction on price fields ×3** — unit_pricing_screen.dart:659; price_list_calendar_widget.dart:1041,1554 — A11y.
+- **[P1] CalendarDayCell no Semantics wrapper** — calendar_day_cell.dart:80-123 — A11y (additive wrapper OK around [FROZEN] grid).
+- **[P2] day cell tap target <48dp small-mobile** — calendar_day_cell.dart:105 — A11y [FROZEN].
+- **[P2] GradientTokens.brandPrimary on Save button** — unit_pricing_screen.dart:679 — Theming — FLAT-CHROME VIOLATION #3. FLAG.
+- **[P2] Colors.white ×6 on button** — :701,710,718 — Theming. SYSTEMIC.
+- **[P2] "base" label EN-only** — calendar_day_cell.dart:217 — A11y/l10n [FROZEN].
+- **[P2] raw hex disabled-state colors** — price_list_calendar_widget.dart:511-512 — Theming.
+- **[P3] _hasScheduledAutoSelect flag races** — :98-107 — Anti-Pattern.
+- **[P3] _showPriceEditDialog 580 LOC inline** — price_list_calendar_widget.dart:870-1453 — Anti-Pattern [FROZEN-adjacent, GO only].
+
+### unit_wizard_screen — 13/20  (owner; publish FROZEN)
+- **[P1] step indicators no Semantics (label/state/role)** — wizard_progress_bar.dart:186-209 — A11y.
+- **[P1] no progress announcement on step change** — unit_wizard_screen.dart:422-440 — A11y (SemanticsService.announce).
+- **[P2] no textInputAction on numeric fields** — step_2_capacity.dart:726-815, step_3_pricing.dart:201-534 — A11y.
+- **[P2] step4 breakpoint 900 vs 1200** — step_4_review.dart:24 — Responsive. SYSTEMIC.
+- **[P2] _buildSummaryCard bypasses BbCard, raw shadow tokens** — step_4_review.dart:355-431 — Theming.
+- **[P2] Colors.white step node icon** — wizard_progress_bar.dart:166,172,205 — Theming.
+- **[P2] _buildServicesCard new Future every rebuild** — step_4_review.dart:321 — Perf.
+- **[P2] stale "TIP-1 DIJAGONALNI GRADIENT" comment** — step_4_review.dart:381 — Anti-Pattern/doc. SYSTEMIC doc-rot.
+- **[P2] AlertDialog not BbDialog (step 2)** — step_2_capacity.dart:196-211 — Anti-Pattern.
+- **[P3] 5× duplicated card-header pattern** — steps 1-4 — Anti-Pattern.
+
+### widget_advanced_settings_screen — 12/20  (owner)
+- **[P1] ExpansionTile stays open after disable (initiallyExpanded one-shot)** — tax_legal_disclaimer_card.dart:65-66 — Anti-Pattern.
+- **[P2] raw exception string to owner** — widget_advanced_settings_screen.dart:457 — Anti-Pattern.
+- **[P2] both helper cards ZERO BB tokens** — email_verification_card.dart, tax_legal_disclaimer_card.dart — Theming. NOTABLE.
+- **[P2] OutlinedButton.icon bypasses BbButton** — tax_legal_disclaimer_card.dart:172-179 — Theming.
+- **[P2] Switch rows no Semantics/MergeSemantics** — email_verification_card.dart:68-103; tax_legal:120-155 — A11y.
+- **[P2] no desktop content-width cap on ListView** — :314-375 — Responsive.
+- **[P3] idle LayoutBuilder reads no constraints (dead)** — :424-429 — Perf.
+
+### widget_settings_screen — 11/20  (owner)
+- **[P1] accent swatches no Semantics (32px GestureDetector)** — widget_appearance_section.dart:234-256 — A11y.
+- **[P1] slider value no semanticFormatterCallback** — widget_settings_payment_sections.dart:321-329; behavior:114-127 — A11y.
+- **[P1] isDesktop=600 vs canonical 1200** — widget_settings_behavior_sections.dart:24 — Responsive. SYSTEMIC.
+- **[P2] part files ZERO BBType/BBSpace (26 font + 25 spacing literals)** — payment_sections + behavior_sections — Theming. NOTABLE (verbatim-split preserved pre-token style).
+- **[P2] Colors.black raw shadow** — behavior_sections:366-367 — Theming.
+- **[P2] whenData + addPostFrameCallback in build (double-build)** — widget_settings_screen.dart:376-385 — Perf.
+- **[P2] twin switch-card methods (copy-paste)** — payment:575-638, behavior:278-348 — Anti-Pattern.
+- **[P3] unused LayoutBuilder** — screen:524 — Perf.
+- **[P3] stale "diagonal gradient" docstring** — widget_settings_section.dart:9-13 — doc. SYSTEMIC doc-rot.

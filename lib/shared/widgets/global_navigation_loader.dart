@@ -72,11 +72,13 @@ class GlobalNavigationOverlay extends ConsumerWidget {
 
     return Stack(
       children: [
-        // Main app content
-        child,
+        // Main app content — hidden from assistive tech while the overlay
+        // blocks it (audit F2.11: TalkBack could reach and activate widgets
+        // under the barrier).
+        ExcludeSemantics(excluding: isLoading, child: child),
 
         // Loading overlay (shown only when isLoading = true)
-        if (isLoading) Positioned.fill(child: _LoadingOverlay()),
+        if (isLoading) const Positioned.fill(child: _LoadingOverlay()),
       ],
     );
   }
@@ -84,8 +86,19 @@ class GlobalNavigationOverlay extends ConsumerWidget {
 
 /// Internal loading overlay widget
 class _LoadingOverlay extends StatelessWidget {
+  const _LoadingOverlay();
+
   @override
   Widget build(BuildContext context) {
+    return Semantics(
+      liveRegion: true,
+      label: 'Učitavanje',
+      excludeSemantics: true,
+      child: _buildBody(context),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
     return Container(
       color: Colors.black.withValues(
         alpha: 0.3,

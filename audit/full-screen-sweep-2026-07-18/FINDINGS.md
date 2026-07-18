@@ -943,3 +943,57 @@
 - **[P1] no reduced-motion guard on any entry point** — :36-51,81-95,167-181 — A11y.
 - **[P1] entire file 0 call sites — DEAD (live path = BbDialog/showDialog).**
 - **[P2] no scopesRoute/namesRoute + Colors.black54 barrier raw** — :25,71,31,76 — A11y/Theming.
+
+---
+## COMPONENTS batch 8 — animations tail + accessible_icon_button + responsive_grid + core/ dups (2026-07-18)
+
+### ⭐ NEW SYSTEMIC ROOT: raw IconButton bypass
+**131 raw `IconButton(` usages across the codebase; only 3 route through the proper `AccessibleIconButton` (core/accessibility/accessibility_helpers.dart) that enforces required semanticLabel + 48px.** This is the ROOT of the recurring "icon button no tooltip/semantics + sub-48px" findings on nearly every screen (notifications_screen:254,410,420,437; unit_hub_master_panel:90-1013; etc). Fix = route icon-buttons through AccessibleIconButton (lint/codemod).
+
+### animated_empty_state (shared, animations/) — 11/20 — PARTIALLY LIVE (AnimatedEmptyState 3 callers; StaggeredEmptyState DEAD)
+- **[P1] no reduced-motion guard** — animated_empty_state.dart:95-106,157-166 — A11y.
+- **[P2] decorative icon not ExcludeSemantics + title no header role** — :62,64-70 — A11y.
+- **[P2] StaggeredEmptyState 0 callers — DEAD** — :123-217 — Anti-Pattern.
+- **[P3] slideY(begin:20) = 20×height not px (flutter_animate fraction)** — :164-166 — Anti-Pattern.
+
+### animated_success (shared, animations/) — 8/20 — DEAD (0 callers)
+- **[P0] DEAD — AnimatedCheckmark + SuccessOverlay 0 callers.** — animated_success.dart:15,211 — Anti-Pattern.
+- **[P1] Curves.elasticOut bounce (ui-ux.md anti-pattern)** — :57 — Anti-Pattern.
+- **[P1] no Semantics/liveRegion + no reduced-motion** — :98-117,49-76 — A11y.
+- **[P2] Colors.green + Colors.black hardcoded** — :262,241,251 — Theming.
+
+### animations.dart (BARREL) — 13/20 — 4 DEAD exports
+- **[P1] DEAD exports: line 6 animated_button, 7 animated_card, 9 animated_dialog, 11 animated_success (all 0 callers) + AnimatedAsyncBuilder dead. LIVE: animated_content_switcher(1), animated_empty_state(3), skeleton_loader(14).**
+- **[P3] barrel has NO consumers (all use direct-path imports) — advertises dead API.**
+
+### skeleton_loader (shared, animations/) — 9/20 — LIVE (14 callers)
+- **[P1] no ExcludeSemantics (dozens of gradient nodes = SR noise)** — skeleton_loader.dart:38,109,161+ — A11y.
+- **[P1] SkeletonColors dark hex off audit/127 ladder (#2D2D3A/#1E1E28 purple-tinted vs #1E1E1E/#2A2A2A)** — :9-17 — Theming.
+- **[P2] AnalyticsSkeleton >900 desktop (canonical 1200)** — :908-912,1119 — Responsive.
+- **[P2] StatsCardsSkeleton uses AppColors.surfaceLight (light-only, breaks dark)** — :767-770 — Theming.
+- **[P2] PropertyListSkeleton/NotificationsListSkeleton unbounded ListView.builder (runtime assertion if nested)** — :168,652 — Anti-Pattern. REAL.
+- **[P3] no RepaintBoundary on composite skeletons in scroll lists** — :335,1297 — Perf.
+
+### accessible_icon_button (shared/buttons) — 11/20 — DEAD + DUPLICATE
+- **[P0] DEAD — 0 callers; the 3 apparent callers import the STRICTER core/accessibility/AccessibleIconButton. Delete.** — Anti-Pattern.
+- **[P1] class-name COLLISION with core/accessibility/accessibility_helpers.dart:AccessibleIconButton (weaker contract: tooltip optional vs semanticLabel required)** — :16 — Anti-Pattern.
+- **[P2] splashRadius deprecated M3 no-op + no tokens + hidden HapticFeedback side-effect** — :23,57-65 — Theming/Anti-Pattern.
+- **[P3] the LIVE AccessibleIconButton underused: 131 raw IconButton vs 3 routed — see SYSTEMIC ROOT above.**
+
+### responsive_grid (shared/responsive) — LIVE (responsive_builder + unit_pricing)
+- **[P1] desktopColumns fires at AppDimensions.tablet=1024 (canonical 1200); docstring lies '≥1440'** — responsive_grid.dart:65,126,43 — Responsive. SYSTEMIC.
+- **[P2] ResponsiveWrap uses MediaQuery not LayoutBuilder (wrong in sidebar/panel)** — :120 — Anti-Pattern.
+- **[P2] shrinkWrap:true default (eager layout + double-scroll)** — :28 — Perf.
+- **[P3] no BB tokens (raw 16/8/12 spacing)** — :26,93-95 — Theming.
+
+### core/bb_avatar — 12/20 — DEAD DUPLICATE
+- **[P0] DEAD/SUPERSEDED — pre-redesign variant; all 14+ live sites use redesign/bb_avatar; only gallery_screen (4) uses this. 3-tier vs 5-tier. Delete + migrate gallery.** — core/bb_avatar.dart:11 — Anti-Pattern.
+- **[P1] Colors.white initials (no onPrimary token)** — :65 — Theming.
+- **[P2] no semanticLabel on image/initials** — :60,78 — A11y.
+
+### core/bb_bottom_sheet (BBBottomSheet) — 13/20 — DUPLICATE PAIR
+- **[P2] no barrierLabel on showModalBottomSheet** — bb_bottom_sheet.dart:31 — A11y.
+- **[P2] drag handle no Semantics/ExcludeSemantics** — :65-75 — A11y.
+- **[P2] no maxHeight guard (tall child overflows)** — :44-97 — Responsive.
+- **[P3] redesign/bb_bottom_sheet (BbBottomSheet) is the DEAD twin (0 consumers, footer/width slots unused) — delete it; core BBBottomSheet is the live-ish one (gallery only).** — Anti-Pattern.
+- **[NOTE] BBBottomSheet + BBDialog only reachable via dev gallery — no PROD screen calls .show yet (pending adoption).**

@@ -112,14 +112,14 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/shared/widgets/animations/animated_card.dart
 - [x] lib/shared/widgets/animations/animated_content_switcher.dart
 - [x] lib/shared/widgets/animations/animated_dialog.dart
-- [ ] lib/shared/widgets/animations/animated_empty_state.dart
-- [ ] lib/shared/widgets/animations/animated_success.dart
-- [ ] lib/shared/widgets/animations/animations.dart
-- [ ] lib/shared/widgets/animations/skeleton_loader.dart
-- [ ] lib/shared/widgets/buttons/accessible_icon_button.dart
-- [ ] lib/shared/widgets/responsive/responsive_grid.dart
-- [ ] lib/core/widgets/bb_avatar.dart
-- [ ] lib/core/widgets/bb_bottom_sheet.dart
+- [x] lib/shared/widgets/animations/animated_empty_state.dart
+- [x] lib/shared/widgets/animations/animated_success.dart
+- [x] lib/shared/widgets/animations/animations.dart
+- [x] lib/shared/widgets/animations/skeleton_loader.dart
+- [x] lib/shared/widgets/buttons/accessible_icon_button.dart
+- [x] lib/shared/widgets/responsive/responsive_grid.dart
+- [x] lib/core/widgets/bb_avatar.dart
+- [x] lib/core/widgets/bb_bottom_sheet.dart
 - [ ] lib/core/widgets/bb_button.dart
 - [ ] lib/core/widgets/bb_card.dart
 - [ ] lib/core/widgets/bb_chip.dart

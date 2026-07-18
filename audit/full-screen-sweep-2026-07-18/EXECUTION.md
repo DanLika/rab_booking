@@ -21,14 +21,14 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] F4.4 booking_confirmation — isti branch @4b35e997 (copy pill: InkWell+Clipboard+Semantics, 44px box oko 28px pilule; resend minHeight 44; Clipboard mock test potvrđuje setData)
 - [x] F4.5 logout_tile — VERIFIED CLOSED bez izmjene: jedini živi caller (profile_screen:484) VEĆ wrapa onLogout u BbDialog confirm + `confirmed != true` guard; nalaz je gledao komponentu, ne call site
 - [x] F4.6 smart_tooltip — fix/f4e-shared @c3a04437 (Container prima EdgeInsetsGeometry pa castovi 320/321 samo obrisani; :367 math resolve(ltr); RED→GREEN long-press test s EdgeInsetsDirectional)
-- [ ] F4.7 offline_indicator: liveRegion + side-efekti van build + stream cancel (connectivity_provider ref.onDispose)
-- [ ] F4.8 _RezAINudge no-op dugmad: ukloni do featurea
-- [ ] F4.9 email_verification: timer cancel na paused + RepaintBoundary
+- [x] F4.7 offline_indicator — fix/f4f-misc @e7c4fc2f, suite 1947 GREEN (Semantics liveRegion na banner; side-efekti build()→ref.listen+setState; ConnectivityService drži subscription + dispose() + ref.onDispose)
+- [x] F4.8 _RezAINudge — isti branch @e7c4fc2f ('Kasnije'/'Odgovori' onPressed:(){} UKLONJENI — pending queue ispod nosi prave Odobri/Odbij; nudge ionako debug/env-gated)
+- [x] F4.9 email_verification — isti branch @e7c4fc2f (3s poll cancel na paused + ??= re-arm na resumed, cooldown NE staje — rate-limit gate ostaje pošten; RepaintBoundary oko BackdropFilter kartice)
 - [x] F4.10 tax_legal ExpansionTile — fix/f4c-dialogs @9735651f, suite 1947 GREEN (StatefulWidget + ExpansibleController iz didUpdateWidget; header i dalje ručno expandira = nema lock-outa; POUKA: Switch živi u children pa nestaje na collapse — test assertuje kroz header re-expand)
 - [x] F4.11 bookings_filters — isti branch @9735651f (Clear sada pop-a kao Apply; clear-date IconButton BoxConstraints() → minWidth/minHeight 48)
 - [x] F4.12 _toBbStatus imported — isti branch @3eedc7f3 (BookingStatus enum NEMA imported → uzima BookingModel i vraća imported za isExternalBooking, cancelled i dalje pobjeđuje; 5 testova matrica)
 - [x] F4.13 (social dio) — isti branch @c3a04437: GoogleBrandIcon → CircleAvatar bijeli disk + glyph 72%, fallback nasljeđuje disk. iOS store URL = GO-QUEUE (treba pravi App Store ID)
-- [ ] F4.14 skeleton_loader: shrinkWrap/physics na 2 unbounded ListView-a
+- [~] F4.14 skeleton_loader → BUNDLE s F3.7 (isti fajl — dark ladder + unbounded ListView zajedno)
 ## F3 boje/flat (namjerne vizuelne — screenshot prije/poslije + golden regen)
 - [ ] F3.1 widget status TEKST boje: success→#059669, warning→#B45309, textTertiary→#767676 (minimalist_colors) + kontrast-matrica test
 - [ ] F3.2 bb_status_badge: importedDeep token + completed-dark + pending-light korekcije

@@ -45,5 +45,9 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [ ] 5A kalendari → [ ] 5B admin → [ ] 5C auth → [ ] 5D forme → [ ] 5E settings/guides → [ ] 5F widget-gost → [ ] 5G ostalo
 ## F6 l10n — [ ] validatori kod→prevod; [ ] hardcoded HR/EN sweep (ARB ×4)
 ## F7 — [ ] /audit re-run 5 najgorih; [ ] golden konsolidacija; [ ] CHANGELOG/audit-log; [ ] GO-queue prezentacija operatoru
+## F8 ZAVRŠNO (nalog operatora 2026-07-18): MERGE → TEST → COMMIT → DEV
+- [ ] integration/visual-campaign branch: merge SVIH feature brancheva (f1, f21, f22, ...) → analyze + PUNI suite + build web
+- [ ] dev deploy: ⚠ PROVJERI hosting target PRIJE (memorija: bookbed-owner-dev.web.app gađa PROD uprkos imenu!) — dev-first pravilo, PROD ostaje GO-gated
+- [ ] smoke na dev buildu (login + 2-3 fixana ekrana)
 ## GO-QUEUE (čeka operatora — NE raditi bez GO)
 upload implement-vs-hide · HRK removal · login hero-metrike · forgot glass · push/PR svi branchevi · PROD deploy

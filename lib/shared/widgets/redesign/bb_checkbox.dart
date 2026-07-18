@@ -153,7 +153,9 @@ class _BbCheckboxState extends State<BbCheckbox> {
       focusNode: _focusNode,
       borderRadius: BBRadius.smAll,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 44),
+        // minWidth 44: the label-less box collapsed to ~28px wide — the ROOT
+        // of the register-screen 22×22 tap-target finding (audit F2.7).
+        constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: BBSpace.xxs,
@@ -223,25 +225,40 @@ class _BbCheckboxState extends State<BbCheckbox> {
       ),
     );
 
-    return Semantics(
-      label: widget.semanticLabel ?? widget.label,
-      checked: checked,
-      enabled: !disabled,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Opacity(opacity: disabled ? 0.45 : 1.0, child: row),
-          if (hasError)
-            Padding(
-              padding: const EdgeInsets.only(top: 6, left: BBSpace.xxs),
-              child: Text(
-                effectiveError,
-                style: BBType.caption(context).copyWith(color: c.error),
-              ),
+    // One merged node (audit F2.7): subtitle folded into the announced label
+    // — a T&C checkbox previously never read its subtitle; excludeSemantics
+    // kills the label/subtitle double-read. Error text stays a SIBLING so it
+    // is still announced. Opacity sits OUTSIDE Semantics (visual dim must
+    // not wrap the a11y node).
+    final String? mergedLabel =
+        widget.semanticLabel ??
+        <String>[
+          if (widget.label != null) widget.label!,
+          if (widget.subtitle != null) widget.subtitle!,
+        ].join(', ');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Opacity(
+          opacity: disabled ? 0.45 : 1.0,
+          child: Semantics(
+            label: mergedLabel,
+            checked: checked,
+            enabled: !disabled,
+            excludeSemantics: true,
+            child: row,
+          ),
+        ),
+        if (hasError)
+          Padding(
+            padding: const EdgeInsets.only(top: 6, left: BBSpace.xxs),
+            child: Text(
+              effectiveError,
+              style: BBType.caption(context).copyWith(color: c.error),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }

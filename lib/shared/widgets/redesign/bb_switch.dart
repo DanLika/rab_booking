@@ -131,11 +131,22 @@ class BbSwitch extends StatelessWidget {
       ),
     );
 
-    return Semantics(
-      label: semanticLabel ?? label,
-      toggled: value,
-      enabled: !disabled,
-      child: Opacity(opacity: disabled ? 0.45 : 1.0, child: row),
+    // One merged node + Opacity outside Semantics (audit F2.7) — the child
+    // label/subtitle Texts were announced a second time after the node.
+    return Opacity(
+      opacity: disabled ? 0.45 : 1.0,
+      child: Semantics(
+        label:
+            semanticLabel ??
+            <String>[
+              if (label != null) label!,
+              if (subtitle != null) subtitle!,
+            ].join(', '),
+        toggled: value,
+        enabled: !disabled,
+        excludeSemantics: true,
+        child: row,
+      ),
     );
   }
 }

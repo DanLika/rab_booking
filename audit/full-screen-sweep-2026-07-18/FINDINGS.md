@@ -997,3 +997,57 @@
 - **[P2] no maxHeight guard (tall child overflows)** — :44-97 — Responsive.
 - **[P3] redesign/bb_bottom_sheet (BbBottomSheet) is the DEAD twin (0 consumers, footer/width slots unused) — delete it; core BBBottomSheet is the live-ish one (gallery only).** — Anti-Pattern.
 - **[NOTE] BBBottomSheet + BBDialog only reachable via dev gallery — no PROD screen calls .show yet (pending adoption).**
+
+---
+## COMPONENTS batch 9 — core/widgets/bb_* set (2026-07-18) — ⭐ ENTIRE SET IS DEAD DUPLICATE
+
+### ⭐ STRUCTURAL VERDICT: core/widgets/bb_* = dead parallel implementation
+The `lib/core/widgets/bb_*.dart` files (`BBButton`, `BBCard`, `BBChip`, `BBEmptyState`, `BBInput`, `BBSectionHeader`, `BBSkeleton`, `BBStatusBadge` — UPPERCASE BB prefix) are a **dead pre-redesign parallel set**. Live callers ALL use `lib/shared/widgets/redesign/bb_*.dart` (`BbXxx` — camel Bb prefix, barrel-exported via redesign.dart). The core/ set is reached ONLY by dev-only `gallery_screen.dart` + `responsive_probe_screen.dart`. → **8 deletable files + BB*/Bb* naming-collision hazard.** Migrate gallery/probe to Bb*, delete core/widgets/bb_*.
+**IMPORTANT:** dead `core/BBInput` HAS textInputAction/focusNode/autofocus params → backport those into live `BbInput` to fix the 3×P0 root.
+Live call-site counts: BbButton 62, BbSectionHeader 34, BbStatusBadge 10, BbChip 7, BbEmptyState 9. Core equivalents: 1-6, all gallery/probe.
+
+### core/bb_button (BBButton) — 13/20 — DEAD dup
+- **[P3] DEAD (gallery/probe + core/bb_empty_state only); BbButton canonical (62 sites). Delete.**
+- **[P1] (live BbButton) sm=36px <48 (core prototype documented 40px floor — regressed)** — redesign/bb_button.dart:73 — A11y.
+- **[P2] onGradient raw hex 0x29FFFFFF/0x38FFFFFF** — :170,173 — Theming.
+- **[P2] nullable label + asIcon=false → empty Row, no assert** — :47,204 — Anti-Pattern.
+
+### core/bb_card (BBCard) — 12/20 — DEAD dup (0 consumers, no barrel)
+- **[P0] DEAD — delete; BbCard canonical.** — core/bb_card.dart — Anti-Pattern.
+- **[P2] (live BbCard) EdgeInsets.all(20) not BBSpace.md + semanticLabel optional w/ null fallback + hoverable default false (migrated cards lose hover)** — redesign/bb_card.dart:77,128,29 — Theming/A11y.
+
+### core/bb_chip (BBChip) — 12/20 — DEAD dup (2 dev-only)
+- **[P3] DEAD; BbChip canonical (7 sites). Delete + migrate gallery/probe.**
+- **[P1] (live BbChip) zero Semantics ROOT (already logged) + sm/md 32/40px <48** — redesign/bb_chip.dart:58,44 — A11y.
+- **[P2] BbChip BBShadow.purpleSm light-only (dark loses glow) + raw TextStyle + fixed height clips @200% scale** — :70,92,64 — Theming/Responsive.
+
+### core/bb_empty_state (BBEmptyState) — 13/20 — DEAD dup (1 dev-only)
+- **[P1] DEAD; BbEmptyState canonical (9 sites). Delete + migrate gallery.**
+- **[P2] (both) decorative icon disc no ExcludeSemantics + headline no header:true** — A11y.
+- **[P2] (live) _BenefitCard receives BBColorSet as ctor arg (breaks hot-reload/theme cascade)** — redesign/bb_empty_state.dart:135,151-153 — Anti-Pattern.
+
+### core/bb_input (BBInput) — 11/20 — DEAD dup BUT has the missing params
+- **[P0] (live BbInput) missing textInputAction/focusNode/autofillHints — ROOT (90 sites). Dead core/BBInput HAS textInputAction/focusNode/autofocus → BACKPORT.** — redesign/bb_input.dart — A11y.
+- **[P1] (live) _ctrl late-final = silent stale controller on parent rebuild (no didUpdateWidget)** — :109-111 — Anti-Pattern.
+- **[P1] (live) _onText listener fires setState on external controller keystroke even w/o charLimit** — :119 — Perf.
+- **[P2] (live) obscureText no built-in toggle; login renders no reveal button** — :43-44 — A11y.
+- **[P3] core/BBInput dead (gallery/probe only). Backport params then delete.**
+
+### core/bb_section_header (BBSectionHeader) — 13/20 — DEAD dup (2 dev-only)
+- **[P1] (BOTH files) no Semantics(header:true) ROOT (already logged); BbSectionHeader canonical (34 sites).**
+- **[P2] action InkWell tap target ~22px (<44) + no semanticLabel** — core:52-65 / redesign — Responsive/A11y.
+- **[P3] DEAD core; delete + migrate gallery.**
+
+### core/bb_skeleton (BBSkeleton) — 12/20 — 3-WAY skeleton duplication
+- **[P0] no ExcludeSemantics in ALL 3 skeleton files (core BBSkeleton / redesign BbSkeleton / animations skeleton_loader)** — A11y.
+- **[P1] skeleton_loader.dart = 3/20: 1496-line god file, ZERO BB tokens, off-audit/127 dark hex, static-only (no shimmer)** — skeleton_loader.dart:1-1496,9-26 — Theming/Anti-Pattern.
+- **[P1] missing RepaintBoundary on animated skeletons (core+redesign)** — bb_skeleton.dart:133; redesign:52 — Perf.
+- **VERDICT: BBSkeleton(core, 2 sites) + BbSkeleton(redesign, 1 site admin_dashboard) + SkeletonLoader(~14 sites). Consolidate to BBSkeleton, migrate skeleton_loader composites incrementally, delete SkeletonColors.**
+
+### core/bb_status_badge (BBStatusBadge) — 14/20 — DEAD dup (6 dev-only)
+- **[P1] statusImported #4A90D9 = 2.95:1 fails AA (BOTH files)** — core:16; redesign:63 — A11y. (status-color-AA class)
+- **[P1] completed DARK #8B6FFF on tint = 3.76:1 fails AA + pending LIGHT #B7791F = 3.30:1 fails AA** — redesign/bb_status_badge.dart:58-60,44-46 — A11y. MORE status-AA members.
+- **[P1] no Semantics wrapper (both)** — A11y.
+- **[P2] _toBbStatus in owner_booking_detail:1073-1082 NON-EXHAUSTIVE (no imported case → falls to pending)** — Anti-Pattern. REAL BUG.
+- **[P2] BbStatusBadge raw TextStyle not BBType.caption + pending dot uses c.tertiary (warning) not statusPendingDeep** — redesign:97,46 — Theming.
+- **[P2] dual enum BBStatus vs BbBookingStatus (identical cases) — delete core, remove BBStatus.**

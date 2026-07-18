@@ -120,14 +120,14 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/shared/widgets/responsive/responsive_grid.dart
 - [x] lib/core/widgets/bb_avatar.dart
 - [x] lib/core/widgets/bb_bottom_sheet.dart
-- [ ] lib/core/widgets/bb_button.dart
-- [ ] lib/core/widgets/bb_card.dart
-- [ ] lib/core/widgets/bb_chip.dart
-- [ ] lib/core/widgets/bb_empty_state.dart
-- [ ] lib/core/widgets/bb_input.dart
-- [ ] lib/core/widgets/bb_section_header.dart
-- [ ] lib/core/widgets/bb_skeleton.dart
-- [ ] lib/core/widgets/bb_status_badge.dart
+- [x] lib/core/widgets/bb_button.dart
+- [x] lib/core/widgets/bb_card.dart
+- [x] lib/core/widgets/bb_chip.dart
+- [x] lib/core/widgets/bb_empty_state.dart
+- [x] lib/core/widgets/bb_input.dart
+- [x] lib/core/widgets/bb_section_header.dart
+- [x] lib/core/widgets/bb_skeleton.dart
+- [x] lib/core/widgets/bb_status_badge.dart
 - [ ] lib/core/widgets/fcm_navigation_handler.dart
 - [ ] lib/core/widgets/force_update_dialog.dart
 - [ ] lib/core/widgets/keyboard_aware_constrained_box.dart

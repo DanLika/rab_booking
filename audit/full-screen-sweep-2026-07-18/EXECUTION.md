@@ -9,7 +9,7 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] F2.5 BbSectionHeader — feat/f25-bbsectionheader-a11y — header:true (34 sitea) + merged action button node; semantics-only, 0 vizuelno; suite FULL GREEN; deferred: akcija 44px hit-area (34 redova reshape = zaseban golden pass)
 - [x] F2.6 BbCard — feat/f26-bbcard-semantics — excludeSemantics param (double-read fix), container role za neinteraktivne s labelom, static Matrix4; 0 vizuelno; suite FULL GREEN
 - [x] F2.7 toggles — feat/f27-toggle-a11y — checkbox 44×44+subtitle-u-label+error-sibling, radio checked+mutuallyExclusive+minWidth48+validator stateVal, switch merged node+keyboard verified; Opacity IZVAN Semantics sva tri; suite FULL GREEN
-- [ ] F2.8 BbSpinner: ExcludeSemantics default + opt-in semanticsLabel liveRegion
+- [x] F2.8 BbSpinner — feat/f28-bbspinner-semantics — ExcludeSemantics default + semanticsLabel liveRegion opt-in (obje grane); suite FULL GREEN
 - [ ] F2.9 CommonAppBar: leadingTooltip param (l10n), title nullable+assert
 - [ ] F2.10 PremiumListTile: makni dense/VisualDensity → minHeight 48, chevron samo uz onTap, ListTile.enabled
 - [ ] F2.11 Loaderi (universal + global_navigation + premium_loading): Semantics(liveRegion)+ExcludeSemantics barijera, CPI semanticsLabel

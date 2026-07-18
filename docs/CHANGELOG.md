@@ -87,6 +87,26 @@ Dev check after deploy:
 curl -s '<dev-fn-url>/?_ssrSubdomain=<subdomain>' | grep -E 'og:title|ld\+json'
 ```
 
+### P2 fix(seo): og:image resolved to an HTML document, not an image
+Verified live, not inferred:
+
+```
+app.bookbed.io/og-image.png   200  text/html  29417B   <- the app shell
+view.bookbed.io/og-image.png  200  text/html  29417B   <- the app shell
+bookbed.io/og-image.png       404
+```
+
+There is no `og-image.png` in `web/`, so the catch-all rewrite answers that path
+with `index.html`. Every `og:image`/`twitter:image` has therefore been resolving
+to an HTML document — **every social share of a BookBed link has had a broken
+preview card**. Pre-existing, but the new SSR adopted the same URL as its
+fallback and would have spread it to every property page.
+
+Repointed to `icons/Icon-512.png`, a real deployed PNG. A 512 square is not the
+ideal card format; a proper 1200×630 branded asset is a design task and the TODO
+in `ssr.ts` records it. Pointing at something real beats pointing at an HTML
+blob, and fabricating the asset was not an option.
+
 ### Also
 - `Organization` JSON-LD added to the shared `web/index.html` (brand-level).
 - `robots.txt` points at the new widget sitemap.

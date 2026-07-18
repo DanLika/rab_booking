@@ -893,3 +893,53 @@
 - **[P2] currencyServiceProvider watched inside when() callback** — :35,80 — Perf.
 - **[P2] CircularProgressIndicator no semanticsLabel** — :44,103 — A11y.
 - **[P3] dead branch in _formatWithSymbol (USD==EUR/GBP arm)** — currency_service.dart:128-130 — Anti-Pattern.
+
+---
+## COMPONENTS batch 7 — barrels + universal_loader + animations/ (2026-07-18) — animations dir = graveyard
+
+### redesign.dart (BARREL) — 19/20 — CLEAN
+- All 25 exports point to LIVE files (no legacy). bb_avatar_slot/bb_bottom_sheet 0 external consumers; bb_scaffold/bb_sidebar/bb_sidebar_rail cluster orphaned but = intentionally-deferred desktop-sidebar feature (audit/124 2B/3B). No dead exports.
+
+### widgets.dart (BARREL) — 13/20 — 3 DEAD EXPORTS
+- **[P1] line 16 export button.dart (PremiumButton) — 0 callers + gradient flat-chrome violation. Remove export + delete.**
+- **[P1] line 10 export error_state_widget.dart — 0 callers + hardcoded HR. Remove + delete.**
+- **[P1] line 20 export adaptive_layout.dart — 0 callers + wrong breakpoint (1024). Remove + delete.**
+- **[P2] line 17 card.dart (PremiumCard) — 2 callers (revenue_chart_widget:40, unit_hub_empty_state:155), glass API = anti-pattern. Migrate to BbCard then delete.**
+- **[P3] SkeletonColors raw hex (skeleton_loader) not audit/127 dark ladder** — Theming.
+- **LIVE exports (keep):** accessible_icon_button, responsive_grid, skeleton_loader (15 callers), price_text, message_box.
+
+### smart_tooltip (shared) — 9/20 — LIVE — P0
+- **[P0] force-cast EdgeInsetsGeometry as EdgeInsets (TypeError if EdgeInsetsDirectional passed)** — smart_tooltip.dart:320-321,367 — Anti-Pattern.
+- **[P1] custom overlay path (≤360px) zero SR semantics** — :170-238 — A11y.
+- **[P1] tooltip hover-only, not keyboard triggerable (WCAG 1.4.13)** — :205-238 — A11y.
+- **[P2] hardcoded hex 0xFF2D2D3A/0xFF2D3748 + raw radius/padding/shadow (zero tokens)** — :274-337 — Theming.
+- **[P2] safe-area not subtracted (tooltip under notch/home bar)** — :276,377-460 — Responsive.
+
+### universal_loader (shared) — 11/20 — LIVE canonical loader
+- **[P1] no semantic overlay barrier (SR reaches blocked content, no liveRegion)** — universal_loader.dart:183-198 — A11y — SYSTEMIC loader gap (shared by all loaders).
+- **[P2] Colors.white70/black87 message + raw overlay bg (inherited from dead predecessor)** — :185,230 — Theming.
+- **[P2] CircularProgressIndicator no semanticsLabel** — :215-219 — A11y.
+- **[P3] Future.delayed not cancellable + hardcoded dims not BBSpace** — :152-157,269-296 — Anti-Pattern/Responsive.
+
+### animated_button (shared, animations/) — 14/20 — DEAD (0 callers)
+- **[P1] stuck-pressed state on fast tap (GestureDetector+button gesture-arena)** — animated_button.dart:79-89,144-164,255-270 — Anti-Pattern.
+- **[P2] pulse animation rebuilt every build (onPlay re-registers)** — :244-253 — Perf.
+- **[P2] no reduced-motion guard** — :83,152,263 — A11y.
+- **[P3] all 3 widgets (AnimatedPressButton/IconButton/FAB) 0 call sites — DEAD, superseded by BbButton.**
+
+### animated_card (shared, animations/) — 6/20 — DEAD (0 callers) — BATCH LOW
+- **[P0] all 3 widgets 0 consumers — DEAD; canonical hover = flutter_animate .hoverScale().**
+- **[P1] slideY begin:30 = 30×height not 30px (flutter_animate fraction, spec broken)** — animated_card.dart:267-270 — Responsive.
+- **[P1] HoverScaleCard Matrix4.setEntry fake-scale (wrong technique)** — :87-105 — Anti-Pattern.
+- **[P2] no Semantics/keyboard + no reduced-motion + no RepaintBoundary** — :77-84,264 — A11y/Perf.
+
+### animated_content_switcher (shared, animations/) — 15/20 — LIVE
+- **[P1] no reduced-motion guard (BBMotion.adapt exists, unused)** — animated_content_switcher.dart:43-44,93-94 — A11y.
+- **[P2] dead flutter_riverpod import (only AsyncValue type)** — :2 — Anti-Pattern.
+- **[P3] raw colorScheme.error fallback** — :108-109 — Theming.
+
+### animated_dialog (shared, animations/) — 9/20 — DEAD (0 callers)
+- **[P1] AnimationController(vsync:Navigator) never disposed = Ticker LEAK per call** — animated_dialog.dart:129-131 — Perf.
+- **[P1] no reduced-motion guard on any entry point** — :36-51,81-95,167-181 — A11y.
+- **[P1] entire file 0 call sites — DEAD (live path = BbDialog/showDialog).**
+- **[P2] no scopesRoute/namesRoute + Colors.black54 barrier raw** — :25,71,31,76 — A11y/Theming.

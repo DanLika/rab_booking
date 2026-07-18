@@ -104,14 +104,14 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/shared/widgets/platform_icon.dart
 - [x] lib/shared/widgets/premium_list_tile.dart
 - [x] lib/shared/widgets/price_text.dart
-- [ ] lib/shared/widgets/redesign.dart
-- [ ] lib/shared/widgets/smart_tooltip.dart
-- [ ] lib/shared/widgets/universal_loader.dart
-- [ ] lib/shared/widgets/widgets.dart
-- [ ] lib/shared/widgets/animations/animated_button.dart
-- [ ] lib/shared/widgets/animations/animated_card.dart
-- [ ] lib/shared/widgets/animations/animated_content_switcher.dart
-- [ ] lib/shared/widgets/animations/animated_dialog.dart
+- [x] lib/shared/widgets/redesign.dart
+- [x] lib/shared/widgets/smart_tooltip.dart
+- [x] lib/shared/widgets/universal_loader.dart
+- [x] lib/shared/widgets/widgets.dart
+- [x] lib/shared/widgets/animations/animated_button.dart
+- [x] lib/shared/widgets/animations/animated_card.dart
+- [x] lib/shared/widgets/animations/animated_content_switcher.dart
+- [x] lib/shared/widgets/animations/animated_dialog.dart
 - [ ] lib/shared/widgets/animations/animated_empty_state.dart
 - [ ] lib/shared/widgets/animations/animated_success.dart
 - [ ] lib/shared/widgets/animations/animations.dart

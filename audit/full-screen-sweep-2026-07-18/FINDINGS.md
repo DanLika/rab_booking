@@ -546,3 +546,65 @@
 - **[P2] raw AppBar not CommonAppBar** — :11-14 — Theming/Anti-Pattern.
 - **[P2] Theme.of.primaryColor deprecated** — :28-29 — Anti-Pattern.
 - **[P3] 5 hardcoded HR strings** — Anti-Pattern.
+
+---
+## COMPONENTS batch 1 — design-system primitives (bb_*) (2026-07-18) — ROOT-CAUSE layer
+
+### bb_app_bar (PRIMITIVE) — 14/20
+- **[P1] badge Colors.white on tertiary tone ~1.6:1 fails AA** — bb_app_bar.dart:236 — Theming.
+- **[P1] breadcrumb tap targets ~2px padding** — :156-158 — A11y.
+- **[P1] _RoundedIconBtn Semantics double-announce + no disabled state** — :193-196 — A11y — ROOT (every BbAppBar action).
+- **[P2] preferredSize raw 56 not BBConstraint.appBarHeight** — :61,93 — Theming.
+- **[P2] breadcrumb Row no overflow guard** — :172 — Responsive.
+- **[P2] hamburger/back/notif labels hardcoded HR non-overridable** — :86,104,113 — A11y/l10n — ROOT.
+
+### bb_avatar_slot (PRIMITIVE) — 14/20
+- **[P1] InkWell no semantic label** — bb_avatar_slot.dart:65 — A11y.
+- **[P1] placeholder textTertiary #718096 on #F5F5F5 = 3.68:1 fails AA** — :53-55 — A11y. SYSTEMIC contrast.
+- **[P2] no ExcludeSemantics when decorative** — :45-58 — A11y.
+- **[P2] ringColor default Color(0x40FFFFFF) hardcoded** — :18 — Theming.
+- **[P2] NetworkImage no error/loading builder** — :37 — Perf/A11y.
+- **[P3] id param stored but dead** — :13,22 — Anti-Pattern.
+
+### bb_avatar_upload (PRIMITIVE) — 15/20
+- **[P2] semanticLabel fallback hardcoded EN 'Change profile photo'** — bb_avatar_upload.dart:324 — A11y.
+- **[P2] edit-button tap target 20/24px on xs/sm** — :128-129 — A11y/Responsive.
+- **[P3] Color(0x33FFFFFF) ring + Colors.black 0.45 scrim raw** — :259,275 — Theming.
+- **[P3] _diameter duplicates BbAvatar size table** — :110-122 — Anti-Pattern.
+- **[CONFIRMED CLEAN] NO diagonal gradient (flat-chrome OK) — the violation is in profile_image_picker, NOT here.**
+
+### bb_avatar (PRIMITIVE) — 15/20
+- **[P1] no semantic label on identity widget (name never surfaced)** — bb_avatar.dart:72-118 — A11y.
+- **[P2] Colors.white onGradient fg (no textOnGradient token)** — :56 — Theming. SYSTEMIC (onPrimary/onGradient gap).
+- **[P2] ring BoxShadow Color(0x33FFFFFF) invisible light mode** — :113 — Theming.
+- **[P2] Image.network no cacheWidth/Height (list of sm avatars)** — :98-105 — Perf.
+- **[P3] _diameter switch could be const map** — :28-41 — Anti-Pattern.
+
+### bb_bottom_sheet (PRIMITIVE) — 13/20
+- **[P1] drag handle bare Container no semantics** — bb_bottom_sheet.dart:43-51 — A11y.
+- **[P1] modal barrier no dismiss label (docstring omits barrierLabel)** — :6-8 — A11y — consider BbBottomSheet.show() factory.
+- **[P2] no Semantics container role on sheet** — :28 — A11y.
+- **[P2] no maxHeight guard (tall child overflows)** — :57-62 — Responsive.
+- **[P2/P3] raw padding literals 10/4/12/8 + circular(999)** — :41,54,59,65,48 — Theming.
+
+### bb_button (PRIMITIVE) — 15/20 — HIGH-VALUE ROOT
+- **[P1] BbButtonSize.sm = 36px = ROOT of sub-48px systemic (35 call sites, 18 files)** — bb_button.dart:73 — A11y — raise to 40/44, one-line fixes all callers.
+- **[P1] asIcon+sm = 36×36 icon button** — :191 — A11y — add minConstraints 44×44 on asIcon path.
+- **[P2] loading state unannounced + BbSpinner no ExcludeSemantics** — :197-198,274-279 — A11y.
+- **[P2] Semantics + InkWell double-announce risk (Material/Opacity between)** — :263-279 — A11y.
+- **[P2] heights 36/44/52 raw literals (no named const)** — :72-79 — Theming.
+- **[P3] onGradient Color(0x29FFFFFF)/0x38FFFFFF hardcoded** — :170-172 — Theming.
+- **[P3] AnimatedContainer re-decorates + Matrix4 alloc on hover** — :236-255 — Perf.
+
+### bb_card (PRIMITIVE) — 15/20 — ROOT
+- **[P1] semanticLabel without excludeSemantics → double-read (ROOT of notifications_screen)** — bb_card.dart:130-132 — A11y — add excludeSemantics param.
+- **[P2] non-interactive card semantically invisible (no container:true)** — :128 — A11y.
+- **[P3] Matrix4.identity() alloc every build** — :123 — Perf.
+- **[P3] accent bar width 4 raw literal** — :107 — Theming.
+
+### bb_checkbox (PRIMITIVE) — 17/20 — ROOT (batch high)
+- **[P1] naked-box variant 28px (no minWidth) = ROOT of register 22×22 finding** — bb_checkbox.dart:155-156 — A11y/Responsive — add minWidth:44.
+- **[P2] Semantics wraps Opacity, label duplicated (no excludeSemantics)** — :226-245 — A11y.
+- **[P2] semanticLabel ?? label drops subtitle (T&C subtitle never announced)** — :227 — A11y.
+- **[P3] focus halo via spreadRadius only on 20px box not 44 target** — :176-179 — A11y.
+- **[P3] InkWell ripple clips to box corner not full row** — :151-154 — Anti-Pattern.

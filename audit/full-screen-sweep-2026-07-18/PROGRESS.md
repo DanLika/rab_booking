@@ -56,14 +56,14 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/shared/presentation/screens/not_found_screen.dart
 
 ## COMPONENTS (241) — design-system primitives first (root of systemic findings), then shared, then feature widgets
-- [ ] lib/shared/widgets/redesign/bb_app_bar.dart
-- [ ] lib/shared/widgets/redesign/bb_avatar_slot.dart
-- [ ] lib/shared/widgets/redesign/bb_avatar_upload.dart
-- [ ] lib/shared/widgets/redesign/bb_avatar.dart
-- [ ] lib/shared/widgets/redesign/bb_bottom_sheet.dart
-- [ ] lib/shared/widgets/redesign/bb_button.dart
-- [ ] lib/shared/widgets/redesign/bb_card.dart
-- [ ] lib/shared/widgets/redesign/bb_checkbox.dart
+- [x] lib/shared/widgets/redesign/bb_app_bar.dart
+- [x] lib/shared/widgets/redesign/bb_avatar_slot.dart
+- [x] lib/shared/widgets/redesign/bb_avatar_upload.dart
+- [x] lib/shared/widgets/redesign/bb_avatar.dart
+- [x] lib/shared/widgets/redesign/bb_bottom_sheet.dart
+- [x] lib/shared/widgets/redesign/bb_button.dart
+- [x] lib/shared/widgets/redesign/bb_card.dart
+- [x] lib/shared/widgets/redesign/bb_checkbox.dart
 - [ ] lib/shared/widgets/redesign/bb_chip.dart
 - [ ] lib/shared/widgets/redesign/bb_dialog.dart
 - [ ] lib/shared/widgets/redesign/bb_dropdown.dart

@@ -144,22 +144,22 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_navigation_buttons.dart
 - [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_progress_bar.dart
 - [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_step_container.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/advanced_settings/email_verification_card.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/advanced_settings/tax_legal_disclaimer_card.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/booking_actions/base_booking_dialog.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_approve_dialog.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_cancel_dialog.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_complete_dialog.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_delete_dialog.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_reject_dialog.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/booking_create_dialog.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/booking_details_dialog.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_filters_dialog.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_ledger.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_premium_header.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_tab_bar.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/bookings/croatian_plural.dart
-- [ ] lib/features/owner_dashboard/presentation/widgets/bookings/premium_loading_indicator.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/advanced_settings/email_verification_card.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/advanced_settings/tax_legal_disclaimer_card.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/base_booking_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_approve_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_cancel_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_complete_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_delete_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_reject_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_create_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_details_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_filters_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_ledger.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_premium_header.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_tab_bar.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/croatian_plural.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/premium_loading_indicator.dart
 - [ ] lib/features/owner_dashboard/presentation/widgets/bookings/revenue_guide_empty_state.dart
 - [ ] lib/features/owner_dashboard/presentation/widgets/calendar/booking_action_menu.dart
 - [ ] lib/features/owner_dashboard/presentation/widgets/calendar/booking_block_widget.dart

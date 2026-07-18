@@ -1134,3 +1134,46 @@ Live call-site counts: BbButton 62, BbSectionHeader 34, BbStatusBadge 10, BbChip
 ### wizard_step_container — 15/20 — LIVE
 - **[P2] step title bez Semantics(header:true)** — wizard_step_container.dart:45 — A11y.
 - **[P3] raw 800.0 maxWidth + 2-tier breakpoint (nema tablet) + MediaQuery.of umjesto sizeOf** — :26-34 — Theming/Responsive/Perf.
+
+---
+## COMPONENTS batch 12 — booking dialogs + bookings widgets (2026-07-18) — FINAL BATCH (loop stopped by operator)
+
+### booking_actions/ (6 dijaloga, zajednička baza) — 11/20
+- **[P0] nijedan dijalog nema Semantics(scopesRoute:true)** — base_booking_dialog.dart:73 — A11y (svi kroz bazu).
+- **[P1] cancel dijalog LinearGradient header (post-FLAT!)** — booking_cancel_dialog.dart:39-46 — Theming — reject NEMA isti = vizuelna asimetrija. FLAT-CHROME regresija #5.
+- **[P1] hardcoded footer boje = duplikat AppColors.dialogFooterDark/Light** — base:183 — Theming.
+- **[P1] 4 dijaloga raw TextStyle(fontSize:15)** — approve:21/complete:21/delete:24/reject:41 — Theming.
+- **[P2] error-color izvor nekonzistentan (AppColors.error vs colorScheme.error)** — delete:28 vs cancel:47 — Theming.
+- **[P2] footer FilledButton bez minimumSize 48** — base:194-208 — A11y.
+- **[P2] svi zaobilaze BbDialog (konvergencijski dug)** — Anti-Pattern.
+
+### booking_create_dialog — 12/20
+- **[P1] ~120 LOC dupliran dialog shell u _showConflictWarningDialog** — booking_create_dialog.dart:852-1113 — Anti-Pattern.
+- **[P2] Colors.white ×4 conflict header; raw dugmad + magic padding 41; RegExp po keystroke-u; date polja van Form focus chaina** — :908-929,1069-1103,840-843,633-654 — Theming/Perf/A11y.
+- **[P3] lastDate DateTime(2030) cliff; dupli DateFormat; status dot bez ExcludeSemantics** — :661,684,636,647,1014-1020.
+
+### booking_details_dialog — 11/20 — DEAD
+- **[P0] DEAD — 0 importera; router komentar spominje V2 ali ovo je BookingDetailsDialog; naslijedio ga OwnerBookingDetailScreen + BookingInlineEditDialog. Delete kandidat.**
+- **[P1] (pouka za žive) AccessibleIconButton s constraints:BoxConstraints() PONIŠTAVA 48px enforcement** — :121-122,555-557 — A11y — ista zamka moguća kod drugih callera.
+
+### bookings_filters_dialog — 13/20 — LIVE
+- **[P1] Clear dugme NE zatvara dijalog (Apply zatvara — nekonzistentan flow)** — bookings_filters_dialog.dart:534-541 — Anti-Pattern/UX.
+- **[P2] date-range InkWell bez Semantics; clear-date IconButton 0×0 tap (BoxConstraints())** — :426-498,492-493 — A11y.
+- **[P2] raw $error u UI** — :381 — Anti-Pattern.
+- **[P3] bez tablet tiera (600→700px fiksno); zero BB tokena; _formatDate locale-unaware** — :57,546-548.
+
+### bookings_tab_bar — 17/20 — LIVE (čist)
+- **[P2] BbChip default md=40px <44 + bez selected-Semantics (root već logovan)** — A11y.
+
+### croatian_plural — 19/20 — LIVE (najčišći fajl sweepa)
+- **[P2] _nightWord dupliran u widget_translations.dart:4958 (pojednostavljena verzija — drift hazard, danas bez buga)** — Anti-Pattern.
+- CLDR HR pravila KOREKTNA (m10/m100 paucal logika).
+
+### premium_loading_indicator — 11/20 — LIVE (owner_bookings:571,620)
+- **[P1] bez Semantics (3 dot-a = unlabeled) + bez reduced-motion guarda** — A11y.
+- **[P2] raw Curves/600ms mimo BBMotion; colorScheme.primary ne BBColor** — Theming.
+
+### COVERED (bez re-audita): email_verification_card + tax_legal_disclaimer_card (batch 7), bookings_ledger + bookings_premium_header (screen batch 1).
+
+## SWEEP ZAUSTAVLJEN PO NALOGU OPERATORA (2026-07-18)
+Pokriveno: 48/48 ekrana + 104/241 komponenti (svi bb_* primitivi, sav shared/, core/widgets, auth widgeti, booking dijalozi). Preostalih 137 = feature widgeti (kalendar/timeline/widget-gost/admin) — većina transitivno čitana kroz screen audite; sistemski rootovi ih pokrivaju. Izvršavanje kreće po REMEDIATION_PLAN.md.

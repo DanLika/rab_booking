@@ -231,7 +231,11 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                           ? null
                           : () => _resendConfirmationEmail(tr),
                       borderRadius: BorderRadius.circular(4),
-                      child: Padding(
+                      // 44px tap floor — the padded row measured ~22px on
+                      // narrow phones (audit F4.4); visual row unchanged.
+                      child: Container(
+                        constraints: const BoxConstraints(minHeight: 44),
+                        alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.symmetric(
                           vertical: BBSpaceBridges.xxs2,
                         ),

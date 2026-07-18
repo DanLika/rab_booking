@@ -267,6 +267,15 @@ Widget buildTrialHeroForTest({
   bool compact = false,
 }) => _TrialHero._render(context, data: data, compact: compact);
 
+/// The mobile free-plan summary row (kIsWeb-gated in the live tree, so VM
+/// widget tests can't reach it through the screen). Audit F4.3 seam.
+@visibleForTesting
+Widget buildFreeInlineForTest() => _FreeInline();
+
+/// The Stripe foot-note (same kIsWeb gate). Audit F4.3 seam.
+@visibleForTesting
+Widget buildFootNoteForTest() => const _FootNote();
+
 class _TrialHero extends ConsumerWidget {
   const _TrialHero({this.compact = false});
 
@@ -949,7 +958,9 @@ class _FreeInline extends StatelessWidget {
             label: 'Zadrži besplatno',
             variant: BbButtonVariant.tertiary,
             size: BbButtonSize.sm,
-            onPressed: () {},
+            // Keeping free needs no server action — declining the upsell
+            // just leaves the screen (audit F4.3: was a no-op () {}).
+            onPressed: () => Navigator.of(context).maybePop(),
           ),
         ],
       ),
@@ -977,25 +988,16 @@ class _FootNote extends StatelessWidget {
         children: <Widget>[
           BbIcon(name: 'verified_user', size: 18, color: c.textTertiary),
           const SizedBox(width: 10),
+          // "Usporedi sve značajke" link removed (audit F4.3): it was a
+          // link-styled TextSpan with no recognizer and no comparison
+          // surface to point at — both plan cards already list features.
           Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: BBType.caption(
-                  context,
-                ).copyWith(color: c.textTertiary, height: 1.5),
-                children: <InlineSpan>[
-                  const TextSpan(
-                    text:
-                        'Sigurno plaćanje putem Stripe-a. Otkažite bilo kada — pretplata se ne obnavlja nakon otkazivanja. ',
-                  ),
-                  TextSpan(
-                    text: 'Usporedi sve značajke',
-                    style: BBType.caption(
-                      context,
-                    ).copyWith(color: c.primary, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
+            child: Text(
+              'Sigurno plaćanje putem Stripe-a. Otkažite bilo kada — '
+              'pretplata se ne obnavlja nakon otkazivanja.',
+              style: BBType.caption(
+                context,
+              ).copyWith(color: c.textTertiary, height: 1.5),
             ),
           ),
         ],

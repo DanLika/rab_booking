@@ -115,3 +115,64 @@
 - **[P2] _hrMonths/_hrDays bypass l10n** — :1040-1053; timeline_date_header.dart:113-121 — Anti-Pattern.
 - **[P3] (state as dynamic).scrollToConflict cast** — :617 — Anti-Pattern.
 - **[P3] try/catch around AppLocalizations in build()** — :305-309 — Anti-Pattern.
+
+---
+## Batch 2 — dev-tooling + admin shell/login/log + splash (2026-07-18)
+
+### gallery_screen (DEV-ONLY) — 16/20
+- **[P2] ThemeData rebuilt every frame** — gallery_screen.dart:38 — Perf — cache light/dark themes.
+- **[P2] BBResponsive read but unused for layout** — :47 — Responsive — reference gallery doesn't demo adaptation.
+- **[P3] text-color tokens missing from palette** — :140-160 — Theming.
+- **[P3] _DialogTriggers missing key/const** — :533-586 — Anti-Pattern.
+- **[P3] SizedBox(width:240) hard-coded cards** — :410-443 — Responsive.
+
+### responsive_probe_screen (DEV-ONLY) — 14/20
+- **[P2] breakpoints stale 1024/1440 ladder** — responsive_probe_screen.dart:193-195 + tokens.dart:701-707 — Responsive — BBBreakpoint.tablet=1024/desktop=1440 disagree with canonical desktop≥1200 (#766/#769); the probe TEACHES the wrong boundary. SYSTEMIC.
+- **[P2] ThemeData.dark()/light() not project BbTheme** — :37-39 — Theming.
+- **[P3] Colors.white active pill** — :179 — Theming.
+- **[P3] raw TextStyle(fontSize:12) ignores textScaler** — :403 — A11y/Theming.
+- **[P3] raw Material palette slot colors** — :264-277 — Anti-Pattern.
+
+### owner_splash_screen — 13/20
+- **[P2] hardcoded bg hex 0xFF000000/0xFFFAFAFA** — owner_splash_screen.dart:231-232,379-381 — Theming.
+- **[P2] silent try/catch around Theme.of** — :371-377 — Anti-Pattern.
+- **[P2] no Semantics/liveRegion on splash** — :237-243,388-398 — A11y.
+- **[P3] complete() animates via Future.delayed loop not vsync** — :69-75 — Perf.
+- **[P3] fixed 200px progress bar** — bookbed_branded_loader.dart:22 — Responsive.
+- **[P3] Material+Scaffold double-wrap in overlay** — :386-397 — Anti-Pattern.
+
+### activity_log_screen — 10/20  (admin)
+- **[P1] no-pagination provider hardcaps 50 rows** — admin_users_repository.dart:441 getActivityLog limit:50 — Perf/A11y — admin investigating incident never sees past row 50; no load-more/cursor. Add paginated notifier.
+- **[P2] raw $err in error widget** — activity_log_screen.dart:124 — Anti-Pattern (admin-visible).
+- **[P2] event card zero Semantics** — :167-247 — A11y.
+- **[P2] AppColors.primary/warning/info on dark surface w/o dark-lift** — :257,263,269 — Theming.
+- **[P2] Colors.white FilledButton fg** — :66 — Theming.
+- **[P3] off-token radius/padding 10** — :173,176 — Theming.
+- **[P3] fontSize:11 ×3 off-token** — :219,230,242 — Theming.
+- **[P3] maxWidth:1000 magic literal** — :106 — Responsive.
+- **[P3] double BbAdminDarkTokens.of lookup** — :148,275 — Anti-Pattern.
+- **[P3] Map<String,dynamic> event untyped into widget** — :142 — Anti-Pattern.
+- **[P3] timestamp no toLocal()** — :163-164 — A11y (UTC shown to admin).
+
+### admin_login_screen — 14/20
+- **[P2] _AdminCheck missing isCheckbox:true** — admin_login_screen.dart:656 — A11y.
+- **[P2] "Forgot password?" tap target 36px** — :619-620 — A11y.
+- **[P2] password toggle tooltip = "Password" not show/hide** — :898 — A11y.
+- **[P3] emailCtrl never disposed** — :163 — Anti-Pattern (KNOWN, confirmed).
+- **[P3] bg CustomPaint/ShaderMask no RepaintBoundary** — :999-1014,822 — Perf.
+- **[P3] DateTime.now().year in build()** — :975 — Perf.
+- **[P3] AlertDialog not BbDialog** — :197 — Theming.
+- **[P3] splashRadius deprecated** — :897 — Anti-Pattern.
+- **[P3] 3.14159265 literal not dart:math pi** — :849-850 — Anti-Pattern.
+- **[P3] _AdminPill raw 6 not BBRadius.xs** — :572 — Theming.
+
+### admin_shell_screen — 14/20
+- **[P1] nav items no Semantics role/selected** — admin_shell_screen.dart:237-246,463-476 — A11y — one fix (_DrawerItem+_RailItem) covers all surfaces.
+- **[P1] "Sign Out" text InkWell ~14px tap target** — :538-554 — A11y/Responsive.
+- **[P2] ThemeData rebuilt every build** — :107-136 — Perf.
+- **[P2] BBColor.success/warning no dark variant in env pill** — :853 — Theming.
+- **[P2] admin breakpoints 800/1100 diverge from canonical 600/1200** — :19-20 — Responsive. SYSTEMIC.
+- **[P2] rail avatar sign-out no Semantics label** — :262-286 — A11y.
+- **[P2] const TextStyle(color:Colors.white) ×2** — :277-281,517-521 — Theming.
+- **[P3] MAIN MENU letterSpacing:1.2 literal** — :455-460 — Theming.
+- **[P3] _DrawerItem height exactly 44px** — :637-638 — Responsive.

@@ -6,13 +6,13 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 ## Status legend: [ ] pending  [~] in-progress  [x] done
 
 ## SCREENS (48)
-- [ ] lib/core/design/gallery_screen.dart
-- [ ] lib/core/design/responsive_probe_screen.dart
-- [ ] lib/core/widgets/owner_splash_screen.dart
-- [ ] lib/features/admin/presentation/screens/activity_log_screen.dart
+- [x] lib/core/design/gallery_screen.dart
+- [x] lib/core/design/responsive_probe_screen.dart
+- [x] lib/core/widgets/owner_splash_screen.dart
+- [x] lib/features/admin/presentation/screens/activity_log_screen.dart
 - [x] lib/features/admin/presentation/screens/admin_dashboard_screen.dart
-- [ ] lib/features/admin/presentation/screens/admin_login_screen.dart
-- [ ] lib/features/admin/presentation/screens/admin_shell_screen.dart
+- [x] lib/features/admin/presentation/screens/admin_login_screen.dart
+- [x] lib/features/admin/presentation/screens/admin_shell_screen.dart
 - [ ] lib/features/admin/presentation/screens/user_detail_screen.dart
 - [ ] lib/features/admin/presentation/screens/users_list_screen.dart
 - [ ] lib/features/auth/presentation/screens/cookies_policy_screen.dart

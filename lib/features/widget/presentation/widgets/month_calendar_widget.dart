@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../domain/constants/widget_constants.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../l10n/availability_error_l10n.dart';
 import '../l10n/widget_translations.dart';

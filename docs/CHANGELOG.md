@@ -1,8 +1,43 @@
 # BookBed Changelog
 
-All version history from v4.6 to v7.45.
+All version history from v4.6 to v7.46.
 
-**Last Updated**: 2026-07-18 | **Version**: 7.45
+**Last Updated**: 2026-07-18 | **Version**: 7.46
+
+---
+
+**Changelog 7.46** (2026-07-18) — IN-FLIGHT full-screen `/audit` sweep (read-only, no code changed):
+
+### docs(audit): self-paced `/audit` sweep across all 48 owner/widget/admin screens
+Design/UX/technical audit (accessibility, performance, theming, responsive,
+anti-patterns; scored 0-4 per dimension, findings tagged P0-P3) run one batch of
+6 screens per `/loop` iteration, then the component layer. Deliberately skips the
+`ref`/`setState`-after-`await` + raw-`e.toString()` classes already catalogued in
+`audit/flutter-patterns-screen-review-2026-07-18.md`. Ledger:
+`audit/full-screen-sweep-2026-07-18/FINDINGS.md`; progress in `PROGRESS.md`;
+final `SUMMARY.md` on completion. Read-only — no source touched.
+
+**Systemic patterns (recurring ≥5 screens):** `BbInput` exposes no
+`textInputAction`/`focusNode`/`autofillHints` → every form screen lacks a
+keyboard-submit chain and password-manager autofill (one widget fix closes
+login/register/forgot/bank/change-password/property-form); `BbChip` lacks
+`Semantics(selected:)`; premium headers hardcode HR eyebrow/title/subtitle;
+`Colors.white`-for-on-primary everywhere (`BBColorSet.onPrimary` token gap);
+EN-only validators (`profile_validators`/`password_validator`); legal-cluster FAB
+missing `semanticLabel` + `BbSectionHeader` missing `header:true`; breakpoint
+drift (1024/1440/900/800/700/1100 vs canonical 1200); custom-tappable/icon-only/
+decorative widgets without `Semantics`/`ExcludeSemantics`;
+`ThemeData`/`BackdropFilter`/`Opacity` built in `build()` without
+`RepaintBoundary`; `textTertiary` (light `#718096` on `#FFF`) +
+`BbAdminDarkTokens.textTertiary` (`0x66FFFFFF` on `#2A2342`) fail WCAG AA;
+**flat-chrome regression** — `profile_screen` applies `rd.heroGradient` to
+structural chrome ×4 and `profile_image_picker` a diagonal gradient (both retired
+2026-06-16); `property_form` uses zero BB* tokens.
+
+**Notable single findings:** P0 — `owner_booking_detail` `_RoundIconButton.onPressed`
+declared + passed but never wired to an `InkWell` → mail/call buttons are dead
+taps. Lowest-scoring screens: `month_calendar` / `activity_log` /
+`stripe_connect_setup` (10/20).
 
 ---
 

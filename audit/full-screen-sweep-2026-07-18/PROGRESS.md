@@ -19,13 +19,13 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/features/auth/presentation/screens/email_verification_screen.dart
 - [x] lib/features/auth/presentation/screens/enhanced_login_screen.dart
 - [x] lib/features/auth/presentation/screens/enhanced_register_screen.dart
-- [ ] lib/features/auth/presentation/screens/forgot_password_screen.dart
-- [ ] lib/features/auth/presentation/screens/privacy_policy_screen.dart
-- [ ] lib/features/auth/presentation/screens/terms_conditions_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/about_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/bank_account_screen.dart
+- [x] lib/features/auth/presentation/screens/forgot_password_screen.dart
+- [x] lib/features/auth/presentation/screens/privacy_policy_screen.dart
+- [x] lib/features/auth/presentation/screens/terms_conditions_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/about_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/bank_account_screen.dart
 - [x] lib/features/owner_dashboard/presentation/screens/calendar/month_calendar_screen.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/change_password_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/change_password_screen.dart
 - [ ] lib/features/owner_dashboard/presentation/screens/edit_profile_screen.dart
 - [ ] lib/features/owner_dashboard/presentation/screens/guides/ai_assistant_screen.dart
 - [ ] lib/features/owner_dashboard/presentation/screens/guides/embed_help_screen.dart

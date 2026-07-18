@@ -239,3 +239,59 @@
 - **[P2] hardcoded EN loader 'Creating your account...'** — :363 — Theming/A11y.
 - **[P3] RichText legal link not keyboard/switch focusable** — :676-695 — A11y.
 - **[P3] _RegisterPitchPanel hardcoded HR copy** — :755-815 — Anti-Pattern.
+
+---
+## Batch 4 — auth forgot/legal + owner about/bank/password (2026-07-18)
+
+### forgot_password_screen — 13/20  (auth)
+- **[P1] glassmorphism BackdropFilter blur** — forgot_password_screen.dart:203-204 — Anti-Pattern — GPU layer, contradicts flat direction.
+- **[P2] validateEmail EN-only strings** — profile_validators.dart:30,37 — A11y/Theming — inline field error always EN (screen has l10n). SYSTEMIC validator class.
+- **[P2] no textInputAction/onFieldSubmitted** — :257-267 — A11y. SYSTEMIC (BbInput param gap).
+- **[P2] double error feedback (snackbar + inline)** — :74-76 — Anti-Pattern.
+- **[P3] raw literal 36 card padding** — :199 — Theming.
+
+### privacy_policy_screen — 16/20  (auth/legal)
+- **[P1] FAB missing semanticLabel** — privacy_policy_screen.dart:169-177 — A11y (legal-cluster class).
+- **[P1] textTertiary #718096 fails AA (3.56:1 shellBg / 4.02:1 white)** — :400,552 — A11y — lastUpdated stamp is normal-weight body. SYSTEMIC light-mode contrast.
+- **[P2] ToC InkWell no mouseCursor + no button semantics** — :463-488,524-539 — A11y.
+- **[P2] lastUpdated = DateTime.now().year (dynamic, semantically wrong)** — :108-110 — Anti-Pattern.
+- **[P3] Colors.white FAB icon** — :173 — Theming.
+- **[P3] BbSectionHeader no header:true** — :427,461 — A11y (KNOWN systemic).
+
+### terms_conditions_screen — 15/20  (auth/legal)
+- **[P2] FAB missing tooltip/semantics** — terms_conditions_screen.dart:161-169 — A11y.
+- **[P2] ToC InkWell tap targets <44px (24-30px)** — :447-448,510 — A11y/Responsive.
+- **[P2] heading hierarchy skips h2 (h1→h3)** — :371,406 — A11y.
+- **[P3] Colors.white FAB icon** — :166 — Theming.
+- **[P3] mixed token namespace (rd.shellBg vs BBColor)** — :84,106 — Theming.
+- **[P3] DateTime.now().year in build** — :101 — Perf.
+- **[P3] fontSize:13 inline ×2** — :515-516,542-543 — Theming.
+
+### about_screen — 15/20  (owner)
+- **[P2] hardcoded eyebrow 'INFO · APLIKACIJA'** — about_screen.dart:124 — A11y/Theming.
+- **[P2] wrong desktop breakpoint >=1024** — :35 — Responsive. SYSTEMIC.
+- **[P2] _ContactRow not tappable as whole row (only tiny icon-btn)** — :433-465 — A11y/UX.
+- **[P3] no heading semantics** — :234,292,388 — A11y.
+- **[P3] decorative BbIcon not ExcludeSemantics** — :337,435 — A11y (BbIcon widget-level).
+- **[P3] panel radius 28 off-token** — :59 — Theming.
+- **[P3] fontSize:12 override vs BBType.caption** — :533 — Theming.
+
+### bank_account_screen — 13/20  (owner)
+- **[P2] wrong desktop breakpoint >=1024** — bank_account_screen.dart:489 — Responsive. SYSTEMIC.
+- **[P2] no textInputAction/focus chain on 4 fields** — :333-371 — A11y/Anti-Pattern. SYSTEMIC (BbInput).
+- **[P3] validateIban/validateSwift EN-only** — profile_validators.dart:181,187,204,210 — A11y. SYSTEMIC validator.
+- **[P3] fontSize:13 override BBType.mono** — :254 — Theming.
+- **[P3] panel radius 28 off-token** — :535 — Theming.
+- **[P3] icon container no Semantics** — :220-232 — A11y.
+- **[P3] _loadData called every build** — :485 — Perf.
+- **[P3] error state raw $error to UI** — :590 — Anti-Pattern.
+- **[P4] redundant autovalidateMode Form+fields** — :341,352,549 — Anti-Pattern.
+
+### change_password_screen — 14/20  (owner)
+- **[P1] no textInputAction chain (3 password fields)** — change_password_screen.dart:350,388,449 — A11y. SYSTEMIC (BbInput).
+- **[P2] strength meter no liveRegion** — :431-445,578-647 — A11y — Weak→Strong not announced.
+- **[P2] missing autofillHints on all 3 password fields** — :350-484 — A11y. SYSTEMIC (BbInput no autofillHints + no AutofillGroup).
+- **[P2] withAlpha((0.1*255).toInt()) truncates not rounds** — :615 — Theming (memory withalpha-toint-vs-withvalues; line 293 same file does it right).
+- **[P2] visibility toggle 18px — verify BbInput trailing ink ≥48px** — :364,401,462 — A11y.
+- **[P3] hardcoded 4/6 radii strength meter** — :602,616 — Theming.
+- **[P3] maxWidth:680 raw literal** — :260 — Responsive.

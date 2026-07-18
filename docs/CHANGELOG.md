@@ -1,10 +1,73 @@
 # BookBed Changelog
 
-All version history from v4.6 to v7.44.
+All version history from v4.6 to v7.45.
 
-**Last Updated**: 2026-07-17 | **Version**: 7.44
+**Last Updated**: 2026-07-18 | **Version**: 7.45
 
 ---
+
+**Changelog 7.45** (2026-07-18) — CI was red two independent ways, both masked:
+
+### P1 fix(ci): regenerate functions lockfile so `npm ci` stops failing on linux (#958)
+Every PR — **including doc-only ones** — failed `Validate Firestore Rules` and
+`Test Cloud Functions` at the install step with
+`Missing: @emnapi/core@1.11.2 from lock file`.
+The lock nested `@emnapi/{core,runtime,wasi-threads}` under
+`@unrs/resolver-binding-wasm32-wasi`, an **optional platform dep that never
+installs on darwin** — so that subtree was recorded but never reconciled against
+a real install. Linux hoists those to top level, computes a different ideal tree
+than the lock describes, and refuses. Fixed by a full regen
+(`rm package-lock.json && npm install --package-lock-only`); `package.json`
+untouched, so no dependency version moved. All jobs green on the fix PR,
+including the two that had been failing.
+**The move that localized it:** #956 was doc-only and failed the same step. A
+CHANGELOG-only diff cannot break `npm ci` — that one observation ruled out every
+diff under review. **Darwin cannot reproduce this**: both
+`npm install --package-lock-only` and `--os=linux --cpu=x64` produce a zero-line
+diff against the broken lock, so they are not diagnostics here. Only CI could
+verify, and the PR was landed as a candidate rather than as an asserted fix.
+
+### P1 chore(widget): drop the two imports #953 left behind (#955)
+CI runs `flutter analyze --no-fatal-infos` — **warnings are still fatal**. #953
+moved the calendar's availability-error copy into `availability_error_l10n.dart`,
+removing the last `WidgetConstants` reference from `month_calendar_widget` and
+`year_calendar_widget`; the imports stayed. Main had been analyze-red since,
+**masked because the next PR (#954) was doc-only and the paths filter skipped the
+Flutter job entirely** — a green main run does not mean the job ran. Proof of
+causation: after this merged, `Run Tests` flipped FAILURE→SUCCESS on two open PRs
+with no other change.
+
+### test(rules): let the emulator suite find its own port (#957)
+Every file in `functions/test/firestore_rules/` pinned
+`host: "127.0.0.1", port: 8080` alongside the port already in `firebase.json`.
+When anything else holds 8080 the suite fails **227 cells** with
+`TypeError: Cannot read properties of undefined (reading 'cleanup')` —
+`initializeTestEnvironment` throws, `testEnv` stays undefined, every `afterAll`
+dies on it. It reads exactly like a catastrophic rules regression and is a setup
+failure. Dangerous signal for the security gate. Deleting the two lines lets the
+SDK fall back to `FIRESTORE_EMULATOR_HOST`, which `emulators:exec` already
+exports; the port now lives in one place. **28 lines deleted, nothing added.**
+Verified on a NON-default port (8099, since 8080 was occupied by an unrelated
+process): 16/16 suites, 245 passed, 6 skipped — where the old pins gave 14 suites
+red.
+
+### docs: the "3 red cells on main" note was fixed two PRs later (#956)
+`CLAUDE.md` (runda 22) and CHANGELOG 7.43 both still warned that
+`bookings_premium_kpi_count_test.dart` fails 3 cells on clean main and is "not
+yet diagnosed". It was repaired by **#945**, which landed after the note was
+written. Re-verified green before editing: the file alone 3/3, full suite
+1945/1945.
+
+### Suite state at `1a65b20f`
+Flutter **1945/1945** · functions jest **508/508** (29 suites) · Firestore rules
+**245/251** (6 pre-existing skips) · `flutter analyze` **0 errors, 0 warnings**.
+
+### Ops note
+The lockfile regen first died on `npm error nospc` — disk was at **127 MiB free,
+100% full**. Reclaimed ~4.7 GiB of pure caches (npm cache, Xcode DerivedData,
+Cursor/Chrome updater staging). **Simulators and `~/.gradle/caches` deliberately
+untouched** — two sims were booted by parallel sessions, and Gradle re-download
+is a real cost. Disk remains tight at ~1.8 GiB.
 
 **Changelog 7.44** (2026-07-17) — autonomous bug-hunt loop, 6 iterations:
 

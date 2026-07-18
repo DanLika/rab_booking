@@ -136,14 +136,14 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/core/widgets/owner_splash_screen.dart
 - [x] lib/features/auth/presentation/widgets/auth_logo_icon.dart
 - [x] lib/features/auth/presentation/widgets/glass_card.dart
-- [ ] lib/features/auth/presentation/widgets/gradient_auth_button.dart
-- [ ] lib/features/auth/presentation/widgets/legal_tabs_row.dart
-- [ ] lib/features/auth/presentation/widgets/premium_input_field.dart
-- [ ] lib/features/auth/presentation/widgets/profile_image_picker.dart
-- [ ] lib/features/auth/presentation/widgets/social_login_button.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_navigation_buttons.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_progress_bar.dart
-- [ ] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_step_container.dart
+- [x] lib/features/auth/presentation/widgets/gradient_auth_button.dart
+- [x] lib/features/auth/presentation/widgets/legal_tabs_row.dart
+- [x] lib/features/auth/presentation/widgets/premium_input_field.dart
+- [x] lib/features/auth/presentation/widgets/profile_image_picker.dart
+- [x] lib/features/auth/presentation/widgets/social_login_button.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_navigation_buttons.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_progress_bar.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_step_container.dart
 - [ ] lib/features/owner_dashboard/presentation/widgets/advanced_settings/email_verification_card.dart
 - [ ] lib/features/owner_dashboard/presentation/widgets/advanced_settings/tax_legal_disclaimer_card.dart
 - [ ] lib/features/owner_dashboard/presentation/widgets/booking_actions/base_booking_dialog.dart

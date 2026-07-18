@@ -1095,3 +1095,42 @@ Live call-site counts: BbButton 62, BbSectionHeader 34, BbStatusBadge 10, BbChip
 - **[P2] ime kaže glassmorphism, NEMA BackdropFilter (opaque 0.97 card)** — :6 — Anti-Pattern.
 - **[P2] raw literali 16/24/EdgeInsets (zero BB tokena)** — :27-50 — Theming (moot).
 - **VERDICT: dead leftover, NIJE flat-chrome violation. Delete.**
+
+---
+## COMPONENTS batch 11 — auth widgets + wizard widgets (2026-07-18)
+
+### gradient_auth_button — 10/20 — DEAD + gradient violation
+- **[P0] DEAD (0 callers) + LIVE LinearGradient u kodu (flat-chrome; buttons NISU dio auth glass izuzetka). Delete; BbButton = zamjena.** — gradient_auth_button.dart:11,46-53 — Anti-Pattern/Theming.
+
+### legal_tabs_row — 14/20 — LIVE
+- **[P1] BbChip md=40px root potvrđen za auth tabove (<44)** — bb_chip.dart:44 via legal_tabs_row:32-55 — A11y.
+- **[P1] aktivni tab onTap:null bez Semantics(selected:) — SR ne zna koji je tab aktivan** — A11y.
+- **[P2] pushReplacement+MaterialPageRoute zaobilazi go_router (web back-stack)** — legal_tabs_row.dart:61-64 — Anti-Pattern.
+- **[P2] Wrap spacing:8 raw** — :29-30 — Theming.
+
+### premium_input_field — 13/20 — DEAD (0 callers; tombstone komentari u bank_account:27,329)
+- **[P0] DEAD — BBInput docstring ga imenuje kao prethodnika. Delete.** — premium_input_field.dart — Anti-Pattern.
+- **[NOTE] ima autofillHints (BbInput nema!) — treći izvor za backport uz core/BBInput.**
+- **[P3] glow shadow = pre-flat era; dead ternary textCapitalization** — :57-59,76-79 — Theming/Anti-Pattern (moot).
+
+### profile_image_picker — COVERED in batch 3 (flat-chrome diagonal gradient :119-126,232-239 + edit btn no Semantics :221-265 — već u ledgeru).
+
+### social_login_button — 12/20 — LIVE
+- **[P1] Google brand violation: "G" ClipOval bez bijele podloge → nevidljiv/pogrešan na dark (#1E1E1E)** — social_login_button.dart:146-149 — A11y/Theming — CircleAvatar(backgroundColor:white).
+- **[P2] ink ripple NEVIDLJIV (AnimatedContainer ispod Material-transparent)** — :68-72 — Anti-Pattern.
+- **[P2] _isFocused bez vidljivog focus ringa (keyboard nav)** — :48-50 — A11y.
+- **[P2] Semantics bez excludeSemantics → double-announce** — :42-45 — A11y.
+- **[P2] nema isLoading param/liveRegion ugovora** — API — A11y.
+- **[P3] MediaQuery.width unutar LayoutBuilder (constraints.maxWidth već dostupan)** — :77 — Perf.
+
+### wizard_navigation_buttons — 14/20 — LIVE
+- **[P1] hardcoded EN default nextLabel='Next'** — wizard_navigation_buttons.dart:30 — l10n.
+- **[P2] control flow preko string-equality vs l10n stringova (isPublish) — krhko; dodaj isPublishStep bool [FROZEN-adjacent: samo param, NE publish wiring]** — :56,58 — Anti-Pattern.
+- **[P2] Skip btn bez semanticLabel/key** — :89-94 — A11y.
+- **[P3] SizedBox.shrink+Spacer pomjera CTA između koraka; redundant pageBackground deco + stale gradient komentar** — :82-83,64-67 — Responsive/Theming.
+
+### wizard_progress_bar — COVERED in batch 7 (step Semantics :186-209, Colors.white :166-205, raw TextStyle :217 — već u ledgeru).
+
+### wizard_step_container — 15/20 — LIVE
+- **[P2] step title bez Semantics(header:true)** — wizard_step_container.dart:45 — A11y.
+- **[P3] raw 800.0 maxWidth + 2-tier breakpoint (nema tablet) + MediaQuery.of umjesto sizeOf** — :26-34 — Theming/Responsive/Perf.

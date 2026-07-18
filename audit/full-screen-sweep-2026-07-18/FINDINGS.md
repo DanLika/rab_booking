@@ -485,3 +485,64 @@
 - **[P2] twin switch-card methods (copy-paste)** — payment:575-638, behavior:278-348 — Anti-Pattern.
 - **[P3] unused LayoutBuilder** — screen:524 — Perf.
 - **[P3] stale "diagonal gradient" docstring** — widget_settings_section.dart:9-13 — doc. SYSTEMIC doc-rot.
+
+---
+## Batch 8 — subscription + widget guest screens + 404 (2026-07-18) — SCREENS COMPLETE (48/48)
+
+### subscription_screen — 11/20  (owner)
+- **[P1] dead "Usporedi sve značajke" link (TextSpan, no recognizer)** — subscription_screen.dart:992 — A11y/Anti-Pattern.
+- **[P2] billing toggle no selected-state semantics** — :548-603 — A11y.
+- **[P2] _TogglePill tap target ~32px** — :556 — A11y.
+- **[P2] "Zadrži besplatno" no-op onPressed:(){} + 36px** — :952 — Anti-Pattern.
+- **[P2] stale breakpoint 720 vs 600** — :75 — Responsive. SYSTEMIC.
+- **[P2] _FeatureRow icon not ExcludeSemantics** — :884-889 — A11y.
+- **[P3] ~30 hardcoded HR strings + 4 hardcoded prices (no NumberFormat)** — many — Anti-Pattern.
+- **NOTE:** rd.heroGradient on _TrialHero is INTENTIONAL hero (not a flat-chrome regression).
+
+### booking_confirmation_screen — 12/20  (guest widget)
+- **[P1] copy button non-interactive (Material+SizedBox 28×28, no onTap/semantics)** — booking_confirmation_screen.dart:542-559 — A11y/Anti-Pattern — dead affordance on primary post-booking data.
+- **[P1] 28×28 copy affordance <44px** — :547-549 — Responsive.
+- **[P1] resend InkWell tap ~22px @320** — email_confirmation_card.dart:229-271 — Responsive.
+- **[P2] duplicate Semantics label icon+heading (read twice)** — confirmation_header.dart:224-251 — A11y.
+- **[P2] CalendarExportButton legacy SpacingTokens/BorderTokens** — calendar_export_button.dart:115,130 — Theming.
+- **[P2] Colors.black dark-bg hardcode ×3** — :295; booking_summary_card.dart:100; email_confirmation_card.dart:143 — Theming.
+- **[P2] Curves.elasticOut bounce on success mark** — confirmation_header.dart:229 — Anti-Pattern (ui-ux.md).
+- **[P2] computeLuminance() each build ×3 (should thread isDarkMode)** — Perf.
+
+### booking_details_screen — 13/20  (guest widget)
+- **[P1] ref.watch inside async _handleCancelBooking (StateError risk)** — booking_details_screen.dart:172 — Anti-Pattern.
+- **[P1] success #10B981 as TEXT = 2.54:1 fails AA** — booking_status_banner.dart:51-57; payment_info_card.dart:120 — A11y/Theming — use emerald600. SYSTEMIC widget palette.
+- **[P1] warning #F59E0B as TEXT = 2.15:1 fails AA** — booking_status_banner.dart:51-57 — A11y/Theming — use amber700. SYSTEMIC.
+- **[P2] textTertiary #999999 2.85:1 (help text)** — :341 — A11y. SYSTEMIC.
+- **[P2] status banner icon no merged Semantics** — booking_status_banner.dart:38 — A11y.
+- **[P2] cancelText Colors.black/white hardcoded** — :617-618 — Theming.
+- **[P2] flag emoji → letters on Windows Chrome** — :484,501-513 — A11y.
+- **[P2] Tooltip on disabled cancel = desktop-only** — :624-660 — A11y.
+- **[P3] CancellationPolicyCard parseOrThrow no try-catch (crash risk)** — cancellation_policy_card.dart:32 — Anti-Pattern.
+
+### booking_view_screen — 13/20  (guest widget)
+- **[P1] status banner color-only semantics** — booking_status_banner.dart:38 — A11y.
+- **[P1] header Row overflows @320 (no Flexible on title)** — booking_details_screen.dart:382-446 — Responsive.
+- **[P2] language IconButton no semanticsLabel (icon is Row)** — :415-445 — A11y.
+- **[P2] _buildStateMark icon no ExcludeSemantics** — booking_view_screen.dart:440 — A11y.
+- **[P2] Colors.black/white cancel text** — booking_details_screen.dart:617 — Theming.
+- **[P2] raw BoxShadow Color(0x1A141E32)** — booking_view_screen.dart:434 — Theming.
+- **[P3] dynamic _loadedBooking/_loadedWidgetSettings** — :74-75 — Anti-Pattern.
+- **[P3] _safeErrorToString duplicated in 2 files** — Anti-Pattern.
+- **[P3] hardcoded EN 'Navigation error:' to guests** — :220,265 — A11y.
+
+### subdomain_not_found_screen — 16/20  (guest widget)
+- **[P1] error icon disc 2.46:1 fails WCAG 1.4.11 (3:1 non-text)** — subdomain_not_found_screen.dart:64-73 — A11y — ExcludeSemantics or raise alpha. SYSTEMIC icon-disc pattern.
+- **[P2] h1 no Semantics(header:true)** — :78-81 — A11y.
+- **[P2] subdomain echo no maxLines/ellipsis (query-param bypasses slug cap)** — :105-111 — Responsive.
+- **[P3] Colors.black not named const** — :41 — Theming.
+- **[CLEAN] full BB* token discipline, l10n complete HR/DE/IT/EN, good test coverage.**
+
+### not_found_screen — 14/20  (shared 404)
+- **[P1] decorative icon no ExcludeSemantics** — not_found_screen.dart:22 — A11y.
+- **[P1] '404'/heading no header role** — :24-30 — A11y.
+- **[P2] Colors.grey[600] body text (~4.48:1)** — :44 — Theming/A11y.
+- **[P2] Colors.grey[300] icon (invisible light)** — :22 — Theming.
+- **[P2] raw AppBar not CommonAppBar** — :11-14 — Theming/Anti-Pattern.
+- **[P2] Theme.of.primaryColor deprecated** — :28-29 — Anti-Pattern.
+- **[P3] 5 hardcoded HR strings** — Anti-Pattern.

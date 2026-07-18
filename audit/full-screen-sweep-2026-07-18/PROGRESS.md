@@ -47,10 +47,10 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart
 - [x] lib/features/owner_dashboard/presentation/screens/widget_advanced_settings_screen.dart
 - [x] lib/features/owner_dashboard/presentation/screens/widget_settings_screen.dart
-- [ ] lib/features/subscription/screens/subscription_screen.dart
-- [ ] lib/features/widget/presentation/screens/booking_confirmation_screen.dart
-- [ ] lib/features/widget/presentation/screens/booking_details_screen.dart
-- [ ] lib/features/widget/presentation/screens/booking_view_screen.dart
+- [x] lib/features/subscription/screens/subscription_screen.dart
+- [x] lib/features/widget/presentation/screens/booking_confirmation_screen.dart
+- [x] lib/features/widget/presentation/screens/booking_details_screen.dart
+- [x] lib/features/widget/presentation/screens/booking_view_screen.dart
 - [x] lib/features/widget/presentation/screens/booking_widget_screen.dart
-- [ ] lib/features/widget/presentation/screens/subdomain_not_found_screen.dart
-- [ ] lib/shared/presentation/screens/not_found_screen.dart
+- [x] lib/features/widget/presentation/screens/subdomain_not_found_screen.dart
+- [x] lib/shared/presentation/screens/not_found_screen.dart

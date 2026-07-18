@@ -16,7 +16,7 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] F2.12 BbDialog: Dialog.semanticsLabel=title, Semantics(header) titula, opcioni bodyWidget slot — feat/f212-bbdialog-a11y @8c7f0dc5, suite 1950 GREEN (Semantics scopesRoute/namesRoute wrap jer raw Dialog nema semanticLabel; body sad default-'' + assert)
 ## F4 bugovi (UI-wiring)
 - [x] F4.1 owner_booking_detail _RoundIconButton InkWell wire + 44px — fix/f4a-booking-detail @3eedc7f3, suite 1950 GREEN (mail/call bili mrtvi: Container bez geste; sad Material+InkWell, 44px box oko 36px pilule, Semantics button, tertiary tint disabled)
-- [ ] F4.2 unit_form: tryParse area (crash) + amenities restore u _loadUnitData (wipe); upload no-op = GO-queue
+- [x] F4.2 unit_form — fix/f4b-unit-form @48abea94, suite 1949 GREEN (area tryParse ×2 + createUnit param double? — 1 caller, bez interfacea; amenities: UnitModel NIJE IMAO polje pa je edit save pisao [] — aditivno @Default([]) polje + restore u _loadUnitData; upload no-op = GO-queue)
 - [ ] F4.3 subscription: 'Usporedi' recognizer + 'Zadrži besplatno' wire-ili-ukloni
 - [ ] F4.4 booking_confirmation: copy dugme Clipboard wire + 44px; resend 44px
 - [ ] F4.5 logout_tile: BbDialog confirm prije onLogout

@@ -6,7 +6,7 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] F2.2 BbButton — feat/f22-bbbutton-tap-targets (wt /tmp/bb-f22-bbbutton-wt) — sm/asIcon hit-area 44 (vizual netaknut), spinner ExcludeSemantics, assert, static Matrix4; 8 testova; golden regen owner_about ×2 (0.64% layout, namjerno); suite FULL GREEN nakon regena
 - [x] F2.3 BbChip — feat/f23-bbchip-semantics — Semantics(button/selected/label+count), 44px hit-area (pill 32/40 netaknut), purpleGlow(context), focus/hover, badge fullAll; golden regen guides_faq ×4 namjeran; suite FULL GREEN; deferred: text-scale minHeight
 - [x] F2.4 BbIcon — feat/f24-bbicon-semantics — decorative-by-default ExcludeSemantics + semanticLabel opt-in, glyph cache, debug unknown-name print; suite FULL GREEN; deferred: fill/weight int→double
-- [ ] F2.5 BbSectionHeader: Semantics(header:true) + akcija button+44px (i core varijanta dok ne umre)
+- [x] F2.5 BbSectionHeader — feat/f25-bbsectionheader-a11y — header:true (34 sitea) + merged action button node; semantics-only, 0 vizuelno; suite FULL GREEN; deferred: akcija 44px hit-area (34 redova reshape = zaseban golden pass)
 - [ ] F2.6 BbCard: excludeSemantics param, container:true za neinteraktivne, static Matrix4
 - [ ] F2.7 BbCheckbox/BbRadio/BbSwitch: minWidth 44/48, excludeSemantics, radio inMutuallyExclusiveGroup+checked, switch keyboard toggle, subtitle u label
 - [ ] F2.8 BbSpinner: ExcludeSemantics default + opt-in semanticsLabel liveRegion

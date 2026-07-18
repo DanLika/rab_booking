@@ -199,11 +199,12 @@ sequential/repeating guards and the common-password blacklist untouched.
 +11/-1 per ARB (a JSON round-trip reformatted all 780 lines — reverted, patched
 surgically). core + l10n + auth suites 339/339.
 
-### Known: 3 red cells on main (pre-existing)
-`bookings_premium_kpi_count_test.dart` fails 3 cells on clean `origin/main`
-(mobile 2-KPI, tablet/desktop 4-KPI, narrow-width overflow). Reproduced against
-untouched main during #942 — **not introduced by this campaign**, and not yet
-diagnosed.
+### ~~Known: 3 red cells on main (pre-existing)~~ — CLOSED by #945
+`bookings_premium_kpi_count_test.dart` failed 3 cells on clean `origin/main`
+(mobile 2-KPI, tablet/desktop 4-KPI, narrow-width overflow), red since #924.
+**Repaired by #945 (`a2a43910`), which landed after this note was written.**
+Re-verified green 2026-07-18: the file alone is 3/3 and the full suite is
+1945/1945.
 
 ### P1 fix(admin): Users list stranded owners behind an active filter (#939)
 Filtering/search is **client-side** over the rows loaded so far (20/page), while

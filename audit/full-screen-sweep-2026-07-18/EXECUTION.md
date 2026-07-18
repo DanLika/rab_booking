@@ -24,8 +24,8 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [ ] F4.7 offline_indicator: liveRegion + side-efekti van build + stream cancel (connectivity_provider ref.onDispose)
 - [ ] F4.8 _RezAINudge no-op dugmad: ukloni do featurea
 - [ ] F4.9 email_verification: timer cancel na paused + RepaintBoundary
-- [ ] F4.10 tax_legal ExpansionTile controller (ostaje otvoren poslije disable)
-- [ ] F4.11 bookings_filters: Clear → pop + clear-date IconButton 0×0 fix
+- [x] F4.10 tax_legal ExpansionTile — fix/f4c-dialogs @9735651f, suite 1947 GREEN (StatefulWidget + ExpansibleController iz didUpdateWidget; header i dalje ručno expandira = nema lock-outa; POUKA: Switch živi u children pa nestaje na collapse — test assertuje kroz header re-expand)
+- [x] F4.11 bookings_filters — isti branch @9735651f (Clear sada pop-a kao Apply; clear-date IconButton BoxConstraints() → minWidth/minHeight 48)
 - [x] F4.12 _toBbStatus imported — isti branch @3eedc7f3 (BookingStatus enum NEMA imported → uzima BookingModel i vraća imported za isExternalBooking, cancelled i dalje pobjeđuje; 5 testova matrica)
 - [ ] F4.13 force_update iOS store URL + social_login Google G bijela podloga + ripple fix
 - [ ] F4.14 skeleton_loader: shrinkWrap/physics na 2 unbounded ListView-a

@@ -23,35 +23,54 @@ import {checkRateLimit} from "./utils/rateLimit";
  * and inject our SEO into it, so the boot logic is always current.
  */
 
-const WIDGET_HOST = "view.bookbed.io";
-const SHELL_URL = `https://${WIDGET_HOST}/index.html`;
+const PROD_PROJECT = "rab-booking-248fc";
+export const PROD_WIDGET_HOST = "view.bookbed.io";
+
+// Longest first: a staging subdomain must not be parsed as a prod one.
+const WIDGET_HOST_SUFFIXES = [
+  "staging.view.bookbed.io",
+  PROD_WIDGET_HOST,
+];
+
 const MARKETING_URL = "https://bookbed.io";
 const SHELL_TTL_MS = 5 * 60 * 1000;
 
-// ponytail: last-good-wins shell cache. Refresh attempt every TTL; a
-// failed refresh keeps serving the last good shell so a transient fetch
-// blip never breaks the page. Upgrade path: bake the shell into the
-// deploy if runtime fetch ever proves flaky.
-let shellCache: {html: string; at: number} | null = null;
+/**
+ * True on the production Firebase project only.
+ * @return {boolean} whether this instance runs in production.
+ */
+function isProd(): boolean {
+  const p = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || "";
+  return p === PROD_PROJECT;
+}
+
+// ponytail: last-good-wins shell cache, keyed by host so each env serves
+// its own build. Refresh attempt every TTL; a failed refresh keeps
+// serving the last good shell so a transient fetch blip never breaks the
+// page. Upgrade path: bake the shell into the deploy if runtime fetch
+// ever proves flaky.
+const shellCache = new Map<string, {html: string; at: number}>();
 
 /**
- * Fetch the deployed Flutter shell, cached with last-good fallback.
+ * Fetch a deployed Flutter shell, cached with last-good fallback.
+ * @param {string} host host whose index.html to fetch.
  * @return {Promise<string|null>} shell HTML, or null if never fetched.
  */
-async function getShell(): Promise<string | null> {
+async function getShell(host: string): Promise<string | null> {
   const now = Date.now();
-  if (shellCache && now - shellCache.at < SHELL_TTL_MS) {
-    return shellCache.html;
-  }
+  const hit = shellCache.get(host);
+  if (hit && now - hit.at < SHELL_TTL_MS) return hit.html;
   try {
-    const res = await fetch(SHELL_URL, {redirect: "follow"});
+    const res = await fetch(`https://${host}/index.html`, {
+      redirect: "follow",
+    });
     if (!res.ok) throw new Error(`shell ${res.status}`);
     const html = await res.text();
-    shellCache = {html, at: now};
+    shellCache.set(host, {html, at: now});
     return html;
   } catch (e) {
-    logError("[SSR] shell fetch failed", e);
-    return shellCache?.html ?? null;
+    logError("[SSR] shell fetch failed", e, {host});
+    return hit?.html ?? null;
   }
 }
 
@@ -96,17 +115,55 @@ function truncate(s: string, n: number): string {
 }
 
 /**
- * Extract the client subdomain from a Host header.
+ * Split a Host header into its client subdomain and widget host.
+ *
+ * Dev has no wildcard: the dev widget site is a plain Firebase Hosting
+ * host (bookbed-widget-dev.web.app), so `sub.dev-host` can never
+ * resolve. Dev verification therefore goes through the non-prod
+ * `_ssrSubdomain` override below, not through this function.
+ *
  * @param {string} host raw Host header.
- * @return {string|null} subdomain, or null when not a client subdomain.
+ * @return {{sub: string, hostSuffix: string}|null} parts, or null.
  */
-function subdomainFromHost(host: string): string | null {
+export function splitWidgetHost(
+  host: string
+): {sub: string; hostSuffix: string} | null {
   const h = (host || "").toLowerCase().split(":")[0];
-  const suffix = `.${WIDGET_HOST}`;
-  if (!h.endsWith(suffix)) return null;
-  const sub = h.slice(0, -suffix.length);
-  if (!sub || sub.includes(".")) return null;
-  return sub;
+  for (const suffix of WIDGET_HOST_SUFFIXES) {
+    const dotted = `.${suffix}`;
+    if (!h.endsWith(dotted)) continue;
+    const sub = h.slice(0, -dotted.length);
+    if (!sub || sub.includes(".")) return null;
+    return {sub, hostSuffix: suffix};
+  }
+  return null;
+}
+
+/** A property subdomain: same shape the app enforces (3-30 chars). */
+const SUBDOMAIN_RE = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
+
+/**
+ * Resolve which property to render, allowing a non-prod override so the
+ * SSR can be exercised on dev, where no wildcard subdomain exists.
+ * The override is refused on the production project.
+ * @param {string} host raw Host header.
+ * @param {unknown} override raw `_ssrSubdomain` query value.
+ * @return {{sub: string, hostSuffix: string}|null} parts, or null.
+ */
+export function resolveSubdomain(
+  host: string,
+  override?: unknown
+): {sub: string; hostSuffix: string} | null {
+  if (!isProd() && typeof override === "string" && override) {
+    const sub = override.toLowerCase();
+    if (SUBDOMAIN_RE.test(sub)) {
+      // Render exactly what prod would emit, so a dev check is
+      // meaningful: canonical/OG use the prod host.
+      return {sub, hostSuffix: PROD_WIDGET_HOST};
+    }
+    return null;
+  }
+  return splitWidgetHost(host);
 }
 
 interface Meta {
@@ -332,10 +389,11 @@ async function findUnit(
 /**
  * Public base URL for a client subdomain.
  * @param {string} sub client subdomain.
+ * @param {string} hostSuffix widget host for this environment.
  * @return {string} origin without trailing slash.
  */
-function propBaseUrl(sub: string): string {
-  return `https://${sub}.${WIDGET_HOST}`;
+function propBaseUrl(sub: string, hostSuffix: string): string {
+  return `https://${sub}.${hostSuffix}`;
 }
 
 /**
@@ -343,14 +401,16 @@ function propBaseUrl(sub: string): string {
  * @param {string} sub client subdomain.
  * @param {PropertyDoc} p the property.
  * @param {UnitDoc[]} units its bookable units.
+ * @param {string} hostSuffix widget host for this environment.
  * @return {Meta} per-page SEO data.
  */
 export function buildPropertyMeta(
   sub: string,
   p: PropertyDoc,
-  units: UnitDoc[]
+  units: UnitDoc[],
+  hostSuffix: string = PROD_WIDGET_HOST
 ): Meta {
-  const url = `${propBaseUrl(sub)}/`;
+  const url = `${propBaseUrl(sub, hostSuffix)}/`;
   const loc = [p.city, p.country].filter(Boolean).join(", ");
   const title = `${p.name}${loc ? ` — ${loc}` : ""} | BookBed`;
   const fallbackImg = `${MARKETING_URL}/og-image.png`;
@@ -363,7 +423,8 @@ export function buildPropertyMeta(
         ` — ${u.basePrice} ${u.currency}/night` :
         "";
       const cap = u.maxGuests ? `, up to ${u.maxGuests} guests` : "";
-      const href = `${propBaseUrl(sub)}/${escapeHtml(u.slug as string)}`;
+      const slug = escapeHtml(u.slug as string);
+      const href = `${propBaseUrl(sub, hostSuffix)}/${slug}`;
       const label = escapeHtml(u.name);
       const extra = escapeHtml(price + cap);
       return `<li><a href="${href}">${label}</a>${extra}</li>`;
@@ -430,14 +491,16 @@ export function buildPropertyMeta(
  * @param {string} sub client subdomain.
  * @param {PropertyDoc} p the parent property.
  * @param {UnitDoc} u the unit.
+ * @param {string} hostSuffix widget host for this environment.
  * @return {Meta} per-page SEO data.
  */
 export function buildUnitMeta(
   sub: string,
   p: PropertyDoc,
-  u: UnitDoc
+  u: UnitDoc,
+  hostSuffix: string = PROD_WIDGET_HOST
 ): Meta {
-  const url = `${propBaseUrl(sub)}/${u.slug}`;
+  const url = `${propBaseUrl(sub, hostSuffix)}/${u.slug}`;
   const title = `${u.name} — ${p.name} | BookBed`;
   const desc = u.description || p.description;
   const fallbackImg = `${MARKETING_URL}/og-image.png`;
@@ -455,7 +518,7 @@ export function buildUnitMeta(
     .filter(Boolean)
     .join(" · ");
 
-  const home = `${propBaseUrl(sub)}/`;
+  const home = `${propBaseUrl(sub, hostSuffix)}/`;
   const factLine = facts ? `<p>${escapeHtml(facts)}</p>` : "";
   const priceLine = u.basePrice ?
     `<p><strong>From ${u.basePrice} ${u.currency} / night</strong></p>` :
@@ -563,12 +626,12 @@ export const ssrWidget = onRequest(
     }
 
     const host = (request.headers.host as string) || "";
-    const sub = subdomainFromHost(host);
-    const shell = await getShell();
+    const parts = resolveSubdomain(host, request.query._ssrSubdomain);
+    const shell = await getShell(host.split(":")[0]);
 
     // No subdomain (bare widget host or dev host) or no shell: fall
     // through to the plain Flutter app.
-    if (!sub || !shell) {
+    if (!parts || !shell) {
       if (shell) {
         response.set("Cache-Control", "public, max-age=60");
         response.status(200).send(shell);
@@ -579,6 +642,7 @@ export const ssrWidget = onRequest(
     }
 
     try {
+      const {sub, hostSuffix} = parts;
       const prop = await findProperty(sub);
       if (!prop || !prop.isActive) {
         response.set("Cache-Control", "public, max-age=120");
@@ -586,12 +650,12 @@ export const ssrWidget = onRequest(
         return;
       }
 
-      const parts = request.path.split("/").filter(Boolean);
-      const rawSlug = decodeURIComponent(parts[0] || "");
+      const segs = request.path.split("/").filter(Boolean);
+      const rawSlug = decodeURIComponent(segs[0] || "");
       let meta: Meta;
       if (!rawSlug) {
         const units = await listUnits(prop.id);
-        meta = buildPropertyMeta(sub, prop, units);
+        meta = buildPropertyMeta(sub, prop, units, hostSuffix);
       } else {
         const unit = await findUnit(prop.id, rawSlug);
         if (!unit) {
@@ -600,7 +664,7 @@ export const ssrWidget = onRequest(
           response.status(404).send(shell);
           return;
         }
-        meta = buildUnitMeta(sub, prop, unit);
+        meta = buildUnitMeta(sub, prop, unit, hostSuffix);
       }
 
       logInfo("[SSR] rendered", {sub, slug: rawSlug || "(root)"});
@@ -611,7 +675,7 @@ export const ssrWidget = onRequest(
       );
       response.status(200).send(injectSeo(shell, meta));
     } catch (e) {
-      logError("[SSR] render failed", e, {sub});
+      logError("[SSR] render failed", e, {sub: parts.sub});
       response.set("Cache-Control", "no-store");
       response.status(200).send(shell);
     }
@@ -640,7 +704,7 @@ export const ssrSitemap = onRequest(
       for (const doc of snap.docs) {
         const p = mapProperty(doc.id, doc.data());
         if (!p.subdomain) continue;
-        const base = propBaseUrl(p.subdomain);
+        const base = propBaseUrl(p.subdomain, PROD_WIDGET_HOST);
         const lastmod = tsToIso(doc.data().updated_at);
         urls.push({loc: `${base}/`, lastmod});
         const units = await listUnits(p.id);

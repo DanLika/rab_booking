@@ -3,6 +3,9 @@ import {
   injectSeo,
   buildPropertyMeta,
   buildUnitMeta,
+  splitWidgetHost,
+  resolveSubdomain,
+  PROD_WIDGET_HOST,
 } from "../src/ssr";
 
 const SHELL = [
@@ -172,5 +175,67 @@ describe("buildUnitMeta JSON-LD", () => {
   it("emits a BreadcrumbList property -> unit", () => {
     expect(JSON.stringify(m.jsonLd)).toContain("\"@type\":\"BreadcrumbList\"");
     expect(m.canonical).toBe("https://jasko-rab.view.bookbed.io/apartman-6");
+  });
+});
+
+describe("splitWidgetHost", () => {
+  it("parses a prod client subdomain", () => {
+    expect(splitWidgetHost("jasko-rab.view.bookbed.io")).toEqual({
+      sub: "jasko-rab",
+      hostSuffix: "view.bookbed.io",
+    });
+  });
+
+  it("parses staging without mistaking it for prod", () => {
+    expect(splitWidgetHost("jasko-rab.staging.view.bookbed.io")).toEqual({
+      sub: "jasko-rab",
+      hostSuffix: "staging.view.bookbed.io",
+    });
+  });
+
+  it("rejects the bare widget host and unrelated hosts", () => {
+    expect(splitWidgetHost("view.bookbed.io")).toBeNull();
+    expect(splitWidgetHost("bookbed-widget-dev.web.app")).toBeNull();
+    expect(splitWidgetHost("")).toBeNull();
+  });
+
+  it("ignores a port and is case-insensitive", () => {
+    expect(splitWidgetHost("Jasko-Rab.View.BookBed.io:443")?.sub).toBe(
+      "jasko-rab"
+    );
+  });
+});
+
+describe("resolveSubdomain override (dev escape hatch)", () => {
+  const prevProject = process.env.GCLOUD_PROJECT;
+  afterEach(() => {
+    process.env.GCLOUD_PROJECT = prevProject;
+  });
+
+  it("honours _ssrSubdomain off prod and renders prod URLs", () => {
+    process.env.GCLOUD_PROJECT = "bookbed-dev";
+    expect(
+      resolveSubdomain("bookbed-widget-dev.web.app", "jasko-rab")
+    ).toEqual({sub: "jasko-rab", hostSuffix: PROD_WIDGET_HOST});
+  });
+
+  it("REFUSES the override on the production project", () => {
+    process.env.GCLOUD_PROJECT = "rab-booking-248fc";
+    expect(
+      resolveSubdomain("bookbed-widget-dev.web.app", "jasko-rab")
+    ).toBeNull();
+  });
+
+  it("rejects a malformed override slug", () => {
+    process.env.GCLOUD_PROJECT = "bookbed-dev";
+    expect(resolveSubdomain("x.web.app", "../evil")).toBeNull();
+    expect(resolveSubdomain("x.web.app", "a")).toBeNull();
+  });
+
+  it("still parses the real host when no override is given", () => {
+    process.env.GCLOUD_PROJECT = "bookbed-dev";
+    expect(resolveSubdomain("jasko-rab.view.bookbed.io")?.sub).toBe(
+      "jasko-rab"
+    );
   });
 });

@@ -107,6 +107,36 @@ ideal card format; a proper 1200×630 branded asset is a design task and the TOD
 in `ssr.ts` records it. Pointing at something real beats pointing at an HTML
 blob, and fabricating the asset was not an option.
 
+### P1 fix(seo): unit listing silently returned nothing (missing composite index)
+Found by deploying to dev and probing the live function, not by reading code.
+
+`listUnits()` ran `.where("is_available","==",true).orderBy("sort_order")`, which
+needs a composite index that does not exist. The query threw
+`FAILED_PRECONDITION` and `.catch(() => null)` swallowed it **with no log**, so
+it degraded to an empty list. Pages still returned 200 with valid HTML while
+every property page lost its "Accommodation" internal links and the sitemap
+contained **zero unit URLs** — unit pages, the entire point of this work, would
+never have been discoverable. Dev has a real unit (`apartment-test-a1`,
+`is_available` true, `sort_order` 0) and the SSR listed none.
+
+Fixed by removing the index dependency rather than adding an index: one
+unfiltered read, filter and sort in memory. That also removes two missing-field
+traps — `where(is_available)` and `orderBy(sort_order)` both silently drop docs
+lacking the field, and the Dart model treats a missing `is_available` as
+available. The catch now logs.
+
+After the fix, dev sitemap 4 → 5 URLs and the property page emits the unit link.
+
+### P2 fix(seo): the SSR could fetch its own URL and hang
+`getShell()` used the request host — correct behind a hosting rewrite, wrong on
+a direct function URL, where it fetched `https://<its-own-run.app>/index.html`,
+re-entered itself and hung until timeout (`HTTP 000` after 25s, empty body).
+Production is not exposed (behind rewrites the host is always a widget host),
+but it burned a full function timeout per direct hit and blocked the very dev
+verification the `_ssrSubdomain` override exists to enable. `shellHostFor()` now
+returns the request host only when it is a known widget host, else the
+environment's widget host.
+
 ### Also
 - `Organization` JSON-LD added to the shared `web/index.html` (brand-level).
 - `robots.txt` points at the new widget sitemap.

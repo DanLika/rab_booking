@@ -141,9 +141,23 @@ environment's widget host.
 - `Organization` JSON-LD added to the shared `web/index.html` (brand-level).
 - `robots.txt` points at the new widget sitemap.
 
-**NOT DEPLOYED.** Needs `firebase deploy --only functions,hosting:widget`
-(+ `hosting:owner` for the noindex headers). Dev first per standing rule.
-Functions suite **527 passing**, eslint clean, tsc clean.
+**DEPLOYED TO DEV ONLY** (`bookbed-dev`, 2026-07-18) — `ssrWidget` + `ssrSitemap`.
+Verified live against real dev data: property page (`LodgingBusiness` +
+`PostalAddress`), unit page (`Product` + `Offer` 120 EUR + `BreadcrumbList`),
+sitemap 5 URLs including the unit, **404** on an unknown slug, **200** on the
+reserved `/calendar`, and `flutter_bootstrap.js` still present so the app boots.
+
+**PROD NOT DEPLOYED** — needs operator GO for
+`firebase deploy --only functions,hosting:widget` (+ `hosting:owner` for the
+noindex headers). Note the CF deploy alone changes nothing user-visible; the
+**hosting** deploy is the live one, since it rewires guest routing.
+
+Deploy gotchas hit (all now in memory): gitignored `functions/.env*` are absent
+from a fresh worktree; a branch cut before `1a65b20f` fails Cloud Build `npm ci`;
+and the `allUsers` invoker auto-grant did not fire, so both functions 403'd until
+granted via `gcloud run services add-iam-policy-binding`.
+
+Functions suite **530 passing**, eslint clean, tsc clean.
 
 ---
 

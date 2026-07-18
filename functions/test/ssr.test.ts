@@ -7,6 +7,7 @@ import {
   resolveSubdomain,
   PROD_WIDGET_HOST,
   isReservedPath,
+  shellHostFor,
 } from "../src/ssr";
 
 const SHELL = [
@@ -251,5 +252,33 @@ describe("isReservedPath", () => {
   it("leaves real unit slugs alone", () => {
     expect(isReservedPath("apartman-6")).toBe(false);
     expect(isReservedPath("villa-marija")).toBe(false);
+  });
+});
+
+describe("shellHostFor", () => {
+  const prev = process.env.GCLOUD_PROJECT;
+  afterEach(() => {
+    process.env.GCLOUD_PROJECT = prev;
+  });
+
+  it("uses the request host behind a hosting rewrite", () => {
+    expect(shellHostFor("jasko-rab.view.bookbed.io")).toBe(
+      "jasko-rab.view.bookbed.io"
+    );
+    expect(shellHostFor("view.bookbed.io")).toBe("view.bookbed.io");
+  });
+
+  it("never returns a direct function URL (would self-fetch)", () => {
+    process.env.GCLOUD_PROJECT = "bookbed-dev";
+    const run = "ssrwidget-whc46z5xxq-uc.a.run.app";
+    expect(shellHostFor(run)).not.toBe(run);
+    expect(shellHostFor(run)).toBe("bookbed-widget-dev.web.app");
+  });
+
+  it("falls back to the prod widget host in production", () => {
+    process.env.GCLOUD_PROJECT = "rab-booking-248fc";
+    expect(shellHostFor("ssrwidget-x-uc.a.run.app")).toBe(
+      "view.bookbed.io"
+    );
   });
 });

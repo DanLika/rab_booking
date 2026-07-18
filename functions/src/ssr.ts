@@ -32,6 +32,7 @@ const WIDGET_HOST_SUFFIXES = [
   PROD_WIDGET_HOST,
 ];
 
+const DEV_WIDGET_HOST = "bookbed-widget-dev.web.app";
 const MARKETING_URL = "https://bookbed.io";
 
 // A real, deployed asset. bookbed.io/og-image.png 404s and
@@ -163,6 +164,26 @@ const RESERVED_PATHS = new Set(["calendar", "view", "embed"]);
  */
 export function isReservedPath(seg: string): boolean {
   return RESERVED_PATHS.has(seg);
+}
+
+/**
+ * Which host to fetch the Flutter shell from.
+ *
+ * Behind a hosting rewrite the request host IS the shell host, so use
+ * it. On a direct function URL (*.run.app) it is NOT: fetching that
+ * host would re-enter this very function and hang until the timeout,
+ * so fall back to the environment's real widget host. That path is how
+ * the SSR gets verified on dev.
+ *
+ * @param {string} requestHost raw Host header.
+ * @return {string} host to fetch index.html from.
+ */
+export function shellHostFor(requestHost: string): string {
+  const h = (requestHost || "").toLowerCase().split(":")[0];
+  const known = [...WIDGET_HOST_SUFFIXES, DEV_WIDGET_HOST];
+  if (known.includes(h)) return h;
+  if (splitWidgetHost(h)) return h;
+  return isProd() ? PROD_WIDGET_HOST : DEV_WIDGET_HOST;
 }
 
 /**
@@ -650,7 +671,7 @@ export const ssrWidget = onRequest(
 
     const host = (request.headers.host as string) || "";
     const parts = resolveSubdomain(host, request.query._ssrSubdomain);
-    const shell = await getShell(host.split(":")[0]);
+    const shell = await getShell(shellHostFor(host));
 
     // No subdomain (bare widget host or dev host) or no shell: fall
     // through to the plain Flutter app.

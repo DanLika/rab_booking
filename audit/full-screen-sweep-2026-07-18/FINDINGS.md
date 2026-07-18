@@ -176,3 +176,66 @@
 - **[P2] const TextStyle(color:Colors.white) ×2** — :277-281,517-521 — Theming.
 - **[P3] MAIN MENU letterSpacing:1.2 literal** — :455-460 — Theming.
 - **[P3] _DrawerItem height exactly 44px** — :637-638 — Responsive.
+
+---
+## Batch 3 — admin detail/list + auth (2026-07-18)
+
+### user_detail_screen — 12/20  (admin)
+- **[P1] BbAdminDarkTokens.textTertiary fails AA** — bb_redesign_tokens.dart:348 — Theming/A11y — 0x66FFFFFF on panelBg #2A2342 ≈3.95:1; #950 fixed owner surface, NOT admin. SYSTEMIC (any screen using palette.textTertiary).
+- **[P2] copy button ~14px tap target** — user_detail_screen.dart:591-613 — A11y.
+- **[P2] stale breakpoint _mobileBreakpoint=900** — :17,112 — Responsive.
+- **[P2] _isLoading=false without setState/mounted in success paths** — :316,354,383,412 — Anti-Pattern.
+- **[P2] 9 raw 16/24 spacing literals** — :134-199 — Theming.
+- **[P2] AppColors.info/warning/success no dark-lift** — :658,671,744-748 — Theming.
+- **[P3] sub-card providers no skeleton** — :632-675 — Perf.
+- **[P3] date raw interpolation no zero-pad** — :534 — Anti-Pattern.
+- **[P3] _ErrorState raw err.toString (has _sanitizeError)** — :217 — Anti-Pattern.
+
+### users_list_screen — 14/20  (admin)
+- **[P2] mobile card no semanticLabel** — users_list_screen.dart:666-668 — A11y.
+- **[P2] SelectableText in DataCell blocks row onSelectChanged** — :826-843 — A11y/Anti-Pattern — name/email cell taps dead.
+- **[P2] _pickDateRange hardcodes ThemeData.light** — :252-256 — Theming — light picker in dark console.
+- **[P2] _filterAndSortOwners O(N) sort+filter every keystroke in build()** — :169-226,490 — Perf.
+- **[P3] _AccountTypeBadge raw TextStyle/off-grid** — :1102-1109 — Theming.
+- **[P3] _PageButton BorderRadius.circular(8) off-token** — :1051,1059 — Theming.
+- **[P3] _formatDate locale-unaware, duplicated** — :723-726,902-905 — A11y.
+
+### cookies_policy_screen — 16/20  (auth/legal, static)
+- **[P1] FAB missing semanticLabel** — cookies_policy_screen.dart:156-164 — A11y.
+- **[P2] ToC InkWell items no semantic role** — :431-456,492-507 — A11y.
+- **[P2] BbSectionHeader emits no header semantics** — bb_section_header.dart:47-51 — A11y (affects all legal screens).
+- **[P2] hardcoded eyebrow 'PRAVNO · KOLAČIĆI'** — :211,261 — A11y/Anti-Pattern.
+- **[P3] Colors.white FAB icon** — :161 — Theming.
+- **[P3] fontSize:13 ×2 sidebar** — :501,529 — Theming.
+- **[P3] DateTime.now() in build (also wrong 'last updated')** — :95-97 — Perf.
+- **[P3] textTertiaryLight #718096 3.56:1 on page bg** — :368,522 — A11y.
+
+### email_verification_screen — 12/20  (auth)
+- **[P2] unsandboxed BackdropFilter (no RepaintBoundary), re-composites each 1s tick** — email_verification_screen.dart:507-521 — Perf.
+- **[P2] polling timer not cancelled on app pause** — :56-58,93-99 — Perf — 3s Auth RPC fires while backgrounded.
+- **[P2] raw exception string to user** — :200 — Anti-Pattern.
+- **[P2] AndroidKeyboardDismissFix mixin absent (screen has input dialogs)** — :42 — Anti-Pattern (keyboard-fix.md class).
+- **[P3] mail disc + email chip no Semantics** — :549-564,586-601 — A11y.
+- **[P3] cooldown countdown not liveRegion** — :656-665 — A11y.
+- **[P3] BorderRadius.circular(18/20) off-token** — :555,591 — Theming.
+- **[P3] no desktop-wide tier (campaign-level, all auth screens)** — :462,471-474 — Responsive.
+
+### enhanced_login_screen — 11/20  (auth, LOWEST batch 3)
+- **[P1] password toggle tap target 32×32 (<44)** — enhanced_login_screen.dart:613-614 — A11y.
+- **[P1] no textInputAction chain (email→next→password→done→submit)** — :571-585,593-626 — A11y — check BbInput exposes param.
+- **[P1] footer InkWell links no Semantics + tiny target** — :864-887 — A11y.
+- **[P2] 4 raw TextStyle bypass BBType** — :797-801,819-824,913-917 — Theming.
+- **[P2] pitch panel padding fromLTRB(80,64,80,64) collapses 1200-1400** — :786 — Responsive.
+- **[P2] _PitchStat hero-metrics anti-pattern + hardcoded '45+'/'12k'/'99.9%'** — :840-844 — Anti-Pattern.
+- **[P2] BackdropFilter no RepaintBoundary** — :475 — Perf (glassmorphism is documented intentional hero exception).
+- **[P3] isCompactMobile uses stale Breakpoints.desktop=1024** — :348 + breakpoints.dart:32 — Responsive. SYSTEMIC.
+
+### enhanced_register_screen — 12/20  (auth)
+- **[P1] password field error EN-only (wrong validator overload)** — enhanced_register_screen.dart:564 — Anti-Pattern/A11y — use minimumLengthError + l10n.passwordErrorText (class #943).
+- **[P1] both legal checkboxes pass identical l10n.authAcceptTerms prefix** — :624,639 — Anti-Pattern — likely copy-paste; SR reads both identically.
+- **[P2] checkbox tap target 22×22 + shrinkWrap, label not tappable** — :709-712,720 — A11y.
+- **[P2] ProfileImagePicker DIAGONAL GRADIENT violates flat-chrome rule + raw colorScheme** — profile_image_picker.dart:119-126,232-239 — Theming — retired 2026-06-16 (flat-chrome-decision). FLAG.
+- **[P2] ProfileImagePicker edit button no Semantics/tooltip** — :221-265 — A11y.
+- **[P2] hardcoded EN loader 'Creating your account...'** — :363 — Theming/A11y.
+- **[P3] RichText legal link not keyboard/switch focusable** — :676-695 — A11y.
+- **[P3] _RegisterPitchPanel hardcoded HR copy** — :755-815 — Anti-Pattern.

@@ -13,12 +13,12 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/features/admin/presentation/screens/admin_dashboard_screen.dart
 - [x] lib/features/admin/presentation/screens/admin_login_screen.dart
 - [x] lib/features/admin/presentation/screens/admin_shell_screen.dart
-- [ ] lib/features/admin/presentation/screens/user_detail_screen.dart
-- [ ] lib/features/admin/presentation/screens/users_list_screen.dart
-- [ ] lib/features/auth/presentation/screens/cookies_policy_screen.dart
-- [ ] lib/features/auth/presentation/screens/email_verification_screen.dart
-- [ ] lib/features/auth/presentation/screens/enhanced_login_screen.dart
-- [ ] lib/features/auth/presentation/screens/enhanced_register_screen.dart
+- [x] lib/features/admin/presentation/screens/user_detail_screen.dart
+- [x] lib/features/admin/presentation/screens/users_list_screen.dart
+- [x] lib/features/auth/presentation/screens/cookies_policy_screen.dart
+- [x] lib/features/auth/presentation/screens/email_verification_screen.dart
+- [x] lib/features/auth/presentation/screens/enhanced_login_screen.dart
+- [x] lib/features/auth/presentation/screens/enhanced_register_screen.dart
 - [ ] lib/features/auth/presentation/screens/forgot_password_screen.dart
 - [ ] lib/features/auth/presentation/screens/privacy_policy_screen.dart
 - [ ] lib/features/auth/presentation/screens/terms_conditions_screen.dart

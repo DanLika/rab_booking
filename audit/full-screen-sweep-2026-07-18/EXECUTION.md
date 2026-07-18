@@ -13,7 +13,7 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] F2.9 CommonAppBar — feat/f29-commonappbar-tooltip @61761015 — leadingTooltip param (default 'Menu' backward-compat, migracija u F5/F6) + sizeOf; suite FULL GREEN; deferred: title nullable (širi refactor)
 - [x] F2.10 PremiumListTile — feat/f210-premium-list-tile @78287d33 — minTileHeight:48, chevron samo uz onTap, ListTile.enabled; goldeni netaknuti; suite FULL GREEN
 - [x] F2.11 loaderi — feat/f211-loader-a11y — UniversalLoader merged liveRegion node, GlobalNavigationOverlay ExcludeSemantics barijera + const, PremiumLoading merged node + reduced-motion; suite FULL GREEN. POUKA: grep -c u && lancu = exit 1 na nuli (presjekao commit)
-- [ ] F2.12 BbDialog: Dialog.semanticsLabel=title, Semantics(header) titula, opcioni bodyWidget slot
+- [x] F2.12 BbDialog: Dialog.semanticsLabel=title, Semantics(header) titula, opcioni bodyWidget slot — feat/f212-bbdialog-a11y @8c7f0dc5, suite 1950 GREEN (Semantics scopesRoute/namesRoute wrap jer raw Dialog nema semanticLabel; body sad default-'' + assert)
 ## F4 bugovi (UI-wiring)
 - [ ] F4.1 owner_booking_detail:682 _RoundIconButton InkWell wire + 44px (mrtva mail/call)
 - [ ] F4.2 unit_form: tryParse area (crash) + amenities restore u _loadUnitData (wipe); upload no-op = GO-queue

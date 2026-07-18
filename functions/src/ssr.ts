@@ -33,6 +33,12 @@ const WIDGET_HOST_SUFFIXES = [
 ];
 
 const MARKETING_URL = "https://bookbed.io";
+
+// A real, deployed asset. bookbed.io/og-image.png 404s and
+// app.bookbed.io/og-image.png returns the HTML shell, so anything
+// pointing there yields a broken social card. TODO: swap in a proper
+// 1200x630 branded card when design supplies one.
+const FALLBACK_IMAGE = "https://app.bookbed.io/icons/Icon-512.png";
 const SHELL_TTL_MS = 5 * 60 * 1000;
 
 /**
@@ -430,7 +436,7 @@ export function buildPropertyMeta(
   const url = `${propBaseUrl(sub, hostSuffix)}/`;
   const loc = [p.city, p.country].filter(Boolean).join(", ");
   const title = `${p.name}${loc ? ` — ${loc}` : ""} | BookBed`;
-  const fallbackImg = `${MARKETING_URL}/og-image.png`;
+  const fallbackImg = FALLBACK_IMAGE;
   const image = p.coverImage || p.images?.[0] || fallbackImg;
 
   const unitLinks = units
@@ -520,7 +526,7 @@ export function buildUnitMeta(
   const url = `${propBaseUrl(sub, hostSuffix)}/${u.slug}`;
   const title = `${u.name} — ${p.name} | BookBed`;
   const desc = u.description || p.description;
-  const fallbackImg = `${MARKETING_URL}/og-image.png`;
+  const fallbackImg = FALLBACK_IMAGE;
   const image =
     u.images?.[0] || p.coverImage || p.images?.[0] || fallbackImg;
 

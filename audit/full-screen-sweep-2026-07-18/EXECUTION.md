@@ -17,17 +17,17 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 ## F4 bugovi (UI-wiring)
 - [x] F4.1 owner_booking_detail _RoundIconButton InkWell wire + 44px — fix/f4a-booking-detail @3eedc7f3, suite 1950 GREEN (mail/call bili mrtvi: Container bez geste; sad Material+InkWell, 44px box oko 36px pilule, Semantics button, tertiary tint disabled)
 - [x] F4.2 unit_form — fix/f4b-unit-form @48abea94, suite 1949 GREEN (area tryParse ×2 + createUnit param double? — 1 caller, bez interfacea; amenities: UnitModel NIJE IMAO polje pa je edit save pisao [] — aditivno @Default([]) polje + restore u _loadUnitData; upload no-op = GO-queue)
-- [ ] F4.3 subscription: 'Usporedi' recognizer + 'Zadrži besplatno' wire-ili-ukloni
-- [ ] F4.4 booking_confirmation: copy dugme Clipboard wire + 44px; resend 44px
-- [ ] F4.5 logout_tile: BbDialog confirm prije onLogout
-- [ ] F4.6 smart_tooltip: as EdgeInsets → resolve(TextDirection.ltr)
+- [x] F4.3 subscription — fix/f4d-guest @4b35e997, suite 1948 GREEN ('Zadrži besplatno' → maybePop; mrtvi 'Usporedi' span UKLONJEN — nema comparison surfacea, kartice već listaju features; kIsWeb-gated → buildFreeInlineForTest/buildFootNoteForTest seamovi)
+- [x] F4.4 booking_confirmation — isti branch @4b35e997 (copy pill: InkWell+Clipboard+Semantics, 44px box oko 28px pilule; resend minHeight 44; Clipboard mock test potvrđuje setData)
+- [x] F4.5 logout_tile — VERIFIED CLOSED bez izmjene: jedini živi caller (profile_screen:484) VEĆ wrapa onLogout u BbDialog confirm + `confirmed != true` guard; nalaz je gledao komponentu, ne call site
+- [x] F4.6 smart_tooltip — fix/f4e-shared @c3a04437 (Container prima EdgeInsetsGeometry pa castovi 320/321 samo obrisani; :367 math resolve(ltr); RED→GREEN long-press test s EdgeInsetsDirectional)
 - [ ] F4.7 offline_indicator: liveRegion + side-efekti van build + stream cancel (connectivity_provider ref.onDispose)
 - [ ] F4.8 _RezAINudge no-op dugmad: ukloni do featurea
 - [ ] F4.9 email_verification: timer cancel na paused + RepaintBoundary
 - [x] F4.10 tax_legal ExpansionTile — fix/f4c-dialogs @9735651f, suite 1947 GREEN (StatefulWidget + ExpansibleController iz didUpdateWidget; header i dalje ručno expandira = nema lock-outa; POUKA: Switch živi u children pa nestaje na collapse — test assertuje kroz header re-expand)
 - [x] F4.11 bookings_filters — isti branch @9735651f (Clear sada pop-a kao Apply; clear-date IconButton BoxConstraints() → minWidth/minHeight 48)
 - [x] F4.12 _toBbStatus imported — isti branch @3eedc7f3 (BookingStatus enum NEMA imported → uzima BookingModel i vraća imported za isExternalBooking, cancelled i dalje pobjeđuje; 5 testova matrica)
-- [ ] F4.13 force_update iOS store URL + social_login Google G bijela podloga + ripple fix
+- [x] F4.13 (social dio) — isti branch @c3a04437: GoogleBrandIcon → CircleAvatar bijeli disk + glyph 72%, fallback nasljeđuje disk. iOS store URL = GO-QUEUE (treba pravi App Store ID)
 - [ ] F4.14 skeleton_loader: shrinkWrap/physics na 2 unbounded ListView-a
 ## F3 boje/flat (namjerne vizuelne — screenshot prije/poslije + golden regen)
 - [ ] F3.1 widget status TEKST boje: success→#059669, warning→#B45309, textTertiary→#767676 (minimalist_colors) + kontrast-matrica test

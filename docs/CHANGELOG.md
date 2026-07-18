@@ -6,7 +6,7 @@ All version history from v4.6 to v7.46.
 
 ---
 
-**Changelog 7.46** (2026-07-18) — IN-FLIGHT full-screen `/audit` sweep (read-only, no code changed):
+**Changelog 7.46** (2026-07-18) — full-screen `/audit` sweep (read-only, no code changed) — **all 48 screens done (8 batches); 241-component phase in progress**:
 
 ### docs(audit): self-paced `/audit` sweep across all 48 owner/widget/admin screens
 Design/UX/technical audit (accessibility, performance, theming, responsive,

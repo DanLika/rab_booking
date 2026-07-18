@@ -12,7 +12,7 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] F2.8 BbSpinner — feat/f28-bbspinner-semantics — ExcludeSemantics default + semanticsLabel liveRegion opt-in (obje grane); suite FULL GREEN
 - [x] F2.9 CommonAppBar — feat/f29-commonappbar-tooltip @61761015 — leadingTooltip param (default 'Menu' backward-compat, migracija u F5/F6) + sizeOf; suite FULL GREEN; deferred: title nullable (širi refactor)
 - [x] F2.10 PremiumListTile — feat/f210-premium-list-tile @78287d33 — minTileHeight:48, chevron samo uz onTap, ListTile.enabled; goldeni netaknuti; suite FULL GREEN
-- [ ] F2.11 Loaderi (universal + global_navigation + premium_loading): Semantics(liveRegion)+ExcludeSemantics barijera, CPI semanticsLabel
+- [x] F2.11 loaderi — feat/f211-loader-a11y — UniversalLoader merged liveRegion node, GlobalNavigationOverlay ExcludeSemantics barijera + const, PremiumLoading merged node + reduced-motion; suite FULL GREEN. POUKA: grep -c u && lancu = exit 1 na nuli (presjekao commit)
 - [ ] F2.12 BbDialog: Dialog.semanticsLabel=title, Semantics(header) titula, opcioni bodyWidget slot
 ## F4 bugovi (UI-wiring)
 - [ ] F4.1 owner_booking_detail:682 _RoundIconButton InkWell wire + 44px (mrtva mail/call)

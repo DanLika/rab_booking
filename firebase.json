@@ -109,6 +109,10 @@
           "destination": "/index.html"
         },
         {
+          "source": "/calendar",
+          "destination": "/index.html"
+        },
+        {
           "source": "/",
           "function": {
             "functionId": "ssrWidget",
@@ -128,6 +132,15 @@
         }
       ],
       "headers": [
+        {
+          "source": "/calendar",
+          "headers": [
+            {
+              "key": "X-Robots-Tag",
+              "value": "noindex, nofollow"
+            }
+          ]
+        },
         {
           "source": "/view",
           "headers": [

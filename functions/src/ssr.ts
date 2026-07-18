@@ -143,6 +143,23 @@ export function splitWidgetHost(
 const SUBDOMAIN_RE = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
 
 /**
+ * First path segments owned by the Flutter router, not by unit slugs.
+ * Kept here rather than only in the hosting rewrites so a new app route
+ * cannot silently start returning 404 from the SSR path.
+ * Mirrors lib/core/config/router_widget.dart.
+ */
+const RESERVED_PATHS = new Set(["calendar", "view", "embed"]);
+
+/**
+ * Whether a first path segment belongs to the Flutter app.
+ * @param {string} seg first path segment, already lowercased.
+ * @return {boolean} true when the app owns this route.
+ */
+export function isReservedPath(seg: string): boolean {
+  return RESERVED_PATHS.has(seg);
+}
+
+/**
  * Resolve which property to render, allowing a non-prod override so the
  * SSR can be exercised on dev, where no wildcard subdomain exists.
  * The override is refused on the production project.
@@ -651,7 +668,17 @@ export const ssrWidget = onRequest(
       }
 
       const segs = request.path.split("/").filter(Boolean);
-      const rawSlug = decodeURIComponent(segs[0] || "");
+      const rawSlug = decodeURIComponent(segs[0] || "").toLowerCase();
+
+      // A route the Flutter app owns (e.g. /calendar): hand over the
+      // shell with 200. Treating it as an unknown slug would 404 a page
+      // that renders perfectly well, and crawlers would drop it.
+      if (rawSlug && isReservedPath(rawSlug)) {
+        response.set("Cache-Control", "public, max-age=60");
+        response.status(200).send(shell);
+        return;
+      }
+
       let meta: Meta;
       if (!rawSlug) {
         const units = await listUnits(prop.id);

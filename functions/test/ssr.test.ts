@@ -6,6 +6,7 @@ import {
   splitWidgetHost,
   resolveSubdomain,
   PROD_WIDGET_HOST,
+  isReservedPath,
 } from "../src/ssr";
 
 const SHELL = [
@@ -237,5 +238,18 @@ describe("resolveSubdomain override (dev escape hatch)", () => {
     expect(resolveSubdomain("jasko-rab.view.bookbed.io")?.sub).toBe(
       "jasko-rab"
     );
+  });
+});
+
+describe("isReservedPath", () => {
+  it("claims the routes the Flutter app owns", () => {
+    expect(isReservedPath("calendar")).toBe(true);
+    expect(isReservedPath("view")).toBe(true);
+    expect(isReservedPath("embed")).toBe(true);
+  });
+
+  it("leaves real unit slugs alone", () => {
+    expect(isReservedPath("apartman-6")).toBe(false);
+    expect(isReservedPath("villa-marija")).toBe(false);
   });
 });

@@ -8,3 +8,4 @@ Allow: /view
 Allow: /embed/
 
 Sitemap: https://bookbed.io/sitemap.xml
+Sitemap: https://view.bookbed.io/sitemap.xml

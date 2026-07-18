@@ -90,6 +90,39 @@
       ],
       "rewrites": [
         {
+          "source": "/sitemap.xml",
+          "function": {
+            "functionId": "ssrSitemap",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/view",
+          "destination": "/index.html"
+        },
+        {
+          "source": "/view/**",
+          "destination": "/index.html"
+        },
+        {
+          "source": "/embed/**",
+          "destination": "/index.html"
+        },
+        {
+          "source": "/",
+          "function": {
+            "functionId": "ssrWidget",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/*",
+          "function": {
+            "functionId": "ssrWidget",
+            "region": "us-central1"
+          }
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }

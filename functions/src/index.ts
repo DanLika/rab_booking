@@ -135,3 +135,6 @@ export * from "./admin/setLifetimeLicense";
 
 // Export scheduled push notifications
 export * from "./scheduledPushNotifications";
+
+// SEO server-side rendering for the public widget (property/unit pages + sitemap)
+export * from "./ssr";

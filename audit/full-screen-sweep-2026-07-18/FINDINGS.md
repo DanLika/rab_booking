@@ -726,3 +726,56 @@
 - **[P3] TextStyle raw literals not BBType** — :97-103 — Theming.
 - **[P3] hardcoded HR fallback strings ×5 (22 call sites, non-HR falls through)** — :41-68 — Anti-Pattern.
 - **[P3] cancelled dot uses c.textTertiary (text token) not status token** — :53 — Theming.
+
+---
+## COMPONENTS batch 4 — bb_switch + shared/legacy widgets (2026-07-18) — DEAD-CODE discoveries
+
+### bb_switch (PRIMITIVE) — 16/20
+- **[P1] excludeSemantics missing → label double-announced (same class as checkbox/radio)** — bb_switch.dart:134-139 — A11y.
+- **[P2] raw BoxShadow Color(0x29000000) not BBShadow** — :76-80 — Theming.
+- **[P2] no keyboard focus (Space/Enter toggle)** — :88 — A11y.
+- **[P3] minHeight 44 not 48** — :92 — A11y.
+
+### adaptive_layout (shared) — 11/20
+- **[P1] AppDimensions.tablet=1024 breakpoint (canonical 1200); AdaptiveSplitView minWidthForSplit=800; 3 diff thresholds in one file** — adaptive_layout.dart:40,124,382,255 — Responsive. SYSTEMIC.
+- **[P2] AdaptiveAppBarActions nested interactive in PopupMenuItem (double-tap/announce)** — :402-407 — A11y.
+- **[P3] AppDimensions.spaceS/M/L not BBSpace** — Theming.
+- **[P3] per-build list alloc + .reversed.toList()** — :45-61 — Perf.
+
+### app_filter_chip (shared, legacy) — 8/20 — MIGRATE→BbChip
+- **[P1] no Semantics(selected:) — AT label empty when icon present** — app_filter_chip.dart:73-111 — A11y.
+- **[P2] AnimatedContainer animates nothing (dead 200ms; colors live in FilterChip)** — :66-67 — Anti-Pattern/Perf.
+- **[P2] tap target <48 (no materialTapTargetSize:padded)** — :105 — A11y.
+- **[P2] ZERO BB tokens (Colors.white, circular(10), elevation:2, fontSize:14)** — :47-110 — Theming.
+- **[P2] BbChip is canonical successor; 4 live call sites (unit_form:647, property_form:914, calendar_filters_panel:317,383) — straight swap.**
+
+### bookbed_branded_loader (shared) — 11/20
+- **[P1] no Semantics/liveRegion on progress** — bookbed_branded_loader.dart:47-64 — A11y.
+- **[P2] indeterminate FractionallySizedBox alignment = layout pass/frame (use Transform.translate)** — :152-163 — Perf.
+- **[P2] fixed 200px bar (62% of 320dp)** — :22,53-54 — Responsive.
+- **[P2] isDarkMode bool param duplicates Theme + raw AppColors** — :39-98 — Theming/Anti-Pattern.
+
+### bookbed_logo (shared, legacy) — 9/20 — DEAD CODE
+- **[P0] DEAD CODE — zero callers, superseded by BbLogo (11+ sites). Safe to `rm`.** — bookbed_logo.dart — Anti-Pattern.
+- **[P1] (live, on BbLogo) useGradient=true default = flat-chrome trap** — bb_logo.dart:9 — Theming (already logged batch 2).
+- **[P2] Image.asset no semanticLabel** — :47 — A11y (moot, dead).
+
+### button (shared, legacy / PremiumButton) — 7/20 — DEAD CODE
+- **[P0] DEAD CODE — zero call sites, superseded by BbButton (288 sites). Delete file + widgets.dart:16 export.** — button.dart — Anti-Pattern.
+- **[P1] authPrimaryGradient/ctaGradient diagonal = flat-chrome violation (in dead code = trap if export stays)** — :410,419 — Theming.
+- **[P1] no Semantics on any path** — :183-237 — A11y (moot, dead).
+- **[P2] GestureDetector+InkWell gesture-arena contention** — :186-213 — Anti-Pattern.
+
+### card (shared, legacy / PremiumCard) — 7/20 — NEARLY DEAD (2 callers, glass API dead)
+- **[P1] CardVariant.glass = live GLASSMORPHISM API (banned anti-pattern as named symbol) + gradient fills** — card.dart:319-342,170-196 — Anti-Pattern/Theming.
+- **[P1] no semantics on tappable card** — :255-261 — A11y.
+- **[P1] outlined/filled variants use non-dark-aware AppShadows.elevation1** — :307,315 — Theming.
+- **[P2] SingleChildScrollView(NeverScrollable) on every card (dead layer)** — :259-267 — Perf.
+- **[P2] enableHover=true default rebuilds non-interactive cards on hover** — :60,234-243 — Perf.
+- **[P3] glass/outlined/filled factories = 0 live consumers (2 sites use .elevated only: unit_hub_empty_state:155, revenue_chart_widget:40) → migrate to BbCard + delete.**
+
+### common_app_bar (shared, ~40 consumers) — 15/20 — ROOT
+- **[P2] hardcoded EN tooltip 'Menu' on ALL leading icons (drawer/back/close) = ROOT across ~40 screens** — common_app_bar.dart:57 — A11y — make nullable leadingTooltip param w/ l10n.
+- **[P2] title required String even when showTitle:false (dummy strings at 4 premium sites)** — :11,22-28 — Anti-Pattern.
+- **[P3] magic breakpoint 600 + MediaQuery.of every build** — :38 — Responsive.
+- **[P3] actions get no enforced tooltip/semantics contract (root of missing action tooltips)** — :60 — A11y.

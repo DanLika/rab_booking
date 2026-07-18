@@ -80,14 +80,14 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/shared/widgets/redesign/bb_sparkline.dart
 - [x] lib/shared/widgets/redesign/bb_spinner.dart
 - [x] lib/shared/widgets/redesign/bb_status_badge.dart
-- [ ] lib/shared/widgets/redesign/bb_switch.dart
-- [ ] lib/shared/widgets/adaptive_layout.dart
-- [ ] lib/shared/widgets/app_filter_chip.dart
-- [ ] lib/shared/widgets/bookbed_branded_loader.dart
-- [ ] lib/shared/widgets/bookbed_logo.dart
-- [ ] lib/shared/widgets/button.dart
-- [ ] lib/shared/widgets/card.dart
-- [ ] lib/shared/widgets/common_app_bar.dart
+- [x] lib/shared/widgets/redesign/bb_switch.dart
+- [x] lib/shared/widgets/adaptive_layout.dart
+- [x] lib/shared/widgets/app_filter_chip.dart
+- [x] lib/shared/widgets/bookbed_branded_loader.dart
+- [x] lib/shared/widgets/bookbed_logo.dart
+- [x] lib/shared/widgets/button.dart
+- [x] lib/shared/widgets/card.dart
+- [x] lib/shared/widgets/common_app_bar.dart
 - [ ] lib/shared/widgets/custom_date_range_picker.dart
 - [ ] lib/shared/widgets/debounced_search_field.dart
 - [ ] lib/shared/widgets/deferred_loader.dart

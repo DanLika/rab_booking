@@ -15,7 +15,7 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] F2.11 loaderi — feat/f211-loader-a11y — UniversalLoader merged liveRegion node, GlobalNavigationOverlay ExcludeSemantics barijera + const, PremiumLoading merged node + reduced-motion; suite FULL GREEN. POUKA: grep -c u && lancu = exit 1 na nuli (presjekao commit)
 - [x] F2.12 BbDialog: Dialog.semanticsLabel=title, Semantics(header) titula, opcioni bodyWidget slot — feat/f212-bbdialog-a11y @8c7f0dc5, suite 1950 GREEN (Semantics scopesRoute/namesRoute wrap jer raw Dialog nema semanticLabel; body sad default-'' + assert)
 ## F4 bugovi (UI-wiring)
-- [ ] F4.1 owner_booking_detail:682 _RoundIconButton InkWell wire + 44px (mrtva mail/call)
+- [x] F4.1 owner_booking_detail _RoundIconButton InkWell wire + 44px — fix/f4a-booking-detail @3eedc7f3, suite 1950 GREEN (mail/call bili mrtvi: Container bez geste; sad Material+InkWell, 44px box oko 36px pilule, Semantics button, tertiary tint disabled)
 - [ ] F4.2 unit_form: tryParse area (crash) + amenities restore u _loadUnitData (wipe); upload no-op = GO-queue
 - [ ] F4.3 subscription: 'Usporedi' recognizer + 'Zadrži besplatno' wire-ili-ukloni
 - [ ] F4.4 booking_confirmation: copy dugme Clipboard wire + 44px; resend 44px
@@ -26,7 +26,7 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [ ] F4.9 email_verification: timer cancel na paused + RepaintBoundary
 - [ ] F4.10 tax_legal ExpansionTile controller (ostaje otvoren poslije disable)
 - [ ] F4.11 bookings_filters: Clear → pop + clear-date IconButton 0×0 fix
-- [ ] F4.12 _toBbStatus imported case (owner_booking_detail:1073)
+- [x] F4.12 _toBbStatus imported — isti branch @3eedc7f3 (BookingStatus enum NEMA imported → uzima BookingModel i vraća imported za isExternalBooking, cancelled i dalje pobjeđuje; 5 testova matrica)
 - [ ] F4.13 force_update iOS store URL + social_login Google G bijela podloga + ripple fix
 - [ ] F4.14 skeleton_loader: shrinkWrap/physics na 2 unbounded ListView-a
 ## F3 boje/flat (namjerne vizuelne — screenshot prije/poslije + golden regen)

@@ -1051,3 +1051,47 @@ Live call-site counts: BbButton 62, BbSectionHeader 34, BbStatusBadge 10, BbChip
 - **[P2] _toBbStatus in owner_booking_detail:1073-1082 NON-EXHAUSTIVE (no imported case → falls to pending)** — Anti-Pattern. REAL BUG.
 - **[P2] BbStatusBadge raw TextStyle not BBType.caption + pending dot uses c.tertiary (warning) not statusPendingDeep** — redesign:97,46 — Theming.
 - **[P2] dual enum BBStatus vs BbBookingStatus (identical cases) — delete core, remove BBStatus.**
+
+---
+## COMPONENTS batch 10 — core/widgets tail + auth widgets (2026-07-18)
+
+### fcm_navigation_handler — 18/20 — LIVE, cleanest so far
+- **[P2] hardcoded EN 'New notification'/'View'** — fcm_navigation_handler.dart:101,121 — l10n.
+- **[P2] unbounded snackbar stacking (no hideCurrentSnackBar)** — :106 — Perf/UX.
+- **[P3] provider side-channel before router.go (URI already carries bookingId)** — :76-87 — Anti-Pattern.
+- **[CLEAN] subscriptions cancelled, mounted guards, router-via-ref per fcm-pwa.md.**
+
+### force_update_dialog — 14/20 — LIVE
+- **[P1] iOS App Store URL missing from fallback (Play-only → frozen CTA on iOS)** — force_update_dialog.dart:98 — Anti-Pattern. REAL.
+- **[P1] raw AlertDialog not BbDialog** — :23 — Theming.
+- **[P2] no scopesRoute + barrierLabel EN-only at call site** — :21; version_check_provider.dart:37-41 — A11y.
+- **[P2] raw radii + colorScheme alpha tints (zero BB tokens)** — :24,51-55 — Theming.
+
+### keyboard_aware_constrained_box — 15/20 — DEAD (0 callers)
+- **[P0] DEAD — live pattern je AndroidKeyboardDismissFix mixin. Delete.** — keyboard_aware_constrained_box.dart:26 — Anti-Pattern.
+- **[P2] per-keystroke setState no debounce + global singleton listener stomp + safe-area double-subtract** — :69-74,122-130; keyboard_dismiss_fix_web.dart:10-11 — Perf/Anti-Pattern (moot, dead).
+
+### optional_update_dialog — 13/20 — LIVE
+- **[P2] raw AlertDialog not BbDialog + _openStore FULLY DUPLICATED s force_update (isti hardcoded fallback URL)** — optional_update_dialog.dart:46,121-152 — Theming/Anti-Pattern — extract UpdateDialogHelper.
+- **[P2] shouldShow/markReminded SharedPreferences logika u widget klasi** — :21-39 — Anti-Pattern.
+- **[P3] colorScheme.primaryContainer not BB + raw radii + icon no semanticLabel** — :78-92,50-54 — Theming/A11y.
+
+### owner_app_loader — 11/20 — DEAD (0 callers)
+- **[P0] DEAD — splash koristi BookBedBrandedLoader; canonical = UniversalLoader. Delete.** — owner_app_loader.dart — Anti-Pattern.
+- **[P1] no Semantics/liveRegion (loader-family systemic)** — :46-63 — A11y (moot).
+- **[P2] Colors.white/black + 'Manrope' string raw** — :44,68-71,101 — Theming (moot).
+
+### owner_splash_screen — COVERED in screen batch 2 (isti fajl; 13/20, nalazi već u ledgeru).
+
+### auth_logo_icon — 11/20 — LIVE (loaderi + drawer)
+- **[P1] BbLogo.useGradient default=true — TRI ŽIVA call sitea bez opt-outa: bb_sidebar:90, bb_sidebar_rail:56, admin_login:542 (auth ekrani već pass false)** — bb_logo.dart:9 — Theming — potvrda flat-chrome regresije s tačnim siteovima.
+- **[P2] no ExcludeSemantics (svi calleri dekorativni)** — auth_logo_icon.dart:76-90 — A11y.
+- **[P2] per-frame Container+BoxDecoration alloc u custom builderu** — :104-127 — Perf.
+- **[P2] duplikat vs BbLogo (drawer site → BbLogo(size:64); loaderi = thin pulse wrapper)** — Anti-Pattern.
+- **[P3] isWhite param dead za sve vanjske callere** — :12,38-55 — Anti-Pattern.
+
+### glass_card — 12/20 — DEAD (0 callers) + misleading name
+- **[P1] DEAD — nikad importovan; pravi glass = 4 privatne _buildGlassCard metode (enhanced_login:460, register:372, forgot:189, email_verification:494) s rd.glassBg/glassBorder = SANKCIONISANI auth izuzetak.** — glass_card.dart:1-67 — Anti-Pattern.
+- **[P2] ime kaže glassmorphism, NEMA BackdropFilter (opaque 0.97 card)** — :6 — Anti-Pattern.
+- **[P2] raw literali 16/24/EdgeInsets (zero BB tokena)** — :27-50 — Theming (moot).
+- **VERDICT: dead leftover, NIJE flat-chrome violation. Delete.**

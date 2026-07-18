@@ -128,14 +128,14 @@ Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-scr
 - [x] lib/core/widgets/bb_section_header.dart
 - [x] lib/core/widgets/bb_skeleton.dart
 - [x] lib/core/widgets/bb_status_badge.dart
-- [ ] lib/core/widgets/fcm_navigation_handler.dart
-- [ ] lib/core/widgets/force_update_dialog.dart
-- [ ] lib/core/widgets/keyboard_aware_constrained_box.dart
-- [ ] lib/core/widgets/optional_update_dialog.dart
-- [ ] lib/core/widgets/owner_app_loader.dart
-- [ ] lib/core/widgets/owner_splash_screen.dart
-- [ ] lib/features/auth/presentation/widgets/auth_logo_icon.dart
-- [ ] lib/features/auth/presentation/widgets/glass_card.dart
+- [x] lib/core/widgets/fcm_navigation_handler.dart
+- [x] lib/core/widgets/force_update_dialog.dart
+- [x] lib/core/widgets/keyboard_aware_constrained_box.dart
+- [x] lib/core/widgets/optional_update_dialog.dart
+- [x] lib/core/widgets/owner_app_loader.dart
+- [x] lib/core/widgets/owner_splash_screen.dart
+- [x] lib/features/auth/presentation/widgets/auth_logo_icon.dart
+- [x] lib/features/auth/presentation/widgets/glass_card.dart
 - [ ] lib/features/auth/presentation/widgets/gradient_auth_button.dart
 - [ ] lib/features/auth/presentation/widgets/legal_tabs_row.dart
 - [ ] lib/features/auth/presentation/widgets/premium_input_field.dart

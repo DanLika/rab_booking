@@ -355,3 +355,67 @@
 - **[P2] decorative watermark BbIcon no ExcludeSemantics** — :755-761 — A11y.
 - **[P3] dynamic unit/property untyped** — :50,72,171,998 — Anti-Pattern.
 - **[P3] _loadUnits one-shot .future (stale on unit add/remove)** — :135-136 — Perf.
+
+---
+## Batch 6 — owner iCal-sync/notif/profile/property-form/stripe (2026-07-18)
+
+### ical_sync_settings_screen — 12/20  (owner)
+- **[P1] stale desktop breakpoint >900** — ical_sync_settings_screen.dart:117 — Responsive. SYSTEMIC.
+- **[P1] hardcoded HR status labels (Aktivan/Pauziran/Greška)** — :662-664 — A11y/Theming.
+- **[P1] BBColor.success STATIC (misses dark mode)** — :1623 — Theming.
+- **[P1] status conveyed by color-only 8px dot (WCAG 1.4.1)** — :535-542 — A11y.
+- **[P2] platform InkWell no semantic role** — :758-795 — A11y.
+- **[P2] IntrinsicHeight desktop 2-col row** — :218-227 — Perf.
+- **[P2] mismatch-banner tone/color mismatch (error accent + warning icon)** — :1370-1386 — Anti-Pattern.
+- **[P2] URL BbInput no textInputAction** — :1200-1218 — A11y. SYSTEMIC (BbInput).
+
+### notification_settings_screen — 15/20  (owner)
+- **[P2] _QuietTimeField tap target ~36px** — notification_settings_screen.dart:581-605 — A11y.
+- **[P2] eyebrow color override breaks BBType.eyebrow AA ink (4.02:1 @10px)** — :388-390 — A11y/Theming.
+- **[P2] textTertiaryLight #718096 on white BbCard fails AA ×3** — :370,538,578 — A11y — #951 fixed dark, light still fails on surface=#FFFFFF. SYSTEMIC.
+- **[P2] BbSectionHeader no header semantics** — :329-332,423-426 — A11y.
+- **[P2] showTimePicker no helpText (EN default all locales)** — :221 — A11y.
+- **[P3] category key 'payments' leaks into snackbar** — :140 — A11y.
+- **[P3] _currentPreferences ??= in build()** — :253-257 — Anti-Pattern.
+
+### notifications_screen — 15/20  (owner)
+- **[P2] unread dot no ExcludeSemantics** — notifications_screen.dart:965-974 — A11y.
+- **[P2] title duplicated in semantic tree (BbCard.semanticLabel + Text) → read twice** — :908,941-950 — A11y.
+- **[P2] getUnreadCount streams full docs not AggregateQuery** — notification_service.dart:91-98 — Perf (latent, PROD max 83).
+- **[P2] hardcoded HR date-group keys in provider** — notifications_provider.dart:61-157 — A11y (provider has no context).
+- **[P2] Colors.black scrim off-token** — :362 — Theming.
+- **[P2] Colors.white FAB/AppBar ×2** — :388,409 — Theming. SYSTEMIC (onPrimary gap).
+- **[P3] Dismissible no a11y delete alternative (WCAG 2.5.1)** — :498-564 — A11y.
+- **[P3] FAB overlaps last row (no bottom pad)** — :384-393 — Responsive.
+
+### profile_screen — 12/20  (owner)
+- **[P1] rd.heroGradient on structural chrome ×4 (avatar halo/accent strip/radial gauge/Pro icon)** — profile_screen.dart:648,800,992,1113 — Theming — FLAT-CHROME VIOLATION #2. FLAG.
+- **[P2] _VerifyChip/identity badges no semantic role** — :854-888,686-709 — A11y.
+- **[P2] _RadialGaugePainter.shouldRepaint always true (gradient identity)** — :1056-1060 — Perf.
+- **[P2] _ProfilStatStrip hardcoded HR strings ×5 (kDebugMode-gated fake metrics)** — :1432-1455 — Anti-Pattern.
+- **[P2] Colors.white filled button fg + Pro icon** — :946,1121 — Theming. SYSTEMIC.
+- **[P2] support email dusko@book-bed.com hardcoded in widget** — :391 — Anti-Pattern.
+- **[P3] PremiumListTile dense+VisualDensity → ~40px tap target** — premium_list_tile.dart:64-65 — A11y.
+- **[P3] EN-only snackbar 'Could not open email client'** — :399 — A11y.
+
+### property_form_screen — 13/20  (owner)
+- **[P1] no textInputAction chain (6 fields)** — property_form_screen.dart — A11y. SYSTEMIC (BbInput).
+- **[P1] loading overlay blocks SR, no ExcludeSemantics/liveRegion** — :597-641 — A11y.
+- **[P2] suggestion InkWell chip ~28px tap target** — :841-865 — A11y.
+- **[P2] loading overlay raw Card(elevation:8) violates flat-chrome** — :600-641 — Theming/Anti-Pattern.
+- **[P2] ZERO BB* token usage (uses old AppDimensions + raw radii/fontSize)** — file-wide — Theming. NOTABLE.
+- **[P2] stale gradient comments (flat since 7.23)** — :277,682 — Anti-Pattern.
+- **[P2] hardcoded EN Exception('Subdomain not available')** — :969 — Anti-Pattern.
+- **[CLEAN] keyboard-fix mixin present; subdomain debounce+dispose clean.**
+
+### stripe_connect_setup_screen — 10/20  (owner, BATCH LOW)
+- **[P1] 3× identical EN-only timeout snackbar (fix-one-miss-two)** — stripe_connect_setup_screen.dart:87,154,242 — A11y/Anti-Pattern.
+- **[P2] isDesktop=900 vs 1200 + two measurement sources (LayoutBuilder vs MediaQuery)** — :289,971 — Responsive. SYSTEMIC.
+- **[P2] step accordion InkWell no semantic label** — :674 — A11y.
+- **[P2] FAQ toggle InkWell no semantic label** — :758 — A11y.
+- **[P2] step CircleAvatar visual 32px** — :684-685 — A11y.
+- **[P3] raw BorderRadius.circular(16/12/8) off-token** — :423,438,486,594,760 — Theming.
+- **[P3] 5 raw TextStyle bypass BBType + fontFamily:'monospace' literal** — :461-502,694,815,871 — Theming.
+- **[P3] AppShadows.elevation3 not BBShadow** — :424 — Theming.
+- **[P3] ❓ emoji FAQ not ExcludeSemantics** — :815 — A11y.
+- **[P3] _StripePayoutsDashboard hardcoded HR labels (kDebugMode-gated)** — :1013-1260 — Anti-Pattern.

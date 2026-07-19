@@ -45,7 +45,7 @@ void main() {
     final SemanticsNode node = tester.getSemantics(
       find.bySemanticsLabel('Nema interneta'),
     );
-    expect(node.hasFlag(SemanticsFlag.isLiveRegion), isTrue);
+    expect(node.flagsCollection.isLiveRegion, isTrue);
 
     online.add(true);
     await tester.pump();

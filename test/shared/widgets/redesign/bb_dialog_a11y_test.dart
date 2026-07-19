@@ -17,7 +17,7 @@ void main() {
     // The route node shares the title label — target the Text element's own
     // node, which carries the header flag.
     final SemanticsNode node = tester.getSemantics(find.text('Potvrda'));
-    expect(node.hasFlag(SemanticsFlag.isHeader), isTrue);
+    expect(node.flagsCollection.isHeader, isTrue);
     handle.dispose();
   });
 

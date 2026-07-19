@@ -15,7 +15,7 @@ void main() {
     final SemanticsNode node = tester.getSemantics(
       find.bySemanticsLabel('Postavke'),
     );
-    expect(node.hasFlag(SemanticsFlag.isHeader), isTrue);
+    expect(node.flagsCollection.isHeader, isTrue);
     handle.dispose();
   });
 
@@ -35,7 +35,7 @@ void main() {
     final SemanticsNode action = tester.getSemantics(
       find.bySemanticsLabel('Prikaži sve'),
     );
-    expect(action.hasFlag(SemanticsFlag.isButton), isTrue);
+    expect(action.flagsCollection.isButton, isTrue);
     // Arrow glyph must not surface as its own stop.
     expect(find.bySemanticsLabel(RegExp('arrow')), findsNothing);
     handle.dispose();

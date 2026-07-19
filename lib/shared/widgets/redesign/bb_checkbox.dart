@@ -230,7 +230,7 @@ class _BbCheckboxState extends State<BbCheckbox> {
     // kills the label/subtitle double-read. Error text stays a SIBLING so it
     // is still announced. Opacity sits OUTSIDE Semantics (visual dim must
     // not wrap the a11y node).
-    final String? mergedLabel =
+    final String mergedLabel =
         widget.semanticLabel ??
         <String>[
           if (widget.label != null) widget.label!,

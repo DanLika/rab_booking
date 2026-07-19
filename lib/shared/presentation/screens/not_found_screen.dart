@@ -9,7 +9,7 @@ class NotFoundScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(
+      appBar: const CommonAppBar(
         title: 'Stranica nije pronađena', // TODO(l10n): localize title
       ),
       body: SafeArea(

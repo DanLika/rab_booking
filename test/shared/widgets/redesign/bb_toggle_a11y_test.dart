@@ -1,6 +1,8 @@
 import 'package:bookbed/shared/widgets/redesign/bb_checkbox.dart';
 import 'package:bookbed/shared/widgets/redesign/bb_radio.dart';
 import 'package:bookbed/shared/widgets/redesign/bb_switch.dart';
+import 'dart:ui' show CheckedState, Tristate;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -46,8 +48,7 @@ void main() {
       final SemanticsNode node = tester.getSemantics(
         find.bySemanticsLabel('Prihvaćam uvjete, Pročitao sam pravila'),
       );
-      expect(node.hasFlag(SemanticsFlag.hasCheckedState), isTrue);
-      expect(node.hasFlag(SemanticsFlag.isChecked), isTrue);
+      expect(node.flagsCollection.isChecked, CheckedState.isTrue);
       handle.dispose();
     });
 
@@ -86,8 +87,8 @@ void main() {
       final SemanticsNode node = tester.getSemantics(
         find.bySemanticsLabel('Opcija A'),
       );
-      expect(node.hasFlag(SemanticsFlag.isChecked), isTrue);
-      expect(node.hasFlag(SemanticsFlag.isInMutuallyExclusiveGroup), isTrue);
+      expect(node.flagsCollection.isChecked, CheckedState.isTrue);
+      expect(node.flagsCollection.isInMutuallyExclusiveGroup, isTrue);
       handle.dispose();
     });
 
@@ -122,8 +123,7 @@ void main() {
       final SemanticsNode node = tester.getSemantics(
         find.bySemanticsLabel('Notifikacije, Email obavijesti'),
       );
-      expect(node.hasFlag(SemanticsFlag.hasToggledState), isTrue);
-      expect(node.hasFlag(SemanticsFlag.isToggled), isTrue);
+      expect(node.flagsCollection.isToggled, Tristate.isTrue);
       handle.dispose();
     });
 

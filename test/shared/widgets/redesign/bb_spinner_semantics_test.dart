@@ -34,7 +34,7 @@ void main() {
     final SemanticsNode node = tester.getSemantics(
       find.bySemanticsLabel('Učitavanje'),
     );
-    expect(node.hasFlag(SemanticsFlag.isLiveRegion), isTrue);
+    expect(node.flagsCollection.isLiveRegion, isTrue);
     handle.dispose();
   });
 }

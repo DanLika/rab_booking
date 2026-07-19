@@ -25,7 +25,7 @@ OwnerBooking _ob({
   String? source,
   String? phone = '+385 91 234 5678',
 }) {
-  final DateTime now = DateTime(2026, 7, 8, 14, 0);
+  final DateTime now = DateTime(2026, 7, 8, 14);
   return OwnerBooking(
     booking: BookingModel(
       id: 'bd-wire-test',

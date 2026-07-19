@@ -350,6 +350,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                       BbInput(
                                         controller: _currentPasswordController,
                                         label: l10n.currentPassword,
+                                        textInputAction: TextInputAction.next,
+                                        autofillHints: const [
+                                          AutofillHints.password,
+                                        ],
                                         iconLeft: 'lock',
                                         obscureText: _obscureCurrentPassword,
                                         size: BbInputSize.lg,
@@ -388,6 +392,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                       BbInput(
                                         controller: _newPasswordController,
                                         label: l10n.newPassword,
+                                        textInputAction: TextInputAction.next,
+                                        autofillHints: const [
+                                          AutofillHints.newPassword,
+                                        ],
                                         iconLeft: 'lock',
                                         obscureText: _obscureNewPassword,
                                         size: BbInputSize.lg,
@@ -454,6 +462,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                       BbInput(
                                         controller: _confirmPasswordController,
                                         label: l10n.confirmNewPassword,
+                                        textInputAction: TextInputAction.done,
+                                        autofillHints: const [
+                                          AutofillHints.newPassword,
+                                        ],
                                         iconLeft: 'lock_open',
                                         obscureText: _obscureConfirmPassword,
                                         size: BbInputSize.lg,

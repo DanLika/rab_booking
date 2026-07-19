@@ -12,19 +12,14 @@ void main() {
     final SemanticsHandle handle = tester.ensureSemantics();
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(
-          body: UniversalLoader(
-            mode: LoaderMode.inline,
-            debounceDuration: Duration.zero,
-          ),
-        ),
+        home: Scaffold(body: UniversalLoader(debounceDuration: Duration.zero)),
       ),
     );
     await tester.pump();
     final SemanticsNode node = tester.getSemantics(
       find.bySemanticsLabel('Učitavanje'),
     );
-    expect(node.hasFlag(SemanticsFlag.isLiveRegion), isTrue);
+    expect(node.flagsCollection.isLiveRegion, isTrue);
     handle.dispose();
     // flutter_animate delay timers outlive disposal — advance the fake
     // clock so the binding's timersPending invariant passes.
@@ -40,7 +35,6 @@ void main() {
       const MaterialApp(
         home: Scaffold(
           body: UniversalLoader(
-            mode: LoaderMode.inline,
             message: 'Prijava u toku',
             debounceDuration: Duration.zero,
           ),
@@ -67,7 +61,7 @@ void main() {
     final SemanticsNode node = tester.getSemantics(
       find.bySemanticsLabel('Učitavanje…'),
     );
-    expect(node.hasFlag(SemanticsFlag.isLiveRegion), isTrue);
+    expect(node.flagsCollection.isLiveRegion, isTrue);
     handle.dispose();
     // flutter_animate delay timers outlive disposal — advance the fake
     // clock so the binding's timersPending invariant passes.

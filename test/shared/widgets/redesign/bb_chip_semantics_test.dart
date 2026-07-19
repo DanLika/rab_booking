@@ -1,4 +1,6 @@
 import 'package:bookbed/shared/widgets/redesign/bb_chip.dart';
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,8 +29,8 @@ void main() {
     final SemanticsNode node = tester.getSemantics(
       find.bySemanticsLabel('Potvrđeno'),
     );
-    expect(node.hasFlag(SemanticsFlag.isButton), isTrue);
-    expect(node.hasFlag(SemanticsFlag.isSelected), isTrue);
+    expect(node.flagsCollection.isButton, isTrue);
+    expect(node.flagsCollection.isSelected, Tristate.isTrue);
     handle.dispose();
   });
 
@@ -40,7 +42,7 @@ void main() {
     final SemanticsNode node = tester.getSemantics(
       find.bySemanticsLabel('Sve'),
     );
-    expect(node.hasFlag(SemanticsFlag.isSelected), isFalse);
+    expect(node.flagsCollection.isSelected, Tristate.isFalse);
     handle.dispose();
   });
 

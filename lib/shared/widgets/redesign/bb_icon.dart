@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/iconname_to_unicode_map.dart';
 // Imported for side-effect: forces tree-shaker to keep all icon code points

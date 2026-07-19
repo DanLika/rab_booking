@@ -116,6 +116,8 @@ mixin _BehaviorSectionsMixin on _WidgetSettingsScreenStateBase {
                         max: 360, // 15 days
                         divisions: 60,
                         label: '$_cancellationHours h',
+                        semanticFormatterCallback: (double v) =>
+                            '${v.round()} sati',
                         onChanged: _allowCancellation
                             ? (value) {
                                 setState(

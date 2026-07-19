@@ -1224,6 +1224,7 @@ class _SendButton extends StatelessWidget {
         padding: EdgeInsets.zero,
         color: _kOnPrimary,
         iconSize: _kSendIcon,
+        tooltip: AppLocalizations.of(context).sendMessage,
         icon: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           transitionBuilder: (Widget child, Animation<double> anim) =>
@@ -1277,6 +1278,8 @@ class _NewChatButton extends StatelessWidget {
 /// Mascot illustration with the handoff radial-glow halo + asset-fail fallback.
 /// Shared by the empty-state, consent, and quick-reply heroes so all three
 /// carry the same glowing hero (handoff `ai-assistant.jsx` consent/empty hero).
+/// Wrapped in [ExcludeSemantics] — decorative illustration; surrounding text
+/// provides the accessible description.
 class _AiHeroIllustration extends StatelessWidget {
   const _AiHeroIllustration({this.size = _kEmptyIllustration});
 
@@ -1285,23 +1288,25 @@ class _AiHeroIllustration extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final BBColorSet c = BBColor.of(context);
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          radius: 0.7,
-          colors: <Color>[
-            c.primary.withValues(alpha: 0.32),
-            c.primary.withValues(alpha: 0.0),
-          ],
+    return ExcludeSemantics(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            radius: 0.7,
+            colors: <Color>[
+              c.primary.withValues(alpha: 0.32),
+              c.primary.withValues(alpha: 0.0),
+            ],
+          ),
         ),
-      ),
-      child: Image.asset(
-        'assets/images/assistant_illustration.png',
-        fit: BoxFit.contain,
-        errorBuilder: (_, _, _) =>
-            Icon(Icons.auto_awesome, size: size * 0.5, color: c.primary),
+        child: Image.asset(
+          'assets/images/assistant_illustration.png',
+          fit: BoxFit.contain,
+          errorBuilder: (_, _, _) =>
+              Icon(Icons.auto_awesome, size: size * 0.5, color: c.primary),
+        ),
       ),
     );
   }

@@ -551,6 +551,7 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
               ),
               IconButton(
                 icon: Icon(Icons.copy, color: c.textTertiary, size: 18),
+                tooltip: l10n.embedGuideCodeCopied,
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: _exampleCode));
                   ErrorDisplayUtils.showSuccessSnackBar(

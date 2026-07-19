@@ -211,14 +211,19 @@ class _NotificationSettingsScreenState
   /// persist the picked time via [onPicked] as a zero-padded "HH:mm".
   Future<void> _pickTime(
     String currentHhmm,
-    ValueChanged<String> onPicked,
-  ) async {
+    ValueChanged<String> onPicked, {
+    String? helpText,
+  }) async {
     final parts = currentHhmm.split(':');
     final initial = TimeOfDay(
       hour: int.tryParse(parts.isNotEmpty ? parts[0] : '') ?? 22,
       minute: int.tryParse(parts.length > 1 ? parts[1] : '') ?? 0,
     );
-    final picked = await showTimePicker(context: context, initialTime: initial);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+      helpText: helpText,
+    );
     if (picked != null) {
       final hh = picked.hour.toString().padLeft(2, '0');
       final mm = picked.minute.toString().padLeft(2, '0');
@@ -436,12 +441,16 @@ class _NotificationSettingsScreenState
                         (String hhmm) => _updateQuietHours(
                           _currentPreferences!.quietHours.copyWith(start: hhmm),
                         ),
+                        // TODO(l10n): use l10n key when one is added for this string
+                        helpText: 'Početak tihih sati',
                       ),
                       onPickEnd: () => _pickTime(
                         _currentPreferences!.quietHours.end,
                         (String hhmm) => _updateQuietHours(
                           _currentPreferences!.quietHours.copyWith(end: hhmm),
                         ),
+                        // TODO(l10n): use l10n key when one is added for this string
+                        helpText: 'Kraj tihih sati',
                       ),
                     ),
                     const SizedBox(height: BBSpace.md),
@@ -582,24 +591,27 @@ class _QuietTimeField extends StatelessWidget {
           key: fieldKey,
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: BBSpace.sm,
-              vertical: BBSpace.xs,
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(color: c.border),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(
-                  value,
-                  style: BBType.body(context).copyWith(color: c.textPrimary),
-                ),
-                Icon(Icons.schedule, size: 18, color: c.textTertiary),
-              ],
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: BBSpace.sm,
+                vertical: BBSpace.xs,
+              ),
+              decoration: BoxDecoration(
+                border: Border.all(color: c.border),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    value,
+                    style: BBType.body(context).copyWith(color: c.textPrimary),
+                  ),
+                  Icon(Icons.schedule, size: 18, color: c.textTertiary),
+                ],
+              ),
             ),
           ),
         ),

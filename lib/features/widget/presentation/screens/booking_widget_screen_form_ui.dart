@@ -176,7 +176,7 @@ mixin _BookingFormUiMixin
               400.0,
               math.max(400.0, screenHeight),
             );
-          } else if (screenWidth < 1024) {
+          } else if (screenWidth < 1200) {
             // Tablet
             // Use math.min to prevent ArgumentError when screen is smaller than minimum
             pillBarWidth = (screenWidth * 0.8).clamp(
@@ -202,7 +202,13 @@ mixin _BookingFormUiMixin
         } else {
           // Step 1: Compact pill bar
           if (screenWidth < 600) {
-            pillBarWidth = 350.0; // Mobile: fixed 350px
+            // Clamp to screen width with 2×8px margin so pill never bleeds on
+            // narrow viewports (e.g. 320px iframe). 300px floor = minimum readable.
+            const kPillMargin = 16.0; // 2 × BBSpace.xs
+            pillBarWidth = math.min(
+              350.0,
+              math.max(300.0, screenWidth - kPillMargin * 2),
+            );
           } else {
             pillBarWidth = 400.0; // Desktop/Tablet: fixed 400px
           }
@@ -653,56 +659,52 @@ mixin _BookingFormUiMixin
         ],
 
         // Confirm button
-        SizedBox(
-          width: double.infinity,
-          height: 54, // Increased by 10px (was 44)
-          child: ElevatedButton(
-            onPressed: _isProcessing
-                ? () {}
-                : () => _handleConfirmBooking(calculation),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: minimalistColors.buttonPrimary,
-              foregroundColor: minimalistColors.buttonPrimaryText,
-              disabledBackgroundColor: minimalistColors.buttonPrimary,
-              disabledForegroundColor: minimalistColors.buttonPrimaryText,
-              padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(BBRadiusBridges.medium),
-                ),
-              ),
+        _buildConfirmButton(calculation, minimalistColors),
+      ],
+    );
+  }
+
+  /// Shared confirm/submit button used in both the payment section and the
+  /// guest-info form. Extracted to eliminate the verbatim duplication.
+  Widget _buildConfirmButton(
+    BookingPriceCalculation calculation,
+    MinimalistColorSchemeAdapter colors,
+  ) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54, // Increased by 10px (was 44)
+      child: ElevatedButton(
+        onPressed: _isProcessing
+            ? () {}
+            : () => _handleConfirmBooking(calculation),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colors.buttonPrimary,
+          foregroundColor: colors.buttonPrimaryText,
+          disabledBackgroundColor: colors.buttonPrimary,
+          disabledForegroundColor: colors.buttonPrimaryText,
+          padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(BBRadiusBridges.medium),
             ),
-            child: _isProcessing
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            minimalistColors.buttonPrimaryText,
-                          ),
-                        ),
+          ),
+        ),
+        child: _isProcessing
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        colors.buttonPrimaryText,
                       ),
-                      const SizedBox(width: 12),
-                      Flexible(
-                        child: AutoSizeText(
-                          _getConfirmButtonText(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: minimalistColors.buttonPrimaryText,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
                     child: AutoSizeText(
                       _getConfirmButtonText(),
                       maxLines: 1,
@@ -710,13 +712,26 @@ mixin _BookingFormUiMixin
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: minimalistColors.buttonPrimaryText,
+                        color: colors.buttonPrimaryText,
                       ),
                     ),
                   ),
-          ),
-        ),
-      ],
+                ],
+              )
+            : Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: AutoSizeText(
+                  _getConfirmButtonText(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colors.buttonPrimaryText,
+                  ),
+                ),
+              ),
+      ),
     );
   }
 
@@ -855,66 +870,8 @@ mixin _BookingFormUiMixin
           ),
           const SizedBox(height: BBSpace.xs),
 
-          // Confirm booking button (only show if showButton parameter is true)
-          if (showButton)
-            SizedBox(
-              width: double.infinity,
-              height: 54, // Increased by 10px (was 44)
-              child: ElevatedButton(
-                onPressed: _isProcessing
-                    ? () {}
-                    : () => _handleConfirmBooking(calculation),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: minimalistColors.buttonPrimary,
-                  foregroundColor: minimalistColors.buttonPrimaryText,
-                  disabledBackgroundColor: minimalistColors.buttonPrimary,
-                  disabledForegroundColor: minimalistColors.buttonPrimaryText,
-                  padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(BBRadiusBridges.medium),
-                    ),
-                  ),
-                ),
-                child: _isProcessing
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                minimalistColors.buttonPrimaryText,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Flexible(
-                            child: Text(
-                              _getConfirmButtonText(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: minimalistColors.buttonPrimaryText,
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Text(
-                        _getConfirmButtonText(),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: minimalistColors.buttonPrimaryText,
-                        ),
-                      ),
-              ),
-            ),
+          // Confirm booking button — reuse shared builder (see _buildConfirmButton)
+          if (showButton) _buildConfirmButton(calculation, minimalistColors),
         ],
       ),
     );

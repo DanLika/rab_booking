@@ -5,7 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
-import '../../../../shared/widgets/widgets.dart';
+import '../../../../shared/widgets/redesign.dart';
 
 /// Revenue data point
 class RevenueDataPoint {
@@ -37,7 +37,8 @@ class RevenueChartWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return PremiumCard.elevated(
+    // BbCard since audit F1b — PremiumCard (shared/card.dart) is retired.
+    return BbCard(
       padding: const EdgeInsets.all(AppDimensions.spaceL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

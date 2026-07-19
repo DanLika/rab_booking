@@ -10,9 +10,9 @@ import '../../../../../core/design/tokens.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/providers/enhanced_auth_provider.dart';
-import '../../../../../core/widgets/bb_skeleton.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../../../../shared/widgets/redesign/bb_avatar.dart';
+import '../../../../../shared/widgets/redesign/bb_skeleton.dart';
 import '../../../../../shared/widgets/redesign/bb_dialog.dart';
 import '../../providers/ai_chat_provider.dart';
 import '../../widgets/guides/ai_assistant_premium_header.dart';
@@ -498,7 +498,24 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
               borderRadius: BBRadius.smAll,
               border: Border.all(color: c.border),
             ),
-            child: const BBSkeleton(variant: BBSkeletonVariant.listRow),
+            // Inline listRow shape on the redesign BbSkeleton (audit F1b —
+            // core/widgets BBSkeleton is retired with the core bb_* dup set).
+            child: const Row(
+              children: <Widget>[
+                BbSkeleton(width: 40, height: 40, radius: 20),
+                SizedBox(width: BBSpace.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      BbSkeleton(width: 180, height: 14),
+                      SizedBox(height: BBSpace.xs),
+                      BbSkeleton(width: 120, height: 12),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
       ],
     );

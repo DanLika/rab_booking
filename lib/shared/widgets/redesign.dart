@@ -14,7 +14,6 @@ export 'redesign/bb_app_bar.dart';
 export 'redesign/bb_avatar.dart';
 export 'redesign/bb_avatar_slot.dart';
 export 'redesign/bb_avatar_upload.dart';
-export 'redesign/bb_bottom_sheet.dart';
 export 'redesign/bb_button.dart';
 export 'redesign/bb_card.dart';
 export 'redesign/bb_checkbox.dart';

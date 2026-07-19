@@ -11,7 +11,6 @@ library;
 export 'responsive/responsive_grid.dart';
 
 // Premium Components
-export 'card.dart';
 
 // Adaptive & Responsive Layouts
 

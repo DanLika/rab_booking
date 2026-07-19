@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../../shared/widgets/card.dart';
+import '../../../../../shared/widgets/redesign.dart';
 
 /// Unit Hub Empty State
 ///
@@ -152,9 +152,8 @@ class UnitHubEmptyState extends StatelessWidget {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return PremiumCard.elevated(
-      elevation: 4,
-      borderRadius: 16,
+    // BbCard since audit F1b — PremiumCard is retired.
+    return BbCard(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

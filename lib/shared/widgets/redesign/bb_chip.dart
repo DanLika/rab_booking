@@ -49,7 +49,7 @@ class BbChip extends StatelessWidget {
 
     final Color bg = filterSelected ? c.primary : c.surface;
     final Color fg = filterSelected
-        ? Colors.white
+        ? c.onPrimary
         : tabSelected
         ? c.primary
         : c.textSecondary;
@@ -113,8 +113,8 @@ class BbChip extends StatelessWidget {
                     '$count',
                     style: TextStyle(
                       color: filterSelected
-                          ? Colors.white
-                          : (countColor != null ? Colors.white : c.primary),
+                          ? c.onPrimary
+                          : (countColor != null ? c.onPrimary : c.primary),
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       height: 1,

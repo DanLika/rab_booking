@@ -46,6 +46,7 @@ class BBColorSet {
     required this.textPrimary,
     required this.textSecondary,
     required this.textTertiary,
+    this.onPrimary = Colors.white,
     required this.statusConfirmed,
     required this.statusPending,
     required this.statusCancelled,
@@ -65,6 +66,12 @@ class BBColorSet {
   final Color warning;
   final Color error;
   final Color info;
+
+  /// Ink on [primary]-filled surfaces (buttons, selected chips, brand
+  /// discs). White in both themes today — the token exists so a future
+  /// brand shift changes ONE value instead of a Colors.white sweep
+  /// (audit F3.3; visually neutral by construction).
+  final Color onPrimary;
 
   // Surfaces
   final Color bg;

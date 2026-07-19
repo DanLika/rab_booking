@@ -126,7 +126,7 @@ class _BbButtonState extends State<BbButton> {
       case BbButtonVariant.primary:
         return (
           bg: _hover ? c.primaryDark : c.primary,
-          fg: Colors.white,
+          fg: c.onPrimary,
           border: null,
           shadow: _hover ? BBShadow.purple : BBShadow.purpleSm,
         );
@@ -147,7 +147,7 @@ class _BbButtonState extends State<BbButton> {
       case BbButtonVariant.destructive:
         return (
           bg: c.error,
-          fg: Colors.white,
+          fg: c.onPrimary,
           border: null,
           shadow: const <BoxShadow>[],
         );
@@ -161,7 +161,7 @@ class _BbButtonState extends State<BbButton> {
       case BbButtonVariant.success:
         return (
           bg: c.success,
-          fg: Colors.white,
+          fg: c.onPrimary,
           border: null,
           shadow: const <BoxShadow>[],
         );

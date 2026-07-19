@@ -25,7 +25,7 @@ class BbLogo extends StatelessWidget {
       child: Text(
         'b',
         style: TextStyle(
-          color: Colors.white,
+          color: BBColor.of(context).onPrimary,
           fontWeight: FontWeight.w800,
           fontSize: size * 0.6,
           height: 1,

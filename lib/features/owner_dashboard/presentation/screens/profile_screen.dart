@@ -683,28 +683,37 @@ class _ProfilIdentityCard extends StatelessWidget {
                     maxLines: 1,
                   ),
                   if (!isAnonymous)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: c.primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(BBRadius.full),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          BbIcon(name: 'verified', size: 14, color: c.primary),
-                          const SizedBox(width: 4),
-                          Text(
-                            l10n.ownerProfileHostBadge,
-                            style: BBType.caption(context).copyWith(
-                              color: c.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
+                    Semantics(
+                      label: l10n.ownerProfileHostBadge,
+                      child: ExcludeSemantics(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 3,
                           ),
-                        ],
+                          decoration: BoxDecoration(
+                            color: c.primary.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(BBRadius.full),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              BbIcon(
+                                name: 'verified',
+                                size: 14,
+                                color: c.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                l10n.ownerProfileHostBadge,
+                                style: BBType.caption(context).copyWith(
+                                  color: c.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                 ],
@@ -865,24 +874,29 @@ class _VerifyChip extends StatelessWidget {
     final fg = isDone ? rd.statusConfirmedDeep : rd.statusPendingDeep;
     final icon = isDone ? 'check_circle' : 'error';
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(BBRadius.full),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          BbIcon(name: icon, size: 14, color: fg),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: BBType.caption(
-              context,
-            ).copyWith(color: fg, fontWeight: FontWeight.w600),
+    return Semantics(
+      label: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(BBRadius.full),
+        ),
+        child: ExcludeSemantics(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              BbIcon(name: icon, size: 14, color: fg),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: BBType.caption(
+                  context,
+                ).copyWith(color: fg, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1429,6 +1443,7 @@ class _ProfilStatStrip extends StatelessWidget {
     _ProfilStat(
       icon: 'star',
       tone: _StatTone.tertiary,
+      // TODO(l10n F6): translate stat labels when backend source exists
       label: 'OCJENA DOMAĆINA',
       value: '4,9',
       delta: '+0,2',
@@ -1437,6 +1452,7 @@ class _ProfilStatStrip extends StatelessWidget {
     _ProfilStat(
       icon: 'mark_chat_read',
       tone: _StatTone.success,
+      // TODO(l10n F6): translate stat labels when backend source exists
       label: 'STOPA ODGOVORA',
       value: '98%',
       delta: '+3%',
@@ -1445,13 +1461,16 @@ class _ProfilStatStrip extends StatelessWidget {
     _ProfilStat(
       icon: 'schedule',
       tone: _StatTone.info,
+      // TODO(l10n F6): translate stat labels when backend source exists
       label: 'VRIJEME ODGOVORA',
       value: '~1 h',
+      // TODO(l10n F6): translate stat sub-labels when backend source exists
       sub: 'prosjek zadnjih 30 dana',
     ),
     _ProfilStat(
       icon: 'task_alt',
       tone: _StatTone.primary,
+      // TODO(l10n F6): translate stat labels when backend source exists
       label: 'ZAVRŠENE REZERVACIJE',
       value: '48',
       delta: '+6',

@@ -50,4 +50,4 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [ ] dev deploy: ⚠ PROVJERI hosting target PRIJE (memorija: bookbed-owner-dev.web.app gađa PROD uprkos imenu!) — dev-first pravilo, PROD ostaje GO-gated
 - [ ] smoke na dev buildu (login + 2-3 fixana ekrana)
 ## GO-QUEUE (čeka operatora — NE raditi bez GO)
-upload implement-vs-hide · HRK removal · login hero-metrike · forgot glass · push/PR svi branchevi · PROD deploy
+unit_pricing Save gradient→solid (FROZEN 'Spremi' scope — F3.5 preskočio) · upload implement-vs-hide · HRK removal · login hero-metrike · forgot glass · push/PR svi branchevi · PROD deploy

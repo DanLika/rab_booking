@@ -1,8 +1,23 @@
 # BookBed Changelog
 
-All version history from v4.6 to v7.46.
+All version history from v4.6 to v7.48.
 
-**Last Updated**: 2026-07-18 | **Version**: 7.46
+**Last Updated**: 2026-07-19 | **Version**: 7.48
+
+---
+
+**Changelog 7.48** (2026-07-19) — VISUAL EXECUTION CAMPAIGN (audit sweep 7.46 → fixes) — **F1-F6 COMPLETE: ~30 local branches, all suites green, awaiting F8 integration merge + DEV deploy**:
+
+### feat/fix/chore: sistemski popravci po REMEDIATION_PLAN.md (izvršено kroz self-paced loop)
+- **F1+F1b konsolidacija:** 20 mrtvih fajlova obrisano; PremiumCard→BbCard (card.dart obrisan); redesign/bb_bottom_sheet obrisan; ai_assistant na BbSkeleton. core/widgets/bb_* set čeka GO (gallery/probe dev-alati).
+- **F2 primitivi (12/12):** BbInput params backport (textInputAction/focusNode/autofillHints/autofocus/textCapitalization); BbButton+BbChip 44px hit-area + Semantics; BbIcon decorative-by-default; BbSectionHeader header:true (34 sitea); BbCard/toggles/spinner/dialog/appbar/list-tile/loaderi a11y (liveRegion, ExcludeSemantics barijere, scopesRoute na BbDialog + bodyWidget slot).
+- **F4 bugovi (14):** mrtva mail/call dugmad (booking detail); unit_form area crash + amenities WIPE (UnitModel nije imao polje!); filters Clear→pop; confirmation copy pill wired na Clipboard; subscription no-opovi; smart_tooltip directional-insets crash; offline banner liveRegion + connectivity stream leak; AI-nudge no-op dugmad uklonjena; verif-poll pauza na background; imported badge provenance.
+- **F3 boje/flat (7):** IZRAČUNATI AA minimumi (ne plan-hexovi — mjerenje ih je oborilo): widget successText #047857/warningText #B45309/textTertiary #6F6F6F; badge tokeni imported #2B6CB0/pending #A05E14/confirmed #2A7354 (matrica uhvatila i slučaj koji je audit propustio)/completed-dark #A78BFF; onPrimary token; admin textTertiary white@0.50; flat-chrome regresije uklonjene (profile ×4, image_picker, cancel header, bb_logo default); skeleton dark OLED ladder; stale TIP-1 docstringovi.
+- **F5 ekrani (7 klastera):** kalendari (chrome Semantics ADITIVNO oko FROZEN), admin (SelectableText→Text row-tap fix, dark date-picker, static teme), auth (44px tap targeti, terms label-tap, liveRegion bez SR spama, legal trio headings), forme (overlay ExcludeSemantics, bank 1200, SF-012 leak fix), settings/guides, widget-gost (breakpointi 1200, confirm dedup, easeOutBack, SnackBarHelper), ostalo (wizard announce+labeli, BbDialog step2, splash).
+- **F6 l10n:** ProfileValidators kod→prevod po #943 uzoru (10 kodova, 9 call siteova, 9 ARB ključeva en+hr, 49-test matrica).
+- **Kontrast-matrice** (5 novih guard testova) drže AA floor po imenu; golden regeni ×38 svi namjerni (hit-area/boje/chrome), dokumentovani po commitu.
+- **GO-QUEUE za operatora:** unit_pricing Save gradient (FROZEN Spremi); gallery/probe migrate-vs-delete; master-panel 44px vs name floor; upload implement-vs-hide; HRK; login hero-metrike; forgot glass; iOS store URL; push/PR svih brancheva; PROD deploy.
+- Detalji: audit/full-screen-sweep-2026-07-18/EXECUTION.md (per-task sha+suite ledger) + memory visual-execution-campaign-2026-07-18.
 
 ---
 

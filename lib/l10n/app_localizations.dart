@@ -16251,6 +16251,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'PRO'**
   String get widgetSettingsProBadge;
+
+  /// No description provided for @subscriptionCheckoutErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start checkout. Please try again.'**
+  String get subscriptionCheckoutErrorGeneric;
+
+  /// No description provided for @subscriptionPortalErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open billing portal. Please try again.'**
+  String get subscriptionPortalErrorGeneric;
+
+  /// No description provided for @subscriptionPaymentSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment successful — activation in progress'**
+  String get subscriptionPaymentSuccess;
+
+  /// No description provided for @subscriptionPaymentCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout cancelled'**
+  String get subscriptionPaymentCancelled;
+
+  /// No description provided for @subscriptionManageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription'**
+  String get subscriptionManageLabel;
 }
 
 class _AppLocalizationsDelegate

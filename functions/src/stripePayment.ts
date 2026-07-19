@@ -1155,6 +1155,80 @@ async function handleInvoicePaid(
   }
 }
 
+async function handleInvoicePaymentFailed(
+  event: Extract<StripeWebhookEvent, {type: "invoice.payment_failed"}>,
+  res: ExpressResponse,
+  eventRef: WebhookEventRef
+): Promise<void> {
+  // ========================================================================
+  // SUBSCRIPTION PAYMENT FAILURE — marks status past_due so the owner can
+  // be surfaced a banner, but does NOT revoke access: Stripe Smart Retries
+  // will attempt collection up to 4× over ~2 weeks. accountStatus stays
+  // 'active' throughout; invoice.paid restores stripeSubscriptionStatus to
+  // 'active' on recovery.
+  // ponytail: no dunning escalation yet — accountStatus stays active while
+  // Stripe smart-retries; add a scheduled suspension pass if past_due
+  // tenants accumulate.
+  // ========================================================================
+  const invoice = event.data.object;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const subscription = (invoice as any).subscription;
+  const subscriptionId = typeof subscription === "string" ?
+    subscription :
+    subscription?.id;
+
+  if (!subscriptionId) {
+    // One-off invoice (not subscription-related) — nothing to do.
+    res.json({received: true});
+    return;
+  }
+
+  logInfo(`Processing invoice.payment_failed for subscription: ${subscriptionId}`);
+
+  try {
+    const usersSnapshot = await db
+      .collection("users")
+      .where("stripeSubscriptionId", "==", subscriptionId)
+      .limit(1)
+      .get();
+
+    if (usersSnapshot.empty) {
+      logWarn(`No user found for invoice.payment_failed (sub: ${subscriptionId}) - skipping`);
+      res.json({received: true, status: "user_not_found"});
+      return;
+    }
+
+    const userDoc = usersSnapshot.docs[0];
+    const userId = userDoc.id;
+    const userData = userDoc.data();
+
+    // Lifetime accounts are not on a recurring subscription — if a payment
+    // event fires (edge case), leave them untouched.
+    if (userData?.accountType === "lifetime") {
+      logInfo(`Lifetime user ${userId}: ignoring invoice.payment_failed`);
+      res.json({received: true, status: "lifetime_user_skipped"});
+      return;
+    }
+
+    await userDoc.ref.update({
+      stripeSubscriptionStatus: "past_due",
+      statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
+      statusChangedBy: "system_webhook",
+      statusChangeReason: "invoice_payment_failed",
+    });
+
+    logSuccess(`User ${userId} marked past_due via invoice.payment_failed`);
+    res.json({received: true, status: "past_due"});
+  } catch (error: any) {
+    logError("Error processing invoice.payment_failed", error);
+    // SF-038 compensating delete: without this a transient Firestore failure
+    // here marks the event "duplicate" on every Stripe retry, leaving
+    // stripeSubscriptionStatus stale.
+    await eventRef.delete().catch(() => {});
+    res.status(500).send("Internal server error");
+  }
+}
+
 async function handleCheckoutSessionCompleted(
   event: Extract<StripeWebhookEvent, {type: "checkout.session.completed"}>,
   res: ExpressResponse,
@@ -1542,6 +1616,8 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
     await handleSubscriptionDeleted(event, res, eventRef);
   } else if (event.type === "invoice.paid") {
     await handleInvoicePaid(event, res, eventRef);
+  } else if (event.type === "invoice.payment_failed") {
+    await handleInvoicePaymentFailed(event, res, eventRef);
   } else if (event.type === "checkout.session.completed") {
     await handleCheckoutSessionCompleted(event, res, eventRef);
   } else {

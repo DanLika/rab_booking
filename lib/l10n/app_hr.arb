@@ -3735,5 +3735,10 @@
   "widgetSettingsShowPrices": "Prikaži cijene u kalendaru",
   "widgetSettingsBranding": "Oznaka „Powered by BookBed”",
   "widgetSettingsBrandingPro": "Uklonite uz Pro",
-  "widgetSettingsProBadge": "PRO"
+  "widgetSettingsProBadge": "PRO",
+  "subscriptionCheckoutErrorGeneric": "Nije moguće pokrenuti plaćanje. Pokušajte ponovo.",
+  "subscriptionPortalErrorGeneric": "Nije moguće otvoriti portal za naplatu. Pokušajte ponovo.",
+  "subscriptionPaymentSuccess": "Plaćanje uspješno — aktivacija u toku",
+  "subscriptionPaymentCancelled": "Odjava iz plaćanja",
+  "subscriptionManageLabel": "Upravljaj pretplatom"
 }

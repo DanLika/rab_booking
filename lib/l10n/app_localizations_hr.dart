@@ -9076,4 +9076,22 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get widgetSettingsProBadge => 'PRO';
+
+  @override
+  String get subscriptionCheckoutErrorGeneric =>
+      'Nije moguće pokrenuti plaćanje. Pokušajte ponovo.';
+
+  @override
+  String get subscriptionPortalErrorGeneric =>
+      'Nije moguće otvoriti portal za naplatu. Pokušajte ponovo.';
+
+  @override
+  String get subscriptionPaymentSuccess =>
+      'Plaćanje uspješno — aktivacija u toku';
+
+  @override
+  String get subscriptionPaymentCancelled => 'Odjava iz plaćanja';
+
+  @override
+  String get subscriptionManageLabel => 'Upravljaj pretplatom';
 }

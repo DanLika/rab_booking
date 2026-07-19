@@ -13,7 +13,13 @@ import '../../../../shared/widgets/redesign.dart';
 import '../../data/admin_users_repository.dart';
 import 'admin_shell_screen.dart';
 
-/// Responsive breakpoint for mobile layout
+/// Responsive breakpoint for mobile layout.
+///
+/// This drives a `LayoutBuilder` reflow (single-column vs 2-column card grid),
+/// NOT a MediaQuery typography/padding pivot, so per the breakpoint-classify
+/// rule it stays a named local const rather than migrating to 1200.
+/// 900 is deliberately tighter than the shell's sidebar breakpoint (1100) so
+/// the detail panel collapses before the sidebar steals too much width.
 const double _mobileBreakpoint = 900.0;
 
 /// User detail screen with edit functionality and modern UI
@@ -588,8 +594,19 @@ class _InfoRow extends StatelessWidget {
                     ),
                     if (copyable) ...[
                       const SizedBox(width: BBSpace.xs),
-                      InkWell(
-                        onTap: () async {
+                      IconButton(
+                        // a11y: 44×44 minimum touch target
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
+                        ),
+                        tooltip: 'Copy $label',
+                        icon: const Icon(
+                          Icons.copy,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
+                        onPressed: () async {
                           try {
                             await Clipboard.setData(ClipboardData(text: value));
                             if (context.mounted) {
@@ -604,11 +621,6 @@ class _InfoRow extends StatelessWidget {
                             // Clipboard API can fail on some browsers
                           }
                         },
-                        child: const Icon(
-                          Icons.copy,
-                          size: 14,
-                          color: AppColors.primary,
-                        ),
                       ),
                     ],
                   ],
@@ -649,11 +661,8 @@ class _StatisticsCard extends ConsumerWidget {
               Expanded(
                 child: _StatBox(
                   label: 'Properties',
-                  value: propertiesAsync.when(
-                    data: (d) => d.toString(),
-                    loading: () => '...',
-                    error: (_, _) => '-',
-                  ),
+                  value: propertiesAsync.valueOrNull?.toString() ?? '-',
+                  isLoading: propertiesAsync.isLoading,
                   icon: Icons.home_work_outlined,
                   color: AppColors.info,
                 ),
@@ -662,11 +671,8 @@ class _StatisticsCard extends ConsumerWidget {
               Expanded(
                 child: _StatBox(
                   label: 'Bookings',
-                  value: bookingsAsync.when(
-                    data: (d) => d.toString(),
-                    loading: () => '...',
-                    error: (_, _) => '-',
-                  ),
+                  value: bookingsAsync.valueOrNull?.toString() ?? '-',
+                  isLoading: bookingsAsync.isLoading,
                   icon: Icons.calendar_month_outlined,
                   color: AppColors.warning,
                 ),
@@ -682,6 +688,7 @@ class _StatisticsCard extends ConsumerWidget {
 class _StatBox extends StatelessWidget {
   final String label;
   final String value;
+  final bool isLoading;
   final IconData icon;
   final Color color;
 
@@ -690,6 +697,7 @@ class _StatBox extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.color,
+    this.isLoading = false,
   });
 
   @override
@@ -705,12 +713,15 @@ class _StatBox extends StatelessWidget {
         children: [
           Icon(icon, size: 24, color: color),
           const SizedBox(height: BBSpace.xs),
-          Text(
-            value,
-            style: BBType.h2(
-              context,
-            ).copyWith(fontWeight: FontWeight.bold, color: color),
-          ),
+          if (isLoading)
+            const BbSkeleton(width: 40, height: 24)
+          else
+            Text(
+              value,
+              style: BBType.h2(
+                context,
+              ).copyWith(fontWeight: FontWeight.bold, color: color),
+            ),
           Text(
             label,
             style: BBType.caption(

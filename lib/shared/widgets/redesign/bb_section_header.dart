@@ -4,6 +4,13 @@ import '../../../core/design/tokens.dart';
 import 'bb_icon.dart';
 
 /// Section title + optional count + trailing link action (handoff [BBSectionHeader]).
+///
+/// **A11y (audit sweep F2.5):** the title emits `Semantics(header: true)` so
+/// screen-reader heading navigation lands on every section (34 call sites
+/// inherited the gap — legal cluster, settings, about…). The trailing action
+/// announces as a single button node (icon suppressed). Hit-area growth for
+/// the action link is deferred — it reshapes 34 header rows and needs its
+/// own golden pass.
 class BbSectionHeader extends StatelessWidget {
   const BbSectionHeader({
     super.key,
@@ -44,10 +51,13 @@ class BbSectionHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: <Widget>[
                 Flexible(
-                  child: Text(
-                    title,
-                    style: _titleStyle(context),
-                    overflow: TextOverflow.ellipsis,
+                  child: Semantics(
+                    header: true,
+                    child: Text(
+                      title,
+                      style: _titleStyle(context),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
                 if (count != null) ...<Widget>[
@@ -69,26 +79,34 @@ class BbSectionHeader extends StatelessWidget {
             ),
           ),
           if (actionLabel != null)
-            InkWell(
-              onTap: onActionTap,
-              borderRadius: BBRadius.smAll,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: BBSpace.xs,
-                  vertical: 4,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      actionLabel!,
-                      style: BBType.label(
-                        context,
-                      ).copyWith(color: c.primary, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(width: 4),
-                    BbIcon(name: 'arrow_forward', size: 16, color: c.primary),
-                  ],
+            // One merged button node — the raw tree announced the label text
+            // and the arrow glyph as separate stops (audit F2.5).
+            Semantics(
+              button: true,
+              label: actionLabel,
+              excludeSemantics: true,
+              child: InkWell(
+                onTap: onActionTap,
+                borderRadius: BBRadius.smAll,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: BBSpace.xs,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        actionLabel!,
+                        style: BBType.label(context).copyWith(
+                          color: c.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      BbIcon(name: 'arrow_forward', size: 16, color: c.primary),
+                    ],
+                  ),
                 ),
               ),
             ),

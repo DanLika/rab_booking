@@ -5,6 +5,7 @@ import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/design/tokens.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../l10n/widget_translations.dart';
+import '../../providers/theme_provider.dart';
 
 /// Card showing email confirmation status with resend functionality.
 ///
@@ -137,8 +138,9 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
     // Enable resend if we have email and booking reference
     final canResend =
         widget.guestEmail.isNotEmpty && widget.bookingReference.isNotEmpty;
-    // Detect dark mode for better contrast
-    final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
+    // Detect dark mode — watch provider once per build, avoids per-call
+    // computeLuminance() which recomputes OKHSL on every rebuild.
+    final isDark = ref.watch(themeProvider);
     // Dark mode: pure black background matching parent, with visible border
     final cardBackground = isDark ? Colors.black : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;

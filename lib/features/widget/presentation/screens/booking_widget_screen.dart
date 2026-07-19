@@ -638,7 +638,8 @@ class _BookingWidgetScreenState extends _BookingWidgetScreenStateBase
                 ? constraints.maxWidth
                 : 1200.0; // Fallback to reasonable default
             final forceMonthView =
-                screenWidth < 1024; // Year view only on desktop
+                screenWidth <
+                1200; // Year view only on desktop (≥1200 canonical)
 
             // Watch calendar view to determine max content width for centering
             final currentCalendarView = ref.watch(calendarViewProvider);
@@ -651,7 +652,7 @@ class _BookingWidgetScreenState extends _BookingWidgetScreenStateBase
             // On large screens, use symmetric padding (same horizontal and vertical)
             final basePadding = screenWidth < 600
                 ? 12.0 // Mobile
-                : screenWidth < 1024
+                : screenWidth < 1200
                 ? 12.0 // Tablet (same as mobile for better space utilization)
                 : isLargeScreen
                 ? 24.0 // Large screen
@@ -743,7 +744,7 @@ class _BookingWidgetScreenState extends _BookingWidgetScreenStateBase
                                     Padding(
                                       padding: EdgeInsets.only(
                                         top: 8,
-                                        bottom: screenWidth >= 1024 ? 24 : 16,
+                                        bottom: screenWidth >= 1200 ? 24 : 16,
                                       ),
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(
@@ -829,16 +830,18 @@ class _BookingWidgetScreenState extends _BookingWidgetScreenStateBase
                                         final isDark = ref2.watch(
                                           themeProvider,
                                         );
-                                        final warnBg = isDark
-                                            ? const Color(0x33F87171)
-                                            : const Color(0x1AEF4444);
-                                        final warnFg = isDark
-                                            ? const Color(0xFFF87171)
-                                            : const Color(0xFFEF4444);
+                                        // Use MinimalistColors booking-denied
+                                        // red tokens — statusBookedText is
+                                        // #EF4444 in both light and dark.
+                                        final warnFg =
+                                            MinimalistColors.statusBookedText;
+                                        final warnBg = warnFg.withValues(
+                                          alpha: isDark ? 0.20 : 0.10,
+                                        );
                                         return Padding(
                                           padding: EdgeInsets.only(
                                             top: 8,
-                                            bottom: screenWidth >= 1024
+                                            bottom: screenWidth >= 1200
                                                 ? 24
                                                 : 16,
                                           ),
@@ -942,23 +945,15 @@ class _BookingWidgetScreenState extends _BookingWidgetScreenStateBase
                                                           context,
                                                           ref,
                                                         );
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(
-                                                          tr.minimumNightsRequired(
+                                                    SnackBarHelper.showError(
+                                                      context: context,
+                                                      message: tr
+                                                          .minimumNightsRequired(
                                                             minNights,
                                                             selectedNights,
                                                           ),
-                                                        ),
-                                                        backgroundColor:
-                                                            minimalistColors
-                                                                .error,
-                                                        duration:
-                                                            const Duration(
-                                                              seconds: 3,
-                                                            ),
+                                                      duration: const Duration(
+                                                        seconds: 3,
                                                       ),
                                                     );
                                                     return;
@@ -1030,16 +1025,20 @@ class _BookingWidgetScreenState extends _BookingWidgetScreenStateBase
                 // Full-screen backdrop overlay when guest form is shown
                 if (_showGuestForm)
                   Positioned.fill(
-                    child: GestureDetector(
-                      onTap: () {
-                        if (mounted) {
-                          setState(() {
-                            _showGuestForm = false;
-                          });
-                        }
-                      },
-                      child: Container(
-                        color: Colors.black.withValues(alpha: 0.5),
+                    child: Semantics(
+                      button: true,
+                      label: WidgetTranslations.of(context, ref).close,
+                      child: GestureDetector(
+                        onTap: () {
+                          if (mounted) {
+                            setState(() {
+                              _showGuestForm = false;
+                            });
+                          }
+                        },
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.5),
+                        ),
                       ),
                     ),
                   ),

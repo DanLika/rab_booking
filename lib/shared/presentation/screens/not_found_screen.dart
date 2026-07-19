@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../widgets/common_app_bar.dart';
 
 /// 404 Not Found screen
 class NotFoundScreen extends StatelessWidget {
@@ -8,9 +9,8 @@ class NotFoundScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Stranica nije pronađena'),
-        centerTitle: true,
+      appBar: CommonAppBar(
+        title: 'Stranica nije pronađena', // TODO(l10n): localize title
       ),
       body: SafeArea(
         child: Center(
@@ -29,16 +29,19 @@ class NotFoundScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  'Stranica nije pronađena',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Semantics(
+                  header: true,
+                  child: Text(
+                    'Stranica nije pronađena', // TODO(l10n): localize
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Tražena stranica ne postoji ili je uklonjena.',
+                  'Tražena stranica ne postoji ili je uklonjena.', // TODO(l10n): localize
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
@@ -48,7 +51,9 @@ class NotFoundScreen extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: () => context.go('/'),
                   icon: const Icon(Icons.home),
-                  label: const Text('Povratak na početnu'),
+                  label: const Text(
+                    'Povratak na početnu',
+                  ), // TODO(l10n): localize
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 32,
@@ -65,7 +70,7 @@ class NotFoundScreen extends StatelessWidget {
                       context.go('/');
                     }
                   },
-                  child: const Text('Natrag'),
+                  child: const Text('Natrag'), // TODO(l10n): localize
                 ),
               ],
             ),

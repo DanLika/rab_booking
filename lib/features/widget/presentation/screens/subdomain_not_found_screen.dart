@@ -74,11 +74,14 @@ class SubdomainNotFoundScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: BBSpace.lg),
 
-                    // Title — h1
-                    Text(
-                      tr.propertyNotFoundTitle,
-                      style: BBType.h1(context),
-                      textAlign: TextAlign.center,
+                    // Title — h1, announced as heading for screen readers
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        tr.propertyNotFoundTitle,
+                        style: BBType.h1(context),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     const SizedBox(height: BBSpace.sm),
 

@@ -47,7 +47,8 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] 5C auth — fix/f5c-auth-chrome @aefdfd01+@dc51550a, suite 1961 GREEN (toggle/footer 44px; terms label-tap uz link recognizer; verif liveRegion na status NE countdown; legal trio header/ToC/FAB/const datum; golden regen auth_register ×4 — 44px terms row)
 - [x] 5D forme — fix/f5d-owner-forms @fa18fe7a, suite 1959 GREEN (overlay BbCard+ExcludeSemantics; delete 44px; bank 1024→1200; strength liveRegion; edit_profile SF-012 leak fix; ⚠ textInputAction/autofill za bank/change_password POSLIJE F8 mergea — trebaju feat/f21 parami)
 - [x] 5E settings/guides — fix/f5e-settings-guides (chipovi/swatches/slideri Semantics; quiet-time 44px; iCal 900→1200 + builder liste; guides copy 44px; tax_legal hunk REVERTOVAN — F4.10 branch posjeduje fajl; suite u toku)
-- [ ] 5F widget-gost → [ ] 5G ostalo
+- [x] 5F widget-gost — fix/f5f-widget-guest @eeaf4d9e (breakpointi 1024→1200 ×4; confirm blok dedup; backdrop Semantics; SnackBarHelper; pill bar 320-safe; details header ellipsis; elasticOut→easeOutBack; legacy tokeni; computeLuminance→themeProvider; 404/subdomain header roles; POUKA: prvi agent umro usred posla — drugi agent nastavio po git diff stanju; suite -5 ISTRAŽITI na wakeup)
+- [x] 5G ostalo — fix/f5g-misc-screens (subscription toggle Semantics+44+consts; wizard announce+node labeli+BbDialog step2; splash liveRegion+tokeni; master panel 44px DROPPED → GO-queue: širina ×3 gnječi čuvani 60px name floor @320, panel fiksne širine — treba dizajn odluka; suite u toku)
 ## F6 l10n — [ ] validatori kod→prevod; [ ] hardcoded HR/EN sweep (ARB ×4)
 ## F7 — [ ] /audit re-run 5 najgorih; [ ] golden konsolidacija; [ ] CHANGELOG/audit-log; [ ] GO-queue prezentacija operatoru
 ## F8 ZAVRŠNO (nalog operatora 2026-07-18): MERGE → TEST → COMMIT → DEV
@@ -55,4 +56,4 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [ ] dev deploy: ⚠ PROVJERI hosting target PRIJE (memorija: bookbed-owner-dev.web.app gađa PROD uprkos imenu!) — dev-first pravilo, PROD ostaje GO-gated
 - [ ] smoke na dev buildu (login + 2-3 fixana ekrana)
 ## GO-QUEUE (čeka operatora — NE raditi bez GO)
-unit_pricing Save gradient→solid (FROZEN 'Spremi') · gallery/probe dev-alati: migrate-na-Bb* vs delete (core/widgets/bb_* čeka tu odluku) · upload implement-vs-hide · HRK removal · login hero-metrike · forgot glass · push/PR svi branchevi · PROD deploy
+unit_pricing Save gradient→solid (FROZEN 'Spremi') · gallery/probe dev-alati: migrate-vs-delete · master-panel 44px ikonice vs 60px name floor (šire panel ili overflow meni?) · upload implement-vs-hide · HRK removal · login hero-metrike · forgot glass · push/PR svi branchevi · PROD deploy

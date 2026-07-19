@@ -556,7 +556,7 @@ class _EmailVerificationScreenState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 1. Auth-family branding — BbLogo
-        Center(child: BbLogo(size: logoSize, useGradient: false)),
+        Center(child: BbLogo(size: logoSize)),
         SizedBox(height: isSmallHeight ? 12 : 16),
 
         // 2. Mail-icon state-mark disc (primary tint)

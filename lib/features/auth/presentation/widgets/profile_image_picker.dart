@@ -114,16 +114,11 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
     return Container(
       width: widget.size,
       height: widget.size,
+      // Flat primary since audit F3.5 — the diagonal gradient violated the
+      // 2026-06-16 flat-chrome decision.
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primaryContainer,
-          ],
-        ),
+        color: theme.colorScheme.primary,
       ),
       child: Center(
         child: Text(
@@ -228,16 +223,10 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.all(10),
+                    // Flat primary since audit F3.5 (flat-chrome).
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primaryContainer,
-                        ],
-                      ),
+                      color: theme.colorScheme.primary,
                       border: Border.all(
                         color: theme.colorScheme.surface,
                         width: 3,

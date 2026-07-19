@@ -440,7 +440,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
 
     return Column(
       children: [
-        BbLogo(size: logoSize, useGradient: false),
+        BbLogo(size: logoSize),
         SizedBox(height: isSmallHeight ? 12 : (isCompact ? 16 : 24)),
         ProfileImagePicker(
           size: avatarSize,

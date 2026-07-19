@@ -42,7 +42,9 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [~] core/widgets/bb_* set: ai_assistant (zadnji ne-dev konzument) migriran na redesign BbSkeleton; SAM SET ostaje — jedini konzumenti gallery_dev (54 sitea) + responsive_probe = dev alati → GO-QUEUE (migrate vs delete showcases = operator)
 - [x] redesign/bb_bottom_sheet DELETED (0 callera) — isti branch
 ## F5 ekrani (klaster PR-ovi, punch-liste u REMEDIATION_PLAN.md §5A-5G)
-- [ ] 5A kalendari → [ ] 5B admin → [ ] 5C auth → [ ] 5D forme → [ ] 5E settings/guides → [ ] 5F widget-gost → [ ] 5G ostalo
+- [x] 5A kalendari — fix/f5a-calendar-chrome @25870273, suite 1952 GREEN (delegirano sonnetu + firsthand verify; portrait-lock <600 only, FAB/day-cell/date-header Semantics ADITIVNO, dupli setState konsolidovan uz post-frame za AnimatedSize, red.shade700→AppColors.error, textInputAction ×3, CalendarDayCell Semantics IZVAN FROZEN sadržaja; 7 testova; 0 golden diffova)
+- [x] 5B admin — fix/f5b-admin-chrome (event kartice Semantics + toLocal; user_detail copy 44px + BbSkeleton umjesto '...'; users_list SelectableText→Text vraća row-tap + dark date-picker + kartica Semantics; shell static teme + nav selected + SignOut 44px; KPI Tooltip+Semantics; 6 testova; POUKA: agentov "pre-existing infos" claim bio netačan — +2 u njegovom test fajlu, počišćeno firsthand)
+- [ ] 5C auth → [ ] 5D forme → [ ] 5E settings/guides → [ ] 5F widget-gost → [ ] 5G ostalo
 ## F6 l10n — [ ] validatori kod→prevod; [ ] hardcoded HR/EN sweep (ARB ×4)
 ## F7 — [ ] /audit re-run 5 najgorih; [ ] golden konsolidacija; [ ] CHANGELOG/audit-log; [ ] GO-queue prezentacija operatoru
 ## F8 ZAVRŠNO (nalog operatora 2026-07-18): MERGE → TEST → COMMIT → DEV

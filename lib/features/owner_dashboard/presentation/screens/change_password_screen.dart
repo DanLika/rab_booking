@@ -428,6 +428,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
 
                                       // Password strength meter (kept inline,
                                       // dynamic — can't live in BbInput.helper).
+                                      // liveRegion: announces the new strength
+                                      // label whenever the level changes.
                                       if (_newPasswordController
                                           .text
                                           .isNotEmpty)
@@ -435,12 +437,15 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                           padding: const EdgeInsets.only(
                                             top: BBSpace.xs,
                                           ),
-                                          child: _PasswordStrengthMeter(
-                                            strength: _passwordStrength,
-                                            missingRequirements:
-                                                _missingRequirements,
-                                            l10n: l10n,
-                                            c: c,
+                                          child: Semantics(
+                                            liveRegion: true,
+                                            child: _PasswordStrengthMeter(
+                                              strength: _passwordStrength,
+                                              missingRequirements:
+                                                  _missingRequirements,
+                                              l10n: l10n,
+                                              c: c,
+                                            ),
                                           ),
                                         ),
                                       const SizedBox(height: BBSpace.md),
@@ -612,7 +617,7 @@ class _PasswordStrengthMeter extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: tone.withAlpha((0.1 * 255).toInt()),
+                color: tone.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(

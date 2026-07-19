@@ -345,7 +345,10 @@ class BbAdminDarkTokens extends ThemeExtension<BbAdminDarkTokens> {
     divider: Color(0x14FFFFFF), // rgba(255,255,255,0.08)
     textPrimary: Color(0xFFFFFFFF),
     textSecondary: Color(0xB8FFFFFF), // rgba(255,255,255,0.72)
-    textTertiary: Color(0x66FFFFFF), // rgba(255,255,255,0.40)
+    // white@0.50 = computed minimum clearing 4.5:1 composited over every
+    // admin surface (#2A2342 worst case 4.81:1; the old 0.40 measured
+    // 3.62:1 — audit F3.4, #951 class: admin was never covered).
+    textTertiary: Color(0x80FFFFFF), // rgba(255,255,255,0.50)
     navTileIdleBg: Color(0x0FFFFFFF), // rgba(255,255,255,0.06)
     navTileActiveBg: Color(0x14FFFFFF), // rgba(255,255,255,0.08)
     navTileActiveBorder: Color(0x1AFFFFFF), // rgba(255,255,255,0.10)

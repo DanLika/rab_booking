@@ -106,7 +106,8 @@ class _BbRadioState<T> extends State<BbRadio<T>> {
       focusNode: _focusNode,
       borderRadius: BBRadius.smAll,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 44),
+        // minWidth 48: the label-less dot collapsed to ~24px (audit F2.7).
+        constraints: const BoxConstraints(minHeight: 44, minWidth: 48),
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: BBSpace.xxs,
@@ -149,11 +150,26 @@ class _BbRadioState<T> extends State<BbRadio<T>> {
       ),
     );
 
-    return Semantics(
-      label: widget.semanticLabel ?? widget.label,
-      selected: selected,
-      enabled: !disabled,
-      child: Opacity(opacity: disabled ? 0.45 : 1.0, child: row),
+    // Radio contract (audit F2.7): `checked` + `inMutuallyExclusiveGroup`
+    // are what TalkBack/VoiceOver need to announce a radio button — the old
+    // `selected:` read as a generic selectable tile. Opacity moved OUTSIDE
+    // Semantics; subtitle folded into the label; excludeSemantics kills the
+    // double-read.
+    return Opacity(
+      opacity: disabled ? 0.45 : 1.0,
+      child: Semantics(
+        label:
+            widget.semanticLabel ??
+            <String>[
+              if (widget.label != null) widget.label!,
+              if (widget.subtitle != null) widget.subtitle!,
+            ].join(', '),
+        checked: selected,
+        inMutuallyExclusiveGroup: true,
+        enabled: !disabled,
+        excludeSemantics: true,
+        child: row,
+      ),
     );
   }
 }
@@ -238,7 +254,9 @@ class BbRadioGroup<T> extends StatelessWidget {
       return FormField<T>(
         initialValue: value,
         autovalidateMode: autovalidateMode,
-        validator: (_) => validator!.call(value),
+        // Prefer the FormField's own accumulated value — validating the
+        // outer prop raced parent rebuilds (audit F2.7).
+        validator: (T? stateVal) => validator!.call(stateVal ?? value),
         builder: (FormFieldState<T> state) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,

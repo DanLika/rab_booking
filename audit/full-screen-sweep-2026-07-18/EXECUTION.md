@@ -34,8 +34,8 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] F3.2 bb_status_badge — fix/f32-status-badge @d70d063a, suite GREEN (IZRAČUNATI minimumi na kompozitnom tintu: imported L #2B6CB0, pending L #A05E14, confirmed L #2A7354 — matrica UHVATILA i confirmed 4.27:1 koji je audit propustio, completed D #A78BFF; ×3 token surfacea konzistentno; badge Semantics node + pending dot statusPendingDeep; golden regen ×12 NAMJERAN — boja-only na legendama/chipovima)
 - [x] F3.3 BBColorSet.onPrimary — fix/f33-onprimary-token @7aa8a95b, suite 1947 GREEN (default Colors.white na konstruktoru = svi setovi automatski; BbButton primary/destructive/success + BbChip + BbCheckbox + BbLogo migrirani; onGradient/translucent NAMJERNO ne; neutrality-pin test; bajt-identično, bez rendera)
 - [x] F3.4 admin textTertiary — fix/f34-admin-tertiary @13371aeb, suite 1946 GREEN (white@0.40→0.50 = 3.62→4.81:1 na panelBg #2A2342; postojeći pin test ažuriran uz obrazloženje; novi named-surface guard test)
-- [ ] F3.5 flat regresije: profile_screen ×4 → solid; profile_image_picker; unit_pricing Save; booking_cancel_dialog header; bb_logo default false (+eyeball 3 default-sitea)
-- [ ] F3.6 stale TIP-1 docstringovi (5 fajlova, doc-only)
+- [x] F3.5 flat regresije — fix/f35-flat-regressions @f5398dfc, suite 1947 GREEN (profile ×4 solid primary + gauge painter Color umjesto shadera — usput fix always-true shouldRepaint; image_picker ×2; cancel dialog header gradient DROPPED — reject nikad nije imao = asimetrija; bb_logo default false + lažni asset-fallback docstring; golden regen ×12 namjeran; unit_pricing Save → GO-QUEUE jer FROZEN 'Spremi')
+- [x] F3.6 stale TIP-1 docstringovi — docs/f36-stale-tip1-docstrings @c234c42c, comments-only 0 behavior, analyze 112 baseline (unit_form ×2, step_4_review, widget_settings_section, property_form ×2; admin_login dijagonala je ŽIVI sanctioned hero — netaknut)
 - [ ] F3.7 skeleton dark ladder na audit/127 (#1E1E1E/#2A2A2A/#333333) + StatsCards light-only fix
 ## F1b konsolidacija
 - [ ] PremiumCard: migriraj 2 callera → BbCard, obriši card.dart + glass API

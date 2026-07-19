@@ -3740,5 +3740,10 @@
   "widgetSettingsShowPrices": "Show prices in the calendar",
   "widgetSettingsBranding": "“Powered by BookBed” badge",
   "widgetSettingsBrandingPro": "Remove with Pro",
-  "widgetSettingsProBadge": "PRO"
+  "widgetSettingsProBadge": "PRO",
+  "subscriptionCheckoutErrorGeneric": "Could not start checkout. Please try again.",
+  "subscriptionPortalErrorGeneric": "Could not open billing portal. Please try again.",
+  "subscriptionPaymentSuccess": "Payment successful — activation in progress",
+  "subscriptionPaymentCancelled": "Checkout cancelled",
+  "subscriptionManageLabel": "Manage subscription"
 }

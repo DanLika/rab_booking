@@ -9001,4 +9001,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetSettingsProBadge => 'PRO';
+
+  @override
+  String get subscriptionCheckoutErrorGeneric =>
+      'Could not start checkout. Please try again.';
+
+  @override
+  String get subscriptionPortalErrorGeneric =>
+      'Could not open billing portal. Please try again.';
+
+  @override
+  String get subscriptionPaymentSuccess =>
+      'Payment successful — activation in progress';
+
+  @override
+  String get subscriptionPaymentCancelled => 'Checkout cancelled';
+
+  @override
+  String get subscriptionManageLabel => 'Manage subscription';
 }

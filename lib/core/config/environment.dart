@@ -110,6 +110,35 @@ class EnvironmentConfig {
     }
   }
 
+  /// Stripe Price IDs for the BookBed Pro subscription plans.
+  ///
+  /// Empty string = "not configured in this environment" — the checkout flow
+  /// degrades to the coming-soon dialog (data honesty). Price IDs are NOT
+  /// secrets; the server validates against its own allowlist.
+  /// Operator: paste each env's price ID after Stripe product creation.
+  /// Dev IDs are TEST-mode (product prod_UuWefrc0bfmq17, created 2026-07-19).
+  static String get stripeProMonthlyPriceId {
+    switch (_current) {
+      case Environment.development:
+        return 'price_1TuhalBomKO7vDr0o19ExoP6';
+      case Environment.staging:
+        return '';
+      case Environment.production:
+        return '';
+    }
+  }
+
+  static String get stripeProYearlyPriceId {
+    switch (_current) {
+      case Environment.development:
+        return 'price_1TuhalBomKO7vDr0NwtUOMIf';
+      case Environment.staging:
+        return '';
+      case Environment.production:
+        return '';
+    }
+  }
+
   /// VAPID public key for Firebase Cloud Messaging web push.
   /// Each Firebase project mints its own VAPID key pair under
   /// Firebase Console → Project Settings → Cloud Messaging → Web Push certificates.

@@ -11,8 +11,12 @@ import '../../../core/theme/gradient_extensions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/common_app_bar.dart';
 import '../../../shared/widgets/redesign.dart';
+import '../../../core/services/logging_service.dart';
+import '../../../core/utils/error_display_utils.dart';
+import '../data/subscription_repository.dart';
 import '../models/trial_status.dart';
 import '../providers/trial_status_provider.dart';
+import '../utils/stripe_url_guard.dart';
 
 /// Subscription Screen
 ///
@@ -25,17 +29,144 @@ import '../providers/trial_status_provider.dart';
 ///
 /// UI-only refactor onto `Bb*` redesign primitives. Subscription / Stripe /
 /// payment state machine logic UNTOUCHED.
-class SubscriptionScreen extends StatefulWidget {
+/// Shared checkout/portal dispatch for both "Nadogradi na Pro" call sites.
+///
+/// Resolution order:
+/// - already subscribed → Stripe Billing Portal (manage, not double-subscribe;
+///   the CF has no server-side double-subscribe guard yet);
+/// - price ID for the selected interval empty (staging/prod until the operator
+///   creates live prices) → existing "coming soon" dialog, no network call;
+/// - otherwise → Checkout Session; the returned URL is only followed when
+///   [isSafeStripeUrl] accepts it.
+///
+/// [redirect] is injectable so tests can spy the destination; production uses
+/// a same-tab `launchUrl` (web-only flow — native never reaches this handler).
+@visibleForTesting
+Future<void> handleSubscriptionCheckoutTap({
+  required BuildContext context,
+  required SubscriptionRepository repository,
+  required bool yearly,
+  required bool isSubscribed,
+  Future<void> Function(Uri uri)? redirect,
+}) async {
+  final AppLocalizations l10n = AppLocalizations.of(context);
+  final Future<void> Function(Uri uri) doRedirect =
+      redirect ?? (Uri uri) => launchUrl(uri, webOnlyWindowName: '_self');
+  final String returnUrl =
+      '${EnvironmentConfig.dashboardBaseUrl}/owner/subscription';
+
+  try {
+    final String url;
+    if (isSubscribed) {
+      url = await repository.createPortalSession(returnUrl: returnUrl);
+    } else {
+      final String priceId = yearly
+          ? EnvironmentConfig.stripeProYearlyPriceId
+          : EnvironmentConfig.stripeProMonthlyPriceId;
+      if (priceId.isEmpty) {
+        showUpgradeComingSoonDialog(context);
+        return;
+      }
+      url = await repository.createCheckoutSession(
+        priceId: priceId,
+        returnUrl: returnUrl,
+      );
+    }
+    if (!isSafeStripeUrl(url)) {
+      throw StateError('unsafe redirect URL');
+    }
+    await doRedirect(Uri.parse(url));
+  } catch (e, stackTrace) {
+    // Class-2 policy: never surface raw error text to the user.
+    await LoggingService.logError(
+      'Subscription: checkout/portal dispatch failed',
+      e,
+      stackTrace,
+    );
+    if (context.mounted) {
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        isSubscribed
+            ? l10n.subscriptionPortalErrorGeneric
+            : l10n.subscriptionCheckoutErrorGeneric,
+      );
+    }
+  }
+}
+
+/// "Coming soon" dialog — the pre-wiring behavior, kept for environments
+/// where subscription prices are not configured yet (empty price ID).
+@visibleForTesting
+void showUpgradeComingSoonDialog(BuildContext context) {
+  final AppLocalizations l10n = AppLocalizations.of(context);
+  showDialog<void>(
+    context: context,
+    builder: (BuildContext ctx) => BbDialog(
+      title: l10n.subscriptionUpgradeComingSoonTitle,
+      body: l10n.subscriptionUpgradeComingSoonBody,
+      primary: BbDialogAction(
+        label: l10n.ok,
+        onPressed: () => Navigator.of(ctx).pop(),
+      ),
+    ),
+  );
+}
+
+class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
 
   @override
-  State<SubscriptionScreen> createState() => _SubscriptionScreenState();
+  ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
 }
 
-class _SubscriptionScreenState extends State<SubscriptionScreen> {
+class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   /// Local UI state for the Mjesečno / Godišnje toggle.
   /// Default `true` = yearly (handoff lands on "Godišnje −20%").
   bool _yearly = true;
+
+  /// Guards double-dispatch while a checkout/portal session is being created.
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final Map<String, String> params = Uri.base.queryParameters;
+        final AppLocalizations l10n = AppLocalizations.of(context);
+        if ((params['session_id'] ?? '').isNotEmpty) {
+          // Webhook flips accountStatus → trialStatusProvider stream updates
+          // the UI; the snackbar just acknowledges the redirect back.
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.subscriptionPaymentSuccess,
+          );
+        } else if ((params['status'] ?? '') == 'cancelled') {
+          ErrorDisplayUtils.showInfoSnackBar(
+            context,
+            l10n.subscriptionPaymentCancelled,
+          );
+        }
+      });
+    }
+  }
+
+  Future<void> _onUpgradeTap() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final TrialStatus? status = ref.read(trialStatusProvider).valueOrNull;
+    try {
+      await handleSubscriptionCheckoutTap(
+        context: context,
+        repository: ref.read(subscriptionRepositoryProvider),
+        yearly: _yearly,
+        isSubscribed: status?.isActive ?? false,
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,17 +219,35 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  _TrialHero(compact: !wide),
+                  _TrialHero(compact: !wide, onUpgrade: _onUpgradeTap),
                   const SizedBox(height: BBSpace.md),
+                  if (ref.watch(trialStatusProvider).valueOrNull?.isActive ??
+                      false) ...<Widget>[
+                    BbButton(
+                      label: l10n.subscriptionManageLabel,
+                      iconLeft: 'credit_card',
+                      loading: _busy,
+                      onPressed: _onUpgradeTap,
+                    ),
+                    const SizedBox(height: BBSpace.md),
+                  ],
                   _BillingToggle(
                     yearly: _yearly,
                     onChanged: (bool v) => setState(() => _yearly = v),
                   ),
                   const SizedBox(height: BBSpace.md),
                   if (wide)
-                    _PlansSideBySide(yearly: _yearly, l10n: l10n)
+                    _PlansSideBySide(
+                      yearly: _yearly,
+                      l10n: l10n,
+                      onUpgrade: _onUpgradeTap,
+                    )
                   else
-                    _PlansStacked(yearly: _yearly, l10n: l10n),
+                    _PlansStacked(
+                      yearly: _yearly,
+                      l10n: l10n,
+                      onUpgrade: _onUpgradeTap,
+                    ),
                   const SizedBox(height: BBSpace.md),
                   const _FootNote(),
                   const SizedBox(height: BBSpace.lg),
@@ -265,12 +414,22 @@ Widget buildTrialHeroForTest({
   required BuildContext context,
   required TrialBarData? data,
   bool compact = false,
-}) => _TrialHero._render(context, data: data, compact: compact);
+  VoidCallback? onUpgrade,
+}) => _TrialHero._render(
+  context,
+  data: data,
+  compact: compact,
+  onUpgrade: onUpgrade,
+);
 
 class _TrialHero extends ConsumerWidget {
-  const _TrialHero({this.compact = false});
+  const _TrialHero({this.compact = false, this.onUpgrade});
 
   final bool compact;
+
+  /// Real checkout dispatch from the screen; falls back to the coming-soon
+  /// dialog when absent (test seam / legacy).
+  final VoidCallback? onUpgrade;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -278,13 +437,14 @@ class _TrialHero extends ConsumerWidget {
     if (status == null) return const SizedBox.shrink();
     final String localeName = AppLocalizations.of(context).localeName;
     final TrialBarData? data = TrialBarData.fromTrialStatus(status, localeName);
-    return _render(context, data: data, compact: compact);
+    return _render(context, data: data, compact: compact, onUpgrade: onUpgrade);
   }
 
   static Widget _render(
     BuildContext context, {
     required TrialBarData? data,
     required bool compact,
+    VoidCallback? onUpgrade,
   }) {
     if (data == null) return const SizedBox.shrink();
     final BbRedesignTokens rd = BbRedesignTokens.of(context);
@@ -296,7 +456,7 @@ class _TrialHero extends ConsumerWidget {
       variant: BbButtonVariant.onGradientSolid,
       size: compact ? BbButtonSize.md : BbButtonSize.lg,
       fullWidth: compact,
-      onPressed: () => _showUpgradeDialog(context),
+      onPressed: onUpgrade ?? () => showUpgradeComingSoonDialog(context),
     );
 
     return Container(
@@ -470,21 +630,6 @@ class _TrialHero extends ConsumerWidget {
       ],
     );
   }
-
-  static void _showUpgradeDialog(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext ctx) => BbDialog(
-        title: l10n.subscriptionUpgradeComingSoonTitle,
-        body: l10n.subscriptionUpgradeComingSoonBody,
-        primary: BbDialogAction(
-          label: l10n.ok,
-          onPressed: () => Navigator.of(ctx).pop(),
-        ),
-      ),
-    );
-  }
 }
 
 // =============================================================================
@@ -614,10 +759,15 @@ class _PlanFeature {
 }
 
 class _PlansSideBySide extends StatelessWidget {
-  const _PlansSideBySide({required this.yearly, required this.l10n});
+  const _PlansSideBySide({
+    required this.yearly,
+    required this.l10n,
+    this.onUpgrade,
+  });
 
   final bool yearly;
   final AppLocalizations l10n;
+  final VoidCallback? onUpgrade;
 
   @override
   Widget build(BuildContext context) {
@@ -628,7 +778,11 @@ class _PlansSideBySide extends StatelessWidget {
           Expanded(child: _FreePlanCard(l10n: l10n)),
           const SizedBox(width: 16),
           Expanded(
-            child: _ProPlanCard(yearly: yearly, l10n: l10n),
+            child: _ProPlanCard(
+              yearly: yearly,
+              l10n: l10n,
+              onUpgrade: onUpgrade,
+            ),
           ),
         ],
       ),
@@ -637,17 +791,22 @@ class _PlansSideBySide extends StatelessWidget {
 }
 
 class _PlansStacked extends StatelessWidget {
-  const _PlansStacked({required this.yearly, required this.l10n});
+  const _PlansStacked({
+    required this.yearly,
+    required this.l10n,
+    this.onUpgrade,
+  });
 
   final bool yearly;
   final AppLocalizations l10n;
+  final VoidCallback? onUpgrade;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _ProPlanCard(yearly: yearly, l10n: l10n),
+        _ProPlanCard(yearly: yearly, l10n: l10n, onUpgrade: onUpgrade),
         const SizedBox(height: 12),
         _FreeInline(),
       ],
@@ -714,10 +873,15 @@ class _FreePlanCard extends StatelessWidget {
 }
 
 class _ProPlanCard extends StatelessWidget {
-  const _ProPlanCard({required this.yearly, required this.l10n});
+  const _ProPlanCard({
+    required this.yearly,
+    required this.l10n,
+    this.onUpgrade,
+  });
 
   final bool yearly;
   final AppLocalizations l10n;
+  final VoidCallback? onUpgrade;
 
   static const List<_PlanFeature> _features = <_PlanFeature>[
     _PlanFeature('Neograničeno jedinica'),
@@ -790,7 +954,8 @@ class _ProPlanCard extends StatelessWidget {
                 label: 'Nadogradi na Pro',
                 iconLeft: 'workspace_premium',
                 fullWidth: true,
-                onPressed: () => _TrialHero._showUpgradeDialog(context),
+                onPressed:
+                    onUpgrade ?? () => showUpgradeComingSoonDialog(context),
               ),
             ],
           ),

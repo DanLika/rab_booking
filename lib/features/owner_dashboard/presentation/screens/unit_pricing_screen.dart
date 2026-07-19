@@ -664,6 +664,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
         context: context,
       ).copyWith(prefixText: '€ '),
       keyboardType: TextInputType.number,
+      textInputAction: TextInputAction.done,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
     );
   }

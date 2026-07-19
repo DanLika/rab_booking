@@ -96,8 +96,23 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
   @override
   void initState() {
     super.initState();
-    // Lock orientation to portrait for calendar view
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    // Lock orientation to portrait on mobile only (tablet/desktop have enough space)
+    if (WidgetsBinding
+                .instance
+                .platformDispatcher
+                .views
+                .first
+                .physicalSize
+                .shortestSide /
+            WidgetsBinding
+                .instance
+                .platformDispatcher
+                .views
+                .first
+                .devicePixelRatio <
+        600) {
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    }
     _calendarController.addPropertyChangedListener(_onCalendarPropertyChanged);
   }
 
@@ -649,74 +664,84 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
       }
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: (isWeekend && isCurrentMonth)
-            ? weekendAccent.withValues(alpha: 0.05)
-            : null,
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.05),
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Date number (top-left)
-          Positioned(
-            left: 4,
-            top: 2,
-            child: isToday
-                ? CircleAvatar(
-                    radius: 12,
-                    backgroundColor: theme.colorScheme.primary,
-                    child: Text(
-                      '${date.day}',
-                      style: TextStyle(
-                        color: theme.colorScheme.onPrimary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  )
-                : Text(
-                    '${date.day}',
-                    style: TextStyle(
-                      color: dateColor,
-                      fontSize: 12,
-                      fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
+    final int bookingCount = appointments.length;
+    final String semanticLabel =
+        '${date.day}. ${date.month}. ${date.year}'
+        '${bookingCount > 0 ? ', $bookingCount rezervacija' : ''}';
+
+    return Semantics(
+      label: semanticLabel,
+      child: Container(
+        decoration: BoxDecoration(
+          color: (isWeekend && isCurrentMonth)
+              ? weekendAccent.withValues(alpha: 0.05)
+              : null,
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
           ),
-          // G1 (desktop/tablet): de-cluttered cell — count-badge dropped so the
-          // spanning bars read clean (handoff). Status dots are kept on MOBILE
-          // only, where G2 suppresses the bars and the dots ARE the indicator.
-          if (isMobile && statusColors.isNotEmpty)
+        ),
+        child: Stack(
+          children: [
+            // Date number (top-left)
             Positioned(
-              bottom: 2,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: statusColors
-                    .take(4) // Max 4 dots to avoid overflow
-                    .map(
-                      (color) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 1),
-                        child: Container(
-                          width: 5,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                          ),
+              left: 4,
+              top: 2,
+              child: isToday
+                  ? CircleAvatar(
+                      radius: 12,
+                      backgroundColor: theme.colorScheme.primary,
+                      child: Text(
+                        '${date.day}',
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     )
-                    .toList(),
-              ),
+                  : Text(
+                      '${date.day}',
+                      style: TextStyle(
+                        color: dateColor,
+                        fontSize: 12,
+                        fontWeight: isToday
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
             ),
-        ],
+            // G1 (desktop/tablet): de-cluttered cell — count-badge dropped so the
+            // spanning bars read clean (handoff). Status dots are kept on MOBILE
+            // only, where G2 suppresses the bars and the dots ARE the indicator.
+            if (isMobile && statusColors.isNotEmpty)
+              Positioned(
+                bottom: 2,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: statusColors
+                      .take(4) // Max 4 dots to avoid overflow
+                      .map(
+                        (color) => Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 1),
+                          child: Container(
+                            width: 5,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1760,63 +1785,69 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return MouseRegion(
-      onEnter: (_) => _isHoveredNotifier.value = true,
-      onExit: (_) => _isHoveredNotifier.value = false,
-      child: GestureDetector(
-        onTapDown: (_) => _isPressedNotifier.value = true,
-        onTapUp: (_) {
-          _isPressedNotifier.value = false;
-          widget.onPressed();
-        },
-        onTapCancel: () => _isPressedNotifier.value = false,
-        child: ValueListenableBuilder<bool>(
-          valueListenable: _isHoveredNotifier,
-          builder: (context, isHovered, _) {
-            return ValueListenableBuilder<bool>(
-              valueListenable: _isPressedNotifier,
-              builder: (context, isPressed, _) {
-                // Handoff CALPFab: solid primary circle + purple glow. Color
-                // from the BB token so dark mode lifts to #8B6FFF.
-                final Color fabColor = BBColor.of(context).primary;
-                return AnimatedContainer(
-                  duration: BBMotion.base,
-                  curve: Curves.easeOutCubic,
-                  width: _kFabSize,
-                  height: _kFabSize,
-                  transform: Matrix4.diagonal3Values(
-                    isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
-                    isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
-                    1.0,
-                  ),
-                  transformAlignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: fabColor,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: fabColor.withValues(
-                          alpha: isHovered ? 0.5 : 0.35,
-                        ),
-                        blurRadius: isHovered ? 20 : 12,
-                        offset: Offset(0, isHovered ? 8 : 4),
-                        spreadRadius: isHovered ? 2 : 0,
-                      ),
-                    ],
-                  ),
-                  child: AnimatedRotation(
-                    duration: BBMotion.base,
-                    turns: isHovered ? 0.125 : 0, // 45 degree rotation on hover
-                    child: Icon(
-                      Icons.add,
-                      color: theme.colorScheme.onPrimary,
-                      size: _kFabIcon,
-                    ),
-                  ),
-                );
-              },
-            );
+    return Semantics(
+      button: true,
+      label: 'Nova rezervacija',
+      child: MouseRegion(
+        onEnter: (_) => _isHoveredNotifier.value = true,
+        onExit: (_) => _isHoveredNotifier.value = false,
+        child: GestureDetector(
+          onTapDown: (_) => _isPressedNotifier.value = true,
+          onTapUp: (_) {
+            _isPressedNotifier.value = false;
+            widget.onPressed();
           },
+          onTapCancel: () => _isPressedNotifier.value = false,
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _isHoveredNotifier,
+            builder: (context, isHovered, _) {
+              return ValueListenableBuilder<bool>(
+                valueListenable: _isPressedNotifier,
+                builder: (context, isPressed, _) {
+                  // Handoff CALPFab: solid primary circle + purple glow. Color
+                  // from the BB token so dark mode lifts to #8B6FFF.
+                  final Color fabColor = BBColor.of(context).primary;
+                  return AnimatedContainer(
+                    duration: BBMotion.base,
+                    curve: Curves.easeOutCubic,
+                    width: _kFabSize,
+                    height: _kFabSize,
+                    transform: Matrix4.diagonal3Values(
+                      isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
+                      isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
+                      1.0,
+                    ),
+                    transformAlignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: fabColor,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: fabColor.withValues(
+                            alpha: isHovered ? 0.5 : 0.35,
+                          ),
+                          blurRadius: isHovered ? 20 : 12,
+                          offset: Offset(0, isHovered ? 8 : 4),
+                          spreadRadius: isHovered ? 2 : 0,
+                        ),
+                      ],
+                    ),
+                    child: AnimatedRotation(
+                      duration: BBMotion.base,
+                      turns: isHovered
+                          ? 0.125
+                          : 0, // 45 degree rotation on hover
+                      child: Icon(
+                        Icons.add,
+                        color: theme.colorScheme.onPrimary,
+                        size: _kFabIcon,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );

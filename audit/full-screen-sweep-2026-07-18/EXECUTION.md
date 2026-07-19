@@ -31,7 +31,7 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [~] F4.14 skeleton_loader → BUNDLE s F3.7 (isti fajl — dark ladder + unbounded ListView zajedno)
 ## F3 boje/flat (namjerne vizuelne — screenshot prije/poslije + golden regen)
 - [x] F3.1 widget status TEKST boje — fix/f31-widget-status-colors @2ac8c4e4, suite GREEN (plan-hexovi NISU prolazili mjerenje → IZRAČUNATI minimumi: successText #047857, warningText #B45309, textTertiary #6F6F6F — svi ≥4.5:1 i na #F5F5F5 i na 10% tintovima; novi successText/warningText tokeni na WidgetColorScheme ×3 sheme; fillovi/ikone netaknuti; 15-cell matrica test)
-- [ ] F3.2 bb_status_badge: importedDeep token + completed-dark + pending-light korekcije
+- [x] F3.2 bb_status_badge — fix/f32-status-badge @d70d063a, suite GREEN (IZRAČUNATI minimumi na kompozitnom tintu: imported L #2B6CB0, pending L #A05E14, confirmed L #2A7354 — matrica UHVATILA i confirmed 4.27:1 koji je audit propustio, completed D #A78BFF; ×3 token surfacea konzistentno; badge Semantics node + pending dot statusPendingDeep; golden regen ×12 NAMJERAN — boja-only na legendama/chipovima)
 - [ ] F3.3 BBColorSet.onPrimary token + sweep Colors.white-on-primary (neutralno)
 - [ ] F3.4 admin BbAdminDarkTokens.textTertiary izračunati min za #2A2342
 - [ ] F3.5 flat regresije: profile_screen ×4 → solid; profile_image_picker; unit_pricing Save; booking_cancel_dialog header; bb_logo default false (+eyeball 3 default-sitea)

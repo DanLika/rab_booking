@@ -95,6 +95,41 @@ class AdminShellScreen extends ConsumerWidget {
     required this.currentPath,
   });
 
+  /// Cached dark ThemeData — built once, reused every rebuild.
+  /// All inputs are compile-time constants or [BbAdminDarkTokens.preset]
+  /// (also a `const`), so this is safe to cache as a static field.
+  static final ThemeData _darkTheme = ThemeData.dark(useMaterial3: true)
+      .copyWith(
+        colorScheme: ColorScheme.dark(
+          primary: AppColors.primaryLight,
+          surface: BbAdminDarkTokens.preset.panelBg,
+          surfaceContainer:
+              BbAdminDarkTokens.preset.shellBg, // sidebar/rail/drawer
+        ),
+        scaffoldBackgroundColor: BbAdminDarkTokens.preset.shellBg,
+        extensions: const <ThemeExtension<dynamic>>[BbAdminDarkTokens.preset],
+      );
+
+  /// Cached light ThemeData — built once, reused every rebuild.
+  static final ThemeData
+  _lightTheme = ThemeData.light(useMaterial3: true).copyWith(
+    colorScheme: const ColorScheme.light(
+      primary: AppColors.primary,
+      surface: AppColors.surfaceVariantLight,
+      surfaceContainer: Colors.white,
+      // Override MD3 defaults (~#1C1B1F / ~#49454F) with canonical
+      // BookBed design slate from tokens.css :root
+      //   --bb-text-primary   #2D3748 (BBColor.textPrimaryLight)
+      //   --bb-text-secondary #4A5568 (BBColor.textSecondaryLight)
+      // Tertiary tier (#718096) has no MD3 ColorScheme slot — admin
+      // light screens needing it should read `BBColor.of(context).textTertiary`
+      // directly (see `_DashboardPalette.of` light branch on PR #664).
+      onSurface: BBColor.textPrimaryLight,
+      onSurfaceVariant: BBColor.textSecondaryLight,
+    ),
+    scaffoldBackgroundColor: AppColors.shellBgLight,
+  );
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(adminDarkModeProvider);
@@ -103,37 +138,7 @@ class AdminShellScreen extends ConsumerWidget {
     final hasRail = !hasSidebar && width >= _kRailBreakpoint;
     final isMobile = !hasSidebar && !hasRail;
 
-    // Use specific admin colors based on mode
-    final themeData = isDarkMode
-        ? ThemeData.dark(useMaterial3: true).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: AppColors.primaryLight,
-              surface: BbAdminDarkTokens.preset.panelBg,
-              surfaceContainer:
-                  BbAdminDarkTokens.preset.shellBg, // sidebar/rail/drawer
-            ),
-            scaffoldBackgroundColor: BbAdminDarkTokens.preset.shellBg,
-            extensions: const <ThemeExtension<dynamic>>[
-              BbAdminDarkTokens.preset,
-            ],
-          )
-        : ThemeData.light(useMaterial3: true).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              surface: AppColors.surfaceVariantLight,
-              surfaceContainer: Colors.white,
-              // Override MD3 defaults (~#1C1B1F / ~#49454F) with canonical
-              // BookBed design slate from tokens.css :root
-              //   --bb-text-primary   #2D3748 (BBColor.textPrimaryLight)
-              //   --bb-text-secondary #4A5568 (BBColor.textSecondaryLight)
-              // Tertiary tier (#718096) has no MD3 ColorScheme slot — admin
-              // light screens needing it should read `BBColor.of(context).textTertiary`
-              // directly (see `_DashboardPalette.of` light branch on PR #664).
-              onSurface: BBColor.textPrimaryLight,
-              onSurfaceVariant: BBColor.textSecondaryLight,
-            ),
-            scaffoldBackgroundColor: AppColors.shellBgLight,
-          );
+    final themeData = isDarkMode ? _darkTheme : _lightTheme;
 
     final content = Column(
       children: [
@@ -315,39 +320,44 @@ class _RailItem extends StatelessWidget {
     final bool gradientActive = isSelected && isDark;
     final Color idleFill = isDark ? tokens.navTileIdleBg : Colors.transparent;
     final Color selectedLightFill = colorScheme.primary.withValues(alpha: 0.1);
-    return Tooltip(
-      message: item.label,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          // 48x48 target (>= 44px touch minimum)
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: gradientActive ? tokens.navIconActiveGradient : null,
-              color: gradientActive
-                  ? null
-                  : (isSelected ? selectedLightFill : idleFill),
-              borderRadius: BorderRadius.circular(12),
-              border: isSelected && !isDark
-                  ? Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.2),
-                    )
-                  : null,
-              boxShadow: gradientActive ? tokens.navActiveGlow : null,
-            ),
-            child: Icon(
-              isSelected ? item.activeIcon : item.icon,
-              size: 22,
-              color: gradientActive
-                  ? Colors.white
-                  : (isSelected
-                        ? colorScheme.primary
-                        : colorScheme.onSurfaceVariant),
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: item.label,
+      child: Tooltip(
+        message: item.label,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            // 48x48 target (>= 44px touch minimum)
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: gradientActive ? tokens.navIconActiveGradient : null,
+                color: gradientActive
+                    ? null
+                    : (isSelected ? selectedLightFill : idleFill),
+                borderRadius: BorderRadius.circular(12),
+                border: isSelected && !isDark
+                    ? Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.2),
+                      )
+                    : null,
+                boxShadow: gradientActive ? tokens.navActiveGlow : null,
+              ),
+              child: Icon(
+                isSelected ? item.activeIcon : item.icon,
+                size: 22,
+                color: gradientActive
+                    ? Colors.white
+                    : (isSelected
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant),
+              ),
             ),
           ),
         ),
@@ -535,8 +545,15 @@ class _AdminNavPanel extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    InkWell(
-                      onTap: () async {
+                    // a11y: 44px minimum touch target
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(44, 44),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        foregroundColor: colorScheme.error,
+                      ),
+                      onPressed: () async {
                         _popDrawerIfNeeded(context);
                         await ref.read(enhancedAuthProvider.notifier).signOut();
                         if (context.mounted) {
@@ -627,41 +644,48 @@ class _DrawerItem extends ConsumerWidget {
         ? (isDark ? tokens.textPrimary : colorScheme.primary)
         : colorScheme.onSurfaceVariant;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: rowBg,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: rowBorder),
-          ),
-          child: Row(
-            children: [
-              _NavIconTile(
-                icon: isSelected ? activeIcon : icon,
-                isSelected: isSelected,
-                isDark: isDark,
-                size: 28,
-                iconSize: 18,
-              ),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: labelColor,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    fontSize: 14,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: rowBg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: rowBorder),
+            ),
+            child: Row(
+              children: [
+                _NavIconTile(
+                  icon: isSelected ? activeIcon : icon,
+                  isSelected: isSelected,
+                  isDark: isDark,
+                  size: 28,
+                  iconSize: 18,
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: labelColor,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -849,8 +873,12 @@ class _AdminEnvPill extends StatelessWidget {
         : projectId.contains('staging')
         ? 'Staging'
         : 'Development';
-    // Green = prod (BB success), amber = non-prod (BB warning).
-    final Color tone = isProd ? BBColor.success : BBColor.warning;
+    // Green = prod, amber = non-prod. Use dark-lift variants on dark console so
+    // the tinted pill is legible against BbAdminDarkTokens.panelBg (#2A2342).
+    final bool isDarkConsole = Theme.of(context).brightness == Brightness.dark;
+    final Color tone = isProd
+        ? (isDarkConsole ? AppColors.successLight : BBColor.success)
+        : (isDarkConsole ? AppColors.warningLight : BBColor.warning);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

@@ -8,6 +8,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/redesign.dart';
 import '../../data/admin_users_repository.dart';
 
+/// Max-width of the centered event list on desktop. No-op below 1000px.
+const double _kLogListMaxWidth = 1000.0;
+
 /// Activity log screen showing admin actions and security events.
 ///
 /// Admin is dark-only + desktop-first: surfaces resolve from canonical
@@ -103,7 +106,9 @@ class ActivityLogScreen extends ConsumerWidget {
                 // event rows don't stretch edge-to-edge on 1440. No-op < 1000.
                 return Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1000),
+                    constraints: const BoxConstraints(
+                      maxWidth: _kLogListMaxWidth,
+                    ),
                     child: ListView.separated(
                       padding: const EdgeInsets.all(BBSpace.lg),
                       itemCount: events.length,
@@ -159,90 +164,94 @@ class _ActivityEventCard extends StatelessWidget {
 
     String formattedTime = '-';
     if (timestamp is Timestamp) {
-      final dt = timestamp.toDate();
+      final dt = timestamp.toDate().toLocal();
       formattedTime =
           '${dt.day}.${dt.month}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     }
 
-    return BbCard(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon tile
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: eventInfo.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+    return Semantics(
+      container: true,
+      label: '${eventInfo.title}, $formattedTime',
+      child: BbCard(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon tile
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: eventInfo.color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: BbIcon(name: eventInfo.iconName, color: eventInfo.color),
             ),
-            child: BbIcon(name: eventInfo.iconName, color: eventInfo.color),
-          ),
-          const SizedBox(width: BBSpace.sm),
-          // Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  eventInfo.title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: t.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                if (targetEmail.isNotEmpty)
-                  SelectableText(
-                    'User: $targetEmail',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: t.textSecondary),
-                  ),
-                if (previousType.isNotEmpty && newType.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      '$previousType → $newType',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: t.textSecondary,
-                      ),
+            const SizedBox(width: BBSpace.sm),
+            // Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    eventInfo.title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: t.textPrimary,
                     ),
                   ),
-                if (targetUserId.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: SelectableText(
-                      'ID: $targetUserId',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: t.textTertiary,
-                        fontSize: 11,
+                  const SizedBox(height: 4),
+                  if (targetEmail.isNotEmpty)
+                    SelectableText(
+                      'User: $targetEmail',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: t.textSecondary),
+                    ),
+                  if (previousType.isNotEmpty && newType.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '$previousType → $newType',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: t.textSecondary,
+                        ),
                       ),
                     ),
-                  ),
-                if (adminUid.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: SelectableText(
-                      'Admin: $adminUid',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: t.textTertiary,
-                        fontSize: 11,
+                  if (targetUserId.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: SelectableText(
+                        'ID: $targetUserId',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: t.textTertiary,
+                          fontSize: 11,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                  if (adminUid.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: SelectableText(
+                        'Admin: $adminUid',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: t.textTertiary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          // Timestamp
-          Text(
-            formattedTime,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: t.textTertiary,
-              fontSize: 11,
+            // Timestamp
+            Text(
+              formattedTime,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: t.textTertiary,
+                fontSize: 11,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

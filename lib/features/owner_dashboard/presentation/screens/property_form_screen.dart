@@ -274,7 +274,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
             },
           ),
           body: Container(
-            // Page background gradient (topLeft → bottomRight)
+            // Page background — FLAT solid fill since CHANGELOG 7.23.
             decoration: BoxDecoration(
               gradient: context.gradients.pageBackground,
             ),
@@ -679,7 +679,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            // Section cards: topRight → bottomLeft gradient
+            // Section cards — FLAT solid fill since CHANGELOG 7.23.
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(

@@ -144,7 +144,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
             },
           ),
           body: Container(
-            // Page background gradient (TIP 1, matches PropertyFormScreen)
+            // Page background — FLAT solid fill since CHANGELOG 7.23
+            // (pageBackground renders as solid; matches PropertyFormScreen)
             decoration: BoxDecoration(
               gradient: context.gradients.pageBackground,
             ),
@@ -550,9 +551,10 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
     );
   }
 
-  /// Helper method to build consistent section cards — TIP 1 diagonal
-  /// gradient recipe (cardBackground + sectionBorder + radius 24), matching
-  /// [PropertyFormScreen._buildSection] and the Widget Settings sections.
+  /// Helper method to build consistent section cards — FLAT recipe since
+  /// CHANGELOG 7.23 (cardBackground renders as a solid fill + sectionBorder
+  /// + radius 24), matching [PropertyFormScreen._buildSection] and the
+  /// Widget Settings sections.
   Widget _buildSection(
     BuildContext context, {
     required String title,

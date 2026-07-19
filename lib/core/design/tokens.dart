@@ -186,19 +186,25 @@ class BBColor {
   // Booking status (light/dark identical — semantic, not surface)
   // -------------------------------------------------------------------------
 
-  static const Color statusConfirmed = Color(0xFF2E7D5B);
+  static const Color statusConfirmed = Color(0xFF2A7354); // AA min (F3.2)
 
-  /// `--bb-status-pending` light — darker amber for AA contrast on tint.
-  static const Color statusPending = Color(0xFFB7791F);
+  /// `--bb-status-pending` light — #A05E14 = computed minimum clearing
+  /// 4.5:1 on the pending tint (#B7791F measured 3.30:1; audit F3.2).
+  static const Color statusPending = Color(0xFFA05E14);
   static const Color statusCancelled = Color(0xFF4A5568);
   static const Color statusCompleted = Color(0xFF6B4CE6);
-  static const Color statusImported = Color(0xFF4A90D9);
+
+  /// #2B6CB0 (blue-700): #4A90D9 measured 2.95:1 on its tint (audit F3.2).
+  static const Color statusImported = Color(0xFF2B6CB0);
 
   // Dark lifts (`tokens.css .theme-dark --bb-status-*`)
   static const Color statusConfirmedDarkMode = Color(0xFF4FAE7F);
   static const Color statusPendingDarkMode = Color(0xFFFFC872);
   static const Color statusCancelledDarkMode = Color(0xFFA0AEC0);
-  static const Color statusCompletedDarkMode = Color(0xFF8B6FFF);
+
+  /// #A78BFF: #8B6FFF measured 3.76:1 on the dark completed tint
+  /// (audit F3.2).
+  static const Color statusCompletedDarkMode = Color(0xFFA78BFF);
   static const Color statusImportedDarkMode = Color(0xFF6BA8E8);
 
   // -------------------------------------------------------------------------

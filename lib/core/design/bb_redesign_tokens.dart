@@ -100,8 +100,8 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
     purpleGlow: AppShadows.purpleSm,
     heroGradient: BBGradient.hero,
     brandPrimaryGradient: BBGradient.brandPrimary,
-    statusConfirmedDeep: Color(0xFF2E7D5B),
-    statusPendingDeep: Color(0xFFB7791F), // AA-safe darker amber
+    statusConfirmedDeep: Color(0xFF2A7354), // computed AA min on tint (F3.2)
+    statusPendingDeep: Color(0xFFA05E14), // computed AA min on tint (F3.2)
     statusCancelledDeep: Color(0xFF4A5568),
     statusConfirmedTint: Color(0x1F2E7D5B), // rgba(46,125,91,.12)
     statusPendingTint: Color(0x2EFFB84D), // rgba(255,184,77,.18)

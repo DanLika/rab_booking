@@ -14,7 +14,6 @@ export 'responsive/responsive_grid.dart';
 
 // Premium Components
 export 'button.dart';
-export 'card.dart';
 
 // Adaptive & Responsive Layouts
 export 'adaptive_layout.dart';

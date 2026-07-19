@@ -486,7 +486,8 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
 
                 final screenWidth = MediaQuery.of(context).size.width;
                 final isMobile = screenWidth < 600;
-                final isDesktop = screenWidth >= 1024;
+                // Canonical desktop breakpoint per breakpoint-decide #766.
+                final isDesktop = screenWidth >= 1200;
 
                 // Outer panel gutter — handoff floating console pattern
                 // (mirrors profile_screen.dart layout).

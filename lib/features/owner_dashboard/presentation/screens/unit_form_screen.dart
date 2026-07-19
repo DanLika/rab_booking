@@ -778,15 +778,21 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
         Positioned(
           top: 4,
           right: 4,
-          child: IconButton.filled(
-            onPressed: () {
-              setState(() => _existingImages.removeAt(index));
-            },
-            icon: const Icon(Icons.close, size: 16),
-            style: IconButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(24, 24),
+          child: Semantics(
+            label: 'Ukloni sliku',
+            button: true,
+            child: IconButton.filled(
+              onPressed: () {
+                setState(() => _existingImages.removeAt(index));
+              },
+              icon: const Icon(Icons.close, size: 16),
+              style: IconButton.styleFrom(
+                backgroundColor: theme.colorScheme.error,
+                padding: EdgeInsets.zero,
+                // 44px tap floor per a11y target-size rules;
+                // visual glyph stays 16px via icon size above.
+                minimumSize: const Size(44, 44),
+              ),
             ),
           ),
         ),
@@ -829,15 +835,19 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
         Positioned(
           top: 4,
           right: 4,
-          child: IconButton.filled(
-            onPressed: () {
-              setState(() => _selectedImages.removeAt(index));
-            },
-            icon: const Icon(Icons.close, size: 16),
-            style: IconButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(24, 24),
+          child: Semantics(
+            label: 'Ukloni sliku',
+            button: true,
+            child: IconButton.filled(
+              onPressed: () {
+                setState(() => _selectedImages.removeAt(index));
+              },
+              icon: const Icon(Icons.close, size: 16),
+              style: IconButton.styleFrom(
+                backgroundColor: theme.colorScheme.error,
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(44, 44),
+              ),
             ),
           ),
         ),

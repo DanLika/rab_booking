@@ -592,17 +592,15 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                         ),
                       ),
 
-                      // Loading Overlay
+                      // Loading Overlay — ExcludeSemantics barrier hides
+                      // scrollable content underneath from a11y tree while
+                      // saving is in progress.
                       if (_isLoading)
-                        Container(
-                          color: Colors.black.withAlpha((0.5 * 255).toInt()),
-                          child: Center(
-                            child: Card(
-                              elevation: 8,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Padding(
+                        ExcludeSemantics(
+                          child: Container(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            child: Center(
+                              child: BbCard(
                                 padding: const EdgeInsets.all(32),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,

@@ -780,7 +780,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                                           setState(() {
                                             _profileImageBytes = bytes;
                                             _profileImageName = name;
-                                            _markDirty();
+                                            // Flatten: set _isDirty inline instead
+                                            // of calling _markDirty() (which itself
+                                            // calls setState — nested setState).
+                                            _isDirty = true;
                                           });
                                         },
                                       ),
@@ -828,7 +831,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stack) => Center(
-                  child: Text(l10n.errorWithMessage(error.toString())),
+                  // Generic message — do NOT leak raw error (SF-012 policy).
+                  child: Text(l10n.editProfileSaveError),
                 ),
               ),
             ),

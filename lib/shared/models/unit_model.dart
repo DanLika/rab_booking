@@ -64,6 +64,12 @@ class UnitModel with _$UnitModel {
     /// Floor area in square meters
     @JsonKey(name: 'area_sqm') double? areaSqm,
 
+    /// Unit amenity value strings (see PropertyAmenity.value). The
+    /// Firestore doc always carried this field (owner repo writes it) but
+    /// the model dropped it on read, so the edit form silently wiped
+    /// amenities on save (audit F4.2).
+    @Default([]) List<String> amenities,
+
     /// List of unit-specific image URLs
     @Default([]) List<String> images,
 

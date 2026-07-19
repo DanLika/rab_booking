@@ -516,7 +516,9 @@ class FirebaseOwnerPropertiesRepository {
     required int maxGuests,
     required int bedrooms,
     required int bathrooms,
-    required double area,
+    // Optional — unit_form's area field is optional; empty stores null
+    // (audit F4.2: double.parse('') crashed the create path).
+    double? area,
     List<String>? amenities,
     List<String>? images,
     String? coverImage,

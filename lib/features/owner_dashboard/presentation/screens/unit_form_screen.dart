@@ -79,6 +79,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
     _minStayController.text = unit.minStayNights.toString();
     _existingImages = unit.images.toList();
     _isAvailable = unit.isAvailable;
+    // Restore amenities — without this the save path wrote the empty
+    // selection and silently wiped them (audit F4.2).
+    _selectedAmenities
+      ..clear()
+      ..addAll(PropertyAmenity.fromStringList(unit.amenities));
 
     // If editing existing unit, consider slug as manually set
     _isManualSlugEdit = unit.slug != null;
@@ -886,7 +891,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),
           maxGuests: int.parse(_maxGuestsController.text),
-          area: double.parse(_areaController.text),
+          area: double.tryParse(_areaController.text),
           minStayNights: int.parse(_minStayController.text),
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
           images: allImages,
@@ -911,7 +916,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),
           maxGuests: int.parse(_maxGuestsController.text),
-          area: double.parse(_areaController.text),
+          area: double.tryParse(_areaController.text),
           minStayNights: int.parse(_minStayController.text),
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
           images: allImages,

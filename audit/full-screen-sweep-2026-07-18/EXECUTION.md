@@ -38,7 +38,7 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] F3.6 stale TIP-1 docstringovi — docs/f36-stale-tip1-docstrings @c234c42c, comments-only 0 behavior, analyze 112 baseline (unit_form ×2, step_4_review, widget_settings_section, property_form ×2; admin_login dijagonala je ŽIVI sanctioned hero — netaknut)
 - [x] F3.7+F4.14 skeleton — fix/f37-skeleton @204d68b2, suite 1949 GREEN (SkeletonColors dark → OLED ladder; StatsCards theme-aware; 2 unbounded ListViewa → shrinkWrap+NeverScrollable; 4 testa uklj. nested-in-Column survival)
 ## F1b konsolidacija
-- [x] PremiumCard → BbCard ×2 + card.dart DELETED — chore/f1b-consolidation (suite u toku)
+- [x] PremiumCard → BbCard ×2 + card.dart DELETED — chore/f1b-consolidation @5e156d41, suite 1945 GREEN
 - [~] core/widgets/bb_* set: ai_assistant (zadnji ne-dev konzument) migriran na redesign BbSkeleton; SAM SET ostaje — jedini konzumenti gallery_dev (54 sitea) + responsive_probe = dev alati → GO-QUEUE (migrate vs delete showcases = operator)
 - [x] redesign/bb_bottom_sheet DELETED (0 callera) — isti branch
 ## F5 ekrani (klaster PR-ovi, punch-liste u REMEDIATION_PLAN.md §5A-5G)

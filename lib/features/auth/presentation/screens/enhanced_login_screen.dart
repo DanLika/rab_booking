@@ -16,6 +16,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_error_l10n.dart';
 import '../../../../core/utils/password_validator.dart';
+import '../../../../core/utils/profile_validator_error_l10n.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/redesign.dart';
@@ -580,7 +581,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         if (_emailErrorFromServer != null) {
           return _emailErrorFromServer;
         }
-        return ProfileValidators.validateEmail(_emailController.text);
+        final e = ProfileValidators.emailError(_emailController.text);
+        return e == null ? null : l10n.profileValidatorErrorText(e);
       },
     );
   }

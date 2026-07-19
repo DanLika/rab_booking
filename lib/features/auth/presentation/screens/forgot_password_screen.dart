@@ -10,6 +10,7 @@ import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
+import '../../../../core/utils/profile_validator_error_l10n.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/redesign.dart';
@@ -262,7 +263,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
             placeholder: 'ime@primjer.hr',
             size: BbInputSize.lg,
             keyboardType: TextInputType.emailAddress,
-            validator: ProfileValidators.validateEmail,
+            validator: (v) {
+              final e = ProfileValidators.emailError(v);
+              return e == null ? null : l10n.profileValidatorErrorText(e);
+            },
             autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
           SizedBox(height: isSmallHeight ? 16 : (isCompact ? 20 : 24)),

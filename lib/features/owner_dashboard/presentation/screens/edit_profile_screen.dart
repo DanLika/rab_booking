@@ -12,6 +12,7 @@ import '../../../../core/services/logging_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
+import '../../../../core/utils/profile_validator_error_l10n.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/user_profile_model.dart';
@@ -375,7 +376,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
             label: l10n.editProfileFullName,
             iconLeft: 'person',
             size: BbInputSize.lg,
-            validator: ProfileValidators.validateName,
+            validator: (v) {
+              final e = ProfileValidators.nameError(v);
+              return e == null ? null : l10n.profileValidatorErrorText(e);
+            },
             autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
           const SizedBox(height: BBSpace.md),
@@ -386,7 +390,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
             iconLeft: 'mail',
             size: BbInputSize.lg,
             keyboardType: TextInputType.emailAddress,
-            validator: ProfileValidators.validateEmail,
+            validator: (v) {
+              final e = ProfileValidators.emailError(v);
+              return e == null ? null : l10n.profileValidatorErrorText(e);
+            },
             autovalidateMode: AutovalidateMode.onUserInteraction,
             trailingAction: isContactEmailVerified
                 ? Row(
@@ -413,7 +420,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
             iconLeft: 'phone',
             size: BbInputSize.lg,
             keyboardType: TextInputType.phone,
-            validator: ProfileValidators.validatePhone,
+            validator: (v) {
+              final e = ProfileValidators.phoneError(v);
+              return e == null ? null : l10n.profileValidatorErrorText(e);
+            },
             autovalidateMode: AutovalidateMode.onUserInteraction,
             // Premium helper — settings.jsx §181 phone hint
             helper: l10n.editProfilePhoneHelper,

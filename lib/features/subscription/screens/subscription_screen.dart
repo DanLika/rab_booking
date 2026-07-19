@@ -52,8 +52,11 @@ Future<void> handleSubscriptionCheckoutTap({
   final AppLocalizations l10n = AppLocalizations.of(context);
   final Future<void> Function(Uri uri) doRedirect =
       redirect ?? (Uri uri) => launchUrl(uri, webOnlyWindowName: '_self');
+  // Hash-routed app: the route lives in the fragment, so Stripe's appended
+  // `?session_id=...` / `?status=cancelled` lands INSIDE the fragment and the
+  // router still opens this screen (see stripeReturnParams for the read side).
   final String returnUrl =
-      '${EnvironmentConfig.dashboardBaseUrl}/owner/subscription';
+      '${EnvironmentConfig.dashboardBaseUrl}/#/owner/subscription';
 
   try {
     final String url;
@@ -112,6 +115,24 @@ void showUpgradeComingSoonDialog(BuildContext context) {
   );
 }
 
+/// Stripe-return query params for a hash-routed web app.
+///
+/// With hash routing the browser URL after a Stripe redirect looks like
+/// `https://host/#/owner/subscription?session_id=cs_...` — the params sit in
+/// the FRAGMENT, so [Uri.base.queryParameters] alone misses them. Merge both
+/// locations (real query wins on key collision is irrelevant here; fragment
+/// params are applied last to cover the hash-routing case).
+@visibleForTesting
+Map<String, String> stripeReturnParams(Uri base) {
+  final Map<String, String> merged = <String, String>{...base.queryParameters};
+  final String fragment = base.fragment;
+  final int q = fragment.indexOf('?');
+  if (q >= 0 && q < fragment.length - 1) {
+    merged.addAll(Uri.splitQueryString(fragment.substring(q + 1)));
+  }
+  return merged;
+}
+
 class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
 
@@ -133,7 +154,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     if (kIsWeb) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final Map<String, String> params = Uri.base.queryParameters;
+        final Map<String, String> params = stripeReturnParams(Uri.base);
         final AppLocalizations l10n = AppLocalizations.of(context);
         if ((params['session_id'] ?? '').isNotEmpty) {
           // Webhook flips accountStatus → trialStatusProvider stream updates

@@ -83,6 +83,37 @@ void main() {
     return captured;
   }
 
+  group('stripeReturnParams (hash routing)', () {
+    test('reads session_id from inside the fragment', () {
+      final Uri u = Uri.parse(
+        'https://host.app/#/owner/subscription?session_id=cs_test_1',
+      );
+      expect(stripeReturnParams(u)['session_id'], 'cs_test_1');
+    });
+
+    test('reads status=cancelled from fragment and plain query', () {
+      expect(
+        stripeReturnParams(
+          Uri.parse('https://host.app/#/owner/subscription?status=cancelled'),
+        )['status'],
+        'cancelled',
+      );
+      expect(
+        stripeReturnParams(
+          Uri.parse('https://host.app/owner/subscription?status=cancelled'),
+        )['status'],
+        'cancelled',
+      );
+    });
+
+    test('empty when neither location carries params', () {
+      expect(
+        stripeReturnParams(Uri.parse('https://host.app/#/owner/subscription')),
+        isEmpty,
+      );
+    });
+  });
+
   group('handleSubscriptionCheckoutTap', () {
     testWidgets('monthly toggle sends the monthly dev price ID', (
       WidgetTester tester,
@@ -104,7 +135,7 @@ void main() {
       expect(repo.lastPriceId, isNotEmpty);
       expect(
         repo.lastReturnUrl,
-        '${EnvironmentConfig.dashboardBaseUrl}/owner/subscription',
+        '${EnvironmentConfig.dashboardBaseUrl}/#/owner/subscription',
       );
       expect(redirects.single.toString(), safeUrl);
     });

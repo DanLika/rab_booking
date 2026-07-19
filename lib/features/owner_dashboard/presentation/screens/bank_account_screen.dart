@@ -8,6 +8,7 @@ import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
+import '../../../../core/utils/profile_validator_error_l10n.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/user_profile_model.dart';
@@ -337,7 +338,10 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
             iconLeft: 'credit_card',
             size: BbInputSize.lg,
             keyboardType: TextInputType.text,
-            validator: ProfileValidators.validateIban,
+            validator: (v) {
+              final e = ProfileValidators.ibanError(v);
+              return e == null ? null : l10n.profileValidatorErrorText(e);
+            },
             autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
           const SizedBox(height: BBSpace.md),
@@ -348,7 +352,10 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
             iconLeft: 'code',
             size: BbInputSize.lg,
             keyboardType: TextInputType.text,
-            validator: ProfileValidators.validateSwift,
+            validator: (v) {
+              final e = ProfileValidators.swiftError(v);
+              return e == null ? null : l10n.profileValidatorErrorText(e);
+            },
             autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
           const SizedBox(height: BBSpace.md),

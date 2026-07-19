@@ -15,6 +15,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_error_l10n.dart';
 import '../../../../core/utils/password_validator.dart';
+import '../../../../core/utils/profile_validator_error_l10n.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -522,7 +523,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           keyboardType: TextInputType.emailAddress,
           error: _emailErrorFromServer,
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          validator: ProfileValidators.validateEmail,
+          validator: (v) {
+            final e = ProfileValidators.emailError(v);
+            return e == null ? null : l10n.profileValidatorErrorText(e);
+          },
         ),
         fieldSpacing,
         // Phone — optional field; validator allows empty (per ProfileValidators).
@@ -534,7 +538,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           size: BbInputSize.lg,
           keyboardType: TextInputType.phone,
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          validator: ProfileValidators.validatePhone,
+          validator: (v) {
+            final e = ProfileValidators.phoneError(v);
+            return e == null ? null : l10n.profileValidatorErrorText(e);
+          },
         ),
         fieldSpacing,
         // Password — trailingAction holds the visibility-toggle IconButton

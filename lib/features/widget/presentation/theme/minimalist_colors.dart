@@ -31,8 +31,11 @@ class MinimalistColors {
   /// Medium grey - secondary text, labels
   static const Color textSecondary = Color(0xFF666666);
 
-  /// Light grey - tertiary text, hints, placeholders
-  static const Color textTertiary = Color(0xFF999999);
+  /// Tertiary text, hints, placeholders — #6F6F6F = computed minimum that
+  /// clears 4.5:1 on EVERY light surface incl. #F5F5F5 (4.61:1). The old
+  /// #999999 measured 2.85:1 on white — an AA fail on guest-facing hints
+  /// (audit F3.1, matrix-guarded by status_text_contrast_test).
+  static const Color textTertiary = Color(0xFF6F6F6F);
 
   /// Very light grey - disabled text
   static const Color textDisabled = Color(0xFFCCCCCC);
@@ -129,11 +132,20 @@ class MinimalistColors {
   /// Success state (matches confirmed badge green)
   static const Color success = Color(0xFF66BB6A); // #66BB6A
 
+  /// Success for TEXT — emerald-700 = computed minimum clearing 4.5:1 on
+  /// every light surface AND the 10% success tint (5.03:1 on #F5F5F5;
+  /// emerald-600 #059669 measured only 3.77:1 on white). Fills/icons keep
+  /// [success]. (audit F3.1)
+  static const Color successText = Color(0xFF047857);
+
   /// Error state (mirrors booked pink)
   static const Color error = Color(0xFFEC4899);
 
   /// Warning state (mirrors pending amber)
   static const Color warning = Color(0xFFF59E0B);
+
+  /// Warning for TEXT — amber-700, 4.5:1+ on white (audit F3.1).
+  static const Color warningText = Color(0xFFB45309);
 
   /// Info state (medium grey)
   static const Color info = Color(0xFF666666);
@@ -312,11 +324,17 @@ class MinimalistColorsDark {
   /// Success state (matches confirmed badge green)
   static const Color success = Color(0xFF66BB6A); // #66BB6A
 
+  /// Success for TEXT — the fill already clears AA on dark surfaces.
+  static const Color successText = Color(0xFF66BB6A);
+
   /// Error state
   static const Color error = Color(0xFFEC4899);
 
   /// Warning state
   static const Color warning = Color(0xFFF59E0B);
+
+  /// Warning for TEXT — the fill already clears AA on dark surfaces.
+  static const Color warningText = Color(0xFFF59E0B);
 
   /// Info state
   static const Color info = Color(0xFF999999);
@@ -587,6 +605,10 @@ class MinimalistColorSchemeAdapter implements WidgetColorScheme {
       dark ? MinimalistColorsDark.success : MinimalistColors.success;
 
   @override
+  Color get successText =>
+      dark ? MinimalistColorsDark.successText : MinimalistColors.successText;
+
+  @override
   Color get successBackground => dark
       ? MinimalistColorsDark.statusAvailableBackground
       : MinimalistColors.statusAvailableBackground;
@@ -602,6 +624,10 @@ class MinimalistColorSchemeAdapter implements WidgetColorScheme {
   @override
   Color get warning =>
       dark ? MinimalistColorsDark.warning : MinimalistColors.warning;
+
+  @override
+  Color get warningText =>
+      dark ? MinimalistColorsDark.warningText : MinimalistColors.warningText;
 
   @override
   Color get warningBackground => dark

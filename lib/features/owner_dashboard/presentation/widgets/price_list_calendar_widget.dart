@@ -1049,6 +1049,7 @@ class _PriceListCalendarWidgetState
                                 context: context,
                               ),
                               keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.next,
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly,
                               ],
@@ -1563,6 +1564,7 @@ class _PriceListCalendarWidgetState
                                 context: ctx,
                               ),
                               keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.done,
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly,
                               ],

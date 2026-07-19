@@ -95,6 +95,16 @@ class _EmailVerificationScreenState
       // Reset error flag when returning to app - network may have been restored
       _hasShownNetworkError = false;
       _checkVerificationStatus();
+      // Re-arm the poll paused below (audit F4.9).
+      _refreshTimer ??= Timer.periodic(const Duration(seconds: 3), (_) {
+        _checkVerificationStatus();
+      });
+    } else if (state == AppLifecycleState.paused) {
+      // Backgrounded: stop polling Firebase every 3s (audit F4.9 — battery
+      // + pointless network while the app isn't visible). The cooldown
+      // timer keeps running so the resend gate stays honest.
+      _refreshTimer?.cancel();
+      _refreshTimer = null;
     }
   }
 
@@ -504,19 +514,23 @@ class _EmailVerificationScreenState
         ? const EdgeInsets.all(BBSpace.sm)
         : EdgeInsets.all(isCompact ? BBSpace.md : 36);
 
-    final card = ClipRRect(
-      borderRadius: BBRadius.lgAll,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: rd.glassBg,
-            border: Border.all(color: rd.glassBorder),
-            borderRadius: BBRadius.lgAll,
-            boxShadow: rd.panelShadow,
+    // RepaintBoundary sandboxes the blur — without it the 1s cooldown tick
+    // re-composited the whole BackdropFilter subtree (audit F4.9).
+    final card = RepaintBoundary(
+      child: ClipRRect(
+        borderRadius: BBRadius.lgAll,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: rd.glassBg,
+              border: Border.all(color: rd.glassBorder),
+              borderRadius: BBRadius.lgAll,
+              boxShadow: rd.panelShadow,
+            ),
+            padding: cardPadding,
+            child: _buildContent(c, l10n, email, isCompact, isSmallHeight),
           ),
-          padding: cardPadding,
-          child: _buildContent(c, l10n, email, isCompact, isSmallHeight),
         ),
       ),
     );
@@ -542,7 +556,7 @@ class _EmailVerificationScreenState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 1. Auth-family branding — BbLogo
-        Center(child: BbLogo(size: logoSize, useGradient: false)),
+        Center(child: BbLogo(size: logoSize)),
         SizedBox(height: isSmallHeight ? 12 : 16),
 
         // 2. Mail-icon state-mark disc (primary tint)
@@ -582,21 +596,24 @@ class _EmailVerificationScreenState
         ),
         const SizedBox(height: 12),
 
-        // 5. Email chip
+        // 5. Email chip — a11y: label announces full "Email: <address>" for SR
         Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: c.surfaceVariant,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: c.border),
-            ),
-            child: Text(
-              email,
-              style: BBType.body(
-                context,
-              ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
+          child: Semantics(
+            label: 'Email: $email',
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: c.surfaceVariant,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: c.border),
+              ),
+              child: Text(
+                email,
+                style: BBType.body(
+                  context,
+                ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
         ),
@@ -652,7 +669,18 @@ class _EmailVerificationScreenState
           onPressed: _resendVerificationEmail,
         ),
 
-        // 8. Cooldown countdown — BBType.bodyNum (tabular)
+        // 8. Cooldown countdown — BBType.bodyNum (tabular).
+        // a11y: liveRegion on the status-change message (cooldown done), NOT
+        // on the per-second number (that would spam screen readers every tick).
+        // An Offstage Semantics node announces "Resend available" exactly once
+        // when the countdown reaches zero; the per-second number is excluded.
+        Offstage(
+          offstage: _resendCooldown != 0,
+          child: Semantics(
+            liveRegion: true,
+            child: Text(l10n.authResendVerificationEmail, maxLines: 1),
+          ),
+        ),
         if (_resendCooldown > 0) ...[
           const SizedBox(height: 10),
           Center(

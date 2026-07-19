@@ -681,17 +681,43 @@ class _RoundIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
+    final bool enabled = onPressed != null;
+    // 36px visual pill inside a 44px tap box (audit F4.1 — the Container
+    // previously had NO gesture wiring, so mail/call were dead).
     return Tooltip(
       message: tooltip,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: c.surfaceVariant,
-          borderRadius: BorderRadius.circular(BBRadius.sm),
+      child: Semantics(
+        button: true,
+        enabled: enabled,
+        label: tooltip,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(BBRadius.sm),
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: c.surfaceVariant,
+                    borderRadius: BorderRadius.circular(BBRadius.sm),
+                  ),
+                  alignment: Alignment.center,
+                  child: BbIcon(
+                    name: icon,
+                    size: 18,
+                    color: enabled ? c.textSecondary : c.textTertiary,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
-        alignment: Alignment.center,
-        child: BbIcon(name: icon, size: 18, color: c.textSecondary),
       ),
     );
   }
@@ -972,7 +998,7 @@ class _BDStatusActionsState extends ConsumerState<_BDStatusActions> {
         children: [
           Row(
             children: [
-              BbStatusBadge(status: _toBbStatus(booking.status)),
+              BbStatusBadge(status: _toBbStatus(booking)),
               const Spacer(),
               Text(
                 relativeAgo,
@@ -1070,8 +1096,14 @@ class _BDStatusActionsState extends ConsumerState<_BDStatusActions> {
     return 'Primljeno prije $days dana';
   }
 
-  BbBookingStatus _toBbStatus(BookingStatus s) {
-    switch (s) {
+  BbBookingStatus _toBbStatus(BookingModel booking) {
+    // iCal/OTA bookings show "Uvezena" instead of a lifecycle status the
+    // owner can't act on (audit F4.12); cancelled still wins.
+    if (booking.isExternalBooking &&
+        booking.status != BookingStatus.cancelled) {
+      return BbBookingStatus.imported;
+    }
+    switch (booking.status) {
       case BookingStatus.pending:
         return BbBookingStatus.pending;
       case BookingStatus.confirmed:

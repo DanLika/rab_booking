@@ -312,50 +312,56 @@ class _StatsCard extends StatelessWidget {
     final double valueSize = compact ? 24 : 30;
     final double valueLetterSpacing = compact ? -0.48 : -0.6;
 
-    return BbCard(
-      padding: cardPadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              // color-mix(in srgb, <color> 14%, transparent) — 14 % opacity
-              // tint of the metric color over transparent.
-              color: item.color.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(item.icon, color: item.color, size: 20),
+    return Semantics(
+      label: '${item.title}: ${item.value}',
+      child: Tooltip(
+        message: '${item.title}: ${item.value}',
+        child: BbCard(
+          padding: cardPadding,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  // color-mix(in srgb, <color> 14%, transparent) — 14 % opacity
+                  // tint of the metric color over transparent.
+                  color: item.color.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(item.icon, color: item.color, size: 20),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                // .bb-caption base (12) overridden to 10 px UPPERCASE
+                // 600 / +0.05em tertiary — design-canonical eyebrow.
+                item.title.toUpperCase(),
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5, // 0.05em × 10
+                  height: 1.5,
+                  color: palette.textTertiary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                item.value,
+                style: BBType.h1Num(context).copyWith(
+                  fontSize: valueSize,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: valueLetterSpacing,
+                  height: 1.0,
+                  color: palette.textPrimary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            // .bb-caption base (12) overridden to 10 px UPPERCASE
-            // 600 / +0.05em tertiary — design-canonical eyebrow.
-            item.title.toUpperCase(),
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5, // 0.05em × 10
-              height: 1.5,
-              color: palette.textTertiary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            item.value,
-            style: BBType.h1Num(context).copyWith(
-              fontSize: valueSize,
-              fontWeight: FontWeight.w800,
-              letterSpacing: valueLetterSpacing,
-              height: 1.0,
-              color: palette.textPrimary,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

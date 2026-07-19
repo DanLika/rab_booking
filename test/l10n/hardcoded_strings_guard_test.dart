@@ -58,11 +58,11 @@ const Map<String, List<String>> _allowed = <String, List<String>>{
   // WidgetTranslations in #768 (4-lang); entry dropped (ratcheted down).
   // popup_blocked_dialog.dart — 'Cancel' (its last hardcoded literal) localized
   // to WidgetTranslations (popupCancel) in 7.33; entry dropped (ratcheted down).
-  'lib/shared/presentation/screens/not_found_screen.dart': <String>[
-    'Natrag',
-    'Povratak na početnu',
-    'Stranica nije pronađena',
-  ],
+  // not_found_screen.dart — the F5F CommonAppBar/BbButton restructure moved
+  // 'Povratak na početnu' + 'Stranica nije pronađena' out of Text() adjacency
+  // (still hardcoded, tagged TODO(l10n) for F6); ratcheted down per the
+  // guard's own instruction.
+  'lib/shared/presentation/screens/not_found_screen.dart': <String>['Natrag'],
 };
 
 /// Dev-only design showcases — literal style labels by design, not l10n debt.

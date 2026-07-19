@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../design/tokens.dart';
 import '../../shared/widgets/bookbed_branded_loader.dart';
 
 /// Smart progress controller for splash screen animation.
@@ -227,17 +228,18 @@ class _OwnerSplashScreenState extends State<OwnerSplashScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Background color based on theme
-    final backgroundColor = isDark
-        ? const Color(0xFF000000) // True black for dark mode
-        : const Color(0xFFFAFAFA); // Warm white for light mode
+    // Background color based on theme (tokens: bgDark=0xFF000000, bgLight=0xFFFAFAFA).
+    final backgroundColor = isDark ? BBColor.bgDark : BBColor.bgLight;
 
     return Scaffold(
       backgroundColor: backgroundColor,
       body: Center(
-        child: BookBedBrandedLoader(
-          isDarkMode: isDark,
-          progress: _progressController.progress,
+        child: Semantics(
+          liveRegion: true,
+          child: BookBedBrandedLoader(
+            isDarkMode: isDark,
+            progress: _progressController.progress,
+          ),
         ),
       ),
     );
@@ -376,9 +378,8 @@ class _OwnerSplashOverlayState extends State<OwnerSplashOverlay> {
       isDark = false;
     }
 
-    final backgroundColor = isDark
-        ? const Color(0xFF000000)
-        : const Color(0xFFFAFAFA);
+    // Background color — tokens (bgDark=0xFF000000, bgLight=0xFFFAFAFA).
+    final backgroundColor = isDark ? BBColor.bgDark : BBColor.bgLight;
 
     // Build the splash screen widget with theme context
     final splashScreen = Theme(
@@ -388,9 +389,12 @@ class _OwnerSplashOverlayState extends State<OwnerSplashOverlay> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: Center(
-            child: BookBedBrandedLoader(
-              isDarkMode: isDark,
-              progress: _progressController.progress,
+            child: Semantics(
+              liveRegion: true,
+              child: BookBedBrandedLoader(
+                isDarkMode: isDark,
+                progress: _progressController.progress,
+              ),
             ),
           ),
         ),

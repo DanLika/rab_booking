@@ -6,9 +6,9 @@ All version history from v4.6 to v7.48.
 
 ---
 
-**Changelog 7.48** (2026-07-19) — VISUAL EXECUTION CAMPAIGN (audit sweep 7.46 → fixes) — **F1-F6 COMPLETE: ~30 local branches, all suites green, awaiting F8 integration merge + DEV deploy**:
+**Changelog 7.48** (2026-07-19) — VISUAL EXECUTION CAMPAIGN (audit sweep 7.46 → fixes) — **COMPLETE F1-F8: 35 branches → integration/visual-campaign (PR #964), full suite 2144/2144 green, analyze 111 (below pre-campaign baseline), DEV deployed + smoked**:
 
-### feat/fix/chore: sistemski popravci po REMEDIATION_PLAN.md (izvršено kroz self-paced loop)
+### feat/fix/chore: sistemski popravci po REMEDIATION_PLAN.md (izvršeno kroz self-paced loop)
 - **F1+F1b konsolidacija:** 20 mrtvih fajlova obrisano; PremiumCard→BbCard (card.dart obrisan); redesign/bb_bottom_sheet obrisan; ai_assistant na BbSkeleton. core/widgets/bb_* set čeka GO (gallery/probe dev-alati).
 - **F2 primitivi (12/12):** BbInput params backport (textInputAction/focusNode/autofillHints/autofocus/textCapitalization); BbButton+BbChip 44px hit-area + Semantics; BbIcon decorative-by-default; BbSectionHeader header:true (34 sitea); BbCard/toggles/spinner/dialog/appbar/list-tile/loaderi a11y (liveRegion, ExcludeSemantics barijere, scopesRoute na BbDialog + bodyWidget slot).
 - **F4 bugovi (14):** mrtva mail/call dugmad (booking detail); unit_form area crash + amenities WIPE (UnitModel nije imao polje!); filters Clear→pop; confirmation copy pill wired na Clipboard; subscription no-opovi; smart_tooltip directional-insets crash; offline banner liveRegion + connectivity stream leak; AI-nudge no-op dugmad uklonjena; verif-poll pauza na background; imported badge provenance.
@@ -53,6 +53,37 @@ structural chrome ×4 and `profile_image_picker` a diagonal gradient (both retir
 declared + passed but never wired to an `InkWell` → mail/call buttons are dead
 taps. Lowest-scoring screens: `month_calendar` / `activity_log` /
 `stripe_connect_setup` (10/20).
+---
+
+**Changelog 7.47** (2026-07-19) — BookBed Pro subscription checkout WIRED and live-verified on dev (#962):
+
+### feat(subscription): "Nadogradi na Pro" now really upgrades — checkout + portal wired on web
+The full server stack (`createSubscriptionCheckoutSession` / `createCustomerPortalSession`,
+webhook lifecycle, trial cron) was deployed but dormant: both upgrade CTAs showed a
+"coming soon" dialog, `SubscriptionRepository` had zero consumers, and the price
+allowlist was empty (deny-all) — the known "dormant infra = unfinished wiring" class (#935).
+Now: shared `handleSubscriptionCheckoutTap` seam behind both plan-card and trial-hero
+CTAs plus a new "Upravljaj pretplatom" portal button for active subscribers (active
+accounts route to the portal, not a second checkout — no server double-subscribe guard yet).
+Price IDs per env in `EnvironmentConfig` (dev = test-mode IDs; staging/prod empty →
+coming-soon dialog stays ⇒ prod-safe merge). Redirects only follow `isSafeStripeUrl`
+(exact hosts checkout.stripe.com / billing.stripe.com). Hash-routing-aware return URL
+(`/#/owner/subscription`) + `stripeReturnParams()` reads `session_id`/`status=cancelled`
+from the fragment. New `invoice.payment_failed` webhook handler → `past_due`
+(accountStatus untouched while Stripe retries; `invoice.paid` recovery covered).
+**Live dev E2E:** test-card checkout → webhook flipped `trial→active`/`premium`,
+profile Pro-upsell card auto-hid, manage button opened the Stripe Billing Portal.
+Dev env prepared: test prices created via throwaway CF (deleted after), dev webhook
+endpoint extended with `invoice.payment_failed`, 3 CFs redeployed.
+Tests: jest 519 (was 508), subscription suite 21/21, full Flutter 1896 green (excl. goldens).
+Known follow-ups: cold-boot deep links (incl. Stripe return URL) redirect to overview
+so the success snackbar never shows (pre-existing router behavior, all deep links);
+server-side double-subscribe guard; dunning escalation for stale `past_due`.
+
+### P2 fix(ci): coverage-check timeout 5→15 min (#961)
+`Check Code Coverage` was `cancelled` on every recent main run: the job re-runs the
+full 1945-test suite with coverage under `timeout-minutes: 5` while plain `Run Tests`
+alone takes ~7 min — killed at ~5m15s, gate silently non-enforcing.
 
 ---
 

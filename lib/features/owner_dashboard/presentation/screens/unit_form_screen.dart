@@ -79,6 +79,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
     _minStayController.text = unit.minStayNights.toString();
     _existingImages = unit.images.toList();
     _isAvailable = unit.isAvailable;
+    // Restore amenities — without this the save path wrote the empty
+    // selection and silently wiped them (audit F4.2).
+    _selectedAmenities
+      ..clear()
+      ..addAll(PropertyAmenity.fromStringList(unit.amenities));
 
     // If editing existing unit, consider slug as manually set
     _isManualSlugEdit = unit.slug != null;
@@ -139,7 +144,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
             },
           ),
           body: Container(
-            // Page background gradient (TIP 1, matches PropertyFormScreen)
+            // Page background — FLAT solid fill since CHANGELOG 7.23
+            // (pageBackground renders as solid; matches PropertyFormScreen)
             decoration: BoxDecoration(
               gradient: context.gradients.pageBackground,
             ),
@@ -545,9 +551,10 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
     );
   }
 
-  /// Helper method to build consistent section cards — TIP 1 diagonal
-  /// gradient recipe (cardBackground + sectionBorder + radius 24), matching
-  /// [PropertyFormScreen._buildSection] and the Widget Settings sections.
+  /// Helper method to build consistent section cards — FLAT recipe since
+  /// CHANGELOG 7.23 (cardBackground renders as a solid fill + sectionBorder
+  /// + radius 24), matching [PropertyFormScreen._buildSection] and the
+  /// Widget Settings sections.
   Widget _buildSection(
     BuildContext context, {
     required String title,
@@ -771,15 +778,21 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
         Positioned(
           top: 4,
           right: 4,
-          child: IconButton.filled(
-            onPressed: () {
-              setState(() => _existingImages.removeAt(index));
-            },
-            icon: const Icon(Icons.close, size: 16),
-            style: IconButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(24, 24),
+          child: Semantics(
+            label: 'Ukloni sliku',
+            button: true,
+            child: IconButton.filled(
+              onPressed: () {
+                setState(() => _existingImages.removeAt(index));
+              },
+              icon: const Icon(Icons.close, size: 16),
+              style: IconButton.styleFrom(
+                backgroundColor: theme.colorScheme.error,
+                padding: EdgeInsets.zero,
+                // 44px tap floor per a11y target-size rules;
+                // visual glyph stays 16px via icon size above.
+                minimumSize: const Size(44, 44),
+              ),
             ),
           ),
         ),
@@ -822,15 +835,19 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
         Positioned(
           top: 4,
           right: 4,
-          child: IconButton.filled(
-            onPressed: () {
-              setState(() => _selectedImages.removeAt(index));
-            },
-            icon: const Icon(Icons.close, size: 16),
-            style: IconButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(24, 24),
+          child: Semantics(
+            label: 'Ukloni sliku',
+            button: true,
+            child: IconButton.filled(
+              onPressed: () {
+                setState(() => _selectedImages.removeAt(index));
+              },
+              icon: const Icon(Icons.close, size: 16),
+              style: IconButton.styleFrom(
+                backgroundColor: theme.colorScheme.error,
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(44, 44),
+              ),
             ),
           ),
         ),
@@ -886,7 +903,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),
           maxGuests: int.parse(_maxGuestsController.text),
-          area: double.parse(_areaController.text),
+          area: double.tryParse(_areaController.text),
           minStayNights: int.parse(_minStayController.text),
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
           images: allImages,
@@ -911,7 +928,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),
           maxGuests: int.parse(_maxGuestsController.text),
-          area: double.parse(_areaController.text),
+          area: double.tryParse(_areaController.text),
           minStayNights: int.parse(_minStayController.text),
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
           images: allImages,

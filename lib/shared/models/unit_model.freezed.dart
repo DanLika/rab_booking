@@ -89,6 +89,12 @@ mixin _$UnitModel {
   @JsonKey(name: 'area_sqm')
   double? get areaSqm => throw _privateConstructorUsedError;
 
+  /// Unit amenity value strings (see PropertyAmenity.value). The
+  /// Firestore doc always carried this field (owner repo writes it) but
+  /// the model dropped it on read, so the edit form silently wiped
+  /// amenities on save (audit F4.2).
+  List<String> get amenities => throw _privateConstructorUsedError;
+
   /// List of unit-specific image URLs
   List<String> get images => throw _privateConstructorUsedError;
 
@@ -156,6 +162,7 @@ abstract class $UnitModelCopyWith<$Res> {
     int bedrooms,
     int bathrooms,
     @JsonKey(name: 'area_sqm') double? areaSqm,
+    List<String> amenities,
     List<String> images,
     @JsonKey(name: 'is_available') bool isAvailable,
     @JsonKey(name: 'min_stay_nights') int minStayNights,
@@ -202,6 +209,7 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
     Object? bedrooms = null,
     Object? bathrooms = null,
     Object? areaSqm = freezed,
+    Object? amenities = null,
     Object? images = null,
     Object? isAvailable = null,
     Object? minStayNights = null,
@@ -285,6 +293,10 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
                 ? _value.areaSqm
                 : areaSqm // ignore: cast_nullable_to_non_nullable
                       as double?,
+            amenities: null == amenities
+                ? _value.amenities
+                : amenities // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
             images: null == images
                 ? _value.images
                 : images // ignore: cast_nullable_to_non_nullable
@@ -351,6 +363,7 @@ abstract class _$$UnitModelImplCopyWith<$Res>
     int bedrooms,
     int bathrooms,
     @JsonKey(name: 'area_sqm') double? areaSqm,
+    List<String> amenities,
     List<String> images,
     @JsonKey(name: 'is_available') bool isAvailable,
     @JsonKey(name: 'min_stay_nights') int minStayNights,
@@ -396,6 +409,7 @@ class __$$UnitModelImplCopyWithImpl<$Res>
     Object? bedrooms = null,
     Object? bathrooms = null,
     Object? areaSqm = freezed,
+    Object? amenities = null,
     Object? images = null,
     Object? isAvailable = null,
     Object? minStayNights = null,
@@ -479,6 +493,10 @@ class __$$UnitModelImplCopyWithImpl<$Res>
             ? _value.areaSqm
             : areaSqm // ignore: cast_nullable_to_non_nullable
                   as double?,
+        amenities: null == amenities
+            ? _value._amenities
+            : amenities // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
         images: null == images
             ? _value._images
             : images // ignore: cast_nullable_to_non_nullable
@@ -538,6 +556,7 @@ class _$UnitModelImpl extends _UnitModel {
     this.bedrooms = 1,
     this.bathrooms = 1,
     @JsonKey(name: 'area_sqm') this.areaSqm,
+    final List<String> amenities = const [],
     final List<String> images = const [],
     @JsonKey(name: 'is_available') this.isAvailable = true,
     @JsonKey(name: 'min_stay_nights') this.minStayNights = 1,
@@ -547,6 +566,7 @@ class _$UnitModelImpl extends _UnitModel {
     @JsonKey(name: 'updated_at') @NullableTimestampConverter() this.updatedAt,
     @JsonKey(name: 'deleted_at') this.deletedAt,
   }) : _weekendDays = weekendDays,
+       _amenities = amenities,
        _images = images,
        super._();
 
@@ -651,6 +671,24 @@ class _$UnitModelImpl extends _UnitModel {
   @JsonKey(name: 'area_sqm')
   final double? areaSqm;
 
+  /// Unit amenity value strings (see PropertyAmenity.value). The
+  /// Firestore doc always carried this field (owner repo writes it) but
+  /// the model dropped it on read, so the edit form silently wiped
+  /// amenities on save (audit F4.2).
+  final List<String> _amenities;
+
+  /// Unit amenity value strings (see PropertyAmenity.value). The
+  /// Firestore doc always carried this field (owner repo writes it) but
+  /// the model dropped it on read, so the edit form silently wiped
+  /// amenities on save (audit F4.2).
+  @override
+  @JsonKey()
+  List<String> get amenities {
+    if (_amenities is EqualUnmodifiableListView) return _amenities;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_amenities);
+  }
+
   /// List of unit-specific image URLs
   final List<String> _images;
 
@@ -702,7 +740,7 @@ class _$UnitModelImpl extends _UnitModel {
 
   @override
   String toString() {
-    return 'UnitModel(id: $id, propertyId: $propertyId, ownerId: $ownerId, name: $name, slug: $slug, description: $description, pricePerNight: $pricePerNight, weekendBasePrice: $weekendBasePrice, weekendDays: $weekendDays, currency: $currency, maxGuests: $maxGuests, maxTotalCapacity: $maxTotalCapacity, extraBedFee: $extraBedFee, petFee: $petFee, maxPets: $maxPets, bedrooms: $bedrooms, bathrooms: $bathrooms, areaSqm: $areaSqm, images: $images, isAvailable: $isAvailable, minStayNights: $minStayNights, maxStayNights: $maxStayNights, sortOrder: $sortOrder, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
+    return 'UnitModel(id: $id, propertyId: $propertyId, ownerId: $ownerId, name: $name, slug: $slug, description: $description, pricePerNight: $pricePerNight, weekendBasePrice: $weekendBasePrice, weekendDays: $weekendDays, currency: $currency, maxGuests: $maxGuests, maxTotalCapacity: $maxTotalCapacity, extraBedFee: $extraBedFee, petFee: $petFee, maxPets: $maxPets, bedrooms: $bedrooms, bathrooms: $bathrooms, areaSqm: $areaSqm, amenities: $amenities, images: $images, isAvailable: $isAvailable, minStayNights: $minStayNights, maxStayNights: $maxStayNights, sortOrder: $sortOrder, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
   }
 
   @override
@@ -741,6 +779,10 @@ class _$UnitModelImpl extends _UnitModel {
             (identical(other.bathrooms, bathrooms) ||
                 other.bathrooms == bathrooms) &&
             (identical(other.areaSqm, areaSqm) || other.areaSqm == areaSqm) &&
+            const DeepCollectionEquality().equals(
+              other._amenities,
+              _amenities,
+            ) &&
             const DeepCollectionEquality().equals(other._images, _images) &&
             (identical(other.isAvailable, isAvailable) ||
                 other.isAvailable == isAvailable) &&
@@ -780,6 +822,7 @@ class _$UnitModelImpl extends _UnitModel {
     bedrooms,
     bathrooms,
     areaSqm,
+    const DeepCollectionEquality().hash(_amenities),
     const DeepCollectionEquality().hash(_images),
     isAvailable,
     minStayNights,
@@ -824,6 +867,7 @@ abstract class _UnitModel extends UnitModel {
     final int bedrooms,
     final int bathrooms,
     @JsonKey(name: 'area_sqm') final double? areaSqm,
+    final List<String> amenities,
     final List<String> images,
     @JsonKey(name: 'is_available') final bool isAvailable,
     @JsonKey(name: 'min_stay_nights') final int minStayNights,
@@ -927,6 +971,13 @@ abstract class _UnitModel extends UnitModel {
   @override
   @JsonKey(name: 'area_sqm')
   double? get areaSqm;
+
+  /// Unit amenity value strings (see PropertyAmenity.value). The
+  /// Firestore doc always carried this field (owner repo writes it) but
+  /// the model dropped it on read, so the edit form silently wiped
+  /// amenities on save (audit F4.2).
+  @override
+  List<String> get amenities;
 
   /// List of unit-specific image URLs
   @override

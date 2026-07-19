@@ -489,8 +489,13 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                       });
                     },
                     tooltip: l10n.ownerFiltersClear,
+                    // BoxConstraints() collapsed the tap target to the 18px
+                    // glyph (audit F4.11) — restore the 48px default floor.
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
+                    ),
                   ),
               ],
             ),
@@ -539,6 +544,9 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
         });
         final notifier = ref.read(bookingsFiltersNotifierProvider.notifier);
         notifier.clearFilters();
+        // Close like Apply does — clearing is a terminal action, leaving
+        // the dialog open read as a no-op (audit F4.11).
+        Navigator.of(context).pop();
       },
     );
   }

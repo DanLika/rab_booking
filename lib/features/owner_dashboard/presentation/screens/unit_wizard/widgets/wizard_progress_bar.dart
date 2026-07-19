@@ -179,66 +179,77 @@ class WizardProgressBar extends StatelessWidget {
     final stepLabels = _getStepLabels(l10n);
     final stepLabel = stepLabels[step] ?? '';
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Circle with icon/checkmark
-        InkWell(
-          onTap: onStepTap != null ? () => onStepTap!(step) : null,
-          borderRadius: BorderRadius.circular(18),
-          child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: borderColor,
-                width: BBBorderWidth.thick,
+    // Accessibility label: 'Korak X: <naziv>, završen/trenutni/predstojeći'
+    final String stateLabel = isCompleted
+        ? 'završen'
+        : isCurrent
+        ? 'trenutni'
+        : 'predstojeći';
+    final String semanticsLabel = 'Korak $step: $stepLabel, $stateLabel';
+
+    return Semantics(
+      label: semanticsLabel,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Circle with icon/checkmark
+          InkWell(
+            onTap: onStepTap != null ? () => onStepTap!(step) : null,
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: borderColor,
+                  width: BBBorderWidth.thick,
+                ),
+                // Active step lifts with the brand purple-sm glow (handoff
+                // wizard.jsx stepper: `--bb-shadow-purple-sm` on the current node).
+                boxShadow: isCurrent ? BBShadow.purpleGlow(context) : null,
               ),
-              // Active step lifts with the brand purple-sm glow (handoff
-              // wizard.jsx stepper: `--bb-shadow-purple-sm` on the current node).
-              boxShadow: isCurrent ? BBShadow.purpleGlow(context) : null,
-            ),
-            child: Center(
-              child: isCompleted
-                  ? const Icon(Icons.check, size: 18, color: Colors.white)
-                  : Icon(stepIcon, size: 18, color: iconColor),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 2),
-
-        // Step label (single word)
-        Text(
-          stepLabel,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: isCompleted || isCurrent
-                ? FontWeight.w600
-                : FontWeight.w400,
-            color: isCompleted
-                ? completedColor
-                : isCurrent
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-
-        // Optional badge (only for optional steps that are not completed)
-        if (isOptional && !isCompleted)
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Text(
-              l10n.unitWizardProgressOptional,
-              style: TextStyle(
-                fontSize: 9,
-                color: theme.colorScheme.onSurfaceVariant,
+              child: Center(
+                child: isCompleted
+                    ? const Icon(Icons.check, size: 18, color: Colors.white)
+                    : Icon(stepIcon, size: 18, color: iconColor),
               ),
             ),
           ),
-      ],
+
+          const SizedBox(height: 2),
+
+          // Step label (single word)
+          Text(
+            stepLabel,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isCompleted || isCurrent
+                  ? FontWeight.w600
+                  : FontWeight.w400,
+              color: isCompleted
+                  ? completedColor
+                  : isCurrent
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+
+          // Optional badge (only for optional steps that are not completed)
+          if (isOptional && !isCompleted)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                l10n.unitWizardProgressOptional,
+                style: TextStyle(
+                  fontSize: 9,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 

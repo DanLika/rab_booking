@@ -143,16 +143,22 @@ class GoogleBrandIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipOval(
-      child: Image.asset(
-        'assets/images/google_icon.png',
-        width: size,
-        height: size,
-        filterQuality: FilterQuality.high,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.g_mobiledata,
-          size: size,
-          color: Theme.of(context).colorScheme.onSurface,
+    // Google brand guidelines require the "G" on a white disc — without it
+    // the mark disappears on dark surfaces (audit F4.13).
+    return CircleAvatar(
+      radius: size / 2,
+      backgroundColor: Colors.white,
+      child: ClipOval(
+        child: Image.asset(
+          'assets/images/google_icon.png',
+          width: size * 0.72,
+          height: size * 0.72,
+          filterQuality: FilterQuality.high,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.g_mobiledata,
+            size: size * 0.72,
+            color: Colors.black87,
+          ),
         ),
       ),
     );

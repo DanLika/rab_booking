@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_dimensions.dart';
-import '../../../core/theme/app_colors.dart';
 
 /// Consistent skeleton colors for light and dark themes
 /// Aligned with AppColors design system for professional look
 class SkeletonColors {
-  // Dark theme colors - match AppColors dark theme
-  static const Color darkPrimary = Color(0xFF2D2D3A); // Darker, more subtle
-  static const Color darkSecondary = Color(
-    0xFF35323D,
-  ); // Slightly lighter for shimmer
-  static const Color darkCardBackground = Color(
-    0xFF1E1E28,
-  ); // Match card backgrounds
-  static const Color darkBorder = Color(0xFF3D3D4A); // Match section dividers
-  static const Color darkHeader = Color(0xFF252330); // Subtle header background
+  // Dark theme colors — audit/127 OLED ladder (#1E1E1E card, #2A2A2A
+  // variant, #333333 elevated). The old purple-tinted hexes (#2D2D3A /
+  // #1E1E28…) predate CHANGELOG 7.24 and clashed with every dark surface
+  // they sat on (audit F3.7).
+  static const Color darkPrimary = Color(0xFF2A2A2A);
+  static const Color darkSecondary = Color(0xFF333333);
+  static const Color darkCardBackground = Color(0xFF1E1E1E);
+  static const Color darkBorder = Color(0xFF333333);
+  static const Color darkHeader = Color(0xFF2A2A2A);
 
   // Light theme colors - match AppColors light theme
   static const Color lightPrimary = Color(0xFFE8E8F0); // Softer gray
@@ -165,7 +163,11 @@ class PropertyListSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // shrinkWrap + no physics: skeletons render inside arbitrary parents;
+    // an unbounded ListView asserts when nested in a Column (audit F4.14).
     return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: itemCount,
       itemBuilder: (context, index) => const Padding(
         padding: EdgeInsets.only(bottom: 16),
@@ -649,7 +651,10 @@ class NotificationsListSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Bounded for the same reason as PropertyListSkeleton (audit F4.14).
     return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: itemCount,
       itemBuilder: (context, index) => const NotificationCardSkeleton(),
@@ -759,16 +764,17 @@ class StatsCardsSkeleton extends StatelessWidget {
   }
 
   Widget _buildStatCardSkeleton(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.all(
         context.isMobile ? AppDimensions.spaceM : AppDimensions.spaceL,
       ),
       decoration: BoxDecoration(
-        color: AppColors.withOpacity(AppColors.surfaceLight, 0.5),
+        // Theme-aware (audit F3.7): surfaceLight/borderLight were
+        // light-only and glowed on dark.
+        color: SkeletonColors.cardBackground(isDark),
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        border: Border.all(
-          color: AppColors.withOpacity(AppColors.borderLight, 0.3),
-        ),
+        border: Border.all(color: SkeletonColors.border(isDark)),
       ),
       child: Column(
         children: [

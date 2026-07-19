@@ -65,41 +65,43 @@ class EmailVerificationCard extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Compact toggle with inline layout
-                Row(
-                  children: [
-                    Icon(
-                      Icons.email_outlined,
-                      size: 18,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.emailVerificationToggleTitle,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          Text(
-                            l10n.emailVerificationToggleSubtitle,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: context.textColorSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                MergeSemantics(
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.email_outlined,
+                        size: 18,
+                        color: theme.colorScheme.primary,
                       ),
-                    ),
-                    Switch(
-                      value: requireEmailVerification,
-                      onChanged: onChanged,
-                      activeThumbColor: theme.colorScheme.primary,
-                    ),
-                  ],
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.emailVerificationToggleTitle,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              l10n.emailVerificationToggleSubtitle,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: context.textColorSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: requireEmailVerification,
+                        onChanged: onChanged,
+                        activeThumbColor: theme.colorScheme.primary,
+                      ),
+                    ],
+                  ),
                 ),
 
                 // Compact info message

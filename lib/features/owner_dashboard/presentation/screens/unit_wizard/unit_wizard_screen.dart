@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../../l10n/app_localizations.dart';
@@ -109,6 +110,23 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
     super.dispose();
   }
 
+  /// Announce step change to screen readers.
+  void _announceStep(int step) {
+    final l10n = AppLocalizations.of(context);
+    final labels = <int, String>{
+      1: l10n.unitWizardProgressInfo,
+      2: l10n.unitWizardProgressCapacity,
+      3: l10n.unitWizardProgressPrice,
+      4: l10n.unitWizardProgressReview,
+    };
+    final label = labels[step] ?? '';
+    SemanticsService.sendAnnouncement(
+      View.of(context),
+      'Korak $step od 4: $label',
+      TextDirection.ltr,
+    );
+  }
+
   /// Handle step navigation
   Future<void> _goToStep(int step) async {
     if (step < 1 || step > 4) return;
@@ -122,6 +140,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
     ref
         .read(unitWizardNotifierProvider(widget.unitId).notifier)
         .jumpToStep(step);
+    _announceStep(step);
   }
 
   /// Handle next button
@@ -155,6 +174,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
           curve: Curves.easeInOut,
         ),
       );
+      _announceStep(currentStep + 1);
     } else {
       // Final step - publish unit
       await _publishUnit();
@@ -166,6 +186,13 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
     final notifier = ref.read(
       unitWizardNotifierProvider(widget.unitId).notifier,
     );
+    final prevStep =
+        (ref
+                .read(unitWizardNotifierProvider(widget.unitId))
+                .value
+                ?.currentStep ??
+            2) -
+        1;
     notifier.goToPreviousStep();
 
     unawaited(
@@ -174,6 +201,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
         curve: Curves.easeInOut,
       ),
     );
+    if (prevStep >= 1) _announceStep(prevStep);
   }
 
   /// Validate step data

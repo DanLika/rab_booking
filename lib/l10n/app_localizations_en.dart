@@ -9001,4 +9001,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetSettingsProBadge => 'PRO';
+
+  @override
+  String get subscriptionCheckoutErrorGeneric =>
+      'Could not start checkout. Please try again.';
+
+  @override
+  String get subscriptionPortalErrorGeneric =>
+      'Could not open billing portal. Please try again.';
+
+  @override
+  String get subscriptionPaymentSuccess =>
+      'Payment successful — activation in progress';
+
+  @override
+  String get subscriptionPaymentCancelled => 'Checkout cancelled';
+
+  @override
+  String get subscriptionManageLabel => 'Manage subscription';
+
+  @override
+  String get profileNameRequired => 'Name is required';
+
+  @override
+  String get profileNameTooShort => 'Name must be at least 2 characters';
+
+  @override
+  String get profileNameTooLong => 'Name must be less than 80 characters';
+
+  @override
+  String get profileEmailInvalid => 'Please enter a valid email address';
+
+  @override
+  String get profilePhoneInvalid => 'Please enter a valid phone number';
+
+  @override
+  String get profileIbanLength => 'IBAN must be 15–34 characters';
+
+  @override
+  String get profileIbanFormat => 'Invalid IBAN format';
+
+  @override
+  String get profileSwiftLength => 'SWIFT code must be 8 or 11 characters';
+
+  @override
+  String get profileSwiftFormat =>
+      'SWIFT code can only contain letters and numbers';
 }

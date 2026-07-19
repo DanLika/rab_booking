@@ -13,7 +13,7 @@ void main() {
       const BbAdminDarkTokens p = BbAdminDarkTokens.preset;
       expect(p.textPrimary, const Color(0xFFFFFFFF));
       expect(p.textSecondary, const Color(0xB8FFFFFF));
-      expect(p.textTertiary, const Color(0x66FFFFFF));
+      expect(p.textTertiary, const Color(0x80FFFFFF));
       expect(p.divider, const Color(0x14FFFFFF));
       expect(p.adminBadgeFg, const Color(0xFFC9BBFF));
     });

@@ -31,6 +31,14 @@ enum BbInputSize { sm, md, lg }
 /// and renders a static decorative icon. For stateful interactive trailing
 /// content (password visibility toggle, clipboard button, etc.) use
 /// [trailingAction] which accepts a [Widget].
+///
+/// **Keyboard + autofill (audit sweep F2.1):** [textInputAction] controls the
+/// IME action key (`next`/`done`/`search`), [focusNode] accepts an external
+/// node so forms can chain focus programmatically, [autofillHints] wires the
+/// field into platform autofill / password managers (wrap multi-field forms
+/// in an [AutofillGroup]), [autofocus] and [textCapitalization] forward
+/// directly to the inner [TextField]. All additive — defaults preserve the
+/// previous behavior. Backported from the retired `BBInput` prototype.
 class BbInput extends StatefulWidget {
   const BbInput({
     super.key,
@@ -49,6 +57,11 @@ class BbInput extends StatefulWidget {
     this.size = BbInputSize.md,
     this.maxLines = 1,
     this.keyboardType,
+    this.textInputAction,
+    this.focusNode,
+    this.autofillHints,
+    this.autofocus = false,
+    this.textCapitalization = TextCapitalization.none,
     this.inputFormatters,
     this.onChanged,
     this.onSubmitted,
@@ -70,6 +83,26 @@ class BbInput extends StatefulWidget {
   final bool disabled;
   final int? charLimit;
   final BbInputSize size;
+
+  /// IME action key (e.g. [TextInputAction.next] to advance a form chain,
+  /// [TextInputAction.done] on the last field). Forwarded to [TextField].
+  final TextInputAction? textInputAction;
+
+  /// External focus node. When supplied the caller owns its lifecycle (this
+  /// widget only attaches/detaches its focus listener); when null an internal
+  /// node is created and disposed as before.
+  final FocusNode? focusNode;
+
+  /// Platform autofill hints (e.g. `[AutofillHints.email]`,
+  /// `[AutofillHints.password]`). Enables password-manager integration.
+  final Iterable<String>? autofillHints;
+
+  /// Autofocus this field on mount. Forwarded to [TextField].
+  final bool autofocus;
+
+  /// Capitalization behavior (e.g. [TextCapitalization.words] for name
+  /// fields). Forwarded to [TextField].
+  final TextCapitalization textCapitalization;
 
   /// Visible line count. `1` (default) keeps the fixed [size]-driven height;
   /// `> 1` switches the field to a multiline area (minHeight = [size] height,
@@ -105,18 +138,59 @@ class BbInput extends StatefulWidget {
 }
 
 class _BbInputState extends State<BbInput> {
-  late final FocusNode _focusNode = FocusNode()..addListener(_onFocus);
-  late final TextEditingController _ctrl =
-      widget.controller ??
-      TextEditingController(text: widget.initialValue ?? '');
+  late FocusNode _focusNode;
+  bool _ownsFocusNode = false;
+  late TextEditingController _ctrl;
+  bool _ownsCtrl = false;
   bool _focused = false;
   int _charCount = 0;
 
   @override
   void initState() {
     super.initState();
+    _initFocusNode();
+    _initController();
+  }
+
+  void _initFocusNode() {
+    _ownsFocusNode = widget.focusNode == null;
+    _focusNode = widget.focusNode ?? FocusNode();
+    _focusNode.addListener(_onFocus);
+  }
+
+  void _initController() {
+    _ownsCtrl = widget.controller == null;
+    _ctrl =
+        widget.controller ??
+        TextEditingController(text: widget.initialValue ?? '');
     _charCount = _ctrl.text.length;
-    _ctrl.addListener(_onText);
+    // Perf: the counter is only rendered when charLimit is set — don't
+    // rebuild the whole field on every keystroke otherwise.
+    if (widget.charLimit != null) _ctrl.addListener(_onText);
+  }
+
+  @override
+  void didUpdateWidget(BbInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Re-attach when the parent swaps in a different node/controller —
+    // `late final` init would silently keep tracking the stale instance.
+    if (oldWidget.focusNode != widget.focusNode) {
+      _focusNode.removeListener(_onFocus);
+      if (_ownsFocusNode) _focusNode.dispose();
+      _initFocusNode();
+      _focused = _focusNode.hasFocus;
+    }
+    if (oldWidget.controller != widget.controller) {
+      _ctrl.removeListener(_onText);
+      if (_ownsCtrl) _ctrl.dispose();
+      _initController();
+    } else if (oldWidget.charLimit != widget.charLimit) {
+      _ctrl.removeListener(_onText);
+      if (widget.charLimit != null) {
+        _charCount = _ctrl.text.length;
+        _ctrl.addListener(_onText);
+      }
+    }
   }
 
   void _onFocus() => setState(() => _focused = _focusNode.hasFocus);
@@ -125,9 +199,9 @@ class _BbInputState extends State<BbInput> {
   @override
   void dispose() {
     _ctrl.removeListener(_onText);
-    if (widget.controller == null) _ctrl.dispose();
+    if (_ownsCtrl) _ctrl.dispose();
     _focusNode.removeListener(_onFocus);
-    _focusNode.dispose();
+    if (_ownsFocusNode) _focusNode.dispose();
     super.dispose();
   }
 
@@ -249,6 +323,10 @@ class _BbInputState extends State<BbInput> {
                   obscureText: widget.obscureText,
                   enabled: !widget.disabled,
                   keyboardType: widget.keyboardType,
+                  textInputAction: widget.textInputAction,
+                  textCapitalization: widget.textCapitalization,
+                  autofocus: widget.autofocus,
+                  autofillHints: widget.autofillHints,
                   maxLines: widget.maxLines,
                   maxLength: widget.charLimit,
                   inputFormatters: widget.inputFormatters,

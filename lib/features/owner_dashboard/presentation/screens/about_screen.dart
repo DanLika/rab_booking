@@ -430,38 +430,51 @@ class _ContactRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
-    return Row(
-      children: [
-        BbIcon(name: icon, size: 18, color: c.textTertiary),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: BBType.caption(context).copyWith(color: c.textTertiary),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BBRadius.smAll,
+      child: Padding(
+        // Ensure 44px touch target (equivalent to 2× BBSpace.xs vertically)
+        padding: const EdgeInsets.symmetric(vertical: BBSpace.xs),
+        child: Row(
+          children: [
+            BbIcon(name: icon, size: 18, color: c.textTertiary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: BBType.caption(
+                      context,
+                    ).copyWith(color: c.textTertiary),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: BBType.body(context).copyWith(
+                      color: c.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: BBType.body(
-                  context,
-                ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
+            ),
+            ExcludeSemantics(
+              child: BbButton(
+                variant: BbButtonVariant.tertiary,
+                size: BbButtonSize.sm,
+                asIcon: true,
+                iconLeft: actionIcon,
+                onPressed: onTap,
+                semanticLabel: '$label · $value',
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        BbButton(
-          variant: BbButtonVariant.tertiary,
-          size: BbButtonSize.sm,
-          asIcon: true,
-          iconLeft: actionIcon,
-          onPressed: onTap,
-          semanticLabel: '$label · $value',
-        ),
-      ],
+      ),
     );
   }
 }

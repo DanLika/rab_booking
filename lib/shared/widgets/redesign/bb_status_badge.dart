@@ -43,7 +43,9 @@ class BbStatusBadge extends StatelessWidget {
         return (
           fg: rd.statusPendingDeep,
           bg: rd.statusPendingTint,
-          dot: c.tertiary,
+          // Was c.tertiary (warning orange) — off-role for a pending dot
+          // (audit F3.2).
+          dot: rd.statusPendingDeep,
           label: 'Na čekanju',
         );
       case BbBookingStatus.cancelled:
@@ -77,6 +79,15 @@ class BbStatusBadge extends StatelessWidget {
     final ({Color fg, Color bg, Color dot, String label}) s = _resolve(rd, c);
 
     final double h = size == BbStatusBadgeSize.sm ? 22 : 26;
+    return Semantics(
+      label: label ?? s.label,
+      container: true,
+      excludeSemantics: true,
+      child: _pill(s, h),
+    );
+  }
+
+  Widget _pill(({Color fg, Color bg, Color dot, String label}) s, double h) {
     return Container(
       height: h,
       padding: const EdgeInsets.symmetric(horizontal: 10),

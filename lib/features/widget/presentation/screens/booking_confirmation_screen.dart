@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/theme_provider.dart';
@@ -10,6 +11,7 @@ import '../../../../core/utils/web_utils.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/widgets/redesign.dart';
+import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../widgets/common/widget_powered_by.dart';
 import '../../domain/models/widget_settings.dart';
 import '../widgets/common/info_card_widget.dart';
@@ -509,6 +511,22 @@ class _BookingReferencePill extends StatelessWidget {
   final String reference;
   final WidgetTranslations tr;
 
+  Future<void> _copyReference(BuildContext context) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: reference));
+      if (context.mounted) {
+        SnackBarHelper.showSuccess(
+          context: context,
+          message: tr.bookingReferenceCopied,
+          duration: const Duration(seconds: 2),
+        );
+      }
+    } catch (_) {
+      // Clipboard API can fail on some browsers (e.g. Safari in iframe) —
+      // the reference stays visible on screen, so fail silently.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
@@ -539,20 +557,37 @@ class _BookingReferencePill extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            Material(
-              color: c.surface,
-              shape: const CircleBorder(),
-              elevation: 1,
-              shadowColor: const Color(0x14000000),
-              child: SizedBox(
-                width: 28,
-                height: 28,
-                child: Center(
-                  child: BbIcon(
-                    name: 'content_copy',
-                    size: 15,
-                    fill: 0,
-                    color: c.textPrimary,
+            // Wired + 44px tap box around the unchanged 28px pill (audit
+            // F4.4: this was a dead affordance — Material, no onTap).
+            Semantics(
+              button: true,
+              label: tr.copyReference,
+              excludeSemantics: true,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => _copyReference(context),
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Center(
+                    child: Material(
+                      color: c.surface,
+                      shape: const CircleBorder(),
+                      elevation: 1,
+                      shadowColor: const Color(0x14000000),
+                      child: SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: Center(
+                          child: BbIcon(
+                            name: 'content_copy',
+                            size: 15,
+                            fill: 0,
+                            color: c.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),

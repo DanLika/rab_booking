@@ -274,7 +274,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
             },
           ),
           body: Container(
-            // Page background gradient (topLeft → bottomRight)
+            // Page background — FLAT solid fill since CHANGELOG 7.23.
             decoration: BoxDecoration(
               gradient: context.gradients.pageBackground,
             ),
@@ -592,17 +592,15 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                         ),
                       ),
 
-                      // Loading Overlay
+                      // Loading Overlay — ExcludeSemantics barrier hides
+                      // scrollable content underneath from a11y tree while
+                      // saving is in progress.
                       if (_isLoading)
-                        Container(
-                          color: Colors.black.withAlpha((0.5 * 255).toInt()),
-                          child: Center(
-                            child: Card(
-                              elevation: 8,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Padding(
+                        ExcludeSemantics(
+                          child: Container(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            child: Center(
+                              child: BbCard(
                                 padding: const EdgeInsets.all(32),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -679,7 +677,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            // Section cards: topRight → bottomLeft gradient
+            // Section cards — FLAT solid fill since CHANGELOG 7.23.
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(

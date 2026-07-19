@@ -194,19 +194,18 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.additionalServiceDeleteConfirm),
-        content: Text(l10n.additionalServiceDeleteHint),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete),
-          ),
-        ],
+      builder: (ctx) => BbDialog(
+        title: l10n.additionalServiceDeleteConfirm,
+        body: l10n.additionalServiceDeleteHint,
+        destructive: true,
+        primary: BbDialogAction(
+          label: l10n.delete,
+          onPressed: () => Navigator.pop(ctx, true),
+        ),
+        secondary: BbDialogAction(
+          label: l10n.cancel,
+          onPressed: () => Navigator.pop(ctx, false),
+        ),
       ),
     );
 

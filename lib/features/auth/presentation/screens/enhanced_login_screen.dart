@@ -16,6 +16,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_error_l10n.dart';
 import '../../../../core/utils/password_validator.dart';
+import '../../../../core/utils/profile_validator_error_l10n.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/redesign.dart';
@@ -547,7 +548,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     final logoSize = isSmallHeight ? 56.0 : (isCompact ? 60.0 : 64.0);
     return Column(
       children: [
-        Center(child: BbLogo(size: logoSize, useGradient: false)),
+        Center(child: BbLogo(size: logoSize)),
         SizedBox(height: isSmallHeight ? 12 : (isCompact ? 14 : 16)),
         Text(
           l10n.authOwnerLogin,
@@ -580,7 +581,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         if (_emailErrorFromServer != null) {
           return _emailErrorFromServer;
         }
-        return ProfileValidators.validateEmail(_emailController.text);
+        final e = ProfileValidators.emailError(_emailController.text);
+        return e == null ? null : l10n.profileValidatorErrorText(e);
       },
     );
   }
@@ -611,7 +613,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
         child: IconButton(
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          // a11y: 44×44 minimum tap target (WCAG 2.5.5)
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           icon: Icon(
             _obscurePassword ? Icons.visibility_off : Icons.visibility,
             color: c.textTertiary,
@@ -735,30 +738,35 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     AppLocalizations l10n,
   ) {
     return Center(
-      child: TextButton(
-        onPressed: _isLoading ? null : () => context.go(OwnerRoutes.register),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        ),
-        child: RichText(
-          text: TextSpan(
-            style: BBType.caption(context).copyWith(
-              color: _isLoading
-                  ? c.textPrimary.withValues(alpha: 0.4)
-                  : c.textSecondary,
-            ),
-            children: [
-              TextSpan(text: '${l10n.authNoAccount} '),
-              TextSpan(
-                text: l10n.authCreateAccount,
-                style: TextStyle(
-                  color: _isLoading
-                      ? c.primary.withValues(alpha: 0.4)
-                      : c.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+      child: Semantics(
+        button: true,
+        child: TextButton(
+          onPressed: _isLoading ? null : () => context.go(OwnerRoutes.register),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+            // a11y: 44px minimum tap-target height (WCAG 2.5.5)
+            minimumSize: const Size(0, 44),
+          ),
+          child: RichText(
+            text: TextSpan(
+              style: BBType.caption(context).copyWith(
+                color: _isLoading
+                    ? c.textPrimary.withValues(alpha: 0.4)
+                    : c.textSecondary,
               ),
-            ],
+              children: [
+                TextSpan(text: '${l10n.authNoAccount} '),
+                TextSpan(
+                  text: l10n.authCreateAccount,
+                  style: TextStyle(
+                    color: _isLoading
+                        ? c.primary.withValues(alpha: 0.4)
+                        : c.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

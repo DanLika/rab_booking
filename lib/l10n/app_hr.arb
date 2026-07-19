@@ -3735,5 +3735,20 @@
   "widgetSettingsShowPrices": "Prikaži cijene u kalendaru",
   "widgetSettingsBranding": "Oznaka „Powered by BookBed”",
   "widgetSettingsBrandingPro": "Uklonite uz Pro",
-  "widgetSettingsProBadge": "PRO"
+  "widgetSettingsProBadge": "PRO",
+  "subscriptionCheckoutErrorGeneric": "Nije moguće pokrenuti plaćanje. Pokušajte ponovo.",
+  "subscriptionPortalErrorGeneric": "Nije moguće otvoriti portal za naplatu. Pokušajte ponovo.",
+  "subscriptionPaymentSuccess": "Plaćanje uspješno — aktivacija u toku",
+  "subscriptionPaymentCancelled": "Odjava iz plaćanja",
+  "subscriptionManageLabel": "Upravljaj pretplatom",
+
+  "profileNameRequired": "Ime je obavezno",
+  "profileNameTooShort": "Ime mora imati najmanje 2 znaka",
+  "profileNameTooLong": "Ime mora biti kraće od 80 znakova",
+  "profileEmailInvalid": "Unesite ispravnu email adresu",
+  "profilePhoneInvalid": "Unesite ispravan broj telefona",
+  "profileIbanLength": "IBAN mora imati 15–34 znaka",
+  "profileIbanFormat": "Neispravan format IBAN-a",
+  "profileSwiftLength": "SWIFT kod mora imati 8 ili 11 znakova",
+  "profileSwiftFormat": "SWIFT kod smije sadržavati samo slova i brojeve"
 }

@@ -407,19 +407,16 @@ class _OwnerTimelineCalendarScreenState
                               showSummaryToggle: true,
                               isSummaryVisible: _showSummary,
                               onSummaryToggleChanged: (value) {
+                                // Single setState; postFrameCallback lets
+                                // AnimatedSize measure the new height before
+                                // the second layout pass renders the summary bar.
                                 setState(() {
                                   _showSummary = value;
                                 });
-                                // Force immediate rebuild to prevent delay
-                                // Without this, summary bar wouldn't appear until user scrolled
                                 WidgetsBinding.instance.addPostFrameCallback((
                                   _,
                                 ) {
-                                  if (mounted) {
-                                    setState(() {
-                                      // Trigger second rebuild to ensure AnimatedSize processes
-                                    });
-                                  }
+                                  if (mounted) setState(() {});
                                 });
                               },
                               // Show empty units toggle (persisted via provider)
@@ -852,64 +849,70 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return MouseRegion(
-      onEnter: (_) => _isHoveredNotifier.value = true,
-      onExit: (_) => _isHoveredNotifier.value = false,
-      child: GestureDetector(
-        onTapDown: (_) => _isPressedNotifier.value = true,
-        onTapUp: (_) {
-          _isPressedNotifier.value = false;
-          widget.onPressed();
-        },
-        onTapCancel: () => _isPressedNotifier.value = false,
-        // SF-016: Nested ValueListenableBuilders to rebuild only FAB content
-        child: ValueListenableBuilder<bool>(
-          valueListenable: _isHoveredNotifier,
-          builder: (context, isHovered, _) {
-            return ValueListenableBuilder<bool>(
-              valueListenable: _isPressedNotifier,
-              builder: (context, isPressed, _) {
-                // Handoff CALPFab: solid primary circle + purple glow. Color
-                // from the BB token so dark mode lifts to #8B6FFF.
-                final Color fabColor = BBColor.of(context).primary;
-                return AnimatedContainer(
-                  duration: BBMotion.base,
-                  curve: Curves.easeOutCubic,
-                  width: _kFabSize,
-                  height: _kFabSize,
-                  transform: Matrix4.diagonal3Values(
-                    isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
-                    isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
-                    1.0,
-                  ),
-                  transformAlignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: fabColor,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: fabColor.withValues(
-                          alpha: isHovered ? 0.5 : 0.35,
-                        ),
-                        blurRadius: isHovered ? 20 : 12,
-                        offset: Offset(0, isHovered ? 8 : 4),
-                        spreadRadius: isHovered ? 2 : 0,
-                      ),
-                    ],
-                  ),
-                  child: AnimatedRotation(
-                    duration: BBMotion.base,
-                    turns: isHovered ? 0.125 : 0, // 45 degree rotation on hover
-                    child: Icon(
-                      Icons.add,
-                      color: theme.colorScheme.onPrimary,
-                      size: _kFabIcon,
-                    ),
-                  ),
-                );
-              },
-            );
+    return Semantics(
+      button: true,
+      label: 'Nova rezervacija',
+      child: MouseRegion(
+        onEnter: (_) => _isHoveredNotifier.value = true,
+        onExit: (_) => _isHoveredNotifier.value = false,
+        child: GestureDetector(
+          onTapDown: (_) => _isPressedNotifier.value = true,
+          onTapUp: (_) {
+            _isPressedNotifier.value = false;
+            widget.onPressed();
           },
+          onTapCancel: () => _isPressedNotifier.value = false,
+          // SF-016: Nested ValueListenableBuilders to rebuild only FAB content
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _isHoveredNotifier,
+            builder: (context, isHovered, _) {
+              return ValueListenableBuilder<bool>(
+                valueListenable: _isPressedNotifier,
+                builder: (context, isPressed, _) {
+                  // Handoff CALPFab: solid primary circle + purple glow. Color
+                  // from the BB token so dark mode lifts to #8B6FFF.
+                  final Color fabColor = BBColor.of(context).primary;
+                  return AnimatedContainer(
+                    duration: BBMotion.base,
+                    curve: Curves.easeOutCubic,
+                    width: _kFabSize,
+                    height: _kFabSize,
+                    transform: Matrix4.diagonal3Values(
+                      isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
+                      isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
+                      1.0,
+                    ),
+                    transformAlignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: fabColor,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: fabColor.withValues(
+                            alpha: isHovered ? 0.5 : 0.35,
+                          ),
+                          blurRadius: isHovered ? 20 : 12,
+                          offset: Offset(0, isHovered ? 8 : 4),
+                          spreadRadius: isHovered ? 2 : 0,
+                        ),
+                      ],
+                    ),
+                    child: AnimatedRotation(
+                      duration: BBMotion.base,
+                      turns: isHovered
+                          ? 0.125
+                          : 0, // 45 degree rotation on hover
+                      child: Icon(
+                        Icons.add,
+                        color: theme.colorScheme.onPrimary,
+                        size: _kFabIcon,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );

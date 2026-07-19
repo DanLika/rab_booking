@@ -1,9 +1,58 @@
 # BookBed Changelog
 
-All version history from v4.6 to v7.47.
+All version history from v4.6 to v7.48.
 
-**Last Updated**: 2026-07-19 | **Version**: 7.47
+**Last Updated**: 2026-07-19 | **Version**: 7.48
 
+---
+
+**Changelog 7.48** (2026-07-19) — VISUAL EXECUTION CAMPAIGN (audit sweep 7.46 → fixes) — **COMPLETE F1-F8: 35 branches → integration/visual-campaign (PR #964), full suite 2144/2144 green, analyze 111 (below pre-campaign baseline), DEV deployed + smoked**:
+
+### feat/fix/chore: sistemski popravci po REMEDIATION_PLAN.md (izvršeno kroz self-paced loop)
+- **F1+F1b konsolidacija:** 20 mrtvih fajlova obrisano; PremiumCard→BbCard (card.dart obrisan); redesign/bb_bottom_sheet obrisan; ai_assistant na BbSkeleton. core/widgets/bb_* set čeka GO (gallery/probe dev-alati).
+- **F2 primitivi (12/12):** BbInput params backport (textInputAction/focusNode/autofillHints/autofocus/textCapitalization); BbButton+BbChip 44px hit-area + Semantics; BbIcon decorative-by-default; BbSectionHeader header:true (34 sitea); BbCard/toggles/spinner/dialog/appbar/list-tile/loaderi a11y (liveRegion, ExcludeSemantics barijere, scopesRoute na BbDialog + bodyWidget slot).
+- **F4 bugovi (14):** mrtva mail/call dugmad (booking detail); unit_form area crash + amenities WIPE (UnitModel nije imao polje!); filters Clear→pop; confirmation copy pill wired na Clipboard; subscription no-opovi; smart_tooltip directional-insets crash; offline banner liveRegion + connectivity stream leak; AI-nudge no-op dugmad uklonjena; verif-poll pauza na background; imported badge provenance.
+- **F3 boje/flat (7):** IZRAČUNATI AA minimumi (ne plan-hexovi — mjerenje ih je oborilo): widget successText #047857/warningText #B45309/textTertiary #6F6F6F; badge tokeni imported #2B6CB0/pending #A05E14/confirmed #2A7354 (matrica uhvatila i slučaj koji je audit propustio)/completed-dark #A78BFF; onPrimary token; admin textTertiary white@0.50; flat-chrome regresije uklonjene (profile ×4, image_picker, cancel header, bb_logo default); skeleton dark OLED ladder; stale TIP-1 docstringovi.
+- **F5 ekrani (7 klastera):** kalendari (chrome Semantics ADITIVNO oko FROZEN), admin (SelectableText→Text row-tap fix, dark date-picker, static teme), auth (44px tap targeti, terms label-tap, liveRegion bez SR spama, legal trio headings), forme (overlay ExcludeSemantics, bank 1200, SF-012 leak fix), settings/guides, widget-gost (breakpointi 1200, confirm dedup, easeOutBack, SnackBarHelper), ostalo (wizard announce+labeli, BbDialog step2, splash).
+- **F6 l10n:** ProfileValidators kod→prevod po #943 uzoru (10 kodova, 9 call siteova, 9 ARB ključeva en+hr, 49-test matrica).
+- **Kontrast-matrice** (5 novih guard testova) drže AA floor po imenu; golden regeni ×38 svi namjerni (hit-area/boje/chrome), dokumentovani po commitu.
+- **GO-QUEUE za operatora:** unit_pricing Save gradient (FROZEN Spremi); gallery/probe migrate-vs-delete; master-panel 44px vs name floor; upload implement-vs-hide; HRK; login hero-metrike; forgot glass; iOS store URL; push/PR svih brancheva; PROD deploy.
+- Detalji: audit/full-screen-sweep-2026-07-18/EXECUTION.md (per-task sha+suite ledger) + memory visual-execution-campaign-2026-07-18.
+
+---
+
+**Changelog 7.46** (2026-07-18) — full-screen `/audit` sweep (read-only, no code changed) — **COMPLETE: 48/48 screens + 104/241 components (all primitives); SUMMARY.md + REMEDIATION_PLAN.md shipped, execution started**:
+
+### docs(audit): self-paced `/audit` sweep across all 48 owner/widget/admin screens
+Design/UX/technical audit (accessibility, performance, theming, responsive,
+anti-patterns; scored 0-4 per dimension, findings tagged P0-P3) run one batch of
+6 screens per `/loop` iteration, then the component layer. Deliberately skips the
+`ref`/`setState`-after-`await` + raw-`e.toString()` classes already catalogued in
+`audit/flutter-patterns-screen-review-2026-07-18.md`. Ledger:
+`audit/full-screen-sweep-2026-07-18/FINDINGS.md`; progress in `PROGRESS.md`;
+final `SUMMARY.md` on completion. Read-only — no source touched.
+
+**Systemic patterns (recurring ≥5 screens):** `BbInput` exposes no
+`textInputAction`/`focusNode`/`autofillHints` → every form screen lacks a
+keyboard-submit chain and password-manager autofill (one widget fix closes
+login/register/forgot/bank/change-password/property-form); `BbChip` lacks
+`Semantics(selected:)`; premium headers hardcode HR eyebrow/title/subtitle;
+`Colors.white`-for-on-primary everywhere (`BBColorSet.onPrimary` token gap);
+EN-only validators (`profile_validators`/`password_validator`); legal-cluster FAB
+missing `semanticLabel` + `BbSectionHeader` missing `header:true`; breakpoint
+drift (1024/1440/900/800/700/1100 vs canonical 1200); custom-tappable/icon-only/
+decorative widgets without `Semantics`/`ExcludeSemantics`;
+`ThemeData`/`BackdropFilter`/`Opacity` built in `build()` without
+`RepaintBoundary`; `textTertiary` (light `#718096` on `#FFF`) +
+`BbAdminDarkTokens.textTertiary` (`0x66FFFFFF` on `#2A2342`) fail WCAG AA;
+**flat-chrome regression** — `profile_screen` applies `rd.heroGradient` to
+structural chrome ×4 and `profile_image_picker` a diagonal gradient (both retired
+2026-06-16); `property_form` uses zero BB* tokens.
+
+**Notable single findings:** P0 — `owner_booking_detail` `_RoundIconButton.onPressed`
+declared + passed but never wired to an `InkWell` → mail/call buttons are dead
+taps. Lowest-scoring screens: `month_calendar` / `activity_log` /
+`stripe_connect_setup` (10/20).
 ---
 
 **Changelog 7.47** (2026-07-19) — BookBed Pro subscription checkout WIRED and live-verified on dev (#962):

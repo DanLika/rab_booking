@@ -1,0 +1,299 @@
+# Full screen /audit sweep — 2026-07-18
+
+Applies the /audit checklist (a11y, performance, theming, responsive, anti-patterns; scored 0-4/dim, P0-P3 findings) to every screen, then components.
+Self-paced /loop. One batch per iteration. Cross-refs audit/flutter-patterns-screen-review-2026-07-18.md (lifecycle sweep) to avoid dup.
+
+## Status legend: [ ] pending  [~] in-progress  [x] done
+
+## SCREENS (48)
+- [x] lib/core/design/gallery_screen.dart
+- [x] lib/core/design/responsive_probe_screen.dart
+- [x] lib/core/widgets/owner_splash_screen.dart
+- [x] lib/features/admin/presentation/screens/activity_log_screen.dart
+- [x] lib/features/admin/presentation/screens/admin_dashboard_screen.dart
+- [x] lib/features/admin/presentation/screens/admin_login_screen.dart
+- [x] lib/features/admin/presentation/screens/admin_shell_screen.dart
+- [x] lib/features/admin/presentation/screens/user_detail_screen.dart
+- [x] lib/features/admin/presentation/screens/users_list_screen.dart
+- [x] lib/features/auth/presentation/screens/cookies_policy_screen.dart
+- [x] lib/features/auth/presentation/screens/email_verification_screen.dart
+- [x] lib/features/auth/presentation/screens/enhanced_login_screen.dart
+- [x] lib/features/auth/presentation/screens/enhanced_register_screen.dart
+- [x] lib/features/auth/presentation/screens/forgot_password_screen.dart
+- [x] lib/features/auth/presentation/screens/privacy_policy_screen.dart
+- [x] lib/features/auth/presentation/screens/terms_conditions_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/about_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/bank_account_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/calendar/month_calendar_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/change_password_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/edit_profile_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/guides/ai_assistant_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/guides/embed_help_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/guides/faq_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/notification_settings_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/notifications_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/owner_booking_detail_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/profile_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/property_form_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_form_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_pricing_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/widget_advanced_settings_screen.dart
+- [x] lib/features/owner_dashboard/presentation/screens/widget_settings_screen.dart
+- [x] lib/features/subscription/screens/subscription_screen.dart
+- [x] lib/features/widget/presentation/screens/booking_confirmation_screen.dart
+- [x] lib/features/widget/presentation/screens/booking_details_screen.dart
+- [x] lib/features/widget/presentation/screens/booking_view_screen.dart
+- [x] lib/features/widget/presentation/screens/booking_widget_screen.dart
+- [x] lib/features/widget/presentation/screens/subdomain_not_found_screen.dart
+- [x] lib/shared/presentation/screens/not_found_screen.dart
+
+## COMPONENTS (241) — design-system primitives first (root of systemic findings), then shared, then feature widgets
+- [x] lib/shared/widgets/redesign/bb_app_bar.dart
+- [x] lib/shared/widgets/redesign/bb_avatar_slot.dart
+- [x] lib/shared/widgets/redesign/bb_avatar_upload.dart
+- [x] lib/shared/widgets/redesign/bb_avatar.dart
+- [x] lib/shared/widgets/redesign/bb_bottom_sheet.dart
+- [x] lib/shared/widgets/redesign/bb_button.dart
+- [x] lib/shared/widgets/redesign/bb_card.dart
+- [x] lib/shared/widgets/redesign/bb_checkbox.dart
+- [x] lib/shared/widgets/redesign/bb_chip.dart
+- [x] lib/shared/widgets/redesign/bb_dialog.dart
+- [x] lib/shared/widgets/redesign/bb_dropdown.dart
+- [x] lib/shared/widgets/redesign/bb_empty_state.dart
+- [x] lib/shared/widgets/redesign/bb_icon.dart
+- [x] lib/shared/widgets/redesign/bb_input.dart
+- [x] lib/shared/widgets/redesign/bb_logo.dart
+- [x] lib/shared/widgets/redesign/bb_radio.dart
+- [x] lib/shared/widgets/redesign/bb_scaffold.dart
+- [x] lib/shared/widgets/redesign/bb_section_header.dart
+- [x] lib/shared/widgets/redesign/bb_sidebar_rail.dart
+- [x] lib/shared/widgets/redesign/bb_sidebar.dart
+- [x] lib/shared/widgets/redesign/bb_skeleton.dart
+- [x] lib/shared/widgets/redesign/bb_sparkline.dart
+- [x] lib/shared/widgets/redesign/bb_spinner.dart
+- [x] lib/shared/widgets/redesign/bb_status_badge.dart
+- [x] lib/shared/widgets/redesign/bb_switch.dart
+- [x] lib/shared/widgets/adaptive_layout.dart
+- [x] lib/shared/widgets/app_filter_chip.dart
+- [x] lib/shared/widgets/bookbed_branded_loader.dart
+- [x] lib/shared/widgets/bookbed_logo.dart
+- [x] lib/shared/widgets/button.dart
+- [x] lib/shared/widgets/card.dart
+- [x] lib/shared/widgets/common_app_bar.dart
+- [x] lib/shared/widgets/custom_date_range_picker.dart
+- [x] lib/shared/widgets/debounced_search_field.dart
+- [x] lib/shared/widgets/deferred_loader.dart
+- [x] lib/shared/widgets/delete_account_dialog.dart
+- [x] lib/shared/widgets/error_state_widget.dart
+- [x] lib/shared/widgets/feature_highlight_widget.dart
+- [x] lib/shared/widgets/global_navigation_loader.dart
+- [x] lib/shared/widgets/gradient_button.dart
+- [x] lib/shared/widgets/loading_overlay.dart
+- [x] lib/shared/widgets/login_loading_overlay.dart
+- [x] lib/shared/widgets/logout_tile.dart
+- [x] lib/shared/widgets/message_box.dart
+- [x] lib/shared/widgets/offline_indicator.dart
+- [x] lib/shared/widgets/platform_icon.dart
+- [x] lib/shared/widgets/premium_list_tile.dart
+- [x] lib/shared/widgets/price_text.dart
+- [x] lib/shared/widgets/redesign.dart
+- [x] lib/shared/widgets/smart_tooltip.dart
+- [x] lib/shared/widgets/universal_loader.dart
+- [x] lib/shared/widgets/widgets.dart
+- [x] lib/shared/widgets/animations/animated_button.dart
+- [x] lib/shared/widgets/animations/animated_card.dart
+- [x] lib/shared/widgets/animations/animated_content_switcher.dart
+- [x] lib/shared/widgets/animations/animated_dialog.dart
+- [x] lib/shared/widgets/animations/animated_empty_state.dart
+- [x] lib/shared/widgets/animations/animated_success.dart
+- [x] lib/shared/widgets/animations/animations.dart
+- [x] lib/shared/widgets/animations/skeleton_loader.dart
+- [x] lib/shared/widgets/buttons/accessible_icon_button.dart
+- [x] lib/shared/widgets/responsive/responsive_grid.dart
+- [x] lib/core/widgets/bb_avatar.dart
+- [x] lib/core/widgets/bb_bottom_sheet.dart
+- [x] lib/core/widgets/bb_button.dart
+- [x] lib/core/widgets/bb_card.dart
+- [x] lib/core/widgets/bb_chip.dart
+- [x] lib/core/widgets/bb_empty_state.dart
+- [x] lib/core/widgets/bb_input.dart
+- [x] lib/core/widgets/bb_section_header.dart
+- [x] lib/core/widgets/bb_skeleton.dart
+- [x] lib/core/widgets/bb_status_badge.dart
+- [x] lib/core/widgets/fcm_navigation_handler.dart
+- [x] lib/core/widgets/force_update_dialog.dart
+- [x] lib/core/widgets/keyboard_aware_constrained_box.dart
+- [x] lib/core/widgets/optional_update_dialog.dart
+- [x] lib/core/widgets/owner_app_loader.dart
+- [x] lib/core/widgets/owner_splash_screen.dart
+- [x] lib/features/auth/presentation/widgets/auth_logo_icon.dart
+- [x] lib/features/auth/presentation/widgets/glass_card.dart
+- [x] lib/features/auth/presentation/widgets/gradient_auth_button.dart
+- [x] lib/features/auth/presentation/widgets/legal_tabs_row.dart
+- [x] lib/features/auth/presentation/widgets/premium_input_field.dart
+- [x] lib/features/auth/presentation/widgets/profile_image_picker.dart
+- [x] lib/features/auth/presentation/widgets/social_login_button.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_navigation_buttons.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_progress_bar.dart
+- [x] lib/features/owner_dashboard/presentation/screens/unit_wizard/widgets/wizard_step_container.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/advanced_settings/email_verification_card.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/advanced_settings/tax_legal_disclaimer_card.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/base_booking_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_approve_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_cancel_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_complete_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_delete_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_actions/booking_reject_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_create_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/booking_details_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_filters_dialog.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_ledger.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_premium_header.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/bookings_tab_bar.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/croatian_plural.dart
+- [x] lib/features/owner_dashboard/presentation/widgets/bookings/premium_loading_indicator.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/bookings/revenue_guide_empty_state.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/booking_action_menu.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/booking_block_widget.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/booking_context_menu.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/booking_drop_zone.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/booking_inline_edit_dialog.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/booking_status_change_dialog.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/calendar_day_cell.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/calendar_error_state.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/calendar_filter_chips.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/calendar_filters_panel.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/calendar_search_dialog.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/calendar_skeleton_loader.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/calendar_state_builders.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/calendar_top_toolbar.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/check_in_out_diagonal_indicator.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/enhanced_booking_drag_feedback.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/month_calendar_kpi_strip.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/multi_select_action_bar.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/room_row_header.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/scroll_direction_lock.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/shared/calendar_booking_actions.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/shared/calendar_summary_bar.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/skewed_booking_painter.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/smart_booking_tooltip.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/tutorial/calendar_tutorial_overlay.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/calendar/unit_future_bookings_dialog.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/dashboard_stats_skeleton.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/edit_booking_dialog.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/embed_code_generator_dialog.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/guides/ai_assistant_premium_header.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/ical/ical_export_premium_header.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/ical/ical_feed_delete_dialog.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/ical/ical_sync_premium_header.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/language_selection_bottom_sheet.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/notification_settings_bottom_sheet.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/owner_app_drawer.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/property_card_owner.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/recent_activity_widget.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/revenue_chart_widget.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/send_email_dialog.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/shared/daily_stats_widgets.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/theme_selection_bottom_sheet.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/calendar_scroll_behavior.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_booking_block.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_booking_stacker.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_constants.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_date_header.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_date_headers_widget.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_dimensions.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_grid_widget.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_snap_scroll_physics.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_split_day_cell.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_summary_bar_widget.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_summary_cell.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_unit_column_widget.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/timeline/timeline_unit_name_cell.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/units/unit_hub_empty_state.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/units/units_premium_header.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/widget_appearance_section.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/widget_embed_code_section.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/widget_live_preview_section.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/widget_platform_install_section.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/widget_settings_section.dart
+- [ ] lib/features/owner_dashboard/presentation/widgets/wizard/additional_service_dialog.dart
+- [ ] lib/features/subscription/widgets/trial_banner.dart
+- [ ] lib/features/widget/presentation/widgets/additional_services_widget.dart
+- [ ] lib/features/widget/presentation/widgets/bank_transfer/bank_details_section.dart
+- [ ] lib/features/widget/presentation/widgets/bank_transfer/important_notes_section.dart
+- [ ] lib/features/widget/presentation/widgets/bank_transfer/payment_warning_section.dart
+- [ ] lib/features/widget/presentation/widgets/bank_transfer/qr_code_payment_section.dart
+- [ ] lib/features/widget/presentation/widgets/booking/booking_pill_bar.dart
+- [ ] lib/features/widget/presentation/widgets/booking/compact_pill_summary.dart
+- [ ] lib/features/widget/presentation/widgets/booking/guest_form/email_field_with_verification.dart
+- [ ] lib/features/widget/presentation/widgets/booking/guest_form/guest_count_picker.dart
+- [ ] lib/features/widget/presentation/widgets/booking/guest_form/guest_name_fields.dart
+- [ ] lib/features/widget/presentation/widgets/booking/guest_form/notes_field.dart
+- [ ] lib/features/widget/presentation/widgets/booking/guest_form/phone_field.dart
+- [ ] lib/features/widget/presentation/widgets/booking/payment/no_payment_info.dart
+- [ ] lib/features/widget/presentation/widgets/booking/payment/payment_method_card.dart
+- [ ] lib/features/widget/presentation/widgets/booking/payment/payment_option_widget.dart
+- [ ] lib/features/widget/presentation/widgets/booking/pill_bar_content.dart
+- [ ] lib/features/widget/presentation/widgets/booking/price_breakdown_widget.dart
+- [ ] lib/features/widget/presentation/widgets/booking/price_row_widget.dart
+- [ ] lib/features/widget/presentation/widgets/calendar_hover_tooltip.dart
+- [ ] lib/features/widget/presentation/widgets/calendar_view_switcher.dart
+- [ ] lib/features/widget/presentation/widgets/calendar/calendar_combined_header_widget.dart
+- [ ] lib/features/widget/presentation/widgets/calendar/calendar_compact_legend.dart
+- [ ] lib/features/widget/presentation/widgets/calendar/calendar_date_selection_validator.dart
+- [ ] lib/features/widget/presentation/widgets/calendar/calendar_date_utils.dart
+- [ ] lib/features/widget/presentation/widgets/calendar/calendar_tooltip_builder.dart
+- [ ] lib/features/widget/presentation/widgets/calendar/calendar_view_switcher_widget.dart
+- [ ] lib/features/widget/presentation/widgets/calendar/month_calendar_skeleton.dart
+- [ ] lib/features/widget/presentation/widgets/calendar/year_calendar_painters.dart
+- [ ] lib/features/widget/presentation/widgets/calendar/year_calendar_skeleton.dart
+- [ ] lib/features/widget/presentation/widgets/common/copyable_text_field.dart
+- [ ] lib/features/widget/presentation/widgets/common/detail_row_widget.dart
+- [ ] lib/features/widget/presentation/widgets/common/info_card_widget.dart
+- [ ] lib/features/widget/presentation/widgets/common/rotate_device_overlay.dart
+- [ ] lib/features/widget/presentation/widgets/common/widget_powered_by.dart
+- [ ] lib/features/widget/presentation/widgets/confirmation/bank_transfer_instructions_card.dart
+- [ ] lib/features/widget/presentation/widgets/confirmation/booking_reference_card.dart
+- [ ] lib/features/widget/presentation/widgets/confirmation/booking_summary_card.dart
+- [ ] lib/features/widget/presentation/widgets/confirmation/calendar_export_button.dart
+- [ ] lib/features/widget/presentation/widgets/confirmation/cancellation_policy_section.dart
+- [ ] lib/features/widget/presentation/widgets/confirmation/confirmation_header.dart
+- [ ] lib/features/widget/presentation/widgets/confirmation/email_confirmation_card.dart
+- [ ] lib/features/widget/presentation/widgets/confirmation/email_spam_warning_card.dart
+- [ ] lib/features/widget/presentation/widgets/confirmation/next_steps_section.dart
+- [ ] lib/features/widget/presentation/widgets/country_code_dropdown.dart
+- [ ] lib/features/widget/presentation/widgets/details/bank_transfer_details_card.dart
+- [ ] lib/features/widget/presentation/widgets/details/booking_dates_card.dart
+- [ ] lib/features/widget/presentation/widgets/details/booking_notes_card.dart
+- [ ] lib/features/widget/presentation/widgets/details/booking_status_banner.dart
+- [ ] lib/features/widget/presentation/widgets/details/cancel_confirmation_dialog.dart
+- [ ] lib/features/widget/presentation/widgets/details/cancellation_policy_card.dart
+- [ ] lib/features/widget/presentation/widgets/details/contact_owner_card.dart
+- [ ] lib/features/widget/presentation/widgets/details/details_reference_card.dart
+- [ ] lib/features/widget/presentation/widgets/details/guest_info_card.dart
+- [ ] lib/features/widget/presentation/widgets/details/payment_info_card.dart
+- [ ] lib/features/widget/presentation/widgets/details/property_info_card.dart
+- [ ] lib/features/widget/presentation/widgets/details/widget_card_decoration.dart
+- [ ] lib/features/widget/presentation/widgets/email_verification_dialog.dart
+- [ ] lib/features/widget/presentation/widgets/lazy_calendar_container.dart
+- [ ] lib/features/widget/presentation/widgets/month_calendar_widget.dart
+- [ ] lib/features/widget/presentation/widgets/popup_blocked_dialog.dart
+- [ ] lib/features/widget/presentation/widgets/powered_by_badge.dart
+- [ ] lib/features/widget/presentation/widgets/pwa/connectivity_banner.dart
+- [ ] lib/features/widget/presentation/widgets/pwa/pwa_install_button.dart
+- [ ] lib/features/widget/presentation/widgets/split_day_calendar_painter.dart
+- [ ] lib/features/widget/presentation/widgets/tax_legal_disclaimer_widget.dart
+- [ ] lib/features/widget/presentation/widgets/widget_shell_skeleton.dart
+- [ ] lib/features/widget/presentation/widgets/year_calendar_widget.dart
+- [ ] lib/features/widget/presentation/widgets/zoom_control_buttons.dart
+- [ ] lib/features/widget/presentation/widgets/zoom_hint_overlay.dart

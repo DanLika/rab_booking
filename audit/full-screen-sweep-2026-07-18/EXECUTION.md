@@ -52,8 +52,8 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 ## F6 l10n — [x] validatori kod→prevod — fix/f6-l10n @f0b48905, suite 2004 GREEN (ProfileValidators 10 kodova + 9 call siteova + 9 ARB ključeva en+hr; legacy String? ostaje EN po #943 pouci — throw-calleri; widget 4-lang tearoffs = zaseban redesign, zabilježen; 5 metoda 0 call siteova preskočeno; 49-test matrica; suite u toku); [~] hardcoded sweep = BOUNDED (samo validatori + guard ratchet; puni sweep ARB = zaseban PR — TODO(l10n) tagovi ostavljeni po F5 klasterima)
 ## F7 — [ ] /audit re-run 5 najgorih; [ ] golden konsolidacija; [ ] CHANGELOG/audit-log; [ ] GO-queue prezentacija operatoru
 ## F8 ZAVRŠNO (nalog operatora 2026-07-18): MERGE → TEST → COMMIT → DEV
-- [ ] integration/visual-campaign branch: merge SVIH feature brancheva (f1, f21, f22, ...) → analyze + PUNI suite + build web
-- [ ] dev deploy: ⚠ PROVJERI hosting target PRIJE (memorija: bookbed-owner-dev.web.app gađa PROD uprkos imenu!) — dev-first pravilo, PROD ostaje GO-gated
-- [ ] smoke na dev buildu (login + 2-3 fixana ekrana)
+- [x] integration/visual-campaign @19890c5f — 35 brancheva mergeano (konflikti union ×4: bb_chip F2.3+F3.3, widgets.dart F1+F1b, PNG ×10 → canonical regen); post-merge: hasFlag→flagsCollection migracija (isChecked=CheckedState!), F5D bank/change_password textInputAction+autofill dopune; analyze 111 (< baseline 112); PUNI suite 2144/2144 GREEN (prvi run -1 = flake); build web ✓
+- [x] dev deploy ✓ HOSTING-ONLY (ne functions — kampanja ih ne dira; ne admin — nema builda): main_dev→build/web_owner + widget_main_dev→build/web_widget + OG tags → firebase deploy --only hosting:owner,hosting:widget --project bookbed-dev → https://bookbed-owner-dev.web.app + https://bookbed-widget-dev.web.app (targeti verifikovani na bookbed-dev projektu prije deploya)
+- [x] smoke ✓ oba sitea HTTP 200 + kampanjski markeri u deployed main.dart.js (owner ×10, widget ×2); interaktivni login smoke = operator (browser)
 ## GO-QUEUE (čeka operatora — NE raditi bez GO)
 unit_pricing Save gradient→solid (FROZEN 'Spremi') · gallery/probe dev-alati: migrate-vs-delete · master-panel 44px ikonice vs 60px name floor (šire panel ili overflow meni?) · upload implement-vs-hide · HRK removal · login hero-metrike · forgot glass · push/PR svi branchevi · PROD deploy

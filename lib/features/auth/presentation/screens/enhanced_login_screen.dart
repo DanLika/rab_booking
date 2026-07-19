@@ -611,7 +611,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
         child: IconButton(
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          // a11y: 44×44 minimum tap target (WCAG 2.5.5)
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           icon: Icon(
             _obscurePassword ? Icons.visibility_off : Icons.visibility,
             color: c.textTertiary,
@@ -735,30 +736,35 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     AppLocalizations l10n,
   ) {
     return Center(
-      child: TextButton(
-        onPressed: _isLoading ? null : () => context.go(OwnerRoutes.register),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        ),
-        child: RichText(
-          text: TextSpan(
-            style: BBType.caption(context).copyWith(
-              color: _isLoading
-                  ? c.textPrimary.withValues(alpha: 0.4)
-                  : c.textSecondary,
-            ),
-            children: [
-              TextSpan(text: '${l10n.authNoAccount} '),
-              TextSpan(
-                text: l10n.authCreateAccount,
-                style: TextStyle(
-                  color: _isLoading
-                      ? c.primary.withValues(alpha: 0.4)
-                      : c.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+      child: Semantics(
+        button: true,
+        child: TextButton(
+          onPressed: _isLoading ? null : () => context.go(OwnerRoutes.register),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+            // a11y: 44px minimum tap-target height (WCAG 2.5.5)
+            minimumSize: const Size(0, 44),
+          ),
+          child: RichText(
+            text: TextSpan(
+              style: BBType.caption(context).copyWith(
+                color: _isLoading
+                    ? c.textPrimary.withValues(alpha: 0.4)
+                    : c.textSecondary,
               ),
-            ],
+              children: [
+                TextSpan(text: '${l10n.authNoAccount} '),
+                TextSpan(
+                  text: l10n.authCreateAccount,
+                  style: TextStyle(
+                    color: _isLoading
+                        ? c.primary.withValues(alpha: 0.4)
+                        : c.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

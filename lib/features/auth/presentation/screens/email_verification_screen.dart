@@ -596,21 +596,24 @@ class _EmailVerificationScreenState
         ),
         const SizedBox(height: 12),
 
-        // 5. Email chip
+        // 5. Email chip — a11y: label announces full "Email: <address>" for SR
         Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: c.surfaceVariant,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: c.border),
-            ),
-            child: Text(
-              email,
-              style: BBType.body(
-                context,
-              ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
+          child: Semantics(
+            label: 'Email: $email',
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: c.surfaceVariant,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: c.border),
+              ),
+              child: Text(
+                email,
+                style: BBType.body(
+                  context,
+                ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
         ),
@@ -666,7 +669,18 @@ class _EmailVerificationScreenState
           onPressed: _resendVerificationEmail,
         ),
 
-        // 8. Cooldown countdown — BBType.bodyNum (tabular)
+        // 8. Cooldown countdown — BBType.bodyNum (tabular).
+        // a11y: liveRegion on the status-change message (cooldown done), NOT
+        // on the per-second number (that would spam screen readers every tick).
+        // An Offstage Semantics node announces "Resend available" exactly once
+        // when the countdown reaches zero; the per-second number is excluded.
+        Offstage(
+          offstage: _resendCooldown != 0,
+          child: Semantics(
+            liveRegion: true,
+            child: Text(l10n.authResendVerificationEmail, maxLines: 1),
+          ),
+        ),
         if (_resendCooldown > 0) ...[
           const SizedBox(height: 10),
           Center(

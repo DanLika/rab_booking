@@ -168,7 +168,15 @@ class _UniversalLoaderState extends State<UniversalLoader> {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    final content = _buildLoaderContent(isDarkMode, theme);
+    // One live-region node per loader (audit F2.11): the CPI/logo internals
+    // surfaced as unlabeled nodes while the loading state itself was never
+    // announced. Message folds into the label.
+    final content = Semantics(
+      liveRegion: true,
+      label: widget.message ?? 'Učitavanje',
+      excludeSemantics: true,
+      child: _buildLoaderContent(isDarkMode, theme),
+    );
 
     switch (widget.mode) {
       case LoaderMode.overlay:

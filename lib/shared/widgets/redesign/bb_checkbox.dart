@@ -184,10 +184,10 @@ class _BbCheckboxState extends State<BbCheckbox> {
                 child: AnimatedOpacity(
                   duration: BBMotion.adapt(context, BBMotion.fast),
                   opacity: checked ? 1.0 : 0.0,
-                  child: const BbIcon(
+                  child: BbIcon(
                     name: 'check',
                     size: 14,
-                    color: Colors.white,
+                    color: c.onPrimary,
                     weight: 600,
                   ),
                 ),

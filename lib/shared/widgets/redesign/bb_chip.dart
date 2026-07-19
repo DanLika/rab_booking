@@ -55,7 +55,7 @@ class BbChip extends StatelessWidget {
 
     final Color bg = filterSelected ? c.primary : c.surface;
     final Color fg = filterSelected
-        ? Colors.white
+        ? c.onPrimary
         : tabSelected
         ? c.primary
         : c.textSecondary;

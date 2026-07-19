@@ -24,7 +24,7 @@ class BookingStatusBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
-    final (color, text, icon) = _getStatusInfo(tr);
+    final (color, textColor, text, icon) = _getStatusInfo(tr);
 
     return Container(
       padding: const EdgeInsets.all(BBSpace.sm),
@@ -53,7 +53,7 @@ class BookingStatusBanner extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: BBTypeBridges.fontSizeL,
                     fontWeight: BBTypeBridges.weightBold,
-                    color: color,
+                    color: textColor,
                   ),
                 ),
               ],
@@ -65,12 +65,28 @@ class BookingStatusBanner extends ConsumerWidget {
   }
 
   /// Returns (color, text, icon) for the current status.
-  (Color, String, IconData) _getStatusInfo(WidgetTranslations tr) =>
+  // (fill for icon/tint/border, AA-safe text colour, label, icon) —
+  // audit F3.1: the status label previously reused the fill as text.
+  (Color, Color, String, IconData) _getStatusInfo(WidgetTranslations tr) =>
       switch (status.toLowerCase()) {
-        'confirmed' ||
-        'approved' => (colors.success, tr.statusConfirmed, Icons.check_circle),
-        'pending' => (colors.warning, tr.statusPending, Icons.schedule),
-        'cancelled' => (colors.error, tr.statusCancelled, Icons.cancel),
-        _ => (colors.textSecondary, status, Icons.info),
+        'confirmed' || 'approved' => (
+          colors.success,
+          colors.successText,
+          tr.statusConfirmed,
+          Icons.check_circle,
+        ),
+        'pending' => (
+          colors.warning,
+          colors.warningText,
+          tr.statusPending,
+          Icons.schedule,
+        ),
+        'cancelled' => (
+          colors.error,
+          colors.error,
+          tr.statusCancelled,
+          Icons.cancel,
+        ),
+        _ => (colors.textSecondary, colors.textSecondary, status, Icons.info),
       };
 }

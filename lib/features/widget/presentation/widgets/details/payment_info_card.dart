@@ -117,14 +117,14 @@ class PaymentInfoCard extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: BBSpace.xxs),
-          _buildPaymentRow(tr.paid, paidAmount, color: colors.success),
+          _buildPaymentRow(tr.paid, paidAmount, color: colors.successText),
           const SizedBox(height: BBSpace.xxs),
           _buildPaymentRow(
             tr.remaining,
             remainingAmount,
             color: remainingAmount.abs() > WidgetConstants.priceTolerance
                 ? colors.error
-                : colors.success,
+                : colors.successText,
           ),
           const SizedBox(height: BBSpace.xs),
           Divider(color: colors.borderDefault),
@@ -271,12 +271,15 @@ class PaymentInfoCard extends ConsumerWidget {
   }
 
   Widget _buildPaymentStatusChip(WidgetTranslations tr) {
-    final (statusColor, statusText) = switch (paymentStatus.toLowerCase()) {
-      'paid' || 'completed' => (colors.success, tr.paid),
-      'pending' => (colors.warning, tr.statusPending),
-      'failed' => (colors.error, tr.statusFailed),
-      'refunded' => (colors.error, tr.statusRefunded),
-      _ => (colors.textSecondary, paymentStatus),
+    // Tint/border keep the fill tone; the LABEL uses the AA-safe text
+    // variant (audit F3.1 — success/warning text failed contrast on white).
+    final (statusColor, statusTextColor, statusText) = switch (paymentStatus
+        .toLowerCase()) {
+      'paid' || 'completed' => (colors.success, colors.successText, tr.paid),
+      'pending' => (colors.warning, colors.warningText, tr.statusPending),
+      'failed' => (colors.error, colors.error, tr.statusFailed),
+      'refunded' => (colors.error, colors.error, tr.statusRefunded),
+      _ => (colors.textSecondary, colors.textSecondary, paymentStatus),
     };
 
     return Container(
@@ -294,7 +297,7 @@ class PaymentInfoCard extends ConsumerWidget {
         style: TextStyle(
           fontSize: BBTypeBridges.fontSizeXS,
           fontWeight: BBTypeBridges.weightSemiBold,
-          color: statusColor,
+          color: statusTextColor,
         ),
       ),
     );

@@ -30,7 +30,7 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] F4.13 (social dio) — isti branch @c3a04437: GoogleBrandIcon → CircleAvatar bijeli disk + glyph 72%, fallback nasljeđuje disk. iOS store URL = GO-QUEUE (treba pravi App Store ID)
 - [~] F4.14 skeleton_loader → BUNDLE s F3.7 (isti fajl — dark ladder + unbounded ListView zajedno)
 ## F3 boje/flat (namjerne vizuelne — screenshot prije/poslije + golden regen)
-- [ ] F3.1 widget status TEKST boje: success→#059669, warning→#B45309, textTertiary→#767676 (minimalist_colors) + kontrast-matrica test
+- [x] F3.1 widget status TEKST boje — fix/f31-widget-status-colors @2ac8c4e4, suite GREEN (plan-hexovi NISU prolazili mjerenje → IZRAČUNATI minimumi: successText #047857, warningText #B45309, textTertiary #6F6F6F — svi ≥4.5:1 i na #F5F5F5 i na 10% tintovima; novi successText/warningText tokeni na WidgetColorScheme ×3 sheme; fillovi/ikone netaknuti; 15-cell matrica test)
 - [ ] F3.2 bb_status_badge: importedDeep token + completed-dark + pending-light korekcije
 - [ ] F3.3 BBColorSet.onPrimary token + sweep Colors.white-on-primary (neutralno)
 - [ ] F3.4 admin BbAdminDarkTokens.textTertiary izračunati min za #2A2342

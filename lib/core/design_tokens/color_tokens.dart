@@ -98,12 +98,14 @@ class ColorTokens {
   static const Color amber400 = Color(0xFFFBBF24);
   static const Color amber500 = Color(0xFFF59E0B);
   static const Color amber600 = Color(0xFFD97706);
+  static const Color amber700 = Color(0xFFB45309);
   static const Color amber900 = Color(0xFF78350F);
 
   // Status colors - Emerald (Success)
   static const Color emerald400 = Color(0xFF34D399);
   static const Color emerald500 = Color(0xFF10B981);
   static const Color emerald600 = Color(0xFF059669);
+  static const Color emerald700 = Color(0xFF047857);
   static const Color emerald900 = Color(0xFF064E3B);
 
   // Status colors - Cancel (Red variants for cancelled booking status)
@@ -207,10 +209,17 @@ abstract class WidgetColorScheme {
 
   // Semantic colors
   Color get success;
+
+  /// AA-safe variant of [success] for TEXT on light surfaces (audit F3.1) —
+  /// fills/icons keep [success].
+  Color get successText;
   Color get successBackground;
   Color get error;
   Color get errorBackground;
   Color get warning;
+
+  /// AA-safe variant of [warning] for TEXT on light surfaces (audit F3.1).
+  Color get warningText;
   Color get warningBackground;
   Color get info;
 
@@ -346,6 +355,9 @@ class LightColorScheme implements WidgetColorScheme {
   // Semantic colors
   @override
   Color get success => ColorTokens.emerald500;
+
+  @override
+  Color get successText => ColorTokens.emerald700;
   @override
   Color get successBackground => ColorTokens.teal100;
   @override
@@ -354,6 +366,9 @@ class LightColorScheme implements WidgetColorScheme {
   Color get errorBackground => ColorTokens.pink200;
   @override
   Color get warning => ColorTokens.amber500;
+
+  @override
+  Color get warningText => ColorTokens.amber700;
   @override
   Color get warningBackground => ColorTokens.amber200;
   @override
@@ -564,6 +579,9 @@ class DarkColorScheme implements WidgetColorScheme {
   // Semantic colors
   @override
   Color get success => ColorTokens.emerald500;
+
+  @override
+  Color get successText => ColorTokens.emerald500;
   @override
   Color get successBackground => ColorTokens.emerald900;
   @override
@@ -572,6 +590,9 @@ class DarkColorScheme implements WidgetColorScheme {
   Color get errorBackground => ColorTokens.pink900;
   @override
   Color get warning => ColorTokens.amber400;
+
+  @override
+  Color get warningText => ColorTokens.amber400;
   @override
   Color get warningBackground => ColorTokens.amber900;
   @override

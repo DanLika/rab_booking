@@ -547,7 +547,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     final logoSize = isSmallHeight ? 56.0 : (isCompact ? 60.0 : 64.0);
     return Column(
       children: [
-        Center(child: BbLogo(size: logoSize, useGradient: false)),
+        Center(child: BbLogo(size: logoSize)),
         SizedBox(height: isSmallHeight ? 12 : (isCompact ? 14 : 16)),
         Text(
           l10n.authOwnerLogin,

@@ -641,11 +641,12 @@ class _ProfilIdentityCard extends StatelessWidget {
 
     final identity = Row(
       children: [
-        // Avatar with hero-gradient halo ring (handoff §142 nested gradient frame)
+        // Avatar halo ring — flat primary since audit F3.5 (heroGradient on
+        // structural chrome violates the 2026-06-16 flat-chrome decision).
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            gradient: rd.heroGradient,
+            color: c.primary,
             shape: BoxShape.circle,
             boxShadow: rd.purpleGlow,
           ),
@@ -794,11 +795,8 @@ class _ProfilIdentityCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Hero gradient accent strip (handoff §131)
-            Container(
-              height: 6,
-              decoration: BoxDecoration(gradient: rd.heroGradient),
-            ),
+            // Accent strip — flat primary since audit F3.5 (flat-chrome).
+            Container(height: 6, color: c.primary),
             Padding(padding: EdgeInsets.all(isMobile ? 18 : 24), child: child),
           ],
         ),
@@ -975,7 +973,6 @@ class _RadialGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rd = BbRedesignTokens.of(context);
     final c = BBColor.of(context);
     return SizedBox(
       width: size,
@@ -989,7 +986,7 @@ class _RadialGauge extends StatelessWidget {
               progress: (percentage / 100).clamp(0.0, 1.0),
               stroke: stroke,
               track: c.surfaceVariant,
-              gradient: rd.heroGradient,
+              arc: c.primary,
             ),
           ),
           Column(
@@ -1022,13 +1019,17 @@ class _RadialGaugePainter extends CustomPainter {
   final double progress;
   final double stroke;
   final Color track;
-  final LinearGradient gradient;
+
+  /// Flat arc colour since audit F3.5 (was a heroGradient shader —
+  /// flat-chrome violation, and gradient identity made shouldRepaint
+  /// effectively always-true).
+  final Color arc;
 
   _RadialGaugePainter({
     required this.progress,
     required this.stroke,
     required this.track,
-    required this.gradient,
+    required this.arc,
   });
 
   @override
@@ -1044,7 +1045,7 @@ class _RadialGaugePainter extends CustomPainter {
     if (progress <= 0) return;
     final rect = Rect.fromCircle(center: center, radius: radius);
     final progressPaint = Paint()
-      ..shader = gradient.createShader(rect)
+      ..color = arc
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round;
@@ -1057,7 +1058,7 @@ class _RadialGaugePainter extends CustomPainter {
       old.progress != progress ||
       old.stroke != stroke ||
       old.track != track ||
-      old.gradient != gradient;
+      old.arc != arc;
 }
 
 // ============================================================================
@@ -1109,8 +1110,9 @@ class _ProfilProCard extends StatelessWidget {
                   Container(
                     width: 46,
                     height: 46,
+                    // Flat primary since audit F3.5 (flat-chrome).
                     decoration: BoxDecoration(
-                      gradient: rd.heroGradient,
+                      color: c.primary,
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: rd.purpleGlow,
                     ),

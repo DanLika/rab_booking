@@ -219,14 +219,12 @@ class ConfirmationHeader extends ConsumerWidget {
           const SizedBox(height: BBSpace.md),
         ],
 
-        // Success icon with animation
-        // Bug #57 Fix: Add Semantics for accessibility
-        Semantics(
-          label: confirmationMessage,
-          image: true,
+        // Success icon with animation — ExcludeSemantics avoids announcing
+        // the same label twice (heading below already carries it).
+        ExcludeSemantics(
           child: confirmationIcon.animate().scale(
             duration: const Duration(milliseconds: 600),
-            curve: Curves.elasticOut,
+            curve: Curves.easeOutBack, // #f5f: elastic replaced per audit
             begin: const Offset(0.0, 0.0),
             end: const Offset(1.0, 1.0),
           ),
@@ -234,8 +232,7 @@ class ConfirmationHeader extends ConsumerWidget {
 
         const SizedBox(height: BBSpace.md),
 
-        // Confirmation message
-        // Bug #57 Fix: Add Semantics for accessibility
+        // Confirmation message — announced as heading
         Semantics(
           label: confirmationMessage,
           header: true,

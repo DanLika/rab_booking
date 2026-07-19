@@ -43,6 +43,9 @@ class CancellationPolicyCard extends ConsumerWidget {
     final hoursUntilCheckIn = checkInUtc.difference(nowUtc).inHours;
     final canCancel = hoursUntilCheckIn >= deadlineHours;
     final statusColor = canCancel ? colors.success : colors.warning;
+    // Text uses the AA-safe variant; icon/tint/border keep the fill
+    // (audit F3.1).
+    final statusTextColor = canCancel ? colors.successText : colors.warningText;
 
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
@@ -88,7 +91,7 @@ class CancellationPolicyCard extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: BBTypeBridges.fontSizeS,
                     fontWeight: BBTypeBridges.weightSemiBold,
-                    color: statusColor,
+                    color: statusTextColor,
                   ),
                 ),
                 const SizedBox(height: BBSpace.xxs),

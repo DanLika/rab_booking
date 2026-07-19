@@ -228,8 +228,10 @@ class AppColors {
   static const Color favorite = Color(0xFFEC4899); // Pink 500
 
   /// Booking status colors (`tokens.css --bb-status-*` light table)
-  static const Color statusPending = Color(0xFFB7791F); // AA-safe amber
-  static const Color statusConfirmed = Color(0xFF2E7D5B);
+  static const Color statusPending = Color(
+    0xFFA05E14,
+  ); // computed AA min (F3.2)
+  static const Color statusConfirmed = Color(0xFF2A7354); // AA min (F3.2)
   static const Color statusCancelled = Color(0xFF4A5568);
   static const Color statusCompleted = Color(0xFF6B4CE6);
 

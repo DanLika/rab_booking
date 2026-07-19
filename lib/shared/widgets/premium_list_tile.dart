@@ -4,6 +4,12 @@ import '../../../core/design_tokens/border_tokens.dart';
 
 /// Reusable premium-styled list tile with hover effects
 /// Used in profile screens and settings pages
+///
+/// A11y (audit sweep F2.10): tap target floored to 48px (the old
+/// `dense + VisualDensity(-1)` combo collapsed rows to ~40px on mobile);
+/// the chevron renders only when the tile is actually tappable; disabled
+/// tiles use `ListTile.enabled` so screen readers stop announcing them as
+/// interactive (visual dim preserved via Opacity).
 class PremiumListTile extends StatefulWidget {
   final IconData icon;
   final String title;
@@ -62,7 +68,9 @@ class _PremiumListTileState extends State<PremiumListTile> {
           opacity: isDisabled ? 0.4 : 1.0,
           child: ListTile(
             dense: true,
-            visualDensity: const VisualDensity(vertical: -1),
+            // 48px WCAG floor — dense + VisualDensity(-1) collapsed the row
+            // to ~40px on mobile (audit F2.10 ROOT, profile-hub cluster).
+            minTileHeight: 48,
             contentPadding: EdgeInsets.symmetric(
               horizontal: isMobile ? 12 : 16,
               vertical: isMobile ? 4 : 6,
@@ -102,11 +110,15 @@ class _PremiumListTileState extends State<PremiumListTile> {
                     ),
                   )
                 : widget.subtitle as Widget?,
-            trailing: Icon(
-              Icons.chevron_right_rounded,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              size: isMobile ? 18 : 20,
-            ),
+            // Chevron implies tappability — hide it on inert tiles.
+            trailing: isDisabled
+                ? null
+                : Icon(
+                    Icons.chevron_right_rounded,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    size: isMobile ? 18 : 20,
+                  ),
+            enabled: !isDisabled,
             onTap: widget.onTap,
           ),
         ),

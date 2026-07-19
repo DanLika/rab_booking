@@ -8,6 +8,7 @@ import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
+import '../../../../core/utils/profile_validator_error_l10n.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/user_profile_model.dart';
@@ -334,10 +335,14 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
             key: const ValueKey('bank_account_iban'),
             controller: _ibanController,
             label: l10n.bankAccountIban,
+            textInputAction: TextInputAction.next,
             iconLeft: 'credit_card',
             size: BbInputSize.lg,
             keyboardType: TextInputType.text,
-            validator: ProfileValidators.validateIban,
+            validator: (v) {
+              final e = ProfileValidators.ibanError(v);
+              return e == null ? null : l10n.profileValidatorErrorText(e);
+            },
             autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
           const SizedBox(height: BBSpace.md),
@@ -345,10 +350,14 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
             key: const ValueKey('bank_account_swift'),
             controller: _swiftController,
             label: l10n.bankAccountSwift,
+            textInputAction: TextInputAction.next,
             iconLeft: 'code',
             size: BbInputSize.lg,
             keyboardType: TextInputType.text,
-            validator: ProfileValidators.validateSwift,
+            validator: (v) {
+              final e = ProfileValidators.swiftError(v);
+              return e == null ? null : l10n.profileValidatorErrorText(e);
+            },
             autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
           const SizedBox(height: BBSpace.md),
@@ -356,6 +365,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
             key: const ValueKey('bank_account_bank_name'),
             controller: _bankNameController,
             label: l10n.bankAccountBankName,
+            textInputAction: TextInputAction.next,
             iconLeft: 'account_balance',
             size: BbInputSize.lg,
             keyboardType: TextInputType.text,
@@ -365,6 +375,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
             key: const ValueKey('bank_account_holder'),
             controller: _accountHolderController,
             label: l10n.bankAccountHolder,
+            textInputAction: TextInputAction.done,
             iconLeft: 'person',
             size: BbInputSize.lg,
             keyboardType: TextInputType.name,
@@ -486,7 +497,8 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
 
                 final screenWidth = MediaQuery.of(context).size.width;
                 final isMobile = screenWidth < 600;
-                final isDesktop = screenWidth >= 1024;
+                // Canonical desktop breakpoint per breakpoint-decide #766.
+                final isDesktop = screenWidth >= 1200;
 
                 // Outer panel gutter — handoff floating console pattern
                 // (mirrors profile_screen.dart layout).

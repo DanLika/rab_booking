@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/services/ical_generator.dart';
 import '../../../../../shared/models/booking_model.dart';
@@ -112,7 +113,7 @@ class _CalendarExportButtonState extends ConsumerState<CalendarExportButton> {
         : colors.backgroundSecondary;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: SpacingTokens.l),
+      margin: const EdgeInsets.only(bottom: BBSpace.md), // SpacingTokens.l=24
       child: ElevatedButton.icon(
         onPressed: _isGeneratingIcs ? null : () => _handleAddToCalendar(tr),
         icon: Icon(
@@ -127,7 +128,7 @@ class _CalendarExportButtonState extends ConsumerState<CalendarExportButton> {
           disabledForegroundColor: colors.textPrimary,
           minimumSize: const Size(double.infinity, 48),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+            borderRadius: BorderRadius.circular(BBRadius.sm), // mandate 12px
           ),
         ),
       ),

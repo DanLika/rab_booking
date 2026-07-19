@@ -36,14 +36,6 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
       icon: Icons.cancel_outlined,
       title: l10n.bookingCancelTitle,
       maxWidth: 450,
-      headerGradient: LinearGradient(
-        colors: [
-          theme.colorScheme.error,
-          theme.colorScheme.error.withAlpha(204),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
       confirmButtonColor: theme.colorScheme.error,
       content: Column(
         mainAxisSize: MainAxisSize.min,

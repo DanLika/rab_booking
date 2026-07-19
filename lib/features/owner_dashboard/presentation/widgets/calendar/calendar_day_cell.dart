@@ -77,47 +77,56 @@ class CalendarDayCell extends StatelessWidget {
         blockCheckOut ||
         (priceData?.minNightsOnArrival != null);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: _getCellBackgroundColor(
-            context,
-            isAvailable,
-            hasWeekendPrice,
-            isWeekend,
-            hasPrice,
-            hasRestrictions,
-          ),
-          border: Border.all(
-            color: isSelected
-                ? context.primaryColor
-                : isToday
-                ? context.primaryColor.withValues(alpha: 0.5)
-                : hasRestrictions
-                ? context.warningColor.withValues(alpha: 0.6)
-                : context.borderColor.withValues(alpha: 0.5),
-            width: isSelected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: EdgeInsets.all(isSmallMobile ? 4 : (isMobile ? 6 : 8)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildDayNumber(context, isToday, isAvailable),
-            _buildPrice(
+    final String semanticLabel =
+        '${date.day}. ${date.month}. ${date.year}'
+        ', €${price.toStringAsFixed(0)}'
+        '${!isAvailable ? ', nedostupno' : ''}';
+
+    return Semantics(
+      label: semanticLabel,
+      button: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          decoration: BoxDecoration(
+            color: _getCellBackgroundColor(
               context,
-              price,
               isAvailable,
               hasWeekendPrice,
               isWeekend,
               hasPrice,
+              hasRestrictions,
             ),
-            if (blockCheckIn || blockCheckOut)
-              _buildStatusIndicators(context, blockCheckIn, blockCheckOut),
-          ],
+            border: Border.all(
+              color: isSelected
+                  ? context.primaryColor
+                  : isToday
+                  ? context.primaryColor.withValues(alpha: 0.5)
+                  : hasRestrictions
+                  ? context.warningColor.withValues(alpha: 0.6)
+                  : context.borderColor.withValues(alpha: 0.5),
+              width: isSelected ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: EdgeInsets.all(isSmallMobile ? 4 : (isMobile ? 6 : 8)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildDayNumber(context, isToday, isAvailable),
+              _buildPrice(
+                context,
+                price,
+                isAvailable,
+                hasWeekendPrice,
+                isWeekend,
+                hasPrice,
+              ),
+              if (blockCheckIn || blockCheckOut)
+                _buildStatusIndicators(context, blockCheckIn, blockCheckOut),
+            ],
+          ),
         ),
       ),
     );

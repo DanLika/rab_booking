@@ -398,13 +398,18 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
             splashColor: colors.backgroundSecondary,
           ),
           const SizedBox(width: BBSpace.xs),
-          // Title (centered)
-          Text(
-            tr.myBooking,
-            style: TextStyle(
-              fontSize: BBTypeBridges.fontSizeXL,
-              fontWeight: BBTypeBridges.weightBold,
-              color: colors.textPrimary,
+          // Title (centered) — Flexible so long translations don't overflow
+          // the Row on narrow (≥320px) viewports.
+          Flexible(
+            child: Text(
+              tr.myBooking,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: BBTypeBridges.fontSizeXL,
+                fontWeight: BBTypeBridges.weightBold,
+                color: colors.textPrimary,
+              ),
             ),
           ),
           const SizedBox(width: BBSpace.xs),
@@ -412,36 +417,40 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           // language code, mirroring the calendar header toolbar. A raw flag
           // emoji here renders as fallback letters ("GB") on platforms without
           // flag-emoji fonts (e.g. Windows Chrome).
-          IconButton(
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.language,
-                  size: iconSize - 6,
-                  color: colors.textPrimary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  ref.watch(languageProvider).toUpperCase(),
-                  style: TextStyle(
-                    fontSize: iconSize - 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.4,
+          Semantics(
+            button: true,
+            label: tr.tooltipChangeLanguage,
+            child: IconButton(
+              icon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.language,
+                    size: iconSize - 6,
                     color: colors.textPrimary,
                   ),
-                ),
-                Icon(
-                  Icons.arrow_drop_down,
-                  size: iconSize - 6,
-                  color: colors.textPrimary,
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  Text(
+                    ref.watch(languageProvider).toUpperCase(),
+                    style: TextStyle(
+                      fontSize: iconSize - 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.4,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    size: iconSize - 6,
+                    color: colors.textPrimary,
+                  ),
+                ],
+              ),
+              onPressed: () => _showLanguageDialog(colors),
+              tooltip: tr.tooltipChangeLanguage,
+              hoverColor: colors.backgroundSecondary,
+              splashColor: colors.backgroundSecondary,
             ),
-            onPressed: () => _showLanguageDialog(colors),
-            tooltip: tr.tooltipChangeLanguage,
-            hoverColor: colors.backgroundSecondary,
-            splashColor: colors.backgroundSecondary,
           ),
         ],
       ),

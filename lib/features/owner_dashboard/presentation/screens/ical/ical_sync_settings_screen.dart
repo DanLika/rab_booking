@@ -532,12 +532,15 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               // export-only feeds just publish our bookings out.
               DirectionBadge(importEnabled: feed.importEnabled),
               const SizedBox(width: BBSpace.xs),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: statusColor,
-                  shape: BoxShape.circle,
+              // Decorative status dot — screen-reader hears the status label below.
+              ExcludeSemantics(
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
               const SizedBox(width: 6),
@@ -659,6 +662,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
 
   String _getStatusLabel(IcalStatus status, AppLocalizations l10n) =>
       switch (status) {
+        // TODO(l10n): replace with l10n keys when added to ARB files
         IcalStatus.active => 'Aktivan',
         IcalStatus.paused => 'Pauziran',
         IcalStatus.error => 'Greška',

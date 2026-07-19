@@ -3745,5 +3745,15 @@
   "subscriptionPortalErrorGeneric": "Could not open billing portal. Please try again.",
   "subscriptionPaymentSuccess": "Payment successful — activation in progress",
   "subscriptionPaymentCancelled": "Checkout cancelled",
-  "subscriptionManageLabel": "Manage subscription"
+  "subscriptionManageLabel": "Manage subscription",
+
+  "profileNameRequired": "Name is required",
+  "profileNameTooShort": "Name must be at least 2 characters",
+  "profileNameTooLong": "Name must be less than 80 characters",
+  "profileEmailInvalid": "Please enter a valid email address",
+  "profilePhoneInvalid": "Please enter a valid phone number",
+  "profileIbanLength": "IBAN must be 15–34 characters",
+  "profileIbanFormat": "Invalid IBAN format",
+  "profileSwiftLength": "SWIFT code must be 8 or 11 characters",
+  "profileSwiftFormat": "SWIFT code can only contain letters and numbers"
 }

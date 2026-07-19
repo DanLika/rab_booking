@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class ConnectivityService {
   final Connectivity _connectivity = Connectivity();
   final StreamController<bool> _controller = StreamController<bool>.broadcast();
+  StreamSubscription<List<ConnectivityResult>>? _subscription;
 
   Stream<bool> get onConnectivityChanged => _controller.stream;
 
@@ -14,7 +15,14 @@ class ConnectivityService {
     _checkConnectivity();
 
     // Listen for changes
-    _connectivity.onConnectivityChanged.listen(_updateStatus);
+    _subscription = _connectivity.onConnectivityChanged.listen(_updateStatus);
+  }
+
+  /// Cancel the platform stream + close the controller (audit F4.7 — the
+  /// subscription previously leaked for the app's lifetime).
+  void dispose() {
+    _subscription?.cancel();
+    _controller.close();
   }
 
   Future<void> _checkConnectivity() async {
@@ -42,7 +50,9 @@ class ConnectivityService {
 
 /// Provider for connectivity service
 final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
-  return ConnectivityService();
+  final service = ConnectivityService();
+  ref.onDispose(service.dispose);
+  return service;
 });
 
 /// Stream provider for online status

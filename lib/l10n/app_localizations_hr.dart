@@ -9094,4 +9094,32 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get subscriptionManageLabel => 'Upravljaj pretplatom';
+
+  @override
+  String get profileNameRequired => 'Ime je obavezno';
+
+  @override
+  String get profileNameTooShort => 'Ime mora imati najmanje 2 znaka';
+
+  @override
+  String get profileNameTooLong => 'Ime mora biti kraće od 80 znakova';
+
+  @override
+  String get profileEmailInvalid => 'Unesite ispravnu email adresu';
+
+  @override
+  String get profilePhoneInvalid => 'Unesite ispravan broj telefona';
+
+  @override
+  String get profileIbanLength => 'IBAN mora imati 15–34 znaka';
+
+  @override
+  String get profileIbanFormat => 'Neispravan format IBAN-a';
+
+  @override
+  String get profileSwiftLength => 'SWIFT kod mora imati 8 ili 11 znakova';
+
+  @override
+  String get profileSwiftFormat =>
+      'SWIFT kod smije sadržavati samo slova i brojeve';
 }

@@ -42,7 +42,10 @@ class BbButton extends StatefulWidget {
     this.active = false,
     this.asIcon = false,
     this.semanticLabel,
-  });
+  }) : assert(
+         label != null || asIcon || iconLeft != null || iconRight != null,
+         'BbButton renders empty without a label, icons, or asIcon',
+       );
 
   final String? label;
   final String? iconLeft;
@@ -62,6 +65,15 @@ class BbButton extends StatefulWidget {
 }
 
 class _BbButtonState extends State<BbButton> {
+  /// WCAG 2.5.5 / Material minimum touch target. The `sm` visual pill stays
+  /// 36px — only the *hit area* is floored to this (audit sweep F2.2).
+  static const double _kMinTapSize = 44;
+
+  // Cached transforms — allocating Matrix4 per build was flagged in the audit.
+  static final Matrix4 _identity = Matrix4.identity();
+  static final Matrix4 _liftTransform = Matrix4.identity()
+    ..translateByDouble(0, -1, 0, 1);
+
   bool _hover = false;
 
   bool get _disabled =>
@@ -126,7 +138,7 @@ class _BbButtonState extends State<BbButton> {
       case BbButtonVariant.primary:
         return (
           bg: _hover ? c.primaryDark : c.primary,
-          fg: Colors.white,
+          fg: c.onPrimary,
           border: null,
           shadow: _hover ? BBShadow.purple : BBShadow.purpleSm,
         );
@@ -147,7 +159,7 @@ class _BbButtonState extends State<BbButton> {
       case BbButtonVariant.destructive:
         return (
           bg: c.error,
-          fg: Colors.white,
+          fg: c.onPrimary,
           border: null,
           shadow: const <BoxShadow>[],
         );
@@ -161,7 +173,7 @@ class _BbButtonState extends State<BbButton> {
       case BbButtonVariant.success:
         return (
           bg: c.success,
-          fg: Colors.white,
+          fg: c.onPrimary,
           border: null,
           shadow: const <BoxShadow>[],
         );
@@ -195,7 +207,11 @@ class _BbButtonState extends State<BbButton> {
 
     Widget content;
     if (widget.loading) {
-      content = BbSpinner(size: _iconSize, color: p.fg);
+      // The outer Semantics node already carries the button label — the
+      // spinner itself must not surface as a separate unlabeled node.
+      content = ExcludeSemantics(
+        child: BbSpinner(size: _iconSize, color: p.fg),
+      );
     } else {
       final List<Widget> kids = <Widget>[];
       if (widget.iconLeft != null) {
@@ -241,9 +257,7 @@ class _BbButtonState extends State<BbButton> {
       constraints: BoxConstraints(minWidth: _height),
       padding: padding,
       alignment: Alignment.center,
-      transform: lift
-          ? (Matrix4.identity()..translateByDouble(0, -1, 0, 1))
-          : Matrix4.identity(),
+      transform: lift ? _liftTransform : _identity,
       transformAlignment: Alignment.center,
       decoration: BoxDecoration(
         color: p.bg,
@@ -253,6 +267,24 @@ class _BbButtonState extends State<BbButton> {
       ),
       child: content,
     );
+
+    // Hit-area floor (audit F2.2): the `sm` pill (36px) and `sm` asIcon
+    // (36×36) sit below the 44px minimum. Expand the *tappable* box to 44
+    // while the visual body stays untouched and centered. `widthFactor: 1`
+    // makes the wrapper width-transparent — horizontal sizing is exactly
+    // whatever the inner AnimatedContainer resolved to before this change
+    // (it expands in loose-bounded contexts; that behavior predates F2.2).
+    // md/lg are already ≥44 and take the body directly — zero delta.
+    Widget hitArea = body;
+    if (_height < _kMinTapSize) {
+      hitArea = SizedBox(
+        height: _kMinTapSize,
+        width: widget.asIcon ? _kMinTapSize : null,
+        child: widget.fullWidth
+            ? Center(child: body)
+            : Center(widthFactor: 1, child: body),
+      );
+    }
 
     final Widget tappable = Opacity(
       opacity: _disabled ? 0.45 : 1,
@@ -265,7 +297,7 @@ class _BbButtonState extends State<BbButton> {
           child: InkWell(
             onTap: _disabled ? null : widget.onPressed,
             borderRadius: BBRadius.smAll,
-            child: body,
+            child: hitArea,
           ),
         ),
       ),

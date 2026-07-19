@@ -350,6 +350,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                       BbInput(
                                         controller: _currentPasswordController,
                                         label: l10n.currentPassword,
+                                        textInputAction: TextInputAction.next,
+                                        autofillHints: const [
+                                          AutofillHints.password,
+                                        ],
                                         iconLeft: 'lock',
                                         obscureText: _obscureCurrentPassword,
                                         size: BbInputSize.lg,
@@ -388,6 +392,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                       BbInput(
                                         controller: _newPasswordController,
                                         label: l10n.newPassword,
+                                        textInputAction: TextInputAction.next,
+                                        autofillHints: const [
+                                          AutofillHints.newPassword,
+                                        ],
                                         iconLeft: 'lock',
                                         obscureText: _obscureNewPassword,
                                         size: BbInputSize.lg,
@@ -428,6 +436,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
 
                                       // Password strength meter (kept inline,
                                       // dynamic — can't live in BbInput.helper).
+                                      // liveRegion: announces the new strength
+                                      // label whenever the level changes.
                                       if (_newPasswordController
                                           .text
                                           .isNotEmpty)
@@ -435,12 +445,15 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                           padding: const EdgeInsets.only(
                                             top: BBSpace.xs,
                                           ),
-                                          child: _PasswordStrengthMeter(
-                                            strength: _passwordStrength,
-                                            missingRequirements:
-                                                _missingRequirements,
-                                            l10n: l10n,
-                                            c: c,
+                                          child: Semantics(
+                                            liveRegion: true,
+                                            child: _PasswordStrengthMeter(
+                                              strength: _passwordStrength,
+                                              missingRequirements:
+                                                  _missingRequirements,
+                                              l10n: l10n,
+                                              c: c,
+                                            ),
                                           ),
                                         ),
                                       const SizedBox(height: BBSpace.md),
@@ -449,6 +462,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                       BbInput(
                                         controller: _confirmPasswordController,
                                         label: l10n.confirmNewPassword,
+                                        textInputAction: TextInputAction.done,
+                                        autofillHints: const [
+                                          AutofillHints.newPassword,
+                                        ],
                                         iconLeft: 'lock_open',
                                         obscureText: _obscureConfirmPassword,
                                         size: BbInputSize.lg,
@@ -612,7 +629,7 @@ class _PasswordStrengthMeter extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: tone.withAlpha((0.1 * 255).toInt()),
+                color: tone.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(

@@ -1,6 +1,5 @@
 import 'dart:ui' show ImageFilter;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +14,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_error_l10n.dart';
 import '../../../../core/utils/password_validator.dart';
+import '../../../../core/utils/profile_validator_error_l10n.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -440,7 +440,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
 
     return Column(
       children: [
-        BbLogo(size: logoSize, useGradient: false),
+        BbLogo(size: logoSize),
         SizedBox(height: isSmallHeight ? 12 : (isCompact ? 16 : 24)),
         ProfileImagePicker(
           size: avatarSize,
@@ -522,7 +522,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           keyboardType: TextInputType.emailAddress,
           error: _emailErrorFromServer,
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          validator: ProfileValidators.validateEmail,
+          validator: (v) {
+            final e = ProfileValidators.emailError(v);
+            return e == null ? null : l10n.profileValidatorErrorText(e);
+          },
         ),
         fieldSpacing,
         // Phone — optional field; validator allows empty (per ProfileValidators).
@@ -534,7 +537,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           size: BbInputSize.lg,
           keyboardType: TextInputType.phone,
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          validator: ProfileValidators.validatePhone,
+          validator: (v) {
+            final e = ProfileValidators.phoneError(v);
+            return e == null ? null : l10n.profileValidatorErrorText(e);
+          },
         ),
         fieldSpacing,
         // Password — trailingAction holds the visibility-toggle IconButton
@@ -673,19 +679,33 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       onChanged: onChanged,
       checkboxKey: checkboxKey,
       c: c,
+      // a11y: tapping anywhere on the label row toggles the checkbox.
+      // The legal link keeps its own TapGestureRecognizer so tapping the
+      // underlined text opens the document (not the toggle).
+      labelOnTap: () => onChanged(!value),
       child: RichText(
         text: TextSpan(
           style: BBType.caption(context).copyWith(color: c.textSecondary),
           children: [
             TextSpan(text: prefixText),
-            TextSpan(
-              text: linkText,
-              style: TextStyle(
-                color: c.primary,
-                fontWeight: FontWeight.w600,
-                decoration: TextDecoration.underline,
+            // a11y: WidgetSpan with Semantics(link: true) so screen readers
+            // expose the link role separately from the checkbox label.
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Semantics(
+                link: true,
+                child: GestureDetector(
+                  onTap: onLinkTap,
+                  child: Text(
+                    linkText,
+                    style: BBType.caption(context).copyWith(
+                      color: c.primary,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
               ),
-              recognizer: TapGestureRecognizer()..onTap = onLinkTap,
             ),
             const TextSpan(text: ' *'),
           ],
@@ -702,7 +722,15 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     required Widget child,
     required BBColorSet c,
     Key? checkboxKey,
+
+    /// Optional tap handler to toggle the checkbox when tapping the label.
+    /// Legal checkboxes pass this; the newsletter row does not (no label tap).
+    VoidCallback? labelOnTap,
   }) {
+    final labelWidget = Expanded(
+      child: Padding(padding: const EdgeInsets.only(top: 2), child: child),
+    );
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -721,9 +749,23 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           ),
         ),
         const SizedBox(width: 12),
-        Expanded(
-          child: Padding(padding: const EdgeInsets.only(top: 2), child: child),
-        ),
+        // Wrap label in an InkWell when a toggle handler is provided so the
+        // entire label area (min 44px) acts as a tap target for the checkbox.
+        labelOnTap != null
+            ? Expanded(
+                child: InkWell(
+                  onTap: labelOnTap,
+                  borderRadius: BorderRadius.circular(4),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 44),
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: child,
+                    ),
+                  ),
+                ),
+              )
+            : labelWidget,
       ],
     );
   }

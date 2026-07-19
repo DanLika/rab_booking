@@ -16281,6 +16281,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage subscription'**
   String get subscriptionManageLabel;
+
+  /// No description provided for @profileNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Name is required'**
+  String get profileNameRequired;
+
+  /// No description provided for @profileNameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be at least 2 characters'**
+  String get profileNameTooShort;
+
+  /// No description provided for @profileNameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be less than 80 characters'**
+  String get profileNameTooLong;
+
+  /// No description provided for @profileEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get profileEmailInvalid;
+
+  /// No description provided for @profilePhoneInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid phone number'**
+  String get profilePhoneInvalid;
+
+  /// No description provided for @profileIbanLength.
+  ///
+  /// In en, this message translates to:
+  /// **'IBAN must be 15–34 characters'**
+  String get profileIbanLength;
+
+  /// No description provided for @profileIbanFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid IBAN format'**
+  String get profileIbanFormat;
+
+  /// No description provided for @profileSwiftLength.
+  ///
+  /// In en, this message translates to:
+  /// **'SWIFT code must be 8 or 11 characters'**
+  String get profileSwiftLength;
+
+  /// No description provided for @profileSwiftFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'SWIFT code can only contain letters and numbers'**
+  String get profileSwiftFormat;
 }
 
 class _AppLocalizationsDelegate

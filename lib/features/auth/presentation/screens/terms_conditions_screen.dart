@@ -97,9 +97,10 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
       ('10. ${l10n.termsScreenSection10Title}', 'contact'),
     ];
 
-    final lastUpdated = l10n.termsScreenLastUpdated(
-      DateTime.now().year.toString(),
-    );
+    // Static date — avoids re-rendering on each rebuild and is the correct
+    // approach for legal docs (actual last-edit date, not runtime date).
+    const kLastUpdatedYear = '2026';
+    final lastUpdated = l10n.termsScreenLastUpdated(kLastUpdatedYear);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -161,9 +162,12 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                       child: FloatingActionButton(
                         onPressed: _scrollToTop,
                         backgroundColor: theme.colorScheme.primary,
+                        // a11y: explicit tooltip/semanticLabel for SR
+                        tooltip: 'Scroll to top',
                         child: const Icon(
                           Icons.arrow_upward,
                           color: Colors.white,
+                          semanticLabel: 'Scroll to top',
                         ),
                       ),
                     ),
@@ -366,11 +370,15 @@ class _LegalDocHeader extends StatelessWidget {
           style: BBType.eyebrow(context).copyWith(color: c.primary),
         ),
         SizedBox(height: isMobile ? 8 : 12),
-        Text(
-          title,
-          style: isMobile ? BBType.h1(context) : BBType.display(context),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        // a11y: Semantics(header: true) marks the document h1 for SR heading nav
+        Semantics(
+          header: true,
+          child: Text(
+            title,
+            style: isMobile ? BBType.h1(context) : BBType.display(context),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
@@ -440,29 +448,40 @@ class _LegalTocCard extends StatelessWidget {
         children: [
           BbSectionHeader(title: title, level: BbSectionHeaderLevel.h3),
           for (final item in items)
-            InkWell(
-              onTap: () => onTapKey(item.$2),
-              borderRadius: BBRadius.smAll,
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: isMobile ? 8 : 10,
-                  horizontal: 8,
-                ),
-                child: Row(
-                  children: [
-                    BbIcon(name: 'chevron_right', size: 18, color: c.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        item.$1,
-                        style: BBType.body(
-                          context,
-                        ).copyWith(color: c.textPrimary),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+            // a11y: MouseRegion.click cursor for pointer devices; min 44px height
+            MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: InkWell(
+                onTap: () => onTapKey(item.$2),
+                borderRadius: BBRadius.smAll,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: isMobile ? 8 : 10,
+                      horizontal: 8,
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        BbIcon(
+                          name: 'chevron_right',
+                          size: 18,
+                          color: c.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            item.$1,
+                            style: BBType.body(
+                              context,
+                            ).copyWith(color: c.textPrimary),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -503,20 +522,30 @@ class _LegalTocSidebar extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         for (final item in items)
-          InkWell(
-            onTap: () => onTapKey(item.$2),
-            borderRadius: BBRadius.smAll,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 12),
-              child: Text(
-                item.$1,
-                style: BBType.body(context).copyWith(
-                  color: c.textSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+          // a11y: MouseRegion.click cursor for pointer devices; min 44px height
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: InkWell(
+              onTap: () => onTapKey(item.$2),
+              borderRadius: BBRadius.smAll,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 44),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 7,
+                    horizontal: 12,
+                  ),
+                  child: Text(
+                    item.$1,
+                    style: BBType.body(context).copyWith(
+                      color: c.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),

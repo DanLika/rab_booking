@@ -356,10 +356,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               },
             ),
 
-            // Loading overlay during delete
+            // Loading overlay during delete — use textPrimary token (dark/light
+            // aware) instead of raw Colors.black so OLED dark surfaces stay.
             if (_isDeleting)
               ColoredBox(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: c.textPrimary.withValues(
+                  alpha: BBOpacity.semiTransparent,
+                ),
                 child: Center(
                   child: BbCard(
                     child: Column(
@@ -962,13 +965,17 @@ class _NotificationRow extends StatelessWidget {
                     ),
                     if (isUnread) ...<Widget>[
                       const SizedBox(width: BBSpace.xs),
-                      Container(
-                        width: 8,
-                        height: 8,
-                        margin: const EdgeInsets.only(top: 6),
-                        decoration: BoxDecoration(
-                          color: c.primary,
-                          shape: BoxShape.circle,
+                      // Decorative unread indicator — screen-reader sees
+                      // the card-level semanticLabel instead.
+                      ExcludeSemantics(
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.only(top: 6),
+                          decoration: BoxDecoration(
+                            color: c.primary,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
                     ],

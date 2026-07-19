@@ -215,6 +215,16 @@ class WidgetAppearanceSection extends StatelessWidget {
   }
 }
 
+/// Maps a hex swatch string to a human-readable colour name for accessibility.
+String _swatchName(String hex) => switch (hex.toLowerCase()) {
+  '#3dd9b0' => 'Mint',
+  '#6b4ce6' => 'Purple',
+  '#4a90d9' => 'Blue',
+  '#ff6b6b' => 'Coral',
+  '#1b2330' => 'Ink',
+  _ => hex,
+};
+
 /// Single accent colour swatch — circular, with a check overlay + ring
 /// border when [selected].
 class _AccentSwatch extends StatelessWidget {
@@ -231,26 +241,33 @@ class _AccentSwatch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: _hex(hex),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: selected ? c.textPrimary : Colors.transparent,
-            width: BBBorderWidth.thick,
+    return Semantics(
+      label: _swatchName(hex),
+      selected: selected,
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: ExcludeSemantics(
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: _hex(hex),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: selected ? c.textPrimary : Colors.transparent,
+                width: BBBorderWidth.thick,
+              ),
+            ),
+            child: selected
+                ? const BbIcon(
+                    name: 'check',
+                    size: BBIconSize.small,
+                    color: Colors.white,
+                  )
+                : null,
           ),
         ),
-        child: selected
-            ? const BbIcon(
-                name: 'check',
-                size: BBIconSize.small,
-                color: Colors.white,
-              )
-            : null,
       ),
     );
   }

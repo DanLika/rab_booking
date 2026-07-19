@@ -19,6 +19,13 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// double-header (see audit/126 §2A).
   final bool showTitle;
 
+  /// Tooltip + screen-reader label for the leading icon (audit sweep F2.9).
+  /// The hardcoded EN 'Menu' covered EVERY leading icon — drawer, back and
+  /// close alike — across ~40 screens. Callers pass the l10n string matching
+  /// the icon's actual action; the default keeps the old value so untouched
+  /// call sites are byte-identical (migration rides the F5/F6 passes).
+  final String? leadingTooltip;
+
   const CommonAppBar({
     super.key,
     required this.title,
@@ -26,6 +33,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onLeadingIconTap,
     this.actions,
     this.showTitle = true,
+    this.leadingTooltip,
   });
 
   @override
@@ -34,7 +42,9 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
+    // sizeOf: subscribe to size only, not the full MediaQueryData (keyboard
+    // insets etc. rebuilt this bar needlessly — audit F2.9).
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final titlePadding = screenWidth > 600 ? 4.0 : 0.0;
 
     return AppBar(
@@ -53,7 +63,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
           ? IconButton(
               icon: Icon(leadingIcon),
               onPressed: () => onLeadingIconTap!(context),
-              tooltip: 'Menu',
+              tooltip: leadingTooltip ?? 'Menu',
             )
           : null,
       automaticallyImplyLeading: false,

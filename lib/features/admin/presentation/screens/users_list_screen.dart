@@ -243,15 +243,25 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
   }
 
   Future<void> _pickDateRange() async {
+    final isDark = ref.read(adminDarkModeProvider);
     final picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2024),
       lastDate: DateTime.now(),
       initialDateRange: _dateRange,
       builder: (context, child) => Theme(
-        data: ThemeData.light(useMaterial3: true).copyWith(
-          colorScheme: const ColorScheme.light(primary: AppColors.primary),
-        ),
+        data: isDark
+            ? ThemeData.dark(useMaterial3: true).copyWith(
+                colorScheme: ColorScheme.dark(
+                  primary: AppColors.primaryLight,
+                  surface: BbAdminDarkTokens.preset.panelBg,
+                ),
+              )
+            : ThemeData.light(useMaterial3: true).copyWith(
+                colorScheme: const ColorScheme.light(
+                  primary: AppColors.primary,
+                ),
+              ),
         child: child!,
       ),
     );
@@ -663,59 +673,69 @@ class _UserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final displayName = user.displayName ?? user.fullName;
-    return BbCard(
-      hoverable: true,
-      onTap: () => context.go('/users/${user.id}'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              BbAvatar(name: displayName, size: BbAvatarSize.sm),
-              const SizedBox(width: BBSpace.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SelectableText(
-                      displayName,
-                      style: BBType.h3(context).copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: palette.textPrimary,
+    return Semantics(
+      label: '$displayName, ${user.email}',
+      button: true,
+      child: BbCard(
+        hoverable: true,
+        onTap: () => context.go('/users/${user.id}'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                BbAvatar(name: displayName, size: BbAvatarSize.sm),
+                const SizedBox(width: BBSpace.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        style: BBType.h3(context).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: palette.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                    ),
-                    SelectableText(
-                      user.email,
-                      style: BBType.caption(
-                        context,
-                      ).copyWith(color: palette.textSecondary),
-                      maxLines: 1,
-                    ),
-                  ],
+                      Text(
+                        user.email,
+                        style: BBType.caption(
+                          context,
+                        ).copyWith(color: palette.textSecondary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: BBSpace.sm),
-          Row(
-            children: [
-              _AccountTypeBadge(type: user.accountType),
-              const SizedBox(width: BBSpace.sm),
-              Expanded(
-                child: Text(
-                  _formatDate(user.createdAt),
-                  style: BBType.caption(
-                    context,
-                  ).copyWith(color: palette.textTertiary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              ],
+            ),
+            const SizedBox(height: BBSpace.sm),
+            Row(
+              children: [
+                _AccountTypeBadge(type: user.accountType),
+                const SizedBox(width: BBSpace.sm),
+                Expanded(
+                  child: Text(
+                    _formatDate(user.createdAt),
+                    style: BBType.caption(
+                      context,
+                    ).copyWith(color: palette.textTertiary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              Icon(Icons.chevron_right, size: 20, color: palette.textTertiary),
-            ],
-          ),
-        ],
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: palette.textTertiary,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -823,7 +843,7 @@ class _UsersTable extends StatelessWidget {
                                   size: BbAvatarSize.xs,
                                 ),
                                 const SizedBox(width: BBSpace.sm),
-                                SelectableText(
+                                Text(
                                   displayName,
                                   style: BBType.body(context).copyWith(
                                     fontWeight: FontWeight.w500,
@@ -834,7 +854,7 @@ class _UsersTable extends StatelessWidget {
                             ),
                           ),
                           DataCell(
-                            SelectableText(
+                            Text(
                               user.email,
                               style: BBType.body(
                                 context,

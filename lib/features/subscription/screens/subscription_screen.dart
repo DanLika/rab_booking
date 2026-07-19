@@ -224,7 +224,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   ) {
     return LayoutBuilder(
       builder: (BuildContext _, BoxConstraints constraints) {
-        final bool wide = constraints.maxWidth >= 720;
+        // 600 = canonical mobile/tablet boundary (breakpoint-canonical-1200.md).
+        // LayoutBuilder reflow: stacked → side-by-side plan cards at ≥ 600.
+        const double kWideThreshold = 600;
+        final bool wide = constraints.maxWidth >= kWideThreshold;
         final double horizontalPad = wide ? BBSpace.lg : BBSpace.sm;
 
         return SingleChildScrollView(
@@ -442,6 +445,15 @@ Widget buildTrialHeroForTest({
   compact: compact,
   onUpgrade: onUpgrade,
 );
+
+/// The mobile free-plan summary row (kIsWeb-gated in the live tree, so VM
+/// widget tests can't reach it through the screen). Audit F4.3 seam.
+@visibleForTesting
+Widget buildFreeInlineForTest() => _FreeInline();
+
+/// The Stripe foot-note (same kIsWeb gate). Audit F4.3 seam.
+@visibleForTesting
+Widget buildFootNoteForTest() => const _FootNote();
 
 class _TrialHero extends ConsumerWidget {
   const _TrialHero({this.compact = false, this.onUpgrade});
@@ -711,57 +723,70 @@ class _TogglePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final BBColorSet c = BBColor.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
-        child: AnimatedContainer(
-          duration: BBMotion.adapt(context, BBMotion.fast),
-          curve: BBMotion.curve,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-          decoration: BoxDecoration(
-            color: selected ? c.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
-            boxShadow: selected ? BBShadow.sm : const <BoxShadow>[],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                label,
-                style: BBType.label(context).copyWith(
-                  color: selected ? c.textPrimary : c.textSecondary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+    // 44 px tap floor (WCAG 2.5.5). Visual pill stays compact inside Center.
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: SizedBox(
+        height: 44,
+        child: Center(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(999),
+              child: AnimatedContainer(
+                duration: BBMotion.adapt(context, BBMotion.fast),
+                curve: BBMotion.curve,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: selected ? c.surface : Colors.transparent,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: selected ? BBShadow.sm : const <BoxShadow>[],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      label,
+                      style: BBType.label(context).copyWith(
+                        color: selected ? c.textPrimary : c.textSecondary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (discountLabel != null) ...<Widget>[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: c.success.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          discountLabel!,
+                          style: TextStyle(
+                            color: c.success,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            height: 1,
+                            fontFeatures: const <FontFeature>[
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              if (discountLabel != null) ...<Widget>[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: c.success.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    discountLabel!,
-                    style: TextStyle(
-                      color: c.success,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                      fontFeatures: const <FontFeature>[
-                        FontFeature.tabularFigures(),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ],
+            ),
           ),
         ),
       ),
@@ -913,10 +938,18 @@ class _ProPlanCard extends StatelessWidget {
     _PlanFeature('Bez BookBed oznake u widgetu'),
   ];
 
+  // Static marketing prices — NOT runtime-formatted.
+  // TODO(l10n/format): replace with locale-aware NumberFormat.currency() when
+  // multi-currency support lands.
+  static const String _kPriceMonthly = '€19';
+  static const String _kPriceYearly = '€15';
+  static const String _kPriceYearlyTotal = '€180';
+  static const String _kPriceYearlySaving = '€48';
+
   @override
   Widget build(BuildContext context) {
     final BBColorSet c = BBColor.of(context);
-    final String price = yearly ? '€15' : '€19';
+    final String price = yearly ? _kPriceYearly : _kPriceMonthly;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -944,7 +977,7 @@ class _ProPlanCard extends StatelessWidget {
                     children: <InlineSpan>[
                       const TextSpan(text: 'Naplaćeno godišnje '),
                       TextSpan(
-                        text: '€180',
+                        text: _kPriceYearlyTotal,
                         style: TextStyle(
                           color: c.textSecondary,
                           fontWeight: FontWeight.w600,
@@ -955,7 +988,7 @@ class _ProPlanCard extends StatelessWidget {
                       ),
                       const TextSpan(text: ' · uštedite '),
                       const TextSpan(
-                        text: '€48',
+                        text: _kPriceYearlySaving,
                         style: TextStyle(
                           fontFeatures: <FontFeature>[
                             FontFeature.tabularFigures(),
@@ -1067,11 +1100,13 @@ class _FeatureRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: <Widget>[
-          BbIcon(
-            name: f.ok ? 'check_circle' : 'cancel',
-            size: 18,
-            fill: f.ok ? 1 : 0,
-            color: f.ok ? c.success : c.textTertiary,
+          ExcludeSemantics(
+            child: BbIcon(
+              name: f.ok ? 'check_circle' : 'cancel',
+              size: 18,
+              fill: f.ok ? 1 : 0,
+              color: f.ok ? c.success : c.textTertiary,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -1135,7 +1170,9 @@ class _FreeInline extends StatelessWidget {
             label: 'Zadrži besplatno',
             variant: BbButtonVariant.tertiary,
             size: BbButtonSize.sm,
-            onPressed: () {},
+            // Keeping free needs no server action — declining the upsell
+            // just leaves the screen (audit F4.3: was a no-op () {}).
+            onPressed: () => Navigator.of(context).maybePop(),
           ),
         ],
       ),
@@ -1163,25 +1200,16 @@ class _FootNote extends StatelessWidget {
         children: <Widget>[
           BbIcon(name: 'verified_user', size: 18, color: c.textTertiary),
           const SizedBox(width: 10),
+          // "Usporedi sve značajke" link removed (audit F4.3): it was a
+          // link-styled TextSpan with no recognizer and no comparison
+          // surface to point at — both plan cards already list features.
           Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: BBType.caption(
-                  context,
-                ).copyWith(color: c.textTertiary, height: 1.5),
-                children: <InlineSpan>[
-                  const TextSpan(
-                    text:
-                        'Sigurno plaćanje putem Stripe-a. Otkažite bilo kada — pretplata se ne obnavlja nakon otkazivanja. ',
-                  ),
-                  TextSpan(
-                    text: 'Usporedi sve značajke',
-                    style: BBType.caption(
-                      context,
-                    ).copyWith(color: c.primary, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
+            child: Text(
+              'Sigurno plaćanje putem Stripe-a. Otkažite bilo kada — '
+              'pretplata se ne obnavlja nakon otkazivanja.',
+              style: BBType.caption(
+                context,
+              ).copyWith(color: c.textTertiary, height: 1.5),
             ),
           ),
         ],

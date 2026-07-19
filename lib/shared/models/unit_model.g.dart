@@ -29,6 +29,9 @@ _$UnitModelImpl _$$UnitModelImplFromJson(
   bedrooms: (json['bedrooms'] as num?)?.toInt() ?? 1,
   bathrooms: (json['bathrooms'] as num?)?.toInt() ?? 1,
   areaSqm: (json['area_sqm'] as num?)?.toDouble(),
+  amenities:
+      (json['amenities'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
   images:
       (json['images'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
@@ -63,6 +66,7 @@ Map<String, dynamic> _$$UnitModelImplToJson(
   'bedrooms': instance.bedrooms,
   'bathrooms': instance.bathrooms,
   'area_sqm': instance.areaSqm,
+  'amenities': instance.amenities,
   'images': instance.images,
   'is_available': instance.isAvailable,
   'min_stay_nights': instance.minStayNights,

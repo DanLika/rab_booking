@@ -95,6 +95,16 @@ class _EmailVerificationScreenState
       // Reset error flag when returning to app - network may have been restored
       _hasShownNetworkError = false;
       _checkVerificationStatus();
+      // Re-arm the poll paused below (audit F4.9).
+      _refreshTimer ??= Timer.periodic(const Duration(seconds: 3), (_) {
+        _checkVerificationStatus();
+      });
+    } else if (state == AppLifecycleState.paused) {
+      // Backgrounded: stop polling Firebase every 3s (audit F4.9 — battery
+      // + pointless network while the app isn't visible). The cooldown
+      // timer keeps running so the resend gate stays honest.
+      _refreshTimer?.cancel();
+      _refreshTimer = null;
     }
   }
 
@@ -504,19 +514,23 @@ class _EmailVerificationScreenState
         ? const EdgeInsets.all(BBSpace.sm)
         : EdgeInsets.all(isCompact ? BBSpace.md : 36);
 
-    final card = ClipRRect(
-      borderRadius: BBRadius.lgAll,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: rd.glassBg,
-            border: Border.all(color: rd.glassBorder),
-            borderRadius: BBRadius.lgAll,
-            boxShadow: rd.panelShadow,
+    // RepaintBoundary sandboxes the blur — without it the 1s cooldown tick
+    // re-composited the whole BackdropFilter subtree (audit F4.9).
+    final card = RepaintBoundary(
+      child: ClipRRect(
+        borderRadius: BBRadius.lgAll,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: rd.glassBg,
+              border: Border.all(color: rd.glassBorder),
+              borderRadius: BBRadius.lgAll,
+              boxShadow: rd.panelShadow,
+            ),
+            padding: cardPadding,
+            child: _buildContent(c, l10n, email, isCompact, isSmallHeight),
           ),
-          padding: cardPadding,
-          child: _buildContent(c, l10n, email, isCompact, isSmallHeight),
         ),
       ),
     );

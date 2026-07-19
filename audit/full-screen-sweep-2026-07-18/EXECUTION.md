@@ -36,11 +36,11 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [x] F3.4 admin textTertiary — fix/f34-admin-tertiary @13371aeb, suite 1946 GREEN (white@0.40→0.50 = 3.62→4.81:1 na panelBg #2A2342; postojeći pin test ažuriran uz obrazloženje; novi named-surface guard test)
 - [x] F3.5 flat regresije — fix/f35-flat-regressions @f5398dfc, suite 1947 GREEN (profile ×4 solid primary + gauge painter Color umjesto shadera — usput fix always-true shouldRepaint; image_picker ×2; cancel dialog header gradient DROPPED — reject nikad nije imao = asimetrija; bb_logo default false + lažni asset-fallback docstring; golden regen ×12 namjeran; unit_pricing Save → GO-QUEUE jer FROZEN 'Spremi')
 - [x] F3.6 stale TIP-1 docstringovi — docs/f36-stale-tip1-docstrings @c234c42c, comments-only 0 behavior, analyze 112 baseline (unit_form ×2, step_4_review, widget_settings_section, property_form ×2; admin_login dijagonala je ŽIVI sanctioned hero — netaknut)
-- [ ] F3.7 skeleton dark ladder na audit/127 (#1E1E1E/#2A2A2A/#333333) + StatsCards light-only fix
+- [x] F3.7+F4.14 skeleton — fix/f37-skeleton @204d68b2, suite 1949 GREEN (SkeletonColors dark → OLED ladder; StatsCards theme-aware; 2 unbounded ListViewa → shrinkWrap+NeverScrollable; 4 testa uklj. nested-in-Column survival)
 ## F1b konsolidacija
-- [ ] PremiumCard: migriraj 2 callera → BbCard, obriši card.dart + glass API
-- [ ] core/widgets/bb_* set: gallery/probe migracija na Bb*, delete (BBInput sad smije — backport gotov)
-- [ ] redesign/bb_bottom_sheet (mrtvi blizanac) delete
+- [x] PremiumCard → BbCard ×2 + card.dart DELETED — chore/f1b-consolidation (suite u toku)
+- [~] core/widgets/bb_* set: ai_assistant (zadnji ne-dev konzument) migriran na redesign BbSkeleton; SAM SET ostaje — jedini konzumenti gallery_dev (54 sitea) + responsive_probe = dev alati → GO-QUEUE (migrate vs delete showcases = operator)
+- [x] redesign/bb_bottom_sheet DELETED (0 callera) — isti branch
 ## F5 ekrani (klaster PR-ovi, punch-liste u REMEDIATION_PLAN.md §5A-5G)
 - [ ] 5A kalendari → [ ] 5B admin → [ ] 5C auth → [ ] 5D forme → [ ] 5E settings/guides → [ ] 5F widget-gost → [ ] 5G ostalo
 ## F6 l10n — [ ] validatori kod→prevod; [ ] hardcoded HR/EN sweep (ARB ×4)
@@ -50,4 +50,4 @@ Pravila: worktree/branch po tasku od origin/main; backend NE; FROZEN wrap-only; 
 - [ ] dev deploy: ⚠ PROVJERI hosting target PRIJE (memorija: bookbed-owner-dev.web.app gađa PROD uprkos imenu!) — dev-first pravilo, PROD ostaje GO-gated
 - [ ] smoke na dev buildu (login + 2-3 fixana ekrana)
 ## GO-QUEUE (čeka operatora — NE raditi bez GO)
-unit_pricing Save gradient→solid (FROZEN 'Spremi' scope — F3.5 preskočio) · upload implement-vs-hide · HRK removal · login hero-metrike · forgot glass · push/PR svi branchevi · PROD deploy
+unit_pricing Save gradient→solid (FROZEN 'Spremi') · gallery/probe dev-alati: migrate-na-Bb* vs delete (core/widgets/bb_* čeka tu odluku) · upload implement-vs-hide · HRK removal · login hero-metrike · forgot glass · push/PR svi branchevi · PROD deploy

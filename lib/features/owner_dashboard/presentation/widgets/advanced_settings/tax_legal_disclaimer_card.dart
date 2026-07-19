@@ -14,7 +14,7 @@ import '../../../../../core/utils/input_decoration_helper.dart';
 /// - Radio selection between default Croatian text and custom text
 /// - Custom text editor (when custom is selected)
 /// - Preview button to see disclaimer text
-class TaxLegalDisclaimerCard extends StatelessWidget {
+class TaxLegalDisclaimerCard extends StatefulWidget {
   final bool taxLegalEnabled;
   final bool useDefaultText;
   final TextEditingController customDisclaimerController;
@@ -35,6 +35,30 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
     this.customTextValidator,
     this.isMobile = false,
   });
+
+  @override
+  State<TaxLegalDisclaimerCard> createState() => _TaxLegalDisclaimerCardState();
+}
+
+class _TaxLegalDisclaimerCardState extends State<TaxLegalDisclaimerCard> {
+  // initiallyExpanded is one-shot, so the tile stayed open after the owner
+  // disabled the toggle (audit F4.10) — drive it with a controller instead.
+  final ExpansibleController _tileController = ExpansibleController();
+
+  @override
+  void didUpdateWidget(TaxLegalDisclaimerCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.taxLegalEnabled != widget.taxLegalEnabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (widget.taxLegalEnabled) {
+          _tileController.expand();
+        } else {
+          _tileController.collapse();
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,18 +87,19 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
           child: Theme(
             data: theme.copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
-              initiallyExpanded: taxLegalEnabled,
+              controller: _tileController,
+              initiallyExpanded: widget.taxLegalEnabled,
               iconColor: theme.colorScheme.primary,
               collapsedIconColor: theme.colorScheme.primary,
               tilePadding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 14 : 18,
+                horizontal: widget.isMobile ? 14 : 18,
                 vertical: 8,
               ),
               childrenPadding: EdgeInsets.fromLTRB(
-                isMobile ? 14 : 18,
+                widget.isMobile ? 14 : 18,
                 0,
-                isMobile ? 14 : 18,
-                isMobile ? 14 : 18,
+                widget.isMobile ? 14 : 18,
+                widget.isMobile ? 14 : 18,
               ),
               leading: _buildLeadingIcon(theme),
               title: Column(
@@ -101,11 +126,11 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  taxLegalEnabled
+                  widget.taxLegalEnabled
                       ? l10n.taxLegalEnabled
                       : l10n.taxLegalDisabled,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: taxLegalEnabled
+                    color: widget.taxLegalEnabled
                         ? AppColors.success
                         : context.textColorSecondary,
                     fontSize: 12,
@@ -147,14 +172,14 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
                           ),
                         ),
                         Switch(
-                          value: taxLegalEnabled,
-                          onChanged: onEnabledChanged,
+                          value: widget.taxLegalEnabled,
+                          onChanged: widget.onEnabledChanged,
                           activeThumbColor: theme.colorScheme.primary,
                         ),
                       ],
                     ),
 
-                    if (taxLegalEnabled) ...[
+                    if (widget.taxLegalEnabled) ...[
                       Divider(
                         height: 24,
                         color: theme.colorScheme.outline.withAlpha(
@@ -170,7 +195,7 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          onPressed: onPreview,
+                          onPressed: widget.onPreview,
                           icon: const Icon(Icons.preview, size: 18),
                           label: Text(l10n.taxLegalPreviewButton),
                           style: OutlinedButton.styleFrom(
@@ -218,8 +243,8 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
 
         // Radio group for text source selection
         RadioGroup<bool>(
-          groupValue: useDefaultText,
-          onChanged: (val) => onUseDefaultChanged(val ?? true),
+          groupValue: widget.useDefaultText,
+          onChanged: (val) => widget.onUseDefaultChanged(val ?? true),
           child: Column(
             children: [
               // Default text option
@@ -266,11 +291,11 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
         ),
 
         // Custom text editor (shown when custom is selected)
-        if (!useDefaultText) ...[
+        if (!widget.useDefaultText) ...[
           const SizedBox(height: 12),
           Builder(
             builder: (ctx) => TextFormField(
-              controller: customDisclaimerController,
+              controller: widget.customDisclaimerController,
               decoration: InputDecorationHelper.buildDecoration(
                 labelText: l10n.taxLegalCustomLabel,
                 hintText: l10n.taxLegalCustomHint,
@@ -278,7 +303,7 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
               ),
               maxLines: 10,
               maxLength: 2000,
-              validator: customTextValidator,
+              validator: widget.customTextValidator,
             ),
           ),
         ],

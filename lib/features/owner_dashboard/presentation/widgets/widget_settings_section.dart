@@ -6,11 +6,11 @@ import '../../../../shared/widgets/redesign.dart';
 
 /// Shared section card for the Widget Settings page.
 ///
-/// TIP 1 section look (per CLAUDE.md user mandate): the diagonal
-/// `context.gradients.sectionBackground` gradient (topRight → bottomLeft,
-/// fade ends at 30%) + hairline `sectionBorder` + `BBShadow.elevated`, unified
-/// on `BBRadius.lg`. Header = primary-tinted icon chip + `BBType.h3` title +
-/// optional [trailing].
+/// FLAT section look since CHANGELOG 7.23 (the TIP-1 diagonal gradient was
+/// retired; `context.gradients.sectionBackground` renders as a SOLID fill) +
+/// hairline `sectionBorder` + `BBShadow.elevated`, unified on `BBRadius.lg`.
+/// Header = primary-tinted icon chip + `BBType.h3` title + optional
+/// [trailing].
 ///
 /// Replaces the per-section hand-rolled
 /// `Container > ClipRRect > Container(color: cardBackground, circular(24))`

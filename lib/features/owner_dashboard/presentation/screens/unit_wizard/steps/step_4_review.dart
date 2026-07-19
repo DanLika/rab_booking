@@ -377,8 +377,7 @@ class Step4Review extends ConsumerWidget {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
-            // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
+            // FLAT section fill since CHANGELOG 7.23 (cardBackground = solid).
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(

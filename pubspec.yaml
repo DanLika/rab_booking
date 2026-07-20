@@ -36,7 +36,7 @@ dependencies:
   google_sign_in: ^6.3.0
 
   # Apple Sign-In (native iOS)
-  sign_in_with_apple: ^7.0.1
+  sign_in_with_apple: ^8.1.0
 
   # HTTP Client
   http: ^1.2.0
